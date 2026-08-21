@@ -1006,7 +1006,7 @@ function render(){
         h+='<div class="el-det">';
         h+='<div class="el-ph-row">';
         if(ePhUrl)h+='<div class="el-ph done"><img src="'+ePhUrl+'"/><button class="el-ph-del" onclick="dElPh(\''+k+'\')">×</button></div>';
-        h+='<div class="el-ph"><input type="file" accept="image/*" onchange="aEP(\''+k+'\',event)"/>'+camMini+'</div>';
+        h+='<div class="el-ph"><input type="file" accept="image/*" capture="environment" onchange="aEP(\''+k+'\',event)"/>'+camMini+'</div>';
         h+='</div>';
         h+='<textarea class="el-nt" placeholder="'+T('noteP')+'" onchange="sEN(\''+k+'\',this.value)">'+(e.note||'')+'</textarea>';
         h+='</div>';
@@ -1139,7 +1139,7 @@ function renderAltItem(p,pk){
 
   h+='<div class="el-det"><div class="el-ph-row">';
   if(phUrl)h+='<div class="el-ph done"><img src="'+phUrl+'"/><button class="el-ph-del" onclick="dAltPh(\''+p.id+'\')">×</button></div>';
-  h+='<div class="el-ph"><input type="file" accept="image/*" onchange="aAltP(\''+p.id+'\',event)"/>'+camMini+'</div>';
+  h+='<div class="el-ph"><input type="file" accept="image/*" capture="environment" onchange="aAltP(\''+p.id+'\',event)"/>'+camMini+'</div>';
   h+='</div>';
   h+='<textarea class="el-nt" placeholder="'+T('noteP')+'" onchange="updAlt(\''+p.id+'\',\'note\',this.value)">'+escapeHtml(p.note||'')+'</textarea>';
   h+='</div>';
@@ -1182,7 +1182,7 @@ function renderRecCarosItem(k,e,pk){
 
   h+='<div class="el-det"><div class="el-ph-row">';
   if(phUrl)h+='<div class="el-ph done"><img src="'+phUrl+'"/><button class="el-ph-del" onclick="dElPh(\''+k+'\')">×</button></div>';
-  h+='<div class="el-ph"><input type="file" accept="image/*" onchange="aEP(\''+k+'\',event)"/>'+camMini+'</div>';
+  h+='<div class="el-ph"><input type="file" accept="image/*" capture="environment" onchange="aEP(\''+k+'\',event)"/>'+camMini+'</div>';
   h+='</div>';
   h+='<textarea class="el-nt" placeholder="'+T('noteP')+'" onchange="sEN(\''+k+'\',this.value)">'+escapeHtml(e.note||'')+'</textarea>';
   h+='</div>';
