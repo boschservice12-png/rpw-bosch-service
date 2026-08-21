@@ -95,5 +95,5 @@ window.RPW_DAUNA_DOCS = [
 ];
 
 // ── BUILD-BÉLYEG (azonosításhoz) ──
-window.RPW_BUILD = 'RPW PHASE1-4 · 2026-08-21 · FOTO-IMPORT-FIX-LIVE';
+window.RPW_BUILD = 'RPW PHASE1-4 · 2026-08-21 · OCR-ON';
 try{ console.log('%cRPW build: '+window.RPW_BUILD, 'background:#E11D2E;color:#fff;padding:2px 6px;border-radius:4px;font-weight:700'); }catch(e){}
