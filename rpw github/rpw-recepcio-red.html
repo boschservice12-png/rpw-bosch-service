@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#dc2626">
+<title>RedAssistance — Receptie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="rpw-config.js"></script>
+<script src="rpw-guard.js"></script>
+<script src="rpw-util.js"></script>
+<script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
+<script src="rpw-workflow.js"></script>
+<script src="rpw-auth.js"></script>
+<script src="rpw-db.js"></script>
+<script src="rpw-roles.js"></script>
+<script src="rpw-save.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f5f5f3;--w:#fff;--r:#dc2626;--r50:#fef2f2;--r100:#fee2e2;--r700:#b91c1c;--g:#16a34a;--gl:#dcfce7;--y:#ca8a04;--yl:#fef9c3;--bl:#2563eb;--bll:#dbeafe;--p:#7c3aed;--pl:#ede9fe;--or:#ea580c;--orl:#fff7ed;--tl:#0d9488;--tll:#ccfbf1;--t:#1a1a1a;--t2:#555;--t3:#999;--b:#e5e5e5;--b2:#d0d0d0;--rd:10px}
+html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100dvh;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+.mono{font-family:'JetBrains Mono',monospace}
+.hdr{background:var(--w);border-bottom:1px solid var(--b);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.hdr-left{display:flex;align-items:center;gap:8px}
+.back{width:32px;height:32px;border-radius:8px;border:1px solid var(--b);background:var(--w);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.back svg{width:18px;height:18px;stroke:var(--t2);fill:none;stroke-width:2}
+.hdr-title{font-size:14px;font-weight:800}.hdr-title span{color:var(--r)}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.hdr-job{text-align:right;font-size:11px;line-height:1.3}.hdr-job b{font-size:12px}
+.lsw{display:flex;border:1px solid var(--b);border-radius:6px;overflow:hidden}
+.lb{padding:4px 8px;font-size:9px;font-weight:700;cursor:pointer;border:none;background:var(--w);color:var(--t3);font-family:inherit}.lb.on{background:var(--r);color:#fff}.lb:not(:last-child){border-right:1px solid var(--b)}
+.btn{border:none;border-radius:var(--rd);padding:10px 16px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;width:100%}
+.btn-r{background:var(--r);color:#fff}.btn-g{background:var(--g);color:#fff}.btn-o{background:var(--w);color:var(--t2);border:1px solid var(--b2)}
+.type-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 16px}
+.type-card{background:var(--w);border:2px solid var(--b);border-radius:var(--rd);padding:20px 14px;text-align:center;cursor:pointer}
+.type-card.on-a{border-color:var(--bl);background:var(--bll)}.type-card.on-b{border-color:var(--or);background:var(--orl)}
+.tc-icon{font-size:24px;margin-bottom:6px;display:flex;justify-content:center}.tc-icon svg{width:32px;height:32px}.tc-t{font-size:13px;font-weight:800}.tc-s{font-size:10px;color:var(--t3);margin-top:2px}
+.sec{margin:8px 16px 0;background:var(--w);border:1px solid var(--b);border-radius:var(--rd);overflow:hidden}
+.sec-h{padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}.sec-h:active{background:var(--bg)}
+.sec-t{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.sec-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px}
+.sb-ok{background:var(--gl);color:var(--g)}.sb-nd{background:var(--r100);color:var(--r)}.sb-pt{background:var(--yl);color:var(--y)}
+.sec-bd{padding:0 14px 14px;display:none}.sec-bd.open{display:block}
+.step-n{width:22px;height:22px;border-radius:50%;background:var(--r);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.info-f{background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:8px 10px}
+.info-f.warn{background:var(--yl);border-color:var(--y)}
+.info-l{font-size:8px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;font-weight:600;margin-bottom:2px}
+.info-v{width:100%;border:none;background:none;font-size:13px;font-weight:700;color:var(--t);font-family:inherit;outline:none}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pslot{background:var(--bg);border:2px dashed var(--b2);border-radius:8px;aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden}
+.pslot.done{border:2px solid var(--g);background:var(--gl)}
+.pslot img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.pslot input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2;font-size:0}
+.pslot-icon{width:28px;height:28px;stroke:var(--t3);fill:none;stroke-width:1.5}
+.pslot-label{font-size:10px;font-weight:600;color:var(--t3);margin-top:4px}
+.pslot-chk{position:absolute;top:6px;right:6px;width:22px;height:22px;background:var(--g);border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:1}
+.pslot-chk svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5}
+/* Fotografiază / Importă — explicit kettős vezérlő a fotó-sloton */
+.pslot-acts{position:absolute;left:0;right:0;bottom:0;display:flex;z-index:4}
+.pslot-act{flex:1;position:relative;display:flex;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:700;padding:6px 0;background:rgba(255,255,255,.94);color:var(--t2);cursor:pointer;border-top:1px solid var(--b)}
+.pslot-act+.pslot-act{border-left:1px solid var(--b)}
+.pslot-act:active{background:var(--r50,#fee)}
+.pslot .pslot-act input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0;z-index:auto}
+.talon-box{background:var(--bg);border:2px dashed var(--b2);border-radius:var(--rd);padding:24px;text-align:center;cursor:pointer;position:relative;overflow:hidden}
+.talon-box.done{border:2px solid var(--g);background:var(--gl)}
+.talon-box img{width:100%;border-radius:8px;margin-bottom:8px}
+.talon-box input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2;font-size:0}
+.tb-icon{width:36px;height:36px;stroke:var(--t3);fill:none;stroke-width:1.5;margin:0 auto 6px;display:block}
+.tb-t{font-size:14px;font-weight:700;color:var(--t2)}.tb-s{font-size:10px;color:var(--t3);margin-top:3px}
+.reocr-btn{margin-top:8px;display:inline-flex;align-items:center;gap:4px;background:var(--bll);color:var(--bl);border:1px solid var(--bl);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit}
+.ocr-bar{margin-top:10px;height:4px;background:var(--b);border-radius:2px;overflow:hidden}
+.ocr-fill{height:100%;background:var(--bl);border-radius:2px;transition:width .3s}
+.ocr-text{font-size:11px;color:var(--bl);font-weight:600;margin-top:6px}
+.doc-list{display:flex;flex-direction:column;gap:6px}
+.doc-item{background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;position:relative;overflow:hidden}
+.doc-item.done{background:var(--gl);border-color:var(--g)}
+.doc-item .doc-upload{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2;font-size:0}
+.di-icon{width:28px;height:28px;border-radius:6px;background:var(--w);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.di-icon svg{width:16px;height:16px;stroke:var(--t3);fill:none;stroke-width:1.5}.doc-item.done .di-icon svg{stroke:var(--g)}
+.di-text{flex:1;min-width:0}.di-name{font-size:12px;font-weight:700}.di-req{font-size:9px;font-weight:600;margin-top:1px}.di-req.req{color:var(--r)}.di-req.opt{color:var(--t3)}
+.di-chk{width:22px;height:22px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;flex-shrink:0}.di-chk svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2.5}
+.di-thumb{width:40px;height:30px;object-fit:cover;border-radius:4px;border:1px solid var(--b);flex-shrink:0}
+.add-doc-btn{margin-top:6px;padding:10px;border:2px dashed var(--b2);border-radius:8px;text-align:center;cursor:pointer;font-size:11px;font-weight:700;color:var(--t2);background:var(--w)}
+.add-doc-btn:hover{background:var(--r50);border-color:var(--r);color:var(--r)}
+.del-cd-btn{width:22px;height:22px;border-radius:50%;border:none;background:var(--r100);color:var(--r);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;position:relative;z-index:3}
+.del-cd-btn:hover{background:var(--r);color:#fff}
+.el{background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:10px 12px;margin-bottom:6px}
+.el.el-ok{border-color:var(--g);background:var(--gl)}.el.el-dmg{border-color:var(--r);background:var(--r50)}.el.el-sug{border-color:var(--or);background:var(--orl)}
+.el.el-missing-photo{border-color:var(--y);background:var(--yl)}
+.el-top{display:flex;justify-content:space-between;align-items:center;gap:4px}.el-n{font-size:12px;font-weight:700;flex:1;min-width:0}
+.el-btns{display:flex;gap:3px;flex-shrink:0}
+.eb{padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;border:1.5px solid var(--b);background:var(--w);font-family:inherit}
+.eb-ok.on{background:var(--gl);border-color:var(--g);color:var(--g)}
+.eb-dm.on{background:var(--r100);border-color:var(--r);color:var(--r)}
+.eb-sg{background:var(--w);color:var(--or);border-color:var(--or)}
+.eb-sg.on{background:var(--orl);border-color:var(--or);color:var(--or)}
+.el-det{margin-top:6px;display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap}
+.el-ph-row{display:flex;gap:4px;flex-wrap:wrap}
+.el-ph{width:50px;height:38px;background:var(--w);border:1.5px dashed var(--b2);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;flex-shrink:0}
+.el-ph.done{border:1.5px solid var(--g)}.el-ph img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.el-ph input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.el-ph svg{width:14px;height:14px;stroke:var(--t3);fill:none;stroke-width:1.5}
+.el-ph-del{position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:var(--r);color:#fff;border-radius:50%;font-size:10px;line-height:16px;cursor:pointer;z-index:3;border:none;font-family:inherit;padding:0}
+.el-nt{flex:1;min-width:100px;font-size:11px;background:var(--w);border:1px solid var(--b);border-radius:6px;padding:6px 8px;font-family:inherit;outline:none;resize:none;min-height:30px;color:var(--t)}.el-nt:focus{border-color:var(--r)}
+.el-wt{margin-top:6px;display:flex;gap:3px;flex-wrap:wrap;align-items:center}
+.wt{padding:3px 7px;border-radius:4px;font-size:9px;font-weight:700;cursor:pointer;border:1.5px solid var(--b);background:var(--w);font-family:inherit}
+.wt-inl.on{background:var(--r100);border-color:var(--r);color:var(--r)}
+.wt-rep.on{background:var(--yl);border-color:var(--y);color:var(--y)}
+.wt-vop.on{background:var(--pl);border-color:var(--p);color:var(--p)}
+.wt-rvp.on{background:var(--tll);border-color:var(--tl);color:var(--tl)}
+.wt-ora{display:inline-flex;align-items:center;gap:4px;background:var(--yl);border:1.5px solid var(--y);border-radius:4px;padding:2px 6px;margin-left:4px}
+.wt-ora input{width:44px;border:none;background:transparent;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--y);outline:none;text-align:center}
+.wt-ora-lbl{font-size:9px;font-weight:700;color:var(--y)}
+.alt-add{background:var(--bg);border:1.5px dashed var(--b2);border-radius:8px;padding:10px;display:flex;gap:6px;align-items:center;margin-top:8px}
+.alt-add input{flex:1;border:1px solid var(--b);border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;outline:none;background:var(--w)}
+.alt-add button{padding:6px 12px;background:var(--r);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+.alt-src{font-size:8px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+.alt-src.ocr{color:var(--bl)}
+.cl{margin:8px 16px 0;background:var(--w);border:1px solid var(--b);border-radius:var(--rd);padding:14px}
+.cl-t{font-size:10px;font-weight:700;color:var(--r);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+.cl-i{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px}
+.cl-ic{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cl-ic.ok{background:var(--g)}.cl-ic.no{background:var(--r100)}
+.cl-ic svg{width:10px;height:10px;fill:none;stroke-width:3}.cl-ic.ok svg{stroke:#fff}.cl-ic.no svg{stroke:var(--r)}
+.cl-tx{flex:1}.cl-tx.ok{color:var(--g)}.cl-tx.no{color:var(--r);font-weight:600}
+.toast{position:fixed;bottom:20px;left:16px;right:16px;background:var(--w);padding:11px 14px;border-radius:var(--rd);font-size:12px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.12);border-left:4px solid var(--g);z-index:250}.toast.err{border-left-color:var(--r)}.toast.info{border-left-color:var(--bl)}
+.bpad{height:24px}.hint{font-size:10px;color:var(--t3);text-align:center;margin-top:6px}
+.loading{text-align:center;padding:60px;color:var(--t3);font-size:14px}
+.mismatch-warn{background:var(--yl);border:1px solid var(--y);border-radius:6px;padding:6px 10px;font-size:10px;color:var(--y);font-weight:700;margin-top:6px}
+.raw-box{background:var(--w);border:1px solid var(--b);border-radius:6px;padding:8px;font-size:10px;color:var(--t2);margin-top:8px;max-height:100px;overflow-y:auto;font-family:'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-word}
+.as-empty{text-align:center;padding:20px;color:var(--t3);font-size:11px}
+.uploading{opacity:0.6;pointer-events:none}
+.thumb-loading{display:inline-block;width:40px;height:30px;background:var(--b);border-radius:4px;position:relative;overflow:hidden}
+.thumb-loading::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:shimmer 1.5s infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* ── RPW SHELL nav (etalon: rpw-evaluare-red.html) — beinjektálva ── */
+.shell{position:sticky;top:0;z-index:50;background:var(--w);border-bottom:1px solid var(--b)}
+.shell-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px}
+.sh-left{display:flex;align-items:center;gap:10px;min-width:0}
+.sh-back{width:32px;height:32px;border-radius:6px;border:1px solid var(--b);background:var(--w);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.sh-back svg{width:16px;height:16px;stroke:var(--t2);fill:none;stroke-width:2}
+.sh-plate{font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;font-weight:600;background:var(--pl,#ede9fe);border:1px solid var(--b2,#d0d0d0);border-radius:4px;padding:3px 8px;white-space:nowrap}
+.sh-phase{font-size:13px;font-weight:700;letter-spacing:-0.012em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-phase .ph-idx{font-family:'Geist Mono',ui-monospace,monospace;color:var(--r);margin-right:6px}
+.sh-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.stepA{display:flex;gap:4px;padding:0 16px 10px;overflow-x:auto;scrollbar-width:none}.stepA::-webkit-scrollbar{display:none}
+.stA{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--b);border-radius:6px;font-size:11px;font-weight:600;color:var(--t3);cursor:pointer;white-space:nowrap;background:var(--w);flex-shrink:0}
+.stA .n{font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:600}
+.stA.done{color:var(--t2);border-color:var(--b2,#d0d0d0)}.stA.done .n{color:var(--g)}
+.stA.cur{background:var(--r);border-color:var(--r);color:#fff;font-weight:700}.stA.cur .n{color:#fff}
+.stepB{display:flex;align-items:center;padding:2px 16px 12px}
+.stB{width:30px;height:30px;border-radius:50%;border:1px solid var(--b2,#d0d0d0);background:var(--w);font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:600;color:var(--t3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.stB.done{background:var(--t);border-color:var(--t);color:#fff}
+.stB.cur{background:var(--r);border-color:var(--r);color:#fff;box-shadow:0 0 0 3px rgba(225,29,46,.22)}
+.stB-line{flex:1;height:1px;background:var(--b2,#d0d0d0);min-width:6px}.stB-line.done{background:var(--t)}
+.stB-name{margin-left:10px;font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap}
+.stepC{padding:0 16px 12px}.stepC-bar{display:flex;gap:3px}
+.stC{flex:1;height:6px;border-radius:3px;background:var(--b);cursor:pointer}.stC.done{background:var(--t2)}.stC.cur{background:var(--r)}
+.stepC-meta{display:flex;justify-content:space-between;margin-top:6px;font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+</style>
+</head>
+<body>
+<div id="rpw-sync" style="position:fixed;bottom:10px;right:12px;z-index:300;font:600 11px system-ui,Arial;background:#fff;border:1px solid #E8EBEF;border-radius:8px;padding:5px 10px;box-shadow:0 2px 8px rgba(0,0,0,.08);opacity:0;transition:opacity .2s"></div>
+<div id="app"><div class="loading">Se incarca...</div></div>
+<script>
+/* =============================================================
+   RedAssistance — Receptie (v2.1)
+   Regi vaz + uj retegek + Claude OCR + Supabase Storage
+
+   UJITASOK:
+   - Claude Sonnet 4.5 OCR via /.netlify/functions/ocr
+   - Fotok: Supabase Storage (URL-ek a JOB-ban, nem base64)
+   - Uj szekcio: Constatare OCR (csak ASIG)
+   - Uj mezok: capacitate, nrDosar, proprietarDosar, asigurator, listaDauneRaw
+   - Uj szekcio: Alte piese (non-caroserie) - JOB.alteParti[]
+   - Uj szekcio: Aftersales panel (recomandate)
+   - Uj work tipus: revopsire
+   - oraNormata csak reparatie mellett
+   - Foto kotelezoseg avariat/recomandat elemekre
+   - Tipusvaltas vedelem
+
+   KOMPATIBILITAS:
+   - status: irjuk a regi ('damaged'/'suggested'/'ok') ES uj ('avariata'/'recomandata'/'ok') mezoket
+   - work: irjuk a regi ('replace'/'fix'/'uni') ES uj ('inlocuire'/'reparatie'/'vopsire'/'revopsire') mezoket
+   - JOB.photoKeys megmarad a regi kompatibilitashoz
+   ============================================================= */
+
+// ────── SUPABASE ──────────────────────────────────────────────
+if(!window.RPW_CFG){(document.getElementById('app')||document.body).innerHTML='<div style="padding:40px;text-align:center;font-family:system-ui,Arial"><div style="font-size:40px">&#9888;&#65039;</div><div style="font-size:18px;font-weight:800;color:#C81E33;margin:12px 0 6px">Configurație lipsă</div><div style="color:#3F4956;font-size:14px;line-height:1.6">rpw-config.js nu s-a încărcat (sau rulează dintr-o copie locală file://).<br>Deschide sistemul live.</div></div>';throw new Error('RPW_CFG missing');}
+if(window.RPWAuth){try{RPWAuth.guard();}catch(e){}}
+var SB_URL=RPW_CFG.SB_URL;
+var SB_KEY=RPW_CFG.SB_KEY;
+var sb=supabase.createClient(SB_URL,SB_KEY);
+/* PHASE 1: látható szinkron-állapot + robusztus mentő (rpw-save.js) */
+function rpwSyncLabel(st){var m={saving_local:['Salvare…','#6B7280'],syncing:['Sincronizare…','#2A6FDB'],synced:['✓ Salvat pe server','#1E9D55'],offline:['⚠ Offline – salvat local','#A6701F'],retry:['↻ Reîncercare…','#A6701F'],failed:['✗ Eșec salvare – reîncearcă','#C81E33'],permission:['✗ Fără permisiune','#C81E33'],conflict:['⚠ Conflict de date','#C81E33'],auth:['✗ Autentificare','#C81E33'],idle:['','#6B7280']};return m[st]||[st,'#6B7280'];}
+function onSyncState(st){var el=document.getElementById('rpw-sync');if(el){var l=rpwSyncLabel(st);el.textContent=l[0];el.style.color=l[1];el.style.opacity=l[0]?'1':'0';if(st==='synced'){setTimeout(function(){if(el&&el.textContent===l[0])el.style.opacity='0'},2000)}}var cb=document.getElementById('rpw-conflict');if(st==='conflict'){if(!cb){cb=document.createElement('div');cb.id='rpw-conflict';cb.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,Arial';cb.innerHTML='<div style="max-width:360px;background:#fff;border-radius:12px;padding:22px;text-align:center"><div style="font-size:34px">\u26A0\uFE0F</div><div style="font-size:17px;font-weight:800;color:#C81E33;margin:8px 0">Conflict de date</div><div style="font-size:13px;color:#3F4956;line-height:1.6">Alt utilizator a modificat aceast\u0103 fi\u0219\u0103. Modificarea ta local\u0103 este p\u0103strat\u0103. Re\u00EEncarc\u0103 pentru versiunea de pe server.</div><button onclick="location.reload()" style="margin-top:16px;background:#E11D2E;color:#fff;border:none;border-radius:9px;padding:11px 20px;font-weight:800;cursor:pointer">Re\u00EEncarc\u0103</button></div>';document.body.appendChild(cb);}}else if(cb){cb.remove();}}
+var SAVER=(window.RPWSave&&RPWSave.createSaver)?RPWSave.createSaver({sb:sb,onState:onSyncState}):null;
+if(SAVER&&window.RPWSave&&RPWSave.bindBeforeUnload)RPWSave.bindBeforeUnload(SAVER,'Există modificări nesincronizate.');
+if(typeof saveJ==='function'){var _saveJ_orig=saveJ;saveJ=function(){if(typeof JOB==='undefined'||!JOB)return Promise.resolve();return SAVER?SAVER.save(JOB):_saveJ_orig();};}
+if(typeof saveJob==='function'){var _saveJob_orig=saveJob;saveJob=function(job){if(!job)return Promise.resolve();return SAVER?SAVER.save(job):_saveJob_orig(job);};}
+var STORAGE_BUCKET=RPW_CFG.BUCKET;
+
+// ────── STATE ─────────────────────────────────────────────────
+var JOB=null;
+var S={
+  sec:{talon:1,constatare:0,docs:0,photos:0,elems:0,alteParti:0,afterSales:0},
+  ts:null,te:0,
+  ocrProg:{talon:0,constatare:0,buletin:0},
+  ocrRun:{talon:false,constatare:false,buletin:false},
+  uploading:{},        // kulcs: fotoKulcs, ertek: folyamatban
+  photoCache:{},       // fotoKulcs -> url (ha mar letoltve)
+  newAltName:''
+};
+
+// ────── KONSTANSOK ────────────────────────────────────────────
+
+// 23 karosszeria elem kulcsa (regi kompatibilis)
+var EK=['fb','rb','hood','trunk','roof','fl_f','fr_f','rl_f','rr_f','fl_d','fr_d','rl_d','rr_d','l_s','r_s','l_m','r_m','a_l','a_r','b_l','b_r','c_l','c_r'];
+// Paintable elemek (van festheto felulet): alapertelmezes true. Csak a NEM festhetokre irunk false-t.
+var PAINTABLE={l_m:false,r_m:false};  // oglinzi: fara fenyezes
+
+// Kulcsszavak a 23 karosszeria elem automatikus jelolesehez (RO)
+var PARTS_KEYWORDS={
+  fb:['bara fata','bara față','bară fata','bară față','tampon fata','tampon față','bumper fata'],
+  rb:['bara spate','bară spate','tampon spate','bumper spate'],
+  hood:['capota','capotă','capota fata','capota motor','capotă motor'],
+  trunk:['portbagaj','capota portbagaj','capota spate','capotă spate','capotă portbagaj'],
+  roof:['plafon','acoperis','acoperiș'],
+  fl_f:['aripa stanga fata','aripă stânga față','aripa stg fata','aripă stg față'],
+  fr_f:['aripa dreapta fata','aripă dreapta față','aripa dr fata','aripă dr față'],
+  rl_f:['aripa stanga spate','aripă stânga spate','aripa stg spate'],
+  rr_f:['aripa dreapta spate','aripă dreapta spate','aripa dr spate'],
+  fl_d:['usa stanga fata','ușă stânga față','usa stg fata','portiera stanga fata','portieră stânga față'],
+  fr_d:['usa dreapta fata','ușă dreapta față','usa dr fata','portiera dreapta fata','portieră dreapta față'],
+  rl_d:['usa stanga spate','ușă stânga spate','usa stg spate','portiera stanga spate'],
+  rr_d:['usa dreapta spate','ușă dreapta spate','usa dr spate','portiera dreapta spate'],
+  l_s:['prag stanga','prag stânga','prag stg'],
+  r_s:['prag dreapta','prag dr'],
+  l_m:['oglinda stanga','oglindă stânga','oglinda stg'],
+  r_m:['oglinda dreapta','oglindă dreapta','oglinda dr'],
+  a_l:['stalp a stanga','stâlp a stânga','stalp a stg','montant a stg'],
+  a_r:['stalp a dreapta','stâlp a dreapta','stalp a dr','montant a dr'],
+  b_l:['stalp b stanga','stâlp b stânga','stalp b stg','montant b stg'],
+  b_r:['stalp b dreapta','stâlp b dreapta','stalp b dr','montant b dr'],
+  c_l:['stalp c stanga','stâlp c stânga','stalp c stg','montant c stg'],
+  c_r:['stalp c dreapta','stâlp c dreapta','stalp c dr','montant c dr']
+};
+
+// Work type konverzio (uj -> regi) - hogy a 2-es fazis is olvasni tudja
+var WORK_V2_TO_V1={
+  inlocuire:'replace',
+  reparatie:'fix',
+  vopsire:'uni',
+  revopsire:'uni'
+};
+
+// Status konverzio (uj -> regi)
+var STATUS_V2_TO_V1={
+  ok:'ok',
+  avariata:'damaged',
+  recomandata:'suggested'
+};
+
+// Photo slot kulcsok
+var VK=['front','back','left','right','serieCaros','km'];
+
+// Documente per tip dauna
+var DA=[{id:'constAmiabila',req:0},{id:'permisFata',req:0},{id:'permisVerso',req:0}];
+var DB=[];
+
+// ────── i18n ──────────────────────────────────────────────────
+var i={
+  reception:{ro:'Receptie',en:'Reception',hu:'Recepcio'},
+  selType:{ro:'Selecteaza tipul',en:'Select type',hu:'Valassz tipust'},
+  asig:{ro:'Dauna asigurare',en:'Insurance',hu:'Biztositos'},
+  asigS:{ro:'RCA / CASCO',en:'RCA / CASCO',hu:'RCA / CASCO'},
+  autoD:{ro:'Dauna auto',en:'Self-paid',hu:'Magankar'},
+  autoS:{ro:'Client particular',en:'Private',hu:'Magan'},
+  clientInfo:{ro:'Date client',en:'Client info',hu:'Ugyfel'},
+  wsNum:{ro:'Nr. fisa',en:'Worksheet',hu:'Munkalap'},
+  clientN:{ro:'Nume',en:'Name',hu:'Nev'},
+  clientP:{ro:'Telefon',en:'Phone',hu:'Tel'},
+  note:{ro:'Obs.',en:'Notes',hu:'Megj.'},
+  scanBuletin:{ro:'Buletin (optional)',en:'ID card (optional)',hu:'Szemelyi (opt.)'},
+  scanBuletinS:{ro:'Claude AI: nume, adresa, CNP',en:'Claude AI: name, address, CNP',hu:'Claude AI: nev, cim, CNP'},
+  adresa:{ro:'Adresa',en:'Address',hu:'Cim'},
+  cnp:{ro:'CNP',en:'CNP',hu:'CNP'},
+  step1:{ro:'Talon — scanare',en:'Reg. card — scan',hu:'Talon — beolvasas'},
+  step2:{ro:'Constatare — scanare',en:'Constatare — scan',hu:'Constatare — beolvasas'},
+  scanT:{ro:'Fotografiaza talonul',en:'Photo reg. card',hu:'Fotozd a talont'},
+  scanTS:{ro:'Claude AI: nr, VIN, marca, an, capacitate',en:'Claude AI: plate, VIN, brand, year, cc',hu:'Claude AI: rendszam, VIN, marka, ev, kobcenti'},
+  scanC:{ro:'Fotografiaza constatarea',en:'Photo constatare',hu:'Fotozd a constataret'},
+  scanCS:{ro:'Claude AI: dosar, proprietar, asigurator, daune',en:'Claude AI: dossier, owner, insurer, damages',hu:'Claude AI: dosszie, tulajdonos, biztosito, karok'},
+  scanning:{ro:'Claude citeste...',en:'Claude reading...',hu:'Claude olvas...'},
+  reScan:{ro:'Refotografiaza',en:'Retake',hu:'Ujra'},
+  reOcr:{ro:'🔄 OCR din nou',en:'🔄 Re-OCR',hu:'🔄 Ujra OCR'},
+  uploading:{ro:'Se incarca...',en:'Uploading...',hu:'Feltolt...'},
+  plate:{ro:'Nr. inmatr.',en:'Plate',hu:'Rendszam'},
+  vin:{ro:'VIN',en:'VIN',hu:'VIN'},
+  brand:{ro:'Marca',en:'Brand',hu:'Marka'},
+  year:{ro:'An',en:'Year',hu:'Ev'},
+  capacitate:{ro:'Capacitate (cm³)',en:'Capacity (cc)',hu:'Kobcenti'},
+  proprietar:{ro:'Proprietar',en:'Owner',hu:'Tulajdonos'},
+  proprietarTalon:{ro:'Proprietar (talon)',en:'Owner (reg.)',hu:'Tulajd. (talon)'},
+  proprietarDosar:{ro:'Proprietar (dosar)',en:'Owner (dossier)',hu:'Tulajd. (dosar)'},
+  ownerMismatch:{ro:'⚠ Numele nu coincid',en:'⚠ Names differ',hu:'⚠ Nevek nem egyeznek'},
+  nrDosar:{ro:'Nr. dosar',en:'Dossier nr.',hu:'Dosszie szam'},
+  asigurator:{ro:'Asigurator',en:'Insurer',hu:'Biztosito'},
+  listaDauneRaw:{ro:'Text OCR (din constatare)',en:'OCR text',hu:'OCR szoveg'},
+  edit:{ro:'Verifica si corecteaza',en:'Check and correct',hu:'Ellenorizd es javitsd'},
+  step3:{ro:'Documente',en:'Documents',hu:'Dok.'},
+  mandatory:{ro:'OBLIGATORIU',en:'MANDATORY',hu:'KOTELEZO'},
+  optional:{ro:'FACULTATIV',en:'OPTIONAL',hu:'FAKULTATIV'},
+  talon:{ro:'Talon',en:'Reg. card',hu:'Talon'},
+  buletin:{ro:'Buletin',en:'ID card',hu:'Buletin'},
+  constatare:{ro:'Constatare / PV Politie',en:'Report',hu:'Jkv'},
+  constAmiabila:{ro:'Constatare amiabila',en:'Amicable report',hu:'Karbecsl. jkv'},
+  declaratieDauna:{ro:'Declaratie dauna',en:'Damage decl.',hu:'Karbejelentes'},
+  imputernicire:{ro:'Imputernicire',en:'Auth.',hu:'Felhatalm.'},
+  politaRca:{ro:'Polita RCA',en:'RCA Policy',hu:'RCA kotveny'},
+  politaCasco:{ro:'Polita CASCO',en:'CASCO Policy',hu:'CASCO kotveny'},
+  autorizatieReparatie:{ro:'Autorizatie reparatie',en:'Repair auth.',hu:'Javitasi eng.'},
+  addDoc:{ro:'Adauga document',en:'Add document',hu:'Dokumentum hozzaad'},
+  docName:{ro:'Nume document (ex: Polita RCA)',en:'Document name',hu:'Dokumentum neve'},
+  delete:{ro:'Sterge',en:'Delete',hu:'Torol'},
+  opsLabel:{ro:'Operatiuni — bifeaza dupa necesitate',en:'Operations — check as needed',hu:'Muveletek — jelold be amire szukseg van'},
+  permisFata:{ro:'Permis - fata',en:'License - front',hu:'Jog. - elol'},
+  permisVerso:{ro:'Permis - verso',en:'License - verso',hu:'Jog. - hatul'},
+  step4:{ro:'Foto ansamblu (6)',en:'Overview (6)',hu:'Attekintos (6)'},
+  front:{ro:'Fata',en:'Front',hu:'Elol'},
+  back:{ro:'Spate',en:'Rear',hu:'Hatul'},
+  left:{ro:'Stanga',en:'Left',hu:'Bal'},
+  right:{ro:'Dreapta',en:'Right',hu:'Jobb'},
+  serieCaros:{ro:'Serie caroserie',en:'Body serial',hu:'Karossz. szam'},
+  km:{ro:'Kilometraj',en:'Odometer',hu:'Km ora'},
+  angle:{ro:'90°, 3m, lumina buna',en:'90°, 3m, good light',hu:'90°, 3m, jo feny'},
+  step5:{ro:'Evaluare caroserie (23)',en:'Body (23)',hu:'Karosszeria (23)'},
+  step6:{ro:'Alte piese afectate',en:'Other parts',hu:'Egyeb alkatreszek'},
+  step7:{ro:'Aftersales — recomandate',en:'Aftersales',hu:'Aftersales'},
+  markAll:{ro:'OK / Avariat / Recomandat',en:'OK / Damaged / Suggested',hu:'OK / Serult / Ajanlott'},
+  ok:{ro:'OK',en:'OK',hu:'OK'},
+  avariata:{ro:'Avariat',en:'Damaged',hu:'Serult'},
+  recomandata:{ro:'+ Recom.',en:'+ Suggest',hu:'+ Ajanlott'},
+  inlocuire:{ro:'Inlocuire',en:'Replace',hu:'Csere'},
+  reparatie:{ro:'Reparatie',en:'Repair',hu:'Javitas'},
+  vopsire:{ro:'Vopsire',en:'Paint',hu:'Festes'},
+  revopsire:{ro:'Revopsire',en:'Re-paint',hu:'Ujrafestes'},
+  oraLbl:{ro:'h',en:'h',hu:'h'},
+  noteP:{ro:'Obs...',en:'Notes...',hu:'Megj...'},
+  fotoRequired:{ro:'⚠ Foto obligatorie',en:'⚠ Photo required',hu:'⚠ Foto kotelezo'},
+  addPart:{ro:'+ Adauga',en:'+ Add',hu:'+ Alkatresz'},
+  altePartiHint:{ro:'Piese non-caroserie (far, parbriz, amortizor, airbag etc)',en:'Non-body parts',hu:'Nem karosszeria elemek'},
+  srcOcr:{ro:'OCR',en:'OCR',hu:'OCR'},
+  srcManual:{ro:'manual',en:'manual',hu:'manualis'},
+  asEmpty:{ro:'Nu exista recomandari aftersales',en:'No aftersales recommendations',hu:'Nincs aftersales ajanlat'},
+  asHint:{ro:'Piesele marcate "Recomandat" pentru oferta suplimentara',en:'Parts marked "Suggested" for extra offer',hu:'"Recomandat"-ra jeloltek - extra ajanlat'},
+  closeCond:{ro:'Conditii inchidere receptie',en:'Close conditions',hu:'Feltetelek'},
+  tipOk:{ro:'Tip dauna selectat',en:'Damage type selected',hu:'Kartipus valasztva'},
+  talonOk:{ro:'Talon scanat',en:'Card scanned',hu:'Talon beolvasva'},
+  constatareOk:{ro:'Constatare scanata',en:'Constatare scanned',hu:'Constatare beolvasva'},
+  nrDosarOk:{ro:'Nr. dosar completat',en:'Dossier nr. filled',hu:'Dosszie szam'},
+  docsOk:{ro:'Documente obligatorii',en:'Mandatory docs',hu:'Kotelezo dok'},
+  photosOk:{ro:'6 fotografii',en:'6 photos',hu:'6 foto'},
+  elemOk:{ro:'Elemente evaluate',en:'Parts assessed',hu:'Elemek'},
+  dmgPhOk:{ro:'Foto pentru avariate',en:'Photos for damaged',hu:'Serult fotok'},
+  recPhOk:{ro:'Foto pentru recomandate',en:'Photos for suggested',hu:'Ajanlott fotok'},
+  closeBtn:{ro:'Inchide receptia',en:'Close reception',hu:'Lezaras'},
+  incomplete:{ro:'Incomplet',en:'Incomplete',hu:'Hianyos'},
+  closed:{ro:'Inchis',en:'Closed',hu:'Lezarva'},
+  saved:{ro:'salvat',en:'saved',hu:'mentve'},
+  noJob:{ro:'Nu exista lucrare',en:'No job',hu:'Nincs munka'},
+  openD:{ro:'Dashboard',en:'Dashboard',hu:'Dashboard'},
+  typeChangeWarn:{ro:'Exista deja date. Schimbarea tipului poate cauza pierderi. Continui?',en:'Data exists. Changing type may cause loss.',hu:'Van adat. A tipusvaltas adatvesztest okozhat.'},
+  fb:{ro:'Bara fata',en:'Front bumper',hu:'Elso lokh.'},rb:{ro:'Bara spate',en:'Rear bumper',hu:'Hatso lokh.'},hood:{ro:'Capota',en:'Hood',hu:'Motorhazt.'},trunk:{ro:'Portbagaj',en:'Trunk',hu:'Csomagtarto'},roof:{ro:'Plafon',en:'Roof',hu:'Teto'},
+  fl_f:{ro:'Aripa stg fata',en:'LF fender',hu:'BE sarvedo'},fr_f:{ro:'Aripa dr fata',en:'RF fender',hu:'JE sarvedo'},rl_f:{ro:'Aripa stg spate',en:'LR fender',hu:'BH sarvedo'},rr_f:{ro:'Aripa dr spate',en:'RR fender',hu:'JH sarvedo'},
+  fl_d:{ro:'Usa stg fata',en:'LF door',hu:'BE ajto'},fr_d:{ro:'Usa dr fata',en:'RF door',hu:'JE ajto'},rl_d:{ro:'Usa stg spate',en:'LR door',hu:'BH ajto'},rr_d:{ro:'Usa dr spate',en:'RR door',hu:'JH ajto'},
+  l_s:{ro:'Prag stg',en:'L sill',hu:'B kuszob'},r_s:{ro:'Prag dr',en:'R sill',hu:'J kuszob'},
+  l_m:{ro:'Ogl. stg',en:'L mirror',hu:'B tukor'},r_m:{ro:'Ogl. dr',en:'R mirror',hu:'J tukor'},
+  a_l:{ro:'Stalp A stg',en:'L A-pil.',hu:'B A oszl.'},a_r:{ro:'Stalp A dr',en:'R A-pil.',hu:'J A oszl.'},
+  b_l:{ro:'Stalp B stg',en:'L B-pil.',hu:'B B oszl.'},b_r:{ro:'Stalp B dr',en:'R B-pil.',hu:'J B oszl.'},
+  c_l:{ro:'Stalp C stg',en:'L C-pil.',hu:'B C oszl.'},c_r:{ro:'Stalp C dr',en:'R C-pil.',hu:'J C oszl.'}
+};
+
+function gL(){return localStorage.getItem('rpw_lang')||'ro'}
+function sL(l){localStorage.setItem('rpw_lang',l);render()}
+function T(k){var e=i[k];return e?e[gL()]||e.ro||k:k}
+function gJI(){return new URLSearchParams(location.search).get('job')}
+
+// ────── SVG ikonok ────────────────────────────────────────────
+var IC={
+  cam:'<svg class="pslot-icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+  doc:'<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  chk:'<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+  back:'<svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  car:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="15" height="13" rx="2"/><circle cx="7" cy="18" r="2"/><circle cx="15" cy="18" r="2"/></svg>'
+};
+
+// ────── LEGACY MIGRATION ─────────────────────────────────────
+/* Regi dossziek akik meg damaged/suggested-et hasznalnak */
+function migrateLegacy(job){
+  if(!job || !job.elements)return;
+  for(var k in job.elements){
+    var e=job.elements[k];
+    if(!e)continue;
+    // Status: regi -> uj parallel (mindket irodik)
+    if(e.status==='damaged' && !e.statusV2) e.statusV2='avariata';
+    else if(e.status==='suggested' && !e.statusV2) e.statusV2='recomandata';
+    else if(e.status==='ok' && !e.statusV2) e.statusV2='ok';
+    // Work: regi -> uj parallel
+    if(e.work==='replace' && !e.workV2) e.workV2='inlocuire';
+    else if(e.work==='fix' && !e.workV2) e.workV2='reparatie';
+    else if(e.work==='uni' && !e.workV2) e.workV2='vopsire';
+    // Photos - tomb hogy tobb is legyen
+    if(!e.photos)e.photos=[];
+  }
+  if(!job.alteParti)job.alteParti=[];
+}
+
+// ────── LOAD / SAVE ──────────────────────────────────────────
+async function loadJob(){
+  var jid=gJI();
+  if(!jid){render();return}
+  var cached=localStorage.getItem('rpw_job_'+jid);
+  if(cached){
+    try{
+      JOB=JSON.parse(cached);
+      fixPhases();migrateLegacy(JOB);
+      render();
+    }catch(e){}
+  }
+  try{
+    var res=await RPWDb.getRow(sb,jid);
+    if(res.error)throw res.error;
+    var lts=null;try{lts=localStorage.getItem('rpw_job_ts_'+jid)}catch(e){}
+    var sNew=Date.parse(res.data.updated_at||0)||0, lNew=Date.parse(lts||0)||0;
+    if(!JOB||!lts||sNew>lNew){
+      JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;
+      fixPhases();migrateLegacy(JOB);
+      try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+JOB.id,res.data.updated_at||new Date().toISOString())}catch(e){}
+    }
+    /* nincs auto-mentes betolteskor */
+  }catch(e){if(!JOB)JOB=null}
+  render();
+}
+
+function fixPhases(){
+  if(!JOB)return;
+  if(!JOB.phases)JOB.phases={};
+  for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:'pending'}}
+  if(!JOB.photoKeys)JOB.photoKeys={};
+  if(!JOB.photoUrls)JOB.photoUrls={};
+  if(!JOB.elements)JOB.elements={};
+  if(!JOB.alteParti)JOB.alteParti=[];
+}
+
+var _saveTimer=null;
+async function saveJ(){
+  if(!JOB)return;
+  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+JOB.id,new Date().toISOString())}catch(e){}
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(async function(){
+    try{
+      var p=RPWDb.patch(sb,JOB);
+      var t=new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'))},4000)});
+      Promise.race([p,t]).catch(function(e){console.warn('SB offline:',e.message)});
+    }catch(e){console.error('Save:',e)}
+  },600);
+}
+
+// ────── UTILS ────────────────────────────────────────────────
+function toast(m,type){
+  S.ts=m;
+  S.te=type==='err'?1:(type==='info'?2:0);
+  render();
+  setTimeout(function(){S.ts=null;render()},3500);
+}
+
+function uid(){return 'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)}
+
+/* Kepmeret csokkentes feltoltes elott */
+function resizeFile(file){
+  return new Promise(function(res){
+    var r=new FileReader();
+    r.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement('canvas'),mx=1600,sc=img.width>mx?mx/img.width:1;
+        c.width=img.width*sc;c.height=img.height*sc;
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        res(c.toDataURL('image/jpeg',.85));
+      };
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+// ────── SUPABASE STORAGE HELPERS ─────────────────────────────
+/* Fotofeltoltes Supabase Storage-ba. Visszaadja a public URL-t. */
+async function uploadPhoto(photoKey,dataUrl){
+  if(!JOB||!JOB.id)throw new Error('no job');
+  S.uploading[photoKey]=true;render();
+  try{
+    // dataUrl -> blob
+    var res=await fetch(dataUrl);
+    var blob=await res.blob();
+    var path=JOB.id+'/'+photoKey+'.jpg';
+    // Upsert (lecsereli ha mar letezik)
+    var up=await sb.storage.from(STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg',upsert:true});
+    if(up.error)throw up.error;
+    // Public URL
+    var urlData=sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+    var url=urlData.data.publicUrl;
+    // Update JOB
+    if(!JOB.photoKeys)JOB.photoKeys={};
+    if(!JOB.photoUrls)JOB.photoUrls={};
+    JOB.photoKeys[photoKey]=true;
+    JOB.photoUrls[photoKey]=url;
+    S.photoCache[photoKey]=url;
+    await saveJ();
+    return url;
+  }finally{
+    delete S.uploading[photoKey];
+    render();
+  }
+}
+
+/* Foto torles a Storage-bol */
+async function deletePhoto(photoKey){
+  if(!JOB||!JOB.id)return;
+  var path=JOB.id+'/'+photoKey+'.jpg';
+  try{await sb.storage.from(STORAGE_BUCKET).remove([path])}catch(e){console.warn('Delete:',e)}
+  if(JOB.photoKeys)delete JOB.photoKeys[photoKey];
+  if(JOB.photoUrls)delete JOB.photoUrls[photoKey];
+  delete S.photoCache[photoKey];
+  await saveJ();
+}
+
+/* URL kinyerese egy fotokulcshoz */
+function photoUrl(photoKey){
+  if(S.photoCache[photoKey])return S.photoCache[photoKey];
+  if(JOB&&JOB.photoUrls&&JOB.photoUrls[photoKey]){
+    S.photoCache[photoKey]=JOB.photoUrls[photoKey];
+    return JOB.photoUrls[photoKey];
+  }
+  return null;
+}
+
+/* DataURL -> nyers base64 (OCR-hez) */
+function dataUrlToBase64(dataUrl){
+  return dataUrl.split(',')[1];
+}
+
+// ────── CLAUDE OCR VIA NETLIFY FUNCTION ──────────────────────
+async function callOCR(base64Raw,type){
+  var resp=await fetch('/.netlify/functions/ocr',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({image:base64Raw,type:type})
+  });
+  var data=await resp.json();
+  if(!resp.ok)throw new Error(data.error||'OCR failed (HTTP '+resp.status+')');
+  try{
+    return JSON.parse(data.result);
+  }catch(e){
+    console.warn('OCR returned non-JSON:',data.result);
+    throw new Error('OCR result not JSON');
+  }
+}
+
+/* Talon OCR - megőrzi a régi viselkedést + kiegészíti capacitate-vel */
+async function ocrTalon(dataUrl){
+  S.ocrRun.talon=true;render();
+  try{
+    var p=await callOCR(dataUrlToBase64(dataUrl),'talon');
+    // Csak akkor ir felul, ha a mezo uresen vagy user nem modositotta
+    if(p.plate&&p.plate!=='null'&&!JOB._plateEdited)JOB.plate=String(p.plate).toUpperCase();
+    if(p.vin&&p.vin!=='null'&&!JOB._vinEdited)JOB.vin=String(p.vin).toUpperCase();
+    if(p.brand&&p.brand!=='null'&&!JOB._brandEdited){
+      JOB.brand=p.brand;
+      JOB.auto=p.brand+(p.model&&p.model!=='null'?' '+p.model:'');
+    }
+    if(p.year&&p.year!=='null'&&!JOB._yearEdited)JOB.year=String(p.year);
+    if(p.capacitate&&p.capacitate!=='null'&&!JOB._capEdited)JOB.capacitate=String(p.capacitate);
+    if(p.owner&&p.owner!=='null'&&!JOB._propEdited)JOB.proprietar=p.owner;
+    if(!JOB.ocrTs)JOB.ocrTs={};
+    JOB.ocrTs.talon=new Date().toISOString();
+    await saveJ();
+    S.ocrRun.talon=false;
+    toast('Talon: '+(p.plate||'?')+' / '+(p.vin?'VIN OK':'?')+' / '+(p.brand||'?'),'info');
+    render();
+  }catch(e){
+    S.ocrRun.talon=false;
+    toast('Talon OCR: '+e.message,'err');
+    render();
+  }
+}
+
+/* Buletin OCR */
+async function ocrBuletin(dataUrl){
+  S.ocrRun.buletin=true;render();
+  try{
+    var p=await callOCR(dataUrlToBase64(dataUrl),'buletin');
+    if(p.name&&p.name!=='null'&&!JOB._clientEdited)JOB.client=p.name;
+    if(p.address&&p.address!=='null'&&!JOB._adresaEdited)JOB.adresa=p.address;
+    if(p.cnp&&p.cnp!=='null'&&!JOB._cnpEdited)JOB.cnp=p.cnp;
+    await saveJ();
+    S.ocrRun.buletin=false;
+    toast('Buletin: '+(p.name||'?'),'info');
+    render();
+  }catch(e){
+    S.ocrRun.buletin=false;
+    toast('Buletin OCR: '+e.message,'err');
+    render();
+  }
+}
+
+/* Constatare OCR - kulcs funkcio.
+   Kinyeri: nrDosar, proprietar (dosar), asigurator, daune[]
+   A daune lista elemeit szetosztja:
+     - Ha illik a 23-hoz -> JOB.elements
+     - Ha nem -> JOB.alteParti[] */
+async function ocrConstatare(dataUrl){
+  S.ocrRun.constatare=true;render();
+  try{
+    var p=await callOCR(dataUrlToBase64(dataUrl),'constatare');
+
+    if(p.nrDosar&&p.nrDosar!=='null'&&!JOB._nrDosarEdited)JOB.nrDosar=p.nrDosar;
+    if(p.proprietar&&p.proprietar!=='null'&&!JOB._propDosarEdited)JOB.proprietarDosar=p.proprietar;
+    if(p.asigurator&&p.asigurator!=='null'&&!JOB._asigEdited)JOB.asigurator=p.asigurator;
+
+    // Nyers szoveg tarolasa (debug + audit)
+    JOB.listaDauneRaw=JSON.stringify(p.daune||[],null,2);
+
+    // Daune szetbontasa
+    var matchedCaros=0,matchedAlt=0;
+    if(Array.isArray(p.daune)){
+      for(var di=0;di<p.daune.length;di++){
+        var d=p.daune[di];
+        if(!d||!d.element)continue;
+        var elementName=String(d.element).toLowerCase().trim();
+        var action=d.actiune&&d.actiune!=='null'?String(d.actiune).toLowerCase():null;
+        var ore=(typeof d.ore==='number'&&d.ore>0&&d.ore<50)?d.ore:null;
+
+        // Prob 1: 23-as karosszeria lista
+        var foundKey=null;
+        for(var ek in PARTS_KEYWORDS){
+          var kws=PARTS_KEYWORDS[ek];
+          for(var ki=0;ki<kws.length;ki++){
+            if(elementName.indexOf(kws[ki].toLowerCase())>=0){foundKey=ek;break}
+          }
+          if(foundKey)break;
+        }
+
+        if(foundKey){
+          if(!JOB.elements[foundKey])JOB.elements[foundKey]={photos:[]};
+          JOB.elements[foundKey].status='damaged';       // regi kompat
+          JOB.elements[foundKey].statusV2='avariata';     // uj
+          if(action){
+            JOB.elements[foundKey].workV2=action;
+            JOB.elements[foundKey].work=WORK_V2_TO_V1[action]||action;
+            if(action==='reparatie'&&ore!==null){
+              JOB.elements[foundKey].oraNormata=ore;
+            }else{
+              JOB.elements[foundKey].oraNormata=null;
+            }
+          }
+          JOB.elements[foundKey]._srcOcr=true;
+          if(!JOB.elements[foundKey].photos)JOB.elements[foundKey].photos=[];
+          matchedCaros++;
+        }else{
+          // Prob 2: alt piesa -> alteParti
+          var existsIdx=-1;
+          for(var ai=0;ai<JOB.alteParti.length;ai++){
+            if(JOB.alteParti[ai]._srcOcr&&JOB.alteParti[ai].name.toLowerCase()===elementName){
+              existsIdx=ai;break;
+            }
+          }
+          if(existsIdx>=0){
+            // Frissitjuk
+            JOB.alteParti[existsIdx].status='damaged';
+            JOB.alteParti[existsIdx].statusV2='avariata';
+            if(action){
+              JOB.alteParti[existsIdx].workV2=action;
+              JOB.alteParti[existsIdx].work=WORK_V2_TO_V1[action]||action;
+              JOB.alteParti[existsIdx].oraNormata=(action==='reparatie'?ore:null);
+            }
+          }else{
+            JOB.alteParti.push({
+              id:uid(),
+              name:d.element,
+              status:'damaged',
+              statusV2:'avariata',
+              work:action?(WORK_V2_TO_V1[action]||action):null,
+              workV2:action||null,
+              oraNormata:action==='reparatie'?ore:null,
+              photos:[],
+              note:'',
+              _srcOcr:true,
+              ts:new Date().toISOString()
+            });
+          }
+          matchedAlt++;
+        }
+      }
+    }
+
+    if(!JOB.ocrTs)JOB.ocrTs={};
+    JOB.ocrTs.constatare=new Date().toISOString();
+    await saveJ();
+    S.ocrRun.constatare=false;
+    toast('Constatare: '+(p.nrDosar||'?')+' / '+matchedCaros+' caros. / '+matchedAlt+' alte','info');
+    render();
+  }catch(e){
+    S.ocrRun.constatare=false;
+    toast('Constatare OCR: '+e.message,'err');
+    render();
+    console.error(e);
+  }
+}
+
+// ────── RENDER ───────────────────────────────────────────────
+
+/* ── RPW SHELL (etalon: rpw-evaluare-red.html) — beinjektálva ── */
+var SHELL_PHASES=[
+ {n:'01',page:'rpw-recepcio-red.html',ro:'Recepție',en:'Reception',hu:'Recepció'},
+ {n:'02',page:'rpw-evaluare-red.html',ro:'Evaluare',en:'Assessment',hu:'Felmérés'},
+ {n:'03',page:'rpw-reconstatare-red.html',ro:'Reconstatare',en:'Re-assessment',hu:'Újrafelmérés'},
+ {n:'04',page:'rpw-tinichigerie-red.html',ro:'Tinichigerie',en:'Bodywork',hu:'Lakatos'},
+ {n:'05',page:'rpw-vopsitorie-red.html',ro:'Vopsitorie',en:'Paint',hu:'Fényezés'},
+ {n:'06',page:'rpw-control-red.html',ro:'Control',en:'Check',hu:'Kontroll'},
+ {n:'07',page:'rpw-inchidere-red.html',ro:'Închidere',en:'Closing',hu:'Lezárás'}
+];
+var SHELL_CUR=0;
+function shellVariant(){try{return localStorage.getItem('rpw_shell_v')||'A'}catch(e){return 'A'}}
+window.setShellVariant=function(v){try{localStorage.setItem('rpw_shell_v',v)}catch(e){}render()};
+window.goPhase=function(i){if(i===SHELL_CUR)return;location.assign(SHELL_PHASES[i].page+'?job='+(JOB?JOB.id:''))};
+function shellHtml(job,ln){
+  var v=shellVariant();var plate=job.plate||job.number||job.id||'';var cur=SHELL_PHASES[SHELL_CUR];
+  function nm(p){return p[ln]||p.ro}
+  var h='<div class="shell no-print"><div class="shell-top">';
+  h+='<div class="sh-left"><div class="sh-back" onclick="location.assign(\'rpw-dosar.html?job='+job.id+'\')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>';
+  h+='<span class="sh-plate">'+escH(plate)+'</span>';
+  h+='<div class="sh-phase"><span class="ph-idx">'+cur.n+'</span>'+nm(cur)+'</div></div>';
+  h+='<div class="sh-right"><div class="lsw">';
+  ['A','B','C'].forEach(function(x){h+='<button class="lb '+(v===x?'on':'')+'" onclick="setShellVariant(\''+x+'\')">'+x+'</button>'});
+  h+='</div><div class="lsw"><button class="lb '+(ln==='ro'?'on':'')+'" onclick="sL(\'ro\')">RO</button><button class="lb '+(ln==='en'?'on':'')+'" onclick="sL(\'en\')">EN</button><button class="lb '+(ln==='hu'?'on':'')+'" onclick="sL(\'hu\')">HU</button></div></div></div>';
+  if(v==='A'){h+='<div class="stepA">';SHELL_PHASES.forEach(function(p,ix){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;var cls=ix<SHELL_CUR?'done':ix===SHELL_CUR?'cur':'';h+='<div class="stA '+cls+'" onclick="goPhase('+ix+')"><span class="n">'+p.n+'</span>'+nm(p)+'</div>'});h+='</div>';}
+  else if(v==='B'){h+='<div class="stepB">';SHELL_PHASES.forEach(function(p,ix){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;if(ix>0)h+='<div class="stB-line'+(ix<=SHELL_CUR?' done':'')+'"></div>';var cls=ix<SHELL_CUR?' done':ix===SHELL_CUR?' cur':'';h+='<div class="stB'+cls+'" onclick="goPhase('+ix+')" title="'+p.n+' '+nm(p)+'">'+p.n+'</div>';});h+='<span class="stB-name">'+nm(cur)+'</span></div>';}
+  else{h+='<div class="stepC"><div class="stepC-bar">';SHELL_PHASES.forEach(function(p,ix){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;var cls=ix<SHELL_CUR?' done':ix===SHELL_CUR?' cur':'';h+='<div class="stC '+cls+'" onclick="goPhase('+ix+')" title="'+p.n+' '+nm(p)+'"></div>'});h+='</div><div class="stepC-meta"><span>'+cur.n+' '+nm(cur)+'</span><span>pasul '+cur.n+' / 07</span></div></div>';}
+  h+='</div>';return h;
+}
+
+function render(){
+  var ln=gL(),job=JOB;
+  if(!job){
+    document.getElementById('app').innerHTML='<div class="loading">'+T('noJob')+'<br><br><button class="btn btn-r" style="width:auto;padding:10px 24px;display:inline-flex" onclick="location.assign(\'index.html\')">'+T('openD')+'</button></div>';
+    return;
+  }
+
+  var dt=job.damageType||null;
+  var pk=job.photoKeys||{};
+  var el=job.elements||{};
+  var altP=job.alteParti||[];
+  var hasTalon=!!pk['talon'];
+  var hasConstatare=!!pk['doc_constatare'];
+  var hasBuletin=!!pk['buletin_client'];
+
+  // Szamolasok
+  var ovC=0;for(var x=0;x<6;x++){if(pk['ov_'+x])ovC++}
+  var elAssigned=0,elAv=0,elRec=0,elOk=0;
+  for(var k in el){
+    var e=el[k];
+    var s=e.statusV2||STATUS_V2_TO_V1[e.status]?e.statusV2||(e.status==='damaged'?'avariata':e.status==='suggested'?'recomandata':e.status==='ok'?'ok':null):null;
+    // Egyszerusitve: uj mezo elsobbseget kap, ha nincs regi status
+    if(!e.statusV2){
+      if(e.status==='damaged')s='avariata';
+      else if(e.status==='suggested')s='recomandata';
+      else if(e.status==='ok')s='ok';
+    }else s=e.statusV2;
+    if(s){elAssigned++;if(s==='avariata')elAv++;else if(s==='recomandata')elRec++;else if(s==='ok')elOk++}
+  }
+  var altAv=0,altRec=0;
+  for(var ai=0;ai<altP.length;ai++){
+    var ap=altP[ai];
+    var s=ap.statusV2||(ap.status==='damaged'?'avariata':ap.status==='suggested'?'recomandata':'ok');
+    if(s==='avariata')altAv++;else if(s==='recomandata')altRec++;
+  }
+
+  // Foto validaciok
+  var missingAvPh=0,missingRecPh=0;
+  for(var k in el){
+    var e=el[k];
+    var s=e.statusV2||(e.status==='damaged'?'avariata':e.status==='suggested'?'recomandata':null);
+    var hasPh=!!pk['elem_'+k]||((e.photos||[]).length>0);
+    if(s==='avariata'&&!hasPh)missingAvPh++;
+    if(s==='recomandata'&&!hasPh)missingRecPh++;
+  }
+  for(var ai=0;ai<altP.length;ai++){
+    var ap=altP[ai];
+    var s=ap.statusV2||(ap.status==='damaged'?'avariata':ap.status==='suggested'?'recomandata':null);
+    var hasPh=!!pk['alt_'+ap.id]||((ap.photos||[]).length>0);
+    if(s==='avariata'&&!hasPh)missingAvPh++;
+    if(s==='recomandata'&&!hasPh)missingRecPh++;
+  }
+
+  var reqDocs=dt==='asig'?DA:dt==='auto'?DB:[];
+  var reqOk=true;
+  for(var x=0;x<reqDocs.length;x++){if(reqDocs[x].req&&!pk['doc_'+reqDocs[x].id])reqOk=false}
+
+  function badge(ok,part){return ok?'sb-ok':part?'sb-pt':'sb-nd'}
+  var chkS='<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+  var xS='<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  var camMini='<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--t3);fill:none;stroke-width:1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+
+  // ========= HEADER =========
+  var h=shellHtml(job,ln);
+
+  // ========= TYPE SELECTOR =========
+  h+='<div style="padding:8px 16px 0;font-size:10px;font-weight:700;color:var(--r);letter-spacing:1.5px;text-transform:uppercase">'+T('selType')+'</div>';
+  h+='<div class="type-row"><div class="type-card '+(dt==='asig'?'on-a':'')+'" onclick="setType(\'asig\')"><div class="tc-icon">'+IC.shield+'</div><div class="tc-t">'+T('asig')+'</div><div class="tc-s">'+T('asigS')+'</div></div><div class="type-card '+(dt==='auto'?'on-b':'')+'" onclick="setType(\'auto\')"><div class="tc-icon">'+IC.car+'</div><div class="tc-t">'+T('autoD')+'</div><div class="tc-s">'+T('autoS')+'</div></div></div>';
+
+  if(dt){
+    // ========= CLIENT INFO =========
+    h+='<div class="sec" style="border-left:3px solid var(--r)"><div class="sec-h" style="cursor:default"><div class="sec-t">'+T('clientInfo')+'</div></div><div class="sec-bd open" style="padding-top:0">';
+    h+='<div class="info-grid"><div class="info-f"><div class="info-l">'+T('wsNum')+'</div><input class="info-v mono" value="'+escA(job.number||'')+'" onchange="updF(\'number\',this.value)"/></div><div class="info-f"><div class="info-l">'+T('clientN')+'</div><input class="info-v" value="'+escA(job.client||'')+'" onchange="updF(\'client\',this.value);mark(\'_clientEdited\')"/></div></div>';
+    h+='<div class="info-grid" style="margin-top:8px"><div class="info-f"><div class="info-l">'+T('clientP')+'</div><input class="info-v" type="tel" value="'+escA(job.phone||'')+'" onchange="updF(\'phone\',this.value)"/></div><div class="info-f"><div class="info-l">'+T('note')+'</div><input class="info-v" value="'+escA(job.note||'')+'" onchange="updF(\'note\',this.value)"/></div></div>';
+
+    // Buletin scan (opcionalis, OCR-rel)
+    h+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--b)">';
+    h+='<div class="talon-box '+(hasBuletin?'done':'')+'" style="padding:14px">';
+    var bulUrl=photoUrl('buletin_client');
+    if(bulUrl)h+='<img src="'+escU(bulUrl)+'" style="max-height:100px;object-fit:contain;margin:0 auto 4px;display:block"/>';
+    else h+='<svg class="tb-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+    h+='<div class="tb-t">'+T('scanBuletin')+'</div><div class="tb-s">'+T('scanBuletinS')+'</div>';
+    h+='<input type="file" accept="image/*" onchange="upBuletin(event)"/></div>';
+    if(S.ocrRun.buletin)h+='<div class="ocr-text">'+T('scanning')+'</div><div class="ocr-bar"><div class="ocr-fill" style="width:60%"></div></div>';
+    if(hasBuletin){
+      h+='<div class="info-grid" style="margin-top:8px"><div class="info-f"><div class="info-l">'+T('adresa')+'</div><input class="info-v" value="'+escA(job.adresa||'')+'" onchange="updF(\'adresa\',this.value);mark(\'_adresaEdited\')"/></div><div class="info-f"><div class="info-l">'+T('cnp')+'</div><input class="info-v mono" value="'+escA(job.cnp||'')+'" onchange="updF(\'cnp\',this.value);mark(\'_cnpEdited\')"/></div></div>';
+    }
+    h+='</div>';
+    h+='</div></div>';
+
+    // ========= STEP 1: TALON =========
+    h+='<div class="sec"><div class="sec-h" onclick="tS(\'talon\')"><div class="sec-t"><span class="step-n">1</span> '+T('step1')+'</div><span class="sec-badge '+badge(hasTalon,0)+'">'+(hasTalon?'OK':'-')+'</span></div><div class="sec-bd '+(S.sec.talon?'open':'')+'">';
+    var talonUrl=photoUrl('talon');
+    h+='<div class="talon-box '+(hasTalon?'done':'')+' '+(S.uploading['talon']?'uploading':'')+'">';
+    if(talonUrl)h+='<img src="'+escU(talonUrl)+'"/>';
+    else h+='<svg class="tb-icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+    h+='<div class="tb-t">'+(hasTalon?T('reScan'):T('scanT'))+'</div><div class="tb-s">'+T('scanTS')+'</div>';
+    h+='<input type="file" accept="image/*" onchange="upTalon(event)"/></div>';
+    if(hasTalon&&!S.ocrRun.talon)h+='<button class="reocr-btn" onclick="reOcrTalon()">'+T('reOcr')+'</button>';
+    if(S.ocrRun.talon)h+='<div class="ocr-text">'+T('scanning')+'</div><div class="ocr-bar"><div class="ocr-fill" style="width:60%"></div></div>';
+    if(S.uploading['talon'])h+='<div class="ocr-text">'+T('uploading')+'</div>';
+    if(hasTalon){
+      h+='<div class="info-grid" style="margin-top:10px"><div class="info-f"><div class="info-l">'+T('plate')+'</div><input class="info-v mono" value="'+escA(job.plate||'')+'" onchange="updF(\'plate\',this.value);mark(\'_plateEdited\')"/></div><div class="info-f"><div class="info-l">'+T('vin')+'</div><input class="info-v mono" value="'+escA(job.vin||'')+'" onchange="updF(\'vin\',this.value);mark(\'_vinEdited\')"/></div></div>';
+      h+='<div class="info-grid" style="margin-top:8px"><div class="info-f"><div class="info-l">'+T('brand')+'</div><input class="info-v" value="'+escA(job.brand||job.auto||'')+'" onchange="updF(\'brand\',this.value);mark(\'_brandEdited\')"/></div><div class="info-f"><div class="info-l">'+T('year')+'</div><input class="info-v mono" value="'+escA(job.year||'')+'" onchange="updF(\'year\',this.value);mark(\'_yearEdited\')"/></div></div>';
+      h+='<div class="info-grid" style="margin-top:8px"><div class="info-f"><div class="info-l">'+T('capacitate')+'</div><input class="info-v mono" value="'+escA(job.capacitate||'')+'" onchange="updF(\'capacitate\',this.value);mark(\'_capEdited\')"/></div><div class="info-f"><div class="info-l">'+T('proprietarTalon')+'</div><input class="info-v" value="'+escA(job.proprietar||'')+'" onchange="updF(\'proprietar\',this.value);mark(\'_propEdited\')"/></div></div>';
+      h+='<div class="hint">'+T('edit')+'</div>';
+    }
+    h+='</div></div>';
+
+    // ========= STEP 2: CONSTATARE (csak ASIG) =========
+    if(dt==='asig'){
+      h+='<div class="sec"><div class="sec-h" onclick="tS(\'constatare\')"><div class="sec-t"><span class="step-n">2</span> '+T('step2')+'</div><span class="sec-badge '+badge(hasConstatare,0)+'">'+(hasConstatare?'OK':'-')+'</span></div><div class="sec-bd '+(S.sec.constatare?'open':'')+'">';
+      var constUrl=photoUrl('doc_constatare');
+      h+='<div class="talon-box '+(hasConstatare?'done':'')+' '+(S.uploading['doc_constatare']?'uploading':'')+'">';
+      if(constUrl)h+='<img src="'+constUrl+'"/>';
+      else h+='<svg class="tb-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+      h+='<div class="tb-t">'+(hasConstatare?T('reScan'):T('scanC'))+'</div><div class="tb-s">'+T('scanCS')+'</div>';
+      h+='<input type="file" accept="image/*" onchange="upConstatare(event)"/></div>';
+      if(hasConstatare&&!S.ocrRun.constatare)h+='<button class="reocr-btn" onclick="reOcrConstatare()">'+T('reOcr')+'</button>';
+      if(S.ocrRun.constatare)h+='<div class="ocr-text">'+T('scanning')+'</div><div class="ocr-bar"><div class="ocr-fill" style="width:60%"></div></div>';
+      if(S.uploading['doc_constatare'])h+='<div class="ocr-text">'+T('uploading')+'</div>';
+      if(hasConstatare){
+        var mismatch=job.proprietar&&job.proprietarDosar&&job.proprietar.toLowerCase().trim()!==job.proprietarDosar.toLowerCase().trim();
+        h+='<div class="info-grid" style="margin-top:10px"><div class="info-f"><div class="info-l">'+T('nrDosar')+'</div><input class="info-v mono" value="'+(job.nrDosar||'')+'" onchange="updF(\'nrDosar\',this.value);mark(\'_nrDosarEdited\')"/></div><div class="info-f"><div class="info-l">'+T('asigurator')+'</div><input class="info-v" value="'+(job.asigurator||'')+'" onchange="updF(\'asigurator\',this.value);mark(\'_asigEdited\')"/></div></div>';
+        h+='<div class="info-grid" style="margin-top:8px"><div class="info-f"><div class="info-l">'+T('proprietarTalon')+'</div><input class="info-v" value="'+escA(job.proprietar||'')+'" readonly style="color:var(--t3)"/></div><div class="info-f '+(mismatch?'warn':'')+'"><div class="info-l">'+T('proprietarDosar')+'</div><input class="info-v" value="'+(job.proprietarDosar||'')+'" onchange="updF(\'proprietarDosar\',this.value);mark(\'_propDosarEdited\')"/></div></div>';
+        if(mismatch)h+='<div class="mismatch-warn">'+T('ownerMismatch')+'</div>';
+        if(job.listaDauneRaw){
+          h+='<div style="font-size:9px;color:var(--t3);margin-top:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px">'+T('listaDauneRaw')+'</div>';
+          h+='<div class="raw-box">'+escapeHtml(job.listaDauneRaw).slice(0,1000)+(job.listaDauneRaw.length>1000?'...':'')+'</div>';
+        }
+      }
+      h+='</div></div>';
+    }
+
+    // ========= STEP 3: DOCUMENTE =========
+    var stepNr=dt==='asig'?3:2;
+    h+='<div class="sec"><div class="sec-h" onclick="tS(\'docs\')"><div class="sec-t"><span class="step-n">'+stepNr+'</span> '+T('step3')+'</div><span class="sec-badge '+badge(reqOk,0)+'">'+(function(){var c=0;for(var x=0;x<reqDocs.length;x++)if(pk['doc_'+reqDocs[x].id])c++;return c+'/'+reqDocs.length})()+'</span></div><div class="sec-bd '+(S.sec.docs?'open':'')+'"><div class="doc-list">';
+    for(var x=0;x<reqDocs.length;x++){
+      var d=reqDocs[x];
+      var hasD=!!pk['doc_'+d.id];
+      var dUrl=photoUrl('doc_'+d.id);
+      var isUp=S.uploading['doc_'+d.id];
+      h+='<div class="doc-item '+(hasD?'done':'')+' '+(isUp?'uploading':'')+'"><div class="di-icon">'+IC.doc+'</div><div class="di-text"><div class="di-name">'+T(d.id)+'</div><div class="di-req '+(d.req?'req':'opt')+'">'+(d.req?T('mandatory'):T('optional'))+'</div></div>';
+      if(dUrl)h+='<img class="di-thumb" src="'+dUrl+'"/>';
+      else if(isUp)h+='<div class="thumb-loading"></div>';
+      if(hasD)h+='<div class="di-chk">'+chkS+'</div>';
+      h+='<input class="doc-upload" type="file" accept="image/*" onchange="upDoc(\''+d.id+'\',event)"/></div>';
+    }
+    // Custom documents (felhasznalo altal hozzaadott)
+    var customDocs=job.customDocs||[];
+    for(var cx=0;cx<customDocs.length;cx++){
+      var cd=customDocs[cx];
+      var cdKey='custdoc_'+cd.id;
+      var cdUrl=photoUrl(cdKey);
+      var cdUp=S.uploading[cdKey];
+      var hasCd=!!pk[cdKey];
+      h+='<div class="doc-item '+(hasCd?'done':'')+' '+(cdUp?'uploading':'')+'"><div class="di-icon">'+IC.doc+'</div><div class="di-text"><div class="di-name">'+escapeHtml(cd.name||'Document')+'</div><div class="di-req opt">'+T('optional')+'</div></div>';
+      if(cdUrl)h+='<img class="di-thumb" src="'+cdUrl+'"/>';
+      else if(cdUp)h+='<div class="thumb-loading"></div>';
+      if(hasCd)h+='<div class="di-chk">'+chkS+'</div>';
+      h+='<button class="del-cd-btn" onclick="event.stopPropagation();delCustomDoc(\''+cd.id+'\')" title="'+T('delete')+'">×</button>';
+      h+='<input class="doc-upload" type="file" accept="image/*" onchange="upCustomDoc(\''+cd.id+'\',event)"/></div>';
+    }
+    // + Adauga document gomb
+    h+='<div class="add-doc-btn" onclick="addCustomDoc()">+ '+T('addDoc')+'</div>';
+    h+='</div></div></div>';
+
+    // ========= STEP 4: FOTO ANSAMBLU =========
+    stepNr=dt==='asig'?4:3;
+    h+='<div class="sec"><div class="sec-h" onclick="tS(\'photos\')"><div class="sec-t"><span class="step-n">'+stepNr+'</span> '+T('step4')+'</div><span class="sec-badge '+badge(ovC>=6,ovC>0)+'">'+ovC+'/6</span></div><div class="sec-bd '+(S.sec.photos?'open':'')+'"><div class="pgrid">';
+    for(var x=0;x<6;x++){
+      var has=!!pk['ov_'+x];
+      var ovUrl=photoUrl('ov_'+x);
+      var isUp=S.uploading['ov_'+x];
+      h+='<div class="pslot '+(has?'done':'')+' '+(isUp?'uploading':'')+'">';
+      if(ovUrl)h+='<img src="'+ovUrl+'"/><div class="pslot-chk">'+chkS+'</div>';
+      else h+=IC.cam;
+      h+='<div class="pslot-label">'+T(VK[x])+'</div>';
+      h+='<div class="pslot-acts"><label class="pslot-act" title="Fotografiază">📷 Foto<input type="file" accept="image/*" capture="environment" onchange="upOv('+x+',event)"/></label><label class="pslot-act" title="Importă din fișier">📁 Import<input type="file" accept="image/*" onchange="upOv('+x+',event)"/></label></div></div>';
+    }
+    h+='</div><div class="hint">'+T('angle')+'</div></div></div>';
+
+    // ========= STEP 5: 23 KAROSZERIA =========
+    stepNr=dt==='asig'?5:4;
+    h+='<div class="sec"><div class="sec-h" onclick="tS(\'elems\')"><div class="sec-t"><span class="step-n">'+stepNr+'</span> '+T('step5')+' ('+elAssigned+'/'+EK.length+')</div><span class="sec-badge '+badge(elAssigned===EK.length&&missingAvPh===0,elAssigned>0)+'">'+elAv+' '+T('avariata')+' · '+elRec+' rec · '+elOk+' '+T('ok')+'</span></div><div class="sec-bd '+(S.sec.elems?'open':'')+'">';
+    h+='<div class="hint" style="margin-bottom:8px">'+T('markAll')+'</div>';
+
+    for(var x=0;x<EK.length;x++){
+      var k=EK[x];
+      var e=el[k]||{};
+      var s=e.statusV2||(e.status==='damaged'?'avariata':e.status==='suggested'?'recomandata':e.status==='ok'?'ok':null);
+      var isOk=s==='ok',isAv=s==='avariata',isRec=s==='recomandata';
+      var hasPh=!!pk['elem_'+k]||((e.photos||[]).length>0);
+      var ePhUrl=photoUrl('elem_'+k);
+      var missingPh=(isAv||isRec)&&!hasPh;
+      var cls='el';
+      if(isOk)cls+=' el-ok';
+      else if(isAv)cls+=' el-dmg';
+      else if(isRec)cls+=' el-sug';
+      if(missingPh)cls+=' el-missing-photo';
+
+      h+='<div class="'+cls+'"><div class="el-top"><div class="el-n">'+T(k)+'</div><div class="el-btns">';
+      h+='<div class="eb eb-ok '+(isOk?'on':'')+'" onclick="mE(\''+k+'\',\'ok\')">'+T('ok')+'</div>';
+      h+='<div class="eb eb-dm '+(isAv?'on':'')+'" onclick="mE(\''+k+'\',\'avariata\')">'+T('avariata')+'</div>';
+      h+='<div class="eb eb-sg '+(isRec?'on':'')+'" onclick="mE(\''+k+'\',\'recomandata\')">'+T('recomandata')+'</div>';
+      h+='</div></div>';
+
+      if(isAv||isRec){
+        // Multi-select (checkbox): ops objektum {inlocuire:bool, reparatie:bool, vopsire:bool, revopsire:bool}
+        var curOps=e.ops||{};
+        // Backward-compat: regi szigletsel mez_b_l -> ops
+        if(!e.ops){
+          curOps={};
+          var oldW=e.workV2||e.work;
+          if(oldW==='replace'||oldW==='inlocuire'||oldW==='new')curOps.inlocuire=true;
+          if(oldW==='fix'||oldW==='reparatie')curOps.reparatie=true;
+          if(oldW==='vopsire'||oldW==='uni')curOps.vopsire=true;
+          if(oldW==='revopsire')curOps.revopsire=true;
+        }
+        var paintable=PAINTABLE[k]!==false;
+        h+='<div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:8px;margin-bottom:4px">'+T('opsLabel')+'</div>';
+        h+='<div class="el-wt">';
+        var workTypes=['inlocuire','reparatie','vopsire','revopsire'];
+        var wtClass={inlocuire:'wt-inl',reparatie:'wt-rep',vopsire:'wt-vop',revopsire:'wt-rvp'};
+        for(var wi=0;wi<workTypes.length;wi++){
+          var wtk=workTypes[wi];
+          var isPaint=wtk==='vopsire'||wtk==='revopsire';
+          var disabled=isPaint && !paintable;
+          var checked=!!curOps[wtk];
+          var tick=checked?'☑ ':'☐ ';
+          if(disabled){
+            h+='<div class="wt" style="opacity:.35;cursor:not-allowed">— '+T(wtk)+'</div>';
+          }else{
+            h+='<div class="wt '+wtClass[wtk]+' '+(checked?'on':'')+'" onclick="sEOp(\''+k+'\',\''+wtk+'\')">'+tick+T(wtk)+'</div>';
+          }
+        }
+        // Ha reparatie be van ikszelve, jelenjen meg a ora input
+        if(curOps.reparatie){
+          h+='<div class="wt-ora"><input type="number" step="0.1" min="0" max="50" value="'+(e.oraNormata||'')+'" placeholder="h" onchange="sEO(\''+k+'\',this.value)"/><span class="wt-ora-lbl">'+T('oraLbl')+'</span></div>';
+        }
+        h+='</div>';
+
+        // Foto + note
+        h+='<div class="el-det">';
+        h+='<div class="el-ph-row">';
+        if(ePhUrl)h+='<div class="el-ph done"><img src="'+ePhUrl+'"/><button class="el-ph-del" onclick="dElPh(\''+k+'\')">×</button></div>';
+        h+='<div class="el-ph"><input type="file" accept="image/*" onchange="aEP(\''+k+'\',event)"/>'+camMini+'</div>';
+        h+='</div>';
+        h+='<textarea class="el-nt" placeholder="'+T('noteP')+'" onchange="sEN(\''+k+'\',this.value)">'+(e.note||'')+'</textarea>';
+        h+='</div>';
+        if(missingPh)h+='<div class="mismatch-warn">'+T('fotoRequired')+'</div>';
+      }
+      h+='</div>';
+    }
+    h+='</div></div>';
+
+    // ========= STEP 6: ALTE PIESE =========
+    stepNr=dt==='asig'?6:5;
+    var altAvList=[];
+    for(var ai=0;ai<altP.length;ai++){
+      var ap=altP[ai];
+      var s=ap.statusV2||(ap.status==='damaged'?'avariata':ap.status==='suggested'?'recomandata':null);
+      if(s!=='recomandata')altAvList.push(ap);
+    }
+    h+='<div class="sec"><div class="sec-h" onclick="tS(\'alteParti\')"><div class="sec-t"><span class="step-n">'+stepNr+'</span> '+T('step6')+' ('+altAv+')</div><span class="sec-badge sb-ok">'+altAv+' av · '+altRec+' rec</span></div><div class="sec-bd '+(S.sec.alteParti?'open':'')+'">';
+    h+='<div class="hint" style="margin-bottom:8px">'+T('altePartiHint')+'</div>';
+    if(altAvList.length===0)h+='<div class="as-empty">—</div>';
+    for(var ai=0;ai<altAvList.length;ai++){
+      h+=renderAltItem(altAvList[ai],pk);
+    }
+    h+='<div class="alt-add"><input id="newAltName" value="'+escapeHtml(S.newAltName||'')+'" placeholder="ex: Far dreapta" oninput="S.newAltName=this.value"/><button onclick="addAltPart()">+</button></div>';
+    h+='</div></div>';
+
+    // ========= STEP 7: AFTERSALES =========
+    stepNr=dt==='asig'?7:6;
+    var allRec=[];
+    for(var k in el){
+      var e=el[k];
+      var s=e.statusV2||(e.status==='suggested'?'recomandata':null);
+      if(s==='recomandata')allRec.push({type:'caros',key:k,data:e});
+    }
+    for(var ai=0;ai<altP.length;ai++){
+      var ap=altP[ai];
+      var s=ap.statusV2||(ap.status==='suggested'?'recomandata':null);
+      if(s==='recomandata')allRec.push({type:'alt',key:ap.id,data:ap});
+    }
+
+    h+='<div class="sec" style="border-left:3px solid var(--or)"><div class="sec-h" onclick="tS(\'afterSales\')"><div class="sec-t"><span class="step-n" style="background:var(--or)">'+stepNr+'</span> '+T('step7')+' ('+allRec.length+')</div><span class="sec-badge '+(allRec.length>0?'sb-pt':'sb-ok')+'">'+allRec.length+'</span></div><div class="sec-bd '+(S.sec.afterSales?'open':'')+'">';
+    h+='<div class="hint" style="margin-bottom:8px;color:var(--or)">'+T('asHint')+'</div>';
+    if(allRec.length===0)h+='<div class="as-empty">'+T('asEmpty')+'</div>';
+    else{
+      for(var ri=0;ri<allRec.length;ri++){
+        var r=allRec[ri];
+        if(r.type==='caros')h+=renderRecCarosItem(r.key,r.data,pk);
+        else h+=renderAltItem(r.data,pk);
+      }
+    }
+    h+='</div></div>';
+
+    // ========= CHECKLIST =========
+    var nrDosarOk=dt!=='asig'||!!job.nrDosar;
+    var constOk=dt!=='asig'||hasConstatare;
+    var canCl=!!dt&&hasTalon&&constOk&&nrDosarOk&&reqOk&&ovC>=6&&elAssigned===EK.length&&missingAvPh===0&&missingRecPh===0;
+
+    h+='<div class="cl"><div class="cl-t">'+T('closeCond')+'</div>';
+    var checks=[{ok:!!dt,t:T('tipOk')},{ok:hasTalon,t:T('talonOk')}];
+    if(dt==='asig'){
+      checks.push({ok:constOk,t:T('constatareOk')});
+      checks.push({ok:nrDosarOk,t:T('nrDosarOk')});
+    }
+    checks.push({ok:reqOk,t:T('docsOk')});
+    checks.push({ok:ovC>=6,t:T('photosOk')+' ('+ovC+'/6)'});
+    checks.push({ok:elAssigned===EK.length,t:T('elemOk')+' ('+elAssigned+'/'+EK.length+')'});
+    checks.push({ok:missingAvPh===0,t:T('dmgPhOk')});
+    checks.push({ok:missingRecPh===0,t:T('recPhOk')});
+
+    for(var ci=0;ci<checks.length;ci++){
+      var c=checks[ci];
+      h+='<div class="cl-i"><div class="cl-ic '+(c.ok?'ok':'no')+'">'+(c.ok?chkS:xS)+'</div><span class="cl-tx '+(c.ok?'ok':'no')+'">'+c.t+'</span></div>';
+    }
+    h+='</div><div style="padding:10px 16px"><button class="btn '+(canCl?'btn-g':'btn-o')+'" onclick="closeR()" '+(canCl?'':'style="opacity:.5"')+'>'+(canCl?T('closeBtn'):T('incomplete'))+'</button></div>';
+  }
+
+  h+='<div class="bpad"></div>';
+  if(S.ts){
+    var toastCls='toast';
+    if(S.te===1)toastCls+=' err';
+    else if(S.te===2)toastCls+=' info';
+    h+='<div class="'+toastCls+'">'+S.ts+'</div>';
+  }
+  document.getElementById('app').innerHTML=h;
+
+  // Refocus
+  var naInp=document.getElementById('newAltName');
+  if(naInp&&S.newAltName)naInp.focus();
+}
+
+// ────── RENDER HELPERS ───────────────────────────────────────
+function renderAltItem(p,pk){
+  var s=p.statusV2||(p.status==='damaged'?'avariata':p.status==='suggested'?'recomandata':null);
+  var isAv=s==='avariata',isRec=s==='recomandata';
+  var hasPh=!!pk['alt_'+p.id]||((p.photos||[]).length>0);
+  var phUrl=photoUrl('alt_'+p.id);
+  var missingPh=(isAv||isRec)&&!hasPh;
+  var cls='el';
+  if(isAv)cls+=' el-dmg';
+  else if(isRec)cls+=' el-sug';
+  if(missingPh)cls+=' el-missing-photo';
+  var srcLbl=p._srcOcr?T('srcOcr'):T('srcManual');
+  var camMini='<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--t3);fill:none;stroke-width:1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+
+  var h='<div class="'+cls+'">';
+  h+='<div class="el-top"><div class="el-n"><input class="info-v" style="font-size:12px" value="'+escapeHtml(p.name||'')+'" onchange="updAlt(\''+p.id+'\',\'name\',this.value)"/><div class="alt-src '+(p._srcOcr?'ocr':'')+'">'+srcLbl+'</div></div>';
+  h+='<div class="el-btns">';
+  h+='<div class="eb eb-dm '+(isAv?'on':'')+'" onclick="updAlt(\''+p.id+'\',\'status\',\'avariata\')">'+T('avariata')+'</div>';
+  h+='<div class="eb eb-sg '+(isRec?'on':'')+'" onclick="updAlt(\''+p.id+'\',\'status\',\'recomandata\')">'+T('recomandata')+'</div>';
+  h+='<div class="eb" style="background:var(--r100);color:var(--r);border-color:var(--r)" onclick="delAlt(\''+p.id+'\')">×</div>';
+  h+='</div></div>';
+
+  var curWork=p.workV2||p.work;
+  if(!p.workV2){
+    if(p.work==='replace')curWork='inlocuire';
+    else if(p.work==='fix')curWork='reparatie';
+    else if(p.work==='uni')curWork='vopsire';
+  }
+  h+='<div class="el-wt">';
+  var workTypes=['inlocuire','reparatie','vopsire','revopsire'];
+  var wtClass={inlocuire:'wt-inl',reparatie:'wt-rep',vopsire:'wt-vop',revopsire:'wt-rvp'};
+  for(var wi=0;wi<workTypes.length;wi++){
+    var wtk=workTypes[wi];
+    h+='<div class="wt '+wtClass[wtk]+' '+(curWork===wtk?'on':'')+'" onclick="updAlt(\''+p.id+'\',\'work\',\''+wtk+'\')">'+T(wtk)+'</div>';
+  }
+  if(curWork==='reparatie'){
+    h+='<div class="wt-ora"><input type="number" step="0.1" min="0" max="50" value="'+(p.oraNormata||'')+'" placeholder="h" onchange="updAlt(\''+p.id+'\',\'oraNormata\',this.value)"/><span class="wt-ora-lbl">'+T('oraLbl')+'</span></div>';
+  }
+  h+='</div>';
+
+  h+='<div class="el-det"><div class="el-ph-row">';
+  if(phUrl)h+='<div class="el-ph done"><img src="'+phUrl+'"/><button class="el-ph-del" onclick="dAltPh(\''+p.id+'\')">×</button></div>';
+  h+='<div class="el-ph"><input type="file" accept="image/*" onchange="aAltP(\''+p.id+'\',event)"/>'+camMini+'</div>';
+  h+='</div>';
+  h+='<textarea class="el-nt" placeholder="'+T('noteP')+'" onchange="updAlt(\''+p.id+'\',\'note\',this.value)">'+escapeHtml(p.note||'')+'</textarea>';
+  h+='</div>';
+  if(missingPh)h+='<div class="mismatch-warn">'+T('fotoRequired')+'</div>';
+  h+='</div>';
+  return h;
+}
+
+function renderRecCarosItem(k,e,pk){
+  var hasPh=!!pk['elem_'+k];
+  var phUrl=photoUrl('elem_'+k);
+  var missingPh=!hasPh;
+  var cls='el el-sug';
+  if(missingPh)cls+=' el-missing-photo';
+  var camMini='<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--t3);fill:none;stroke-width:1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+
+  var h='<div class="'+cls+'"><div class="el-top"><div class="el-n">'+T(k)+' <span class="alt-src ocr">caroserie</span></div>';
+  h+='<div class="el-btns">';
+  h+='<div class="eb eb-ok" onclick="mE(\''+k+'\',\'ok\')">'+T('ok')+'</div>';
+  h+='<div class="eb eb-dm" onclick="mE(\''+k+'\',\'avariata\')">'+T('avariata')+'</div>';
+  h+='</div></div>';
+
+  var curWork=e.workV2||e.work;
+  if(!e.workV2){
+    if(e.work==='replace')curWork='inlocuire';
+    else if(e.work==='fix')curWork='reparatie';
+    else if(e.work==='uni')curWork='vopsire';
+  }
+  h+='<div class="el-wt">';
+  var workTypes=['inlocuire','reparatie','vopsire','revopsire'];
+  var wtClass={inlocuire:'wt-inl',reparatie:'wt-rep',vopsire:'wt-vop',revopsire:'wt-rvp'};
+  for(var wi=0;wi<workTypes.length;wi++){
+    var wtk=workTypes[wi];
+    h+='<div class="wt '+wtClass[wtk]+' '+(curWork===wtk?'on':'')+'" onclick="sEW(\''+k+'\',\''+wtk+'\')">'+T(wtk)+'</div>';
+  }
+  if(curWork==='reparatie'){
+    h+='<div class="wt-ora"><input type="number" step="0.1" min="0" max="50" value="'+(e.oraNormata||'')+'" placeholder="h" onchange="sEO(\''+k+'\',this.value)"/><span class="wt-ora-lbl">'+T('oraLbl')+'</span></div>';
+  }
+  h+='</div>';
+
+  h+='<div class="el-det"><div class="el-ph-row">';
+  if(phUrl)h+='<div class="el-ph done"><img src="'+phUrl+'"/><button class="el-ph-del" onclick="dElPh(\''+k+'\')">×</button></div>';
+  h+='<div class="el-ph"><input type="file" accept="image/*" onchange="aEP(\''+k+'\',event)"/>'+camMini+'</div>';
+  h+='</div>';
+  h+='<textarea class="el-nt" placeholder="'+T('noteP')+'" onchange="sEN(\''+k+'\',this.value)">'+escapeHtml(e.note||'')+'</textarea>';
+  h+='</div>';
+  if(missingPh)h+='<div class="mismatch-warn">'+T('fotoRequired')+'</div>';
+  h+='</div>';
+  return h;
+}
+
+function escapeHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+
+// ────── WINDOW HANDLERS ──────────────────────────────────────
+window.tS=function(s){S.sec[s]=S.sec[s]?0:1;render()};
+window.updF=async function(f,v){JOB[f]=v;if(f==='brand')JOB.auto=v;await saveJ()};
+window.mark=function(flag){JOB[flag]=true};
+
+window.setType=async function(t){
+  if(JOB.damageType&&JOB.damageType!==t){
+    var hasData=!!(JOB.photoKeys&&Object.keys(JOB.photoKeys).length)||(JOB.elements&&Object.keys(JOB.elements).length);
+    if(hasData&&!confirm(T('typeChangeWarn')))return;
+  }
+  JOB.damageType=t;
+  await saveJ();
+  S.sec={talon:1,constatare:1,docs:0,photos:0,elems:0,alteParti:0,afterSales:0};
+  render();
+};
+
+// Talon upload + OCR
+window.upTalon=function(e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  resizeFile(f).then(async function(dataUrl){
+    JOB._plateEdited=false;JOB._vinEdited=false;JOB._brandEdited=false;JOB._yearEdited=false;JOB._capEdited=false;JOB._propEdited=false;
+    try{await uploadPhoto('talon',dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
+    render();
+    await ocrTalon(dataUrl);
+  });
+};
+window.reOcrTalon=async function(){
+  var url=photoUrl('talon');if(!url)return;
+  // fetch the image and convert
+  try{
+    var resp=await fetch(url);var blob=await resp.blob();
+    var reader=new FileReader();
+    reader.onload=async function(e){
+      JOB._plateEdited=false;JOB._vinEdited=false;JOB._brandEdited=false;JOB._yearEdited=false;JOB._capEdited=false;JOB._propEdited=false;
+      await ocrTalon(e.target.result);
+    };
+    reader.readAsDataURL(blob);
+  }catch(e){toast('Re-OCR: '+e.message,'err')}
+};
+
+// Buletin upload + OCR
+window.upBuletin=function(e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  resizeFile(f).then(async function(dataUrl){
+    JOB._clientEdited=false;JOB._adresaEdited=false;JOB._cnpEdited=false;
+    try{await uploadPhoto('buletin_client',dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
+    render();
+    await ocrBuletin(dataUrl);
+  });
+};
+
+// Constatare upload + OCR
+window.upConstatare=function(e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  resizeFile(f).then(async function(dataUrl){
+    JOB._nrDosarEdited=false;JOB._propDosarEdited=false;JOB._asigEdited=false;
+    try{await uploadPhoto('doc_constatare',dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
+    render();
+    await ocrConstatare(dataUrl);
+  });
+};
+window.reOcrConstatare=async function(){
+  var url=photoUrl('doc_constatare');if(!url)return;
+  try{
+    var resp=await fetch(url);var blob=await resp.blob();
+    var reader=new FileReader();
+    reader.onload=async function(e){
+      JOB._nrDosarEdited=false;JOB._propDosarEdited=false;JOB._asigEdited=false;
+      await ocrConstatare(e.target.result);
+    };
+    reader.readAsDataURL(blob);
+  }catch(e){toast('Re-OCR: '+e.message,'err')}
+};
+
+// Document upload (ha constatare, OCR-t is futtat)
+window.upDoc=function(t,e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  resizeFile(f).then(async function(dataUrl){
+    try{await uploadPhoto('doc_'+t,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
+    toast(T(t)+' '+T('saved'),'info');
+    render();
+    if(t==='constatare'){
+      JOB._nrDosarEdited=false;JOB._propDosarEdited=false;JOB._asigEdited=false;
+      await ocrConstatare(dataUrl);
+    }
+  });
+};
+
+// Custom document (user added with name)
+window.addCustomDoc=async function(){
+  var name=prompt(T('docName'),'');
+  if(!name||!name.trim())return;
+  if(!JOB.customDocs)JOB.customDocs=[];
+  var newId='cd_'+Date.now().toString(36);
+  JOB.customDocs.push({id:newId,name:name.trim(),ts:new Date().toISOString()});
+  await saveJ();
+  S.sec.docs=1;
+  render();
+};
+window.upCustomDoc=function(cdId,e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  resizeFile(f).then(async function(dataUrl){
+    try{await uploadPhoto('custdoc_'+cdId,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
+    toast(T('saved'),'info');
+    render();
+  });
+};
+window.delCustomDoc=async function(cdId){
+  if(!JOB.customDocs)return;
+  if(!confirm(T('delete')+'?'))return;
+  JOB.customDocs=JOB.customDocs.filter(function(d){return d.id!==cdId});
+  if(JOB.photoKeys){delete JOB.photoKeys['custdoc_'+cdId]}
+  if(JOB.photoUrls){delete JOB.photoUrls['custdoc_'+cdId]}
+  await saveJ();
+  render();
+};
+
+// Overview foto upload
+window.upOv=function(x,e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  resizeFile(f).then(async function(dataUrl){
+    try{await uploadPhoto('ov_'+x,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
+    toast(T(VK[x])+' '+T('saved'),'info');
+    render();
+  });
+};
+
+// 23 caroserie elem state handlers (mindket seman ir!)
+window.mE=async function(k,stV2){
+  if(!JOB.elements)JOB.elements={};
+  if(!JOB.elements[k])JOB.elements[k]={photos:[]};
+  JOB.elements[k].statusV2=stV2;
+  JOB.elements[k].status=stV2==='avariata'?'damaged':stV2==='recomandata'?'suggested':'ok';
+  if(stV2==='ok'){
+    JOB.elements[k].work=null;
+    JOB.elements[k].workV2=null;
+    JOB.elements[k].oraNormata=null;
+    JOB.elements[k].note='';
+    // Torljuk a fotot ha volt
+    if(JOB.photoKeys&&JOB.photoKeys['elem_'+k])await deletePhoto('elem_'+k);
+  }
+  await saveJ();
+  render();
+};
+
+window.aEP=function(k,e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  resizeFile(f).then(async function(dataUrl){
+    try{await uploadPhoto('elem_'+k,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
+    toast(T(k)+' '+T('saved'),'info');
+    render();
+  });
+};
+window.dElPh=async function(k){
+  if(!confirm('\u26A0\uFE0F Fotografia este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;
+  await deletePhoto('elem_'+k);
+  render();
+};
+window.sEN=async function(k,n){if(!JOB.elements||!JOB.elements[k])return;JOB.elements[k].note=n;await saveJ()};
+window.sEW=async function(k,wV2){
+  if(!JOB.elements||!JOB.elements[k])return;
+  JOB.elements[k].workV2=wV2;
+  JOB.elements[k].work=WORK_V2_TO_V1[wV2]||wV2;
+  if(wV2!=='reparatie')JOB.elements[k].oraNormata=null;
+  await saveJ();render();
+};
+
+// Multi-select checkbox toggle az `ops` objektumra
+window.sEOp=async function(k,op){
+  if(!JOB.elements||!JOB.elements[k])return;
+  var e=JOB.elements[k];
+  if(!e.ops)e.ops={};
+  // Kikapcsol / bekapcsol
+  var wasOn=!!e.ops[op];
+  e.ops[op]=!wasOn;
+  // Validacio: Inlocuire+Reparatie nem lehet egyszerre
+  if(op==='inlocuire' && e.ops.inlocuire)e.ops.reparatie=false;
+  if(op==='reparatie' && e.ops.reparatie)e.ops.inlocuire=false;
+  // Validacio: Vopsire+Revopsire nem lehet egyszerre
+  if(op==='vopsire' && e.ops.vopsire)e.ops.revopsire=false;
+  if(op==='revopsire' && e.ops.revopsire)e.ops.vopsire=false;
+  // Backward compat: meg tarjuk a workV2/work mezt is a v1-es oldalakhoz
+  if(e.ops.inlocuire)e.workV2='inlocuire';
+  else if(e.ops.reparatie)e.workV2='reparatie';
+  else if(e.ops.vopsire)e.workV2='vopsire';
+  else if(e.ops.revopsire)e.workV2='revopsire';
+  else e.workV2=null;
+  e.work=WORK_V2_TO_V1[e.workV2]||null;
+  // Ha nincs bepikalva reparatie, nullazuk az ora-t
+  if(!e.ops.reparatie)e.oraNormata=null;
+  await saveJ();render();
+};
+window.sEO=async function(k,v){
+  if(!JOB.elements||!JOB.elements[k])return;
+  var n=parseFloat((v||'').toString().replace(',','.'));
+  JOB.elements[k].oraNormata=isNaN(n)?null:n;
+  await saveJ();
+};
+
+// Alte Parti handlers
+window.addAltPart=async function(){
+  var name=(S.newAltName||'').trim();
+  if(name.length<2){toast('Nume prea scurt','err');return}
+  if(!JOB.alteParti)JOB.alteParti=[];
+  JOB.alteParti.push({
+    id:uid(),name:name,
+    status:'damaged',statusV2:'avariata',
+    work:null,workV2:null,oraNormata:null,
+    photos:[],note:'',_srcOcr:false,
+    ts:new Date().toISOString()
+  });
+  S.newAltName='';
+  await saveJ();render();
+};
+
+window.updAlt=async function(id,field,val){
+  if(!JOB.alteParti)return;
+  for(var x=0;x<JOB.alteParti.length;x++){
+    if(JOB.alteParti[x].id===id){
+      if(field==='status'){
+        JOB.alteParti[x].statusV2=val;
+        JOB.alteParti[x].status=val==='avariata'?'damaged':val==='recomandata'?'suggested':'ok';
+      }else if(field==='work'){
+        JOB.alteParti[x].workV2=val;
+        JOB.alteParti[x].work=WORK_V2_TO_V1[val]||val;
+        if(val!=='reparatie')JOB.alteParti[x].oraNormata=null;
+      }else if(field==='oraNormata'){
+        var n=parseFloat((val||'').toString().replace(',','.'));
+        JOB.alteParti[x].oraNormata=isNaN(n)?null:n;
+      }else{
+        JOB.alteParti[x][field]=val;
+      }
+      break;
+    }
+  }
+  await saveJ();render();
+};
+
+window.delAlt=async function(id){
+  if(!confirm('\u26A0\uFE0F Fotografia este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;
+  await deletePhoto('alt_'+id);
+  JOB.alteParti=(JOB.alteParti||[]).filter(function(p){return p.id!==id});
+  await saveJ();render();
+};
+
+window.aAltP=function(id,e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  resizeFile(f).then(async function(dataUrl){
+    try{await uploadPhoto('alt_'+id,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
+    render();
+  });
+};
+window.dAltPh=async function(id){
+  if(!confirm('\u26A0\uFE0F Fotografia este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;
+  await deletePhoto('alt_'+id);
+  render();
+};
+
+// Close reception
+window.closeR=async function(){
+  var pk=JOB.photoKeys||{},el=JOB.elements||{},altP=JOB.alteParti||[];
+  var hasTalon=!!pk['talon'],hasConstatare=!!pk['doc_constatare'];
+  var ovC=0;for(var x=0;x<6;x++){if(pk['ov_'+x])ovC++}
+  var reqDocs=JOB.damageType==='asig'?DA:DB;
+  var reqOk=true;
+  for(var x=0;x<reqDocs.length;x++){if(reqDocs[x].req&&!pk['doc_'+reqDocs[x].id])reqOk=false}
+
+  var elAssigned=0,missAv=0,missRec=0;
+  for(var k in el){
+    var e=el[k];
+    var s=e.statusV2||(e.status==='damaged'?'avariata':e.status==='suggested'?'recomandata':e.status==='ok'?'ok':null);
+    if(s)elAssigned++;
+    var hasPh=!!pk['elem_'+k];
+    if(s==='avariata'&&!hasPh)missAv++;
+    if(s==='recomandata'&&!hasPh)missRec++;
+  }
+  for(var ai=0;ai<altP.length;ai++){
+    var ap=altP[ai];
+    var s=ap.statusV2||(ap.status==='damaged'?'avariata':ap.status==='suggested'?'recomandata':null);
+    var hasPh=!!pk['alt_'+ap.id];
+    if(s==='avariata'&&!hasPh)missAv++;
+    if(s==='recomandata'&&!hasPh)missRec++;
+  }
+
+  var nrDosarOk=JOB.damageType!=='asig'||!!JOB.nrDosar;
+  var constOk=JOB.damageType!=='asig'||hasConstatare;
+
+  if(!JOB.damageType||!hasTalon||!constOk||!nrDosarOk||!reqOk||ovC<6||elAssigned!==EK.length||missAv>0||missRec>0){
+    toast(T('incomplete'),'err');
+    S.sec={talon:1,constatare:1,docs:1,photos:1,elems:1,alteParti:1,afterSales:1};
+    render();
+    return;
+  }
+
+  // Damage report
+  var dmg=[],sug=[];
+  for(var k in el){
+    var e=el[k];
+    var s=e.statusV2||(e.status==='damaged'?'avariata':e.status==='suggested'?'recomandata':null);
+    if(s==='avariata')dmg.push({key:k,name:T(k),type:'caros',work:e.workV2||e.work,oraNormata:e.oraNormata||null,note:e.note||''});
+    else if(s==='recomandata')sug.push({key:k,name:T(k),type:'caros',work:e.workV2||e.work,oraNormata:e.oraNormata||null,note:e.note||''});
+  }
+  for(var ai=0;ai<altP.length;ai++){
+    var ap=altP[ai];
+    var s=ap.statusV2||(ap.status==='damaged'?'avariata':ap.status==='suggested'?'recomandata':null);
+    if(s==='avariata')dmg.push({key:ap.id,name:ap.name,type:'non-caros',work:ap.workV2||ap.work,oraNormata:ap.oraNormata||null,note:ap.note||''});
+    else if(s==='recomandata')sug.push({key:ap.id,name:ap.name,type:'non-caros',work:ap.workV2||ap.work,oraNormata:ap.oraNormata||null,note:ap.note||''});
+  }
+
+  JOB.damageReport={
+    generated:new Date().toISOString(),
+    damaged:dmg,
+    suggested:sug,
+    totalDamaged:dmg.length,
+    totalSuggested:sug.length,
+    totalOraReparatie:dmg.reduce(function(s,i){return s+(i.oraNormata||0)},0)
+  };
+
+  // A fázisváltás a KÖZPONTI modulon + MEGERŐSÍTETT mentésen át (a fenti részletes recepciós
+  // validáció megmarad; nincs két egymásnak ellentmondó igazságforrás, nincs közvetlen fázismódosítás)
+  var _ln=(typeof gL==='function')?gL():'ro';
+  var res=await RPWWorkflow.commitCriticalTransition(JOB, function(){
+    return RPWWorkflow.completePhase(JOB,1,{actor:'receptie'});
+  }, {save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  if(!res.ok){
+    if(res.notSynced){ toast(RPWWorkflow.t('wf_saved_not_synced',_ln),'err'); render(); return; }
+    var errs=(res.result&&(res.result.errors||res.result.missing))||[];
+    toast(errs.map(function(r){return RPWWorkflow.t(r,_ln);}).join('; ')||T('incomplete'),'err'); render(); return;
+  }
+  toast(T('closed')+' — '+dmg.length+' '+T('avariata')+', '+sug.length+' rec','info');
+  setTimeout(function(){location.assign('rpw-dosar.html?job='+JOB.id)},1800);
+};
+
+loadJob();
+</script>
+<script>/* RPW központi workflow-őr — fázisbelépés + állapotsáv */try{RPWWorkflow.installPageGuard({phase:1});}catch(e){}</script>
+</body>
+</html>

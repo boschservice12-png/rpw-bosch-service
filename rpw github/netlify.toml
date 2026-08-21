@@ -1,0 +1,19 @@
+[build]
+  functions = "functions"
+
+# ── PHASE 2: biztonsági fejlécek + CSP ──
+# Megjegyzés: a 'unsafe-inline' a script/style-nál EGYELŐRE marad, mert az app
+# inline scripteket és inline onclick-eket használ. Ennek eltávolítása a #9 XSS-refaktor
+# (inline handler → addEventListener) után lehetséges — akkor a CSP tovább szigorítható.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+
+# A funkciók (/.netlify/functions/*) SAJÁT CORS-fejléceiket adják (_shared.js allowlist),
+# ezért itt NINCS globális Access-Control-Allow-Origin: * (a korábbi nyitott CORS megszűnt).

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>RedAssistance — Control Final</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="rpw-config.js"></script>
+<script src="rpw-guard.js"></script>
+<script src="rpw-util.js"></script>
+<script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
+<script src="rpw-workflow.js"></script>
+<script src="rpw-auth.js"></script>
+<script src="rpw-db.js"></script>
+<script src="rpw-roles.js"></script>
+<script src="rpw-save.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f5f5f3;--w:#fff;--r:#dc2626;--r50:#fef2f2;--r100:#fee2e2;--g:#16a34a;--gl:#dcfce7;--y:#ca8a04;--yl:#fef9c3;--bl:#2563eb;--bll:#dbeafe;--tl:#0d9488;--tll:#ccfbf1;--or:#ea580c;--orl:#fff7ed;--t:#1a1a1a;--t2:#555;--t3:#999;--b:#e5e5e5;--b2:#d0d0d0;--rd:10px}
+html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100dvh;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+.mono{font-family:'JetBrains Mono',monospace}
+.hdr{background:var(--w);border-bottom:1px solid var(--b);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.hdr-left{display:flex;align-items:center;gap:8px}
+.back{width:32px;height:32px;border-radius:8px;border:1px solid var(--b);background:var(--w);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.back svg{width:18px;height:18px;stroke:var(--t2);fill:none;stroke-width:2}
+.hdr-title{font-size:14px;font-weight:800}.hdr-title span{color:var(--tl)}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.hdr-job{text-align:right;font-size:11px;line-height:1.3}.hdr-job b{font-size:12px}
+.lsw{display:flex;border:1px solid var(--b);border-radius:6px;overflow:hidden}
+.lb{padding:4px 8px;font-size:9px;font-weight:700;cursor:pointer;border:none;background:var(--w);color:var(--t3);font-family:inherit}.lb.on{background:var(--tl);color:#fff}.lb:not(:last-child){border-right:1px solid var(--b)}
+.btn{border:none;border-radius:var(--rd);padding:10px 16px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;width:100%}
+.btn-g{background:var(--g);color:#fff}.btn-o{background:var(--w);color:var(--t2);border:1px solid var(--b2)}
+.company{padding:10px 16px;font-size:10px;color:var(--t3);text-align:center;font-weight:600;letter-spacing:.5px}
+.sec{margin:8px 16px 0;background:var(--w);border:1px solid var(--b);border-radius:var(--rd);overflow:hidden}
+.sec-h{padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+.sec-t{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.sec-bd{padding:0 14px 14px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.info-f{background:var(--bg);border:1px solid var(--b);border-radius:6px;padding:6px 8px}
+.info-l{font-size:8px;color:var(--t3);letter-spacing:.8px;text-transform:uppercase;font-weight:600;margin-bottom:1px}
+.info-v{font-size:13px;font-weight:700;color:var(--t)}
+.progress-bar{margin:8px 16px;padding:14px;background:var(--tl);color:#fff;border-radius:var(--rd);display:flex;justify-content:space-between;align-items:center}
+.prog-label{font-size:10px;font-weight:600;opacity:.85}.prog-val{font-size:24px;font-weight:800}
+.prog-track{flex:1;height:8px;background:rgba(255,255,255,.2);border-radius:4px;margin:0 16px;overflow:hidden}
+.prog-fill{height:100%;background:#fff;border-radius:4px;transition:width .3s}
+.chk-cat{margin:8px 16px 0;background:var(--w);border:1px solid var(--b);border-radius:var(--rd);overflow:hidden}
+.chk-cat-h{padding:12px 14px;font-size:12px;font-weight:800;color:var(--tl);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--b)}
+.chk-cat-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px}
+.cb-ok{background:var(--gl);color:var(--g)}.cb-nd{background:var(--r100);color:var(--r)}.cb-pt{background:var(--yl);color:var(--y)}
+.chk-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bg);cursor:pointer}
+.chk-item:last-child{border:none}
+.chk-item:active{background:var(--bg)}
+.chk-box{width:24px;height:24px;border-radius:6px;border:2px solid var(--b2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.chk-box.on{background:var(--g);border-color:var(--g)}
+.chk-box svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3;opacity:0}.chk-box.on svg{opacity:1}
+.chk-box.fail{background:var(--r);border-color:var(--r)}
+.chk-box.fail svg{opacity:1}
+.chk-text{flex:1;font-size:12px;font-weight:600}
+.chk-note{width:100%;border:1px solid var(--b);border-radius:6px;padding:6px 8px;font-size:11px;font-family:inherit;outline:none;resize:none;min-height:30px;margin-top:4px}.chk-note:focus{border-color:var(--tl)}
+.chk-3btn{display:flex;gap:3px}
+.c3{padding:4px 8px;border-radius:4px;font-size:9px;font-weight:700;cursor:pointer;border:1.5px solid var(--b);background:var(--w)}
+.c3-ok.on{background:var(--gl);border-color:var(--g);color:var(--g)}
+.c3-nok.on{background:var(--r100);border-color:var(--r);color:var(--r)}
+.c3-na.on{background:var(--yl);border-color:var(--y);color:var(--y)}
+.toast{position:fixed;bottom:20px;left:16px;right:16px;background:var(--w);padding:11px 14px;border-radius:var(--rd);font-size:12px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.12);border-left:4px solid var(--g);z-index:250}.toast.err{border-left-color:var(--r)}
+.bpad{height:24px}.loading{text-align:center;padding:60px;color:var(--t3);font-size:14px}
+@media print{*{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}.hdr,.btn,.lsw{display:none!important}.chk-cat,.sec,.progress-bar{margin:4px 0;break-inside:avoid}body{background:#fff}}
+
+/* ── RPW SHELL nav (etalon: rpw-evaluare-red.html) — beinjektálva ── */
+.shell{position:sticky;top:0;z-index:50;background:var(--w);border-bottom:1px solid var(--b)}
+.shell-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px}
+.sh-left{display:flex;align-items:center;gap:10px;min-width:0}
+.sh-back{width:32px;height:32px;border-radius:6px;border:1px solid var(--b);background:var(--w);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.sh-back svg{width:16px;height:16px;stroke:var(--t2);fill:none;stroke-width:2}
+.sh-plate{font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;font-weight:600;background:var(--pl,#ede9fe);border:1px solid var(--b2,#d0d0d0);border-radius:4px;padding:3px 8px;white-space:nowrap}
+.sh-phase{font-size:13px;font-weight:700;letter-spacing:-0.012em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-phase .ph-idx{font-family:'Geist Mono',ui-monospace,monospace;color:var(--r);margin-right:6px}
+.sh-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.stepA{display:flex;gap:4px;padding:0 16px 10px;overflow-x:auto;scrollbar-width:none}.stepA::-webkit-scrollbar{display:none}
+.stA{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--b);border-radius:6px;font-size:11px;font-weight:600;color:var(--t3);cursor:pointer;white-space:nowrap;background:var(--w);flex-shrink:0}
+.stA .n{font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:600}
+.stA.done{color:var(--t2);border-color:var(--b2,#d0d0d0)}.stA.done .n{color:var(--g)}
+.stA.cur{background:var(--r);border-color:var(--r);color:#fff;font-weight:700}.stA.cur .n{color:#fff}
+.stepB{display:flex;align-items:center;padding:2px 16px 12px}
+.stB{width:30px;height:30px;border-radius:50%;border:1px solid var(--b2,#d0d0d0);background:var(--w);font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:600;color:var(--t3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.stB.done{background:var(--t);border-color:var(--t);color:#fff}
+.stB.cur{background:var(--r);border-color:var(--r);color:#fff;box-shadow:0 0 0 3px rgba(225,29,46,.22)}
+.stB-line{flex:1;height:1px;background:var(--b2,#d0d0d0);min-width:6px}.stB-line.done{background:var(--t)}
+.stB-name{margin-left:10px;font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap}
+.stepC{padding:0 16px 12px}.stepC-bar{display:flex;gap:3px}
+.stC{flex:1;height:6px;border-radius:3px;background:var(--b);cursor:pointer}.stC.done{background:var(--t2)}.stC.cur{background:var(--r)}
+.stepC-meta{display:flex;justify-content:space-between;margin-top:6px;font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading">Se incarca...</div></div>
+<div id="rpw-sync" style="position:fixed;bottom:10px;right:12px;z-index:300;font:600 11px system-ui,Arial;background:#fff;border:1px solid #E8EBEF;border-radius:8px;padding:5px 10px;box-shadow:0 2px 8px rgba(0,0,0,.08);opacity:0;transition:opacity .2s"></div>
+<script>
+// ── PHASE 1: config-guard (TypeError helyett kontrollált hibaképernyő) ──
+if(!window.RPW_CFG){document.getElementById('app').innerHTML='<div style="padding:40px;text-align:center;font-family:system-ui,Arial"><div style="font-size:40px">&#9888;&#65039;</div><div style="font-size:18px;font-weight:800;color:#C81E33;margin:12px 0 6px">Configurație lipsă</div><div style="color:#3F4956;font-size:14px;line-height:1.6">rpw-config.js nu s-a încărcat (sau rulează dintr-o copie locală file://).<br>Deschide sistemul live.</div></div>';throw new Error('RPW_CFG missing');}
+if(window.RPWAuth){try{RPWAuth.guard();}catch(e){}}
+var SB_URL=RPW_CFG.SB_URL;
+var SB_KEY=RPW_CFG.SB_KEY;
+var sb=supabase.createClient(SB_URL,SB_KEY);
+var JOB=null,S={ts:null,te:0};
+// ── PHASE 1: látható szinkron-állapot + robusztus mentő ──
+function rpwSyncLabel(st){var m={saving_local:['Salvare…','#6B7280'],syncing:['Sincronizare…','#2A6FDB'],synced:['✓ Salvat pe server','#1E9D55'],offline:['⚠ Offline – salvat local','#A6701F'],retry:['↻ Reîncercare…','#A6701F'],failed:['✗ Eșec salvare – reîncearcă','#C81E33'],permission:['✗ Fără permisiune','#C81E33'],conflict:['⚠ Conflict de date','#C81E33'],auth:['✗ Autentificare','#C81E33'],idle:['','#6B7280']};return m[st]||[st,'#6B7280'];}
+function onSyncState(st){var el=document.getElementById('rpw-sync');if(el){var l=rpwSyncLabel(st);el.textContent=l[0];el.style.color=l[1];el.style.opacity=l[0]?'1':'0';if(st==='synced'){setTimeout(function(){if(el&&el.textContent===l[0])el.style.opacity='0'},2000)}}var cb=document.getElementById('rpw-conflict');if(st==='conflict'){if(!cb){cb=document.createElement('div');cb.id='rpw-conflict';cb.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,Arial';cb.innerHTML='<div style="max-width:360px;background:#fff;border-radius:12px;padding:22px;text-align:center"><div style="font-size:34px">\u26A0\uFE0F</div><div style="font-size:17px;font-weight:800;color:#C81E33;margin:8px 0">Conflict de date</div><div style="font-size:13px;color:#3F4956;line-height:1.6">Alt utilizator a modificat aceast\u0103 fi\u0219\u0103. Modificarea ta local\u0103 este p\u0103strat\u0103. Re\u00EEncarc\u0103 pentru versiunea de pe server.</div><button onclick="location.reload()" style="margin-top:16px;background:#E11D2E;color:#fff;border:none;border-radius:9px;padding:11px 20px;font-weight:800;cursor:pointer">Re\u00EEncarc\u0103</button></div>';document.body.appendChild(cb);}}else if(cb){cb.remove();}}
+var SAVER=(window.RPWSave&&RPWSave.createSaver)?RPWSave.createSaver({sb:sb,onState:onSyncState}):null;
+if(SAVER&&window.RPWSave&&RPWSave.bindBeforeUnload)RPWSave.bindBeforeUnload(SAVER,'Există modificări nesincronizate.');
+
+function gJI(){return new URLSearchParams(location.search).get('job')}
+async function loadJob(){
+  var jid=gJI();if(!jid){render();return}
+  var cached=localStorage.getItem('rpw_job_'+jid);
+  if(cached){try{JOB=JSON.parse(cached);if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};if(!JOB.controlChecks)JOB.controlChecks={};render()}catch(e){}}
+  try{
+    var res=await RPWDb.getRow(sb,jid);
+    if(res.error)throw res.error;
+    var _lts=0,_sts=0;try{_lts=Date.parse(localStorage.getItem('rpw_job_ts_'+jid)||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
+    if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};if(!JOB.controlChecks)JOB.controlChecks={};
+    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+jid,res.data.updated_at||new Date().toISOString())}catch(e){}}
+    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB))}catch(e){}
+    /* nincs auto-mentes betolteskor */
+  }catch(e){if(!JOB)JOB=null}
+  render();
+}
+async function saveJ(){
+  if(!JOB)return;
+  if(SAVER)return SAVER.save(JOB);              // PHASE 1: valódi Promise + látható állapot + offline sor
+  // fallback, ha a mentőmodul nem töltött be — DE most már ellenőrizzük az {error}-t (#2)
+  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+JOB.id,new Date().toISOString())}catch(e){}
+  try{var r=await RPWDb.patch(sb,JOB);if(r&&r.error){onSyncState('failed');console.error('Save error:',r.error);return{failed:true,error:r.error}} onSyncState('synced');return{ok:true}}
+  catch(e){onSyncState('failed');console.error('Save:',e);return{failed:true,error:e}}
+}
+function toast(m,e){S.ts=m;S.te=e?1:0;render();setTimeout(function(){S.ts=null;render()},3000)}
+
+// Checklist categories — placeholder, to be filled with real items
+var CHECKLIST=[
+  {cat:'Tinichigerie',catKey:'tin',items:[
+    {id:'tin_1',text:'Geometrie panouri — aliniament corect'},
+    {id:'tin_2',text:'Jocuri egale intre panouri'},
+    {id:'tin_3',text:'Suduri / lipiri — calitate'},
+    {id:'tin_4',text:'Elemente inlocuite — fixare corecta'},
+    {id:'tin_5',text:'Functionalitate usi / capote / portbagaj'}
+  ]},
+  {cat:'Vopsitorie',catKey:'vop',items:[
+    {id:'vop_1',text:'Culoare — concordanta cu originalul'},
+    {id:'vop_2',text:'Suprafata — fara incluziuni / scurgeri'},
+    {id:'vop_3',text:'Luciu — uniform pe toate panourile'},
+    {id:'vop_4',text:'Uniformizare — tranzitie invizibila'},
+    {id:'vop_5',text:'Protectie anticoroziva — aplicata'}
+  ]},
+  {cat:'Montaj / Finisare',catKey:'mon',items:[
+    {id:'mon_1',text:'Toate elementele remontate corect'},
+    {id:'mon_2',text:'Garnituri / etansari — pozitionate'},
+    {id:'mon_3',text:'Clipsuri / suruburi — complete'},
+    {id:'mon_4',text:'Faruri / stopuri — functionale'},
+    {id:'mon_5',text:'Senzori / camere — recalibrate'}
+  ]},
+  {cat:'Electrice / Functional',catKey:'elf',items:[
+    {id:'elf_1',text:'Reglaj faruri — aliniere fascicul'},
+    {id:'elf_2',text:'Martor bord: Airbag — stins'},
+    {id:'elf_3',text:'Martor bord: Check motor — stins'},
+    {id:'elf_4',text:'Martor bord: ABS / ESP — stins'},
+    {id:'elf_5',text:'Alte martoare bord — verificate (stinse)'},
+    {id:'elf_6',text:'Verificare becuri — fata / spate / semnalizare'},
+    {id:'elf_7',text:'Inchidere centralizata — functionala'}
+  ]},
+  {cat:'Curatenie / Predare',catKey:'cur',items:[
+    {id:'cur_1',text:'Spalat exterior'},
+    {id:'cur_2',text:'Curatat interior — zona lucrata'},
+    {id:'cur_3',text:'Fara urme de vopsea / praf'},
+    {id:'cur_4',text:'Stickere protectie — indepartate'},
+    {id:'cur_5',text:'Inventar complet — verificat'}
+  ]}
+];
+
+var i={control:{ro:'Control Final',en:'Final Check',hu:'Vegso Kontrol'},vehicul:{ro:'DATE VEHICUL',en:'VEHICLE DATA',hu:'JARMU ADATOK'},plate:{ro:'Nr. inmatr.',en:'Plate',hu:'Rendszam'},proprietar:{ro:'Proprietar',en:'Owner',hu:'Tulajdonos'},brand:{ro:'Marca',en:'Brand',hu:'Marka'},year:{ro:'An',en:'Year',hu:'Ev'},
+progress:{ro:'PROGRES CONTROL',en:'CHECK PROGRESS',hu:'KONTROL HALADAS'},
+ok:{ro:'OK',en:'OK',hu:'OK'},nok:{ro:'NOK',en:'NOK',hu:'NOK'},na:{ro:'N/A',en:'N/A',hu:'N/A'},
+advance:{ro:'Avanseaza → Inchidere',en:'Advance → Close',hu:'Tovabb → Lezaras'},print:{ro:'Printeaza',en:'Print',hu:'Nyomtatas'},
+noJob:{ro:'Nu exista lucrare',en:'No job',hu:'Nincs munka'},openD:{ro:'Dashboard',en:'Dashboard',hu:'Dashboard'},saved:{ro:'Salvat',en:'Saved',hu:'Mentve'},
+incomplete:{ro:'Control incomplet',en:'Check incomplete',hu:'Kontrol hianyos'},
+reworkTitle:{ro:'DEFECTE (NOK) → Remediere',en:'DEFECTS (NOK) → Rework',hu:'HIBÁK (NOK) → Javítás'},
+reworkQ:{ro:'Unde trimiteți la remediere?',en:'Send rework to?',hu:'Hová küldi javításra?'},
+toLakatos:{ro:'→ Tinichigerie',en:'→ Bodywork',hu:'→ Lakatos'},
+toFesto:{ro:'→ Vopsitorie',en:'→ Paint',hu:'→ Fényezés'},
+toOther:{ro:'→ Altă reparație',en:'→ Other repair',hu:'→ Más javítás'},
+toManager:{ro:'→ Decizie manager',en:'→ Manager decision',hu:'→ Vezetői döntés'},
+reworkOpen:{ro:'Remedieri deschise',en:'Open reworks',hu:'Nyitott javítások'},
+reworkSent:{ro:'Trimis la remediere',en:'Sent to rework',hu:'Javításra küldve'},
+reControl:{ro:'Control repetat necesar după remediere',en:'Re-control required after rework',hu:'Javítás után ismételt kontroll kell'},
+reworkAssign:{ro:'Responsabil',en:'Assignee',hu:'Felelős'},
+reworkDesc:{ro:'Descriere defect (min. 10)',en:'Defect description (min 10)',hu:'Hiba leírása (min. 10)'},
+ctrlNamePrompt:{ro:'Nume controlor:',en:'Controller name:',hu:'Kontrolőr neve:'}};
+
+function gL(){return localStorage.getItem('rpw_lang')||'ro'}
+function sL(l){localStorage.setItem('rpw_lang',l);render()}
+function T(k){var e=i[k];return e?e[gL()]||e.ro||k:k}
+
+
+/* ── RPW SHELL (etalon: rpw-evaluare-red.html) — beinjektálva ── */
+var SHELL_PHASES=[
+ {n:'01',page:'rpw-recepcio-red.html',ro:'Recepție',en:'Reception',hu:'Recepció'},
+ {n:'02',page:'rpw-evaluare-red.html',ro:'Evaluare',en:'Assessment',hu:'Felmérés'},
+ {n:'03',page:'rpw-reconstatare-red.html',ro:'Reconstatare',en:'Re-assessment',hu:'Újrafelmérés'},
+ {n:'04',page:'rpw-tinichigerie-red.html',ro:'Tinichigerie',en:'Bodywork',hu:'Lakatos'},
+ {n:'05',page:'rpw-vopsitorie-red.html',ro:'Vopsitorie',en:'Paint',hu:'Fényezés'},
+ {n:'06',page:'rpw-control-red.html',ro:'Control',en:'Check',hu:'Kontroll'},
+ {n:'07',page:'rpw-inchidere-red.html',ro:'Închidere',en:'Closing',hu:'Lezárás'}
+];
+var SHELL_CUR=5;
+function shellVariant(){try{return localStorage.getItem('rpw_shell_v')||'A'}catch(e){return 'A'}}
+window.setShellVariant=function(v){try{localStorage.setItem('rpw_shell_v',v)}catch(e){}render()};
+window.goPhase=function(i){if(i===SHELL_CUR)return;location.assign(SHELL_PHASES[i].page+'?job='+(JOB?JOB.id:''))};
+function shellHtml(job,ln){
+  var v=shellVariant();var plate=job.plate||job.number||job.id||'';var cur=SHELL_PHASES[SHELL_CUR];
+  function nm(p){return p[ln]||p.ro}
+  var h='<div class="shell no-print"><div class="shell-top">';
+  h+='<div class="sh-left"><div class="sh-back" onclick="location.assign(\'rpw-dosar.html?job='+job.id+'\')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>';
+  h+='<span class="sh-plate">'+escH(plate)+'</span>';
+  h+='<div class="sh-phase"><span class="ph-idx">'+cur.n+'</span>'+nm(cur)+'</div></div>';
+  h+='<div class="sh-right"><div class="lsw">';
+  ['A','B','C'].forEach(function(x){h+='<button class="lb '+(v===x?'on':'')+'" onclick="setShellVariant(\''+x+'\')">'+x+'</button>'});
+  h+='</div><div class="lsw"><button class="lb '+(ln==='ro'?'on':'')+'" onclick="sL(\'ro\')">RO</button><button class="lb '+(ln==='en'?'on':'')+'" onclick="sL(\'en\')">EN</button><button class="lb '+(ln==='hu'?'on':'')+'" onclick="sL(\'hu\')">HU</button></div></div></div>';
+  if(v==='A'){h+='<div class="stepA">';SHELL_PHASES.forEach(function(p,ix){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;var cls=ix<SHELL_CUR?'done':ix===SHELL_CUR?'cur':'';h+='<div class="stA '+cls+'" onclick="goPhase('+ix+')"><span class="n">'+p.n+'</span>'+nm(p)+'</div>'});h+='</div>';}
+  else if(v==='B'){h+='<div class="stepB">';SHELL_PHASES.forEach(function(p,ix){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;if(ix>0)h+='<div class="stB-line'+(ix<=SHELL_CUR?' done':'')+'"></div>';var cls=ix<SHELL_CUR?' done':ix===SHELL_CUR?' cur':'';h+='<div class="stB'+cls+'" onclick="goPhase('+ix+')" title="'+p.n+' '+nm(p)+'">'+p.n+'</div>';});h+='<span class="stB-name">'+nm(cur)+'</span></div>';}
+  else{h+='<div class="stepC"><div class="stepC-bar">';SHELL_PHASES.forEach(function(p,ix){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;var cls=ix<SHELL_CUR?' done':ix===SHELL_CUR?' cur':'';h+='<div class="stC '+cls+'" onclick="goPhase('+ix+')" title="'+p.n+' '+nm(p)+'"></div>'});h+='</div><div class="stepC-meta"><span>'+cur.n+' '+nm(cur)+'</span><span>pasul '+cur.n+' / 07</span></div></div>';}
+  h+='</div>';return h;
+}
+
+function render(){
+  var ln=gL(),job=JOB;
+  if(!job){document.getElementById('app').innerHTML='<div class="loading">'+T('noJob')+'<br><br><button class="btn btn-o" style="width:auto;padding:10px 24px;display:inline-flex" onclick="location.assign(\'index.html\')">'+T('openD')+'</button></div>';return}
+  var cc=job.controlChecks||{};
+
+  // Count progress
+  var totalItems=0,doneItems=0,okItems=0,nokItems=0;
+  CHECKLIST.forEach(function(cat){cat.items.forEach(function(it){totalItems++;var v=cc[it.id];if(v==='ok'){doneItems++;okItems++}else if(v==='nok'){doneItems++;nokItems++}else if(v==='na')doneItems++})});
+  var pct=totalItems?Math.round(doneItems/totalItems*100):0;
+  var allDone=doneItems===totalItems&&nokItems===0;
+
+  var h=shellHtml(job,ln);
+
+  // ── CONTROL állapot-szín: elvégezetlen=piros, elvégezve=zöld, hibák(NOK)=sárga ──
+  var _cs=nokItems>0?'hiba':(allDone?'gata':'todo');
+  var _ccol=_cs==='hiba'?'#E9A700':(_cs==='gata'?'#1E9D55':'#E11D2E');
+  var _clab=_cs==='hiba'?('⚠️ DEFECTE ('+nokItems+')'):(_cs==='gata'?'✓ EFECTUAT':'● NEEFECTUAT');
+
+  h+='<div class="company">SC SZKALICZKI SERVICE SRL · RO16250445 · Str. Petki David, Nr.27/A, Sangeorgiu de Mures · Tel: 0265318020</div>';
+
+  // Vehicle
+  h+='<div class="sec"><div class="sec-h"><div class="sec-t">'+T('vehicul')+'</div></div><div class="sec-bd"><div class="info-grid"><div class="info-f"><div class="info-l">'+T('plate')+'</div><div class="info-v mono" style="font-size:16px;font-weight:800">'+escH(job.plate||'—')+'</div></div><div class="info-f"><div class="info-l">'+T('proprietar')+'</div><div class="info-v">'+escH(job.proprietar||job.client||'—')+'</div></div></div><div class="info-grid" style="margin-top:6px"><div class="info-f"><div class="info-l">'+T('brand')+'</div><div class="info-v">'+escH(job.brand||job.auto||'—')+'</div></div><div class="info-f"><div class="info-l">'+T('year')+'</div><div class="info-v mono">'+escH(job.year||'—')+'</div></div></div></div></div>';
+
+  // Progress bar
+  h+='<div class="progress-bar" style="border-left:6px solid '+_ccol+';background:'+_ccol+'14"><div><div class="prog-label">'+T('progress')+'</div><div class="prog-val" style="color:'+_ccol+'">'+pct+'% · '+_clab+'</div></div><div class="prog-track"><div class="prog-fill" style="width:'+pct+'%;background:'+_ccol+'"></div></div><div style="font-size:11px;font-weight:700;color:'+_ccol+'">'+doneItems+'/'+totalItems+(nokItems?' · '+nokItems+' NOK':'')+'</div></div>';
+
+  // Checklist categories
+  CHECKLIST.forEach(function(cat){
+    var catDone=0,catTotal=cat.items.length,catNok=0;
+    cat.items.forEach(function(it){var v=cc[it.id];if(v)catDone++;if(v==='nok')catNok++});
+    var badgeCls=catDone===catTotal&&catNok===0?'cb-ok':catDone>0?'cb-pt':'cb-nd';
+    h+='<div class="chk-cat"><div class="chk-cat-h">'+cat.cat+'<span class="chk-cat-badge '+badgeCls+'">'+catDone+'/'+catTotal+(catNok?' · '+catNok+' NOK':'')+'</span></div>';
+    cat.items.forEach(function(it){
+      var v=cc[it.id]||'';
+      h+='<div class="chk-item"><div class="chk-text">'+it.text+'</div><div class="chk-3btn"><div class="c3 c3-ok '+(v==='ok'?'on':'')+'" onclick="setChk(\''+it.id+'\',\'ok\')">'+T('ok')+'</div><div class="c3 c3-nok '+(v==='nok'?'on':'')+'" onclick="setChk(\''+it.id+'\',\'nok\')">'+T('nok')+'</div><div class="c3 c3-na '+(v==='na'?'on':'')+'" onclick="setChk(\''+it.id+'\',\'na\')">'+T('na')+'</div></div></div>';
+      if(v==='nok'){h+='<div style="padding:0 14px 8px"><textarea class="chk-note" placeholder="Observatii NOK..." onchange="setChkNote(\''+it.id+'\',this.value)">'+(cc[it.id+'_note']||'')+'</textarea></div>'}
+    });
+    h+='</div>';
+  });
+
+  // Központi workflow-állapot szinkron (a modul innen olvassa a kontroll eredményét)
+  if(window.RPWWorkflow){
+    RPWWorkflow.migrateJob(job);
+    if(!job.control)job.control={};
+    job.control.allDone=allDone;
+    job.control.lastResult=nokItems>0?'nok':(allDone?'ok':null);
+  }
+  var _openRw=(window.RPWWorkflow?RPWWorkflow.openReworks(job):[]);
+
+  // NOK → kötelező javítási ciklus (rework), NEM lehet csak továbbengedni
+  if(nokItems>0){
+    h+='<div class="chk-cat" style="border:2px solid #E11D2E"><div class="chk-cat-h" style="color:#E11D2E">'+T('reworkTitle')+'</div>';
+    h+='<div style="padding:8px 14px"><div style="font-size:12px;font-weight:700;margin-bottom:6px">'+T('reworkQ')+'</div>';
+    h+='<input id="rwDesc" class="chk-note" placeholder="'+T('reworkDesc')+'" style="width:100%;margin-bottom:6px"><input id="rwWho" class="chk-note" placeholder="'+T('reworkAssign')+'" style="width:100%;margin-bottom:8px">';
+    h+='<div style="display:flex;flex-wrap:wrap;gap:6px">';
+    h+='<button class="btn btn-o" onclick="mkRework(4)">'+T('toLakatos')+'</button>';
+    h+='<button class="btn btn-o" onclick="mkRework(5)">'+T('toFesto')+'</button>';
+    h+='<button class="btn btn-o" onclick="mkRework(4,\'other\')">'+T('toOther')+'</button>';
+    h+='<button class="btn btn-o" onclick="mkRework(0,\'manager\')">'+T('toManager')+'</button>';
+    h+='</div></div></div>';
+  }
+
+  // Nyitott javítások listája + „ismételt kontroll" figyelmeztetés
+  if(_openRw.length){
+    h+='<div class="chk-cat"><div class="chk-cat-h">'+T('reworkOpen')+' ('+_openRw.length+')</div>';
+    _openRw.forEach(function(r){h+='<div class="chk-item"><div class="chk-text">#'+r.id+' → '+(r.sourcePhase?('F'+r.sourcePhase):'manager')+' · '+(r.description||r.category||'')+(r.assignedTo?(' · '+r.assignedTo):'')+'</div></div>';});
+    h+='<div style="padding:6px 14px;color:#E9A700;font-weight:700;font-size:12px">'+T('reControl')+'</div></div>';
+  }
+
+  // Actions — a továbblépés a KÖZPONTI modulból engedélyezett (NOK / nyitott rework → tiltva)
+  var _canAdv=(window.RPWWorkflow?RPWWorkflow.canCompletePhase(job,6).ok:(allDone));
+  h+='<div style="padding:10px 16px;display:flex;gap:8px"><button class="btn btn-o" onclick="window.print()" style="flex:1">'+T('print')+'</button><button class="btn '+(_canAdv?'btn-g':'btn-o')+'" onclick="advPh()" style="flex:1;'+(_canAdv?'':'opacity:.5')+'" '+(_canAdv?'':'disabled')+'>'+T('advance')+'</button></div>';
+
+  h+='<div class="bpad"></div>';
+  if(S.ts)h+='<div class="toast '+(S.te?'err':'')+'">'+S.ts+'</div>';
+  document.getElementById('app').innerHTML=h;
+}
+
+window.setChk=async function(id,val){
+  if(!JOB.controlChecks)JOB.controlChecks={};
+  JOB.controlChecks[id]=JOB.controlChecks[id]===val?'':val;
+  await saveJ();render();
+};
+window.setChkNote=async function(id,val){
+  if(!JOB.controlChecks)JOB.controlChecks={};
+  JOB.controlChecks[id+'_note']=val;
+  await saveJ();
+};
+// NOK → javítási ciklus indítása (érvényes rework a célfázisra, megerősített mentéssel)
+window.mkRework=async function(targetPhase,mode){
+  if(!JOB)return;var _ln=gL();
+  var d=document.getElementById('rwDesc'),w=document.getElementById('rwWho');
+  var desc=(d&&d.value||'').trim(), who=(w&&w.value||'').trim();
+  var ctrl=prompt(T('ctrlNamePrompt'),'');
+  if(ctrl===null)return;
+  var category=(mode==='manager'?'manager':(mode==='other'?'other':(targetPhase===5?'vopsitorie':'tinichigerie')));
+  RPWWorkflow.migrateJob(JOB);
+  if(!JOB.control)JOB.control={};
+  JOB.control.lastResult='nok'; JOB.control.lastAt=new Date().toISOString(); JOB.control.lastBy=ctrl;
+  var res=await RPWWorkflow.commitCriticalTransition(JOB, function(){
+    return RPWWorkflow.createRework(JOB,{ category:category, targetPhase:(mode==='manager'?6:targetPhase),
+      description:desc, assignedTo:who, createdBy:(ctrl||'').trim(), seed:(JOB.rework?JOB.rework.length:0) });
+  }, {save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  if(!res.ok){
+    if(res.notSynced){ toast(RPWWorkflow.t('wf_saved_not_synced',_ln),1); render(); return; }
+    var errs=(res.result&&res.result.errors)||[];
+    toast(errs.map(function(r){return RPWWorkflow.t(r,_ln);}).join('; ')||'?',1); return;
+  }
+  toast(T('reworkSent'));render();
+};
+window.advPh=async function(){
+  if(!JOB)return;var _ln=gL();
+  RPWWorkflow.migrateJob(JOB);
+  var cc=JOB.controlChecks||{},totalItems=0,doneItems=0,nokItems=0;
+  CHECKLIST.forEach(function(cat){cat.items.forEach(function(it){totalItems++;var v=cc[it.id];if(v)doneItems++;if(v==='nok')nokItems++})});
+  if(!JOB.control)JOB.control={};
+  JOB.control.allDone=(doneItems===totalItems && nokItems===0);
+  JOB.control.lastResult=nokItems>0?'nok':(JOB.control.allDone?'ok':null);
+  JOB.control.lastAt=new Date().toISOString();
+  var res=await RPWWorkflow.commitCriticalTransition(JOB, function(){
+    return RPWWorkflow.completePhase(JOB,6,{actor:'control'});
+  }, {save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  if(!res.ok){
+    if(res.notSynced){ toast(RPWWorkflow.t('wf_saved_not_synced',_ln),1); render(); return; }
+    var errs=(res.result&&(res.result.errors||res.result.missing))||[];
+    toast(errs.map(function(r){return RPWWorkflow.t(r,_ln);}).join('; ')||T('incomplete'),1); return;
+  }
+  toast(T('saved'));
+  setTimeout(function(){location.assign('rpw-dosar.html?job='+JOB.id)},1500);
+};
+
+loadJob();
+</script>
+<script>/* RPW központi workflow-őr — fázisbelépés + állapotsáv */try{RPWWorkflow.installPageGuard({phase:6});}catch(e){}</script>
+</body>
+</html>

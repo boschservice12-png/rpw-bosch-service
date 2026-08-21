@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Coș — dosare șterse · RedAssistance</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<script src="rpw-config.js"></script>
+<script src="rpw-guard.js"></script>
+<script src="rpw-util.js"></script>
+<script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
+<script src="rpw-auth.js"></script>
+<script src="rpw-db.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;color:#1f2937;line-height:1.5;padding:16px;max-width:820px;margin:0 auto}
+.hdr{background:#111;color:#fff;border-radius:14px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.hdr .t{font-size:15px;font-weight:800}.hdr .s{font-size:12px;opacity:.8}
+.back{background:#fff;color:#111;border:none;border-radius:9px;padding:8px 12px;font-weight:800;cursor:pointer;font-family:inherit;font-size:13px}
+.bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.btn{border:none;border-radius:10px;padding:9px 14px;font-weight:800;cursor:pointer;font-family:inherit;font-size:13px}
+.btn-empty{background:#E11D2E;color:#fff}
+.btn-ref{background:#fff;border:1px solid #d1d5db;color:#374151}
+.count{margin-left:auto;font-size:13px;font-weight:800;color:#6b7280;align-self:center}
+.row{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.row .plate{font-family:ui-monospace,monospace;font-weight:800;background:#111;color:#fff;padding:3px 8px;border-radius:5px;font-size:13px}
+.row .meta{flex:1;min-width:180px}
+.row .nm{font-weight:800;font-size:14px}
+.row .sub{font-size:12px;color:#6b7280}
+.row .acts{display:flex;gap:6px}
+.a-rest{background:#1E9D55;color:#fff}
+.a-del{background:#fff;border:1px solid #E11D2E;color:#E11D2E}
+.empty{text-align:center;padding:50px 16px;color:#6b7280;background:#fff;border-radius:12px;border:1px dashed #d1d5db}
+.gate{text-align:center;padding:50px 16px;color:#6b7280}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#111;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:700;z-index:99}
+.toast.err{background:#E11D2E}
+.loading{text-align:center;padding:40px;color:#6b7280}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading">Se încarcă…</div></div>
+<script>
+(function(){
+  var app=document.getElementById('app');
+  var CFG=window.RPW_CFG;
+  function toast(m,e){var t=document.createElement('div');t.className='toast'+(e?' err':'');t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove()},3000);}
+  function isAdmin(){try{return localStorage.getItem('rpw_admin')==='1'}catch(e){return false}}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  if(!CFG||!CFG.SB_URL){app.innerHTML='<div class="gate">Eroare de configurare.</div>';return;}
+  if(!isAdmin()){app.innerHTML='<div class="hdr"><button class="back" onclick="location.assign(\'index.html\')">← Înapoi</button><div><div class="t">Coș — dosare șterse</div></div></div><div class="gate">🔒 Doar administrator.<br><br>Activați modul ADMIN în meniul principal, apoi reveniți.</div>';return;}
+  var sb=supabase.createClient(CFG.SB_URL,CFG.SB_KEY);
+  var ROWS=[];
+
+  function fmt(ts){try{return new Date(ts).toLocaleString('ro-RO')}catch(e){return ts||''}}
+
+  async function load(){
+    try{
+      var res=await RPWDb.listTrashed(sb);
+      if(res.error)throw res.error;
+      ROWS=(res.data||[]).map(function(r){var d=r.data||{};return {id:r.id,number:d.number||r.id,plate:d.plate||'',client:d.client||d.proprietar||'',phase:d.phase,deleted_at:r.deleted_at}});
+      render();
+    }catch(e){app.innerHTML='<div class="empty">Eroare de conexiune: '+esc(e&&e.message||e)+'</div>';}
+  }
+
+  function render(){
+    var h='';
+    h+='<div class="hdr"><button class="back" onclick="location.assign(\'index.html\')">← Înapoi</button><div><div class="t">🗑 Coș — dosare șterse</div><div class="s">Restaurare sau ștergere definitivă</div></div></div>';
+    h+='<div class="bar"><button class="btn btn-ref" onclick="window.__reload()">↻ Reîncarcă</button>'+(ROWS.length?'<button class="btn btn-empty" onclick="window.__emptyAll()">Golește coșul definitiv</button>':'')+'<span class="count">'+ROWS.length+' dosar(e)</span></div>';
+    if(!ROWS.length){h+='<div class="empty">Coșul este gol. ✓</div>';app.innerHTML=h;return;}
+    ROWS.forEach(function(r){
+      h+='<div class="row">'+(r.plate?'<span class="plate">'+esc(r.plate)+'</span>':'')+
+        '<div class="meta"><div class="nm">'+esc(r.number)+(r.client?' · '+esc(r.client):'')+'</div><div class="sub">Șters: '+fmt(r.deleted_at)+(r.phase!=null?(' · faza '+r.phase):'')+'</div></div>'+
+        '<div class="acts"><button class="btn a-rest" onclick="window.__restore(\''+r.id+'\')">↩ Restaurează</button><button class="btn a-del" onclick="window.__perma(\''+r.id+'\',\''+esc(r.number).replace(/\x27/g,"")+'\')">Șterge definitiv</button></div>'+
+        '</div>';
+    });
+    app.innerHTML=h;
+  }
+
+  window.__reload=function(){load()};
+  window.__restore=async function(id){
+    try{var res=await RPWDb.restore(sb,id);if(res.error)throw res.error;
+      ROWS=ROWS.filter(function(r){return r.id!==id});render();toast('✓ Restaurat');
+    }catch(e){toast('Eroare la restaurare: '+(e&&e.message||e),1);}
+  };
+  window.__perma=async function(id,label){
+    if(!confirm('ȘTERGERE DEFINITIVĂ\n\nDosarul '+label+' va fi șters IREVERSIBIL din baza de date.\n\nContinuați?'))return;
+    if(!confirm('Sigur? Această acțiune NU poate fi anulată.'))return;
+    try{var res=await RPWDb.purge(sb,id);if(res.error)throw res.error;
+      ROWS=ROWS.filter(function(r){return r.id!==id});render();toast('Șters definitiv');
+    }catch(e){toast('Eroare: '+(e&&e.message||e),1);}
+  };
+  window.__emptyAll=async function(){
+    if(!confirm('GOLIRE COȘ\n\nToate cele '+ROWS.length+' dosare din coș vor fi șterse IREVERSIBIL.\n\nContinuați?'))return;
+    if(!confirm('Ultima confirmare — ștergere definitivă a întregului coș?'))return;
+    try{var res=await RPWDb.purgeAllTrashed(sb);if(res.error)throw res.error;
+      ROWS=[];render();toast('Coș golit definitiv');
+    }catch(e){toast('Eroare: '+(e&&e.message||e),1);}
+  };
+
+  load();
+})();
+</script>
+</body>
+</html>

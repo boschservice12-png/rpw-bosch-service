@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#7c3aed">
+<title>RedAssistance — Vopsitorie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="rpw-config.js"></script>
+<script src="rpw-guard.js"></script>
+<script src="rpw-util.js"></script>
+<script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
+<script src="rpw-workflow.js"></script>
+<script src="rpw-auth.js"></script>
+<script src="rpw-db.js"></script>
+<script src="rpw-roles.js"></script>
+<script src="rpw-save.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f5f5f3;--w:#fff;--r:#dc2626;--r50:#fef2f2;--r100:#fee2e2;--r700:#b91c1c;--g:#16a34a;--gl:#dcfce7;--y:#ca8a04;--yl:#fef9c3;--bl:#2563eb;--bll:#dbeafe;--p:#7c3aed;--pl:#ede9fe;--or:#ea580c;--orl:#fff7ed;--tl:#0d9488;--tll:#ccfbf1;--t:#1a1a1a;--t2:#555;--t3:#999;--b:#e5e5e5;--b2:#d0d0d0;--rd:10px}
+html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100dvh;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+.mono{font-family:'JetBrains Mono',monospace}
+.hdr{background:var(--w);border-bottom:1px solid var(--b);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.hdr-left{display:flex;align-items:center;gap:8px}
+.back{width:32px;height:32px;border-radius:8px;border:1px solid var(--b);background:var(--w);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.back svg{width:18px;height:18px;stroke:var(--t2);fill:none;stroke-width:2}
+.hdr-title{font-size:14px;font-weight:800}.hdr-title span{color:var(--p)}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.hdr-job{text-align:right;font-size:11px;line-height:1.3}.hdr-job b{font-size:12px}
+.lsw{display:flex;border:1px solid var(--b);border-radius:6px;overflow:hidden}
+.lb{padding:4px 8px;font-size:9px;font-weight:700;cursor:pointer;border:none;background:var(--w);color:var(--t3);font-family:inherit}.lb.on{background:var(--p);color:#fff}.lb:not(:last-child){border-right:1px solid var(--b)}
+.btn{border:none;border-radius:var(--rd);padding:10px 16px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;width:100%}
+.btn-g{background:var(--g);color:#fff}.btn-o{background:var(--w);color:var(--t2);border:1px solid var(--b2)}.btn-wa{background:#25D366;color:#fff}
+.company{padding:10px 16px;font-size:10px;color:var(--t3);text-align:center;font-weight:600;letter-spacing:.5px}
+.sec{margin:8px 16px 0;background:var(--w);border:1px solid var(--b);border-radius:var(--rd);overflow:hidden}
+.sec-h{padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+.sec-t{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.sec-bd{padding:0 14px 14px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.info-f{background:var(--bg);border:1px solid var(--b);border-radius:6px;padding:6px 8px}
+.info-l{font-size:8px;color:var(--t3);letter-spacing:.8px;text-transform:uppercase;font-weight:600;margin-bottom:1px}
+.info-v{font-size:13px;font-weight:700;color:var(--t)}
+.row{background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:10px 12px;margin-bottom:6px}
+.row-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.row-name{font-size:13px;font-weight:800}
+.row-type{font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;display:inline-block}
+.rt-inl{background:var(--r100);color:var(--r)}.rt-vops{background:var(--gl,#dcfce7);color:var(--g,#16a34a)}.rt-rev{background:var(--pl);color:var(--p)}.rt-uni{background:var(--tll);color:var(--tl)}.rt-extra{background:var(--bll);color:var(--bl)}
+.row-detail{margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.vops-toggle{display:flex;border:1.5px solid var(--b);border-radius:6px;overflow:hidden}
+.vt{padding:5px 12px;font-size:10px;font-weight:700;cursor:pointer;background:var(--w);color:var(--t3)}
+.vt.on-da{background:var(--gl);color:var(--g);border-color:var(--g)}.vt.on-nu{background:var(--r50);color:var(--r);border-color:var(--r)}
+.hrs-box{display:flex;align-items:center;gap:4px}
+.hrs-label{font-size:9px;font-weight:700;color:var(--t3)}
+.hrs-input{width:50px;text-align:center;font-weight:700;border:1.5px solid var(--b);border-radius:6px;padding:5px;font-size:13px;font-family:'JetBrains Mono',monospace;outline:none;background:var(--w)}.hrs-input:focus{border-color:var(--p)}
+.hrs-input.disabled{opacity:.3;pointer-events:none}
+.row-note{flex:1;min-width:120px}
+.row-note input{width:100%;border:1px solid var(--b);border-radius:6px;padding:5px 8px;font-size:11px;font-family:inherit;outline:none}.row-note input:focus{border-color:var(--p)}
+.del-btn{width:24px;height:24px;border-radius:50%;border:none;background:var(--r50);color:var(--r);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.add-row{margin-top:8px;padding:8px;border:2px dashed var(--b2);border-radius:8px;text-align:center;cursor:pointer;font-size:11px;font-weight:700;color:var(--t3)}.add-row:hover{background:var(--pl);border-color:var(--p);color:var(--p)}
+.summary{margin:12px 16px;background:var(--p);color:#fff;border-radius:var(--rd);padding:14px;display:flex;justify-content:space-around;text-align:center}
+.sum-item{display:flex;flex-direction:column;gap:2px}
+.sum-val{font-size:22px;font-weight:800}.sum-label{font-size:9px;font-weight:600;opacity:.8;text-transform:uppercase}
+.sector{margin:12px 16px 0;border-radius:var(--rd);overflow:hidden;border:2px solid var(--b)}
+.sector-hdr{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.sector-hdr-green{background:var(--g);border-color:var(--g)}
+.sector-hdr-red{background:var(--r);border-color:var(--r)}
+.sector-hdr-title{font-size:15px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px}
+.sector-hdr-badge{font-size:20px;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px}
+.sector-hdr-badge span{font-size:10px;font-weight:600;opacity:.85}
+.sector-dot{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.5)}
+.dot-on{background:#fff}.dot-off{background:rgba(255,255,255,.2)}
+.sector-bd{background:var(--w);padding:10px 14px}
+.sector-empty{text-align:center;padding:16px;color:var(--t3);font-size:12px}
+.appr-toggle{display:flex;border:2px solid rgba(255,255,255,.4);border-radius:6px;overflow:hidden}
+.appr-btn{padding:5px 14px;font-size:11px;font-weight:800;color:rgba(255,255,255,.6);cursor:pointer;background:none}
+.appr-btn.on-yes{background:rgba(255,255,255,.3);color:#fff}.appr-btn.on-no{background:rgba(0,0,0,.2);color:#fff}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 16px}
+.action-grid .btn{font-size:11px}
+.toast{position:fixed;bottom:20px;left:16px;right:16px;background:var(--w);padding:11px 14px;border-radius:var(--rd);font-size:12px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.12);border-left:4px solid var(--g);z-index:250}.toast.err{border-left-color:var(--r)}
+.bpad{height:24px}.loading{text-align:center;padding:60px;color:var(--t3);font-size:14px}
+@media print{*{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}.hdr,.action-grid,.add-row,.del-btn,.lsw,.vops-toggle{display:none!important}.sec,.summary{margin:4px 0;break-inside:avoid}.company{font-size:12px;font-weight:700;color:#000}.row{break-inside:avoid}body{background:#fff}.hrs-input{border:none}}
+
+/* ── RPW SHELL nav (etalon: rpw-evaluare-red.html) — beinjektálva ── */
+.shell{position:sticky;top:0;z-index:50;background:var(--w);border-bottom:1px solid var(--b)}
+.shell-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px}
+.sh-left{display:flex;align-items:center;gap:10px;min-width:0}
+.sh-back{width:32px;height:32px;border-radius:6px;border:1px solid var(--b);background:var(--w);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.sh-back svg{width:16px;height:16px;stroke:var(--t2);fill:none;stroke-width:2}
+.sh-plate{font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;font-weight:600;background:var(--pl,#ede9fe);border:1px solid var(--b2,#d0d0d0);border-radius:4px;padding:3px 8px;white-space:nowrap}
+.sh-phase{font-size:13px;font-weight:700;letter-spacing:-0.012em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-phase .ph-idx{font-family:'Geist Mono',ui-monospace,monospace;color:var(--r);margin-right:6px}
+.sh-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.stepA{display:flex;gap:4px;padding:0 16px 10px;overflow-x:auto;scrollbar-width:none}.stepA::-webkit-scrollbar{display:none}
+.stA{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--b);border-radius:6px;font-size:11px;font-weight:600;color:var(--t3);cursor:pointer;white-space:nowrap;background:var(--w);flex-shrink:0}
+.stA .n{font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:600}
+.stA.done{color:var(--t2);border-color:var(--b2,#d0d0d0)}.stA.done .n{color:var(--g)}
+.stA.cur{background:var(--r);border-color:var(--r);color:#fff;font-weight:700}.stA.cur .n{color:#fff}
+.stepB{display:flex;align-items:center;padding:2px 16px 12px}
+.stB{width:30px;height:30px;border-radius:50%;border:1px solid var(--b2,#d0d0d0);background:var(--w);font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:600;color:var(--t3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.stB.done{background:var(--t);border-color:var(--t);color:#fff}
+.stB.cur{background:var(--r);border-color:var(--r);color:#fff;box-shadow:0 0 0 3px rgba(225,29,46,.22)}
+.stB-line{flex:1;height:1px;background:var(--b2,#d0d0d0);min-width:6px}.stB-line.done{background:var(--t)}
+.stB-name{margin-left:10px;font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap}
+.stepC{padding:0 16px 12px}.stepC-bar{display:flex;gap:3px}
+.stC{flex:1;height:6px;border-radius:3px;background:var(--b);cursor:pointer}.stC.done{background:var(--t2)}.stC.cur{background:var(--r)}
+.stepC-meta{display:flex;justify-content:space-between;margin-top:6px;font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+</style>
+</head>
+<body>
+<div id="rpw-sync" style="position:fixed;bottom:10px;right:12px;z-index:300;font:600 11px system-ui,Arial;background:#fff;border:1px solid #E8EBEF;border-radius:8px;padding:5px 10px;box-shadow:0 2px 8px rgba(0,0,0,.08);opacity:0;transition:opacity .2s"></div>
+<div id="app"><div class="loading">Se incarca...</div></div>
+<script>
+if(!window.RPW_CFG){(document.getElementById('app')||document.body).innerHTML='<div style="padding:40px;text-align:center;font-family:system-ui,Arial"><div style="font-size:40px">&#9888;&#65039;</div><div style="font-size:18px;font-weight:800;color:#C81E33;margin:12px 0 6px">Configurație lipsă</div><div style="color:#3F4956;font-size:14px;line-height:1.6">rpw-config.js nu s-a încărcat (sau rulează dintr-o copie locală file://).<br>Deschide sistemul live.</div></div>';throw new Error('RPW_CFG missing');}
+if(window.RPWAuth){try{RPWAuth.guard();}catch(e){}}
+var SB_URL=RPW_CFG.SB_URL;
+var SB_KEY=RPW_CFG.SB_KEY;
+var sb=supabase.createClient(SB_URL,SB_KEY);
+/* PHASE 1: látható szinkron-állapot + robusztus mentő (rpw-save.js) */
+function rpwSyncLabel(st){var m={saving_local:['Salvare…','#6B7280'],syncing:['Sincronizare…','#2A6FDB'],synced:['✓ Salvat pe server','#1E9D55'],offline:['⚠ Offline – salvat local','#A6701F'],retry:['↻ Reîncercare…','#A6701F'],failed:['✗ Eșec salvare – reîncearcă','#C81E33'],permission:['✗ Fără permisiune','#C81E33'],conflict:['⚠ Conflict de date','#C81E33'],auth:['✗ Autentificare','#C81E33'],idle:['','#6B7280']};return m[st]||[st,'#6B7280'];}
+function onSyncState(st){var el=document.getElementById('rpw-sync');if(el){var l=rpwSyncLabel(st);el.textContent=l[0];el.style.color=l[1];el.style.opacity=l[0]?'1':'0';if(st==='synced'){setTimeout(function(){if(el&&el.textContent===l[0])el.style.opacity='0'},2000)}}var cb=document.getElementById('rpw-conflict');if(st==='conflict'){if(!cb){cb=document.createElement('div');cb.id='rpw-conflict';cb.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,Arial';cb.innerHTML='<div style="max-width:360px;background:#fff;border-radius:12px;padding:22px;text-align:center"><div style="font-size:34px">\u26A0\uFE0F</div><div style="font-size:17px;font-weight:800;color:#C81E33;margin:8px 0">Conflict de date</div><div style="font-size:13px;color:#3F4956;line-height:1.6">Alt utilizator a modificat aceast\u0103 fi\u0219\u0103. Modificarea ta local\u0103 este p\u0103strat\u0103. Re\u00EEncarc\u0103 pentru versiunea de pe server.</div><button onclick="location.reload()" style="margin-top:16px;background:#E11D2E;color:#fff;border:none;border-radius:9px;padding:11px 20px;font-weight:800;cursor:pointer">Re\u00EEncarc\u0103</button></div>';document.body.appendChild(cb);}}else if(cb){cb.remove();}}
+var SAVER=(window.RPWSave&&RPWSave.createSaver)?RPWSave.createSaver({sb:sb,onState:onSyncState}):null;
+if(SAVER&&window.RPWSave&&RPWSave.bindBeforeUnload)RPWSave.bindBeforeUnload(SAVER,'Există modificări nesincronizate.');
+if(typeof saveJ==='function'){var _saveJ_orig=saveJ;saveJ=function(){if(typeof JOB==='undefined'||!JOB)return Promise.resolve();return SAVER?SAVER.save(JOB):_saveJ_orig();};}
+if(typeof saveJob==='function'){var _saveJob_orig=saveJob;saveJob=function(job){if(!job)return Promise.resolve();return SAVER?SAVER.save(job):_saveJob_orig(job);};}
+var JOB=null;
+var S={ts:null,te:0};
+
+function gJI(){return new URLSearchParams(location.search).get('job')}
+async function loadJob(){
+  var jid=gJI();if(!jid){render();return}
+  var cached=localStorage.getItem('rpw_job_'+jid);
+  if(cached){try{JOB=JSON.parse(cached);if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};render()}catch(e){}}
+  try{
+    var res=await RPWDb.getRow(sb,jid);
+    if(res.error)throw res.error;
+    var _lts=0,_sts=0;try{_lts=Date.parse(localStorage.getItem('rpw_job_ts_'+jid)||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
+    if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};
+    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+jid,res.data.updated_at||new Date().toISOString())}catch(e){}}
+    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB))}catch(e){}
+    /* nincs auto-mentes betolteskor */
+  }catch(e){if(!JOB)JOB=null}
+  render();
+}
+var _saveTimer=null;
+async function saveJ(){
+  if(!JOB)return;
+  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+JOB.id,new Date().toISOString())}catch(e){}
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(async function(){
+    try{await RPWDb.patch(sb,JOB)}
+    catch(e){console.error('Save:',e)}
+  },500);
+}
+
+var DEF_HRS={replace:3,revopsire:3,uni:2,vopsire:3};
+var EL_NAMES={fb:'Bara fata',rb:'Bara spate',hood:'Capota',trunk:'Portbagaj',roof:'Plafon',fl_f:'Aripa stg fata',fr_f:'Aripa dr fata',rl_f:'Aripa stg spate',rr_f:'Aripa dr spate',fl_d:'Usa stg fata',fr_d:'Usa dr fata',rl_d:'Usa stg spate',rr_d:'Usa dr spate',l_s:'Prag stg',r_s:'Prag dr',l_m:'Ogl. stg',r_m:'Ogl. dr',a_l:'Stalp A stg',a_r:'Stalp A dr',b_l:'Stalp B stg',b_r:'Stalp B dr',c_l:'Stalp C stg',c_r:'Stalp C dr'};
+
+function buildPaintRows(){
+  var rows=[],seen={};
+  // TERMELÉS-KAPU: ha van evaluare-státusz és NEM 'accepted', a munka még nem megy termelésbe (régi, státusz nélküli dossziek nem érintettek)
+  if(JOB&&JOB.evalData&&JOB.evalData.status&&JOB.evalData.status!=='accepted')return rows;
+  function add(key,r,src){
+    if(seen[key])return;
+    var pt=mapPaintType(r.op);
+    if(!pt)return; // nem festode-munka (lakatos)
+    seen[key]=1;
+    var nm=r.name||EL_NAMES[r.elKey]||r.elKey||'';
+    rows.push({key:key,name:nm,src:src,workType:r.op,paintType:pt,vopsire:true,hours:(r.hours!=null?r.hours:(DEF_HRS[pt]||3)),note:r.note||''});
+  }
+  var ed=JOB.evalData||{};
+  var cR=ed.comanda||[];for(var x=0;x<cR.length;x++)add('c_'+(cR[x].id||x),cR[x],'evaluare');
+  var sR=ed.suplimentare||[];for(var x=0;x<sR.length;x++)add('s_'+(sR[x].id||x),sR[x],'reconstatare');
+  return rows;
+}
+
+function syncPaintRows(){
+  if(!JOB)return;
+  var gen=buildPaintRows(),old=JOB.paintRows||[],byKey={};
+  old.forEach(function(r){byKey[r.key]=r});
+  var merged=[];
+  gen.forEach(function(g){var o=byKey[g.key];if(o){o.name=g.name;o.workType=g.workType;o.paintType=g.paintType;o.src=g.src;merged.push(o)}else merged.push(g)});
+  old.forEach(function(r){if(r.src==='manual')merged.push(r)});
+  JOB.paintRows=merged;
+}
+
+function mapPaintType(w){
+  if(!w)return null;
+  var wl=w.toLowerCase();
+  if(wl==='vopsire')return 'vopsire';
+  if(wl==='revopsire')return 'revopsire';
+  if(wl==='uni'||wl.indexOf('uniform')>=0)return 'uni';
+  return null; // inlocuire/demontat/dezasamblat/reparatie/mecanica = LAKATOS, NEM festode
+}
+
+function toast(m,e){S.ts=m;S.te=e?1:0;render();setTimeout(function(){S.ts=null;render()},3000)}
+
+var i={vopsitorie:{ro:'Vopsitorie',en:'Paint Shop',hu:'Festode'},vehicul:{ro:'DATE VEHICUL',en:'VEHICLE DATA',hu:'JARMU ADATOK'},plate:{ro:'Nr. inmatr.',en:'Plate',hu:'Rendszam'},proprietar:{ro:'Proprietar',en:'Owner',hu:'Tulajdonos'},vin:{ro:'Serie sasiu',en:'VIN',hu:'VIN'},brand:{ro:'Marca',en:'Brand',hu:'Marka'},year:{ro:'An',en:'Year',hu:'Ev'},
+comanda:{ro:'COMANDA VOPSITORIE',en:'PAINT WORK ORDER',hu:'FESTO MUNKARENDELES'},
+inlocuit:{ro:'Inlocuit',en:'Replaced',hu:'Cserelt'},vopsire_piese:{ro:'Vopsire piese',en:'Paint parts',hu:'Alkatresz festes'},revopsire:{ro:'Revopsire',en:'Repaint',hu:'Ujrafestes'},uniformizare:{ro:'Uniformizare',en:'Blending',hu:'Uniformizalas'},extra:{ro:'Suplimentar',en:'Extra',hu:'Plusz'},
+srcEval:{ro:'Evaluare',en:'Assessment',hu:'Ertekeles'},srcReconst:{ro:'Reconstatare',en:'Re-assess.',hu:'Ujrafelm.'},srcAfter:{ro:'Aftersales',en:'Aftersales',hu:'Aftersales'},srcManual:{ro:'Manual',en:'Manual',hu:'Kezzel'},
+secConst:{ro:'CONSTATARE',en:'ASSESSMENT',hu:'FELMERES'},secReconst:{ro:'RECONSTATARE',en:'RE-ASSESSMENT',hu:'UJRAFELMERES'},secUpsell:{ro:'UPSELL / AFTERSALES',en:'UPSELL / AFTERSALES',hu:'UPSELL / AFTERSALES'},
+aprobat:{ro:'APROBAT',en:'APPROVED',hu:'JOVAHAGYVA'},neaprobat:{ro:'NEAPROBAT',en:'NOT APPROVED',hu:'NEM JOVAH.'},aproba:{ro:'Aproba',en:'Approve',hu:'Jovahagyom'},respinge:{ro:'Respinge',en:'Reject',hu:'Elutasit'},
+vopsire:{ro:'Vopsire',en:'Paint',hu:'Festes'},da:{ro:'DA',en:'YES',hu:'IGEN'},nu:{ro:'NU',en:'NO',hu:'NEM'},ore:{ro:'ore',en:'hrs',hu:'ora'},obs:{ro:'Obs.',en:'Notes',hu:'Megj.'},
+totalOre:{ro:'TOTAL ORE',en:'TOTAL HRS',hu:'OSSZ ORA'},elemVops:{ro:'ELEMENTE',en:'ELEMENTS',hu:'ELEMEK'},
+addRow:{ro:'+ Adauga element',en:'+ Add element',hu:'+ Uj elem'},
+print:{ro:'Printeaza',en:'Print',hu:'Nyomtatas'},waBtn:{ro:'WhatsApp',en:'WhatsApp',hu:'WhatsApp'},advance:{ro:'Avanseaza → Control',en:'Advance → Check',hu:'Tovabb → Kontrol'},
+markDone:{ro:'Marchează executat',en:'Mark done',hu:'Kész-re állít'},doneLbl:{ro:'Executat',en:'Done',hu:'Kész'},notRequiredLbl:{ro:'Nu necesită vopsire (documentat)',en:'No paint required (documented)',hu:'Nem kell fényezni (dokumentált)'},
+execPrompt:{ro:'Nume executant (real):',en:'Executor name (real):',hu:'Végrehajtó neve (valódi):'},
+rwPanel:{ro:'REMEDIERE PRIMITĂ (rework)',en:'RECEIVED REWORK',hu:'BEÉRKEZETT JAVÍTÁS (rework)'},
+rwCat:{ro:'Categorie',en:'Category',hu:'Kategória'},rwDescL:{ro:'Descriere',en:'Description',hu:'Leírás'},
+rwBy:{ro:'Creat de',en:'Created by',hu:'Létrehozó'},rwAt:{ro:'Creat la',en:'Created at',hu:'Létrehozva'},
+rwAssignee:{ro:'Responsabil',en:'Assignee',hu:'Felelős'},rwStatus:{ro:'Status',en:'Status',hu:'Státusz'},
+rwDoneBtn:{ro:'Remediere finalizată',en:'Rework completed',hu:'Javítás befejezve'},
+rwNotePrompt:{ro:'Notă de rezolvare:',en:'Resolution note:',hu:'Lezárási megjegyzés:'},
+rwResolved:{ro:'Remediere finalizată → control repetat',en:'Rework done → re-control',hu:'Javítás kész → ismételt kontroll'},skipNoWork:{ro:'Fără lucrări → fază omisă',en:'No work → phase skipped',hu:'Nincs munka → fázis kihagyva'},
+noJob:{ro:'Nu exista lucrare',en:'No job',hu:'Nincs munka'},openD:{ro:'Dashboard',en:'Dashboard',hu:'Dashboard'},saved:{ro:'Salvat',en:'Saved',hu:'Mentve'}};
+
+function gL(){return localStorage.getItem('rpw_lang')||'ro'}
+function sL(l){localStorage.setItem('rpw_lang',l);render()}
+function T(k){var e=i[k];return e?e[gL()]||e.ro||k:k}
+
+var IC={back:'<svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>',print:'<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',wa:'<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492l4.636-1.467A11.932 11.932 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-2.168 0-4.19-.592-5.935-1.62l-.424-.253-2.748.87.884-2.678-.278-.44A9.768 9.768 0 012.182 12c0-5.423 4.395-9.818 9.818-9.818S21.818 6.577 21.818 12 17.423 21.818 12 21.818z"/></svg>'};
+
+
+/* ── RPW SHELL (etalon: rpw-evaluare-red.html) — beinjektálva ── */
+var SHELL_PHASES=[
+ {n:'01',page:'rpw-recepcio-red.html',ro:'Recepție',en:'Reception',hu:'Recepció'},
+ {n:'02',page:'rpw-evaluare-red.html',ro:'Evaluare',en:'Assessment',hu:'Felmérés'},
+ {n:'03',page:'rpw-reconstatare-red.html',ro:'Reconstatare',en:'Re-assessment',hu:'Újrafelmérés'},
+ {n:'04',page:'rpw-tinichigerie-red.html',ro:'Tinichigerie',en:'Bodywork',hu:'Lakatos'},
+ {n:'05',page:'rpw-vopsitorie-red.html',ro:'Vopsitorie',en:'Paint',hu:'Fényezés'},
+ {n:'06',page:'rpw-control-red.html',ro:'Control',en:'Check',hu:'Kontroll'},
+ {n:'07',page:'rpw-inchidere-red.html',ro:'Închidere',en:'Closing',hu:'Lezárás'}
+];
+var SHELL_CUR=4;
+function shellVariant(){try{return localStorage.getItem('rpw_shell_v')||'A'}catch(e){return 'A'}}
+window.setShellVariant=function(v){try{localStorage.setItem('rpw_shell_v',v)}catch(e){}render()};
+window.goPhase=function(i){if(i===SHELL_CUR)return;location.assign(SHELL_PHASES[i].page+'?job='+(JOB?JOB.id:''))};
+function shellHtml(job,ln){
+  var v=shellVariant();var plate=job.plate||job.number||job.id||'';var cur=SHELL_PHASES[SHELL_CUR];
+  function nm(p){return p[ln]||p.ro}
+  var h='<div class="shell no-print"><div class="shell-top">';
+  h+='<div class="sh-left"><div class="sh-back" onclick="location.assign(\'rpw-dosar.html?job='+job.id+'\')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>';
+  h+='<span class="sh-plate">'+escH(plate)+'</span>';
+  h+='<div class="sh-phase"><span class="ph-idx">'+cur.n+'</span>'+nm(cur)+'</div></div>';
+  h+='<div class="sh-right"><div class="lsw">';
+  ['A','B','C'].forEach(function(x){h+='<button class="lb '+(v===x?'on':'')+'" onclick="setShellVariant(\''+x+'\')">'+x+'</button>'});
+  h+='</div><div class="lsw"><button class="lb '+(ln==='ro'?'on':'')+'" onclick="sL(\'ro\')">RO</button><button class="lb '+(ln==='en'?'on':'')+'" onclick="sL(\'en\')">EN</button><button class="lb '+(ln==='hu'?'on':'')+'" onclick="sL(\'hu\')">HU</button></div></div></div>';
+  if(v==='A'){h+='<div class="stepA">';SHELL_PHASES.forEach(function(p,ix){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;var cls=ix<SHELL_CUR?'done':ix===SHELL_CUR?'cur':'';h+='<div class="stA '+cls+'" onclick="goPhase('+ix+')"><span class="n">'+p.n+'</span>'+nm(p)+'</div>'});h+='</div>';}
+  else if(v==='B'){h+='<div class="stepB">';SHELL_PHASES.forEach(function(p,ix){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;if(ix>0)h+='<div class="stB-line'+(ix<=SHELL_CUR?' done':'')+'"></div>';var cls=ix<SHELL_CUR?' done':ix===SHELL_CUR?' cur':'';h+='<div class="stB'+cls+'" onclick="goPhase('+ix+')" title="'+p.n+' '+nm(p)+'">'+p.n+'</div>';});h+='<span class="stB-name">'+nm(cur)+'</span></div>';}
+  else{h+='<div class="stepC"><div class="stepC-bar">';SHELL_PHASES.forEach(function(p,ix){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;var cls=ix<SHELL_CUR?' done':ix===SHELL_CUR?' cur':'';h+='<div class="stC '+cls+'" onclick="goPhase('+ix+')" title="'+p.n+' '+nm(p)+'"></div>'});h+='</div><div class="stepC-meta"><span>'+cur.n+' '+nm(cur)+'</span><span>pasul '+cur.n+' / 07</span></div></div>';}
+  h+='</div>';return h;
+}
+
+function render(){
+  var ln=gL(),job=JOB;
+  if(!job){document.getElementById('app').innerHTML='<div class="loading">'+T('noJob')+'<br><br><button class="btn btn-o" style="width:auto;padding:10px 24px;display:inline-flex" onclick="location.assign(\'index.html\')">'+T('openD')+'</button></div>';return}
+
+  syncPaintRows();
+  try{ if(window.RPWWorkflow){RPWWorkflow.migrateJob(job); syncProduction();} }catch(e){}
+
+  function renderRow(r){
+    var x=r._idx;
+    var ptLabel=r.paintType==='vopsire'?T('vopsire_piese'):r.paintType==='replace'?T('inlocuit'):r.paintType==='revopsire'?T('revopsire'):r.paintType==='uni'?T('uniformizare'):T('extra');
+    var ptClass=r.paintType==='vopsire'?'rt-vops':r.paintType==='replace'?'rt-inl':r.paintType==='revopsire'?'rt-rev':r.paintType==='uni'?'rt-uni':'rt-extra';
+    var isReplace=r.paintType==='replace';
+    var needsPaint=isReplace?(r.vopsire===true):(r.vopsire!==false);
+    var hrsDisabled=!needsPaint;
+    var typeTag=r.src==='manual'?'<select style="font-size:9px;font-weight:700;padding:3px 6px;border-radius:4px;border:1px solid var(--b);font-family:inherit" onchange="setPType('+x+',this.value)"><option value="replace" '+(r.paintType==='replace'?'selected':'')+'>'+T('inlocuit')+'</option><option value="revopsire" '+(r.paintType==='revopsire'?'selected':'')+'>'+T('revopsire')+'</option><option value="uni" '+(r.paintType==='uni'?'selected':'')+'>'+T('uniformizare')+'</option></select>':'<span class="row-type '+ptClass+'">'+ptLabel+'</span>';
+    var o='<div class="row" style="'+(hrsDisabled?'opacity:.5':'')+'"><div class="row-top"><div class="row-name">'+(r.src==='manual'?'<input style="border:none;background:none;font-size:13px;font-weight:800;font-family:inherit;outline:none;width:100%" value="'+(r.name||'')+'" placeholder="Element..." onchange="setName('+x+',this.value)"/>':r.name||'—')+'</div>'+typeTag+'</div>';
+    o+='<div class="row-detail">';
+    if(isReplace){o+='<div class="vops-toggle"><div class="vt '+(r.vopsire===true?'on-da':'')+'" onclick="setVops('+x+',true)">'+T('da')+'</div><div class="vt '+(r.vopsire===false?'on-nu':'')+'" onclick="setVops('+x+',false)">'+T('nu')+'</div></div>'}
+    else{o+='<div style="font-size:10px;font-weight:700;color:var(--g);padding:5px 0">'+T('vopsire')+' ✓</div>'}
+    o+='<div class="hrs-box"><div class="hrs-label">'+T('ore')+'</div><input class="hrs-input mono '+(hrsDisabled?'disabled':'')+'" type="number" step="0.5" min="0" value="'+(needsPaint?r.hours:0)+'" onchange="setHrs('+x+',this.value)" '+(hrsDisabled?'disabled':'')+'></div>';
+    o+='<div class="row-note"><input placeholder="'+T('obs')+'" value="'+(r.note||'')+'" onchange="setNote('+x+',this.value)"></div>';
+    if(r.src==='manual'){o+='<button class="del-btn" onclick="delRow('+x+')">×</button>'}
+    o+='</div>';
+    // Végrehajtás jelölése — a „nem kell fényezni" (vopsire===false) sor not_required
+    if(needsPaint){
+      o+='<div style="padding:6px 0 2px"><button onclick="setDone('+x+')" style="font-size:10px;font-weight:800;padding:5px 12px;border-radius:6px;border:1px solid '+(r.completed?'#1E9D55':'#d0d0d0')+';background:'+(r.completed?'#1E9D55':'#fff')+';color:'+(r.completed?'#fff':'#555')+';cursor:pointer;font-family:inherit">'+(r.completed?('✓ '+T('doneLbl')+(r.completedBy?(' · '+r.completedBy):'')):T('markDone'))+'</button></div>';
+    } else {
+      o+='<div style="padding:6px 0 2px;font-size:10px;font-weight:700;color:#6b7280">'+T('notRequiredLbl')+'</div>';
+    }
+    o+='</div>';
+    return o;
+  }
+
+  // Split rows by source
+  var rows=job.paintRows||[];
+  var constRows=[],reconstRows=[],upsellRows=[],manualRows=[];
+  rows.forEach(function(r,idx){r._idx=idx;if(r.src==='evaluare')constRows.push(r);else if(r.src==='reconstatare')reconstRows.push(r);else if(r.src==='aftersales')upsellRows.push(r);else manualRows.push(r)});
+  var appr=job.paintApproval||{reconst:false,upsell:false};
+
+  // Calc totals
+  var totalHrs=0,paintCount=0;
+  function countRow(r,approved){
+    if(!approved&&r.src!=='evaluare'&&r.src!=='manual')return;
+    var needsPaint=(r.paintType==='replace')?r.vopsire===true:(r.vopsire!==false);
+    if(needsPaint){totalHrs+=parseFloat(r.hours)||0;paintCount++}
+  }
+  constRows.forEach(function(r){countRow(r,true)});
+  reconstRows.forEach(function(r){countRow(r,appr.reconst)});
+  upsellRows.forEach(function(r){countRow(r,appr.upsell)});
+  manualRows.forEach(function(r){countRow(r,true)});
+
+  var h=shellHtml(job,ln);
+  h+=rwPanelHtml(job,5,ln);
+
+  h+='<div class="company">SC SZKALICZKI SERVICE SRL · RO16250445 · Str. Petki David, Nr.27/A, Sangeorgiu de Mures · Tel: 0265318020</div>';
+
+  // Vehicle
+  h+='<div class="sec"><div class="sec-h"><div class="sec-t">'+T('vehicul')+'</div></div><div class="sec-bd"><div class="info-grid"><div class="info-f"><div class="info-l">'+T('plate')+'</div><div class="info-v mono" style="font-size:16px;font-weight:800">'+escH(job.plate||'—')+'</div></div><div class="info-f"><div class="info-l">'+T('proprietar')+'</div><div class="info-v">'+escH(job.proprietar||job.client||'—')+'</div></div></div><div class="info-grid" style="margin-top:6px"><div class="info-f"><div class="info-l">'+T('brand')+'</div><div class="info-v">'+escH(job.brand||job.auto||'—')+'</div></div><div class="info-f"><div class="info-l">'+T('year')+'</div><div class="info-v mono">'+escH(job.year||'—')+'</div></div></div></div></div>';
+
+  // Summary bar
+  h+='<div class="summary"><div class="sum-item"><div class="sum-val">'+paintCount+'</div><div class="sum-label">'+T('elemVops')+'</div></div><div class="sum-item"><div class="sum-val">'+totalHrs.toFixed(1)+'</div><div class="sum-label">'+T('totalOre')+'</div></div></div>';
+
+  // === SECTOR 1: CONSTATARE — always green ===
+  var cHrs=0;constRows.forEach(function(r){var np=(r.paintType==='replace')?r.vopsire===true:true;if(np)cHrs+=parseFloat(r.hours)||0});
+  h+='<div class="sector" style="border-color:var(--g)"><div class="sector-hdr sector-hdr-green"><div class="sector-hdr-title"><div class="sector-dot dot-on"></div>'+T('secConst')+'</div><div class="sector-hdr-badge">'+cHrs.toFixed(1)+' <span>'+T('ore')+'</span></div></div><div class="sector-bd">';
+  if(constRows.length){for(var x=0;x<constRows.length;x++)h+=renderRow(constRows[x])}
+  else h+='<div class="sector-empty">—</div>';
+  h+='</div></div>';
+
+  // === SECTOR 2: RECONSTATARE — red/green ===
+  var rHrs=0;if(appr.reconst)reconstRows.forEach(function(r){var np=(r.paintType==='replace')?r.vopsire===true:true;if(np)rHrs+=parseFloat(r.hours)||0});
+  h+='<div class="sector" style="border-color:'+(appr.reconst?'var(--g)':'var(--r)')+'"><div class="sector-hdr '+(appr.reconst?'sector-hdr-green':'sector-hdr-red')+'" onclick="toggleAppr(\'reconst\')"><div class="sector-hdr-title"><div class="sector-dot '+(appr.reconst?'dot-on':'dot-off')+'"></div>'+T('secReconst')+'</div><div style="display:flex;align-items:center;gap:10px"><div class="sector-hdr-badge">'+(appr.reconst?rHrs.toFixed(1):'—')+' <span>'+T('ore')+'</span></div><div style="font-size:10px;font-weight:800;color:#fff;padding:4px 10px;border-radius:4px;background:rgba(255,255,255,.2)">'+(appr.reconst?'✓ '+T('aprobat'):'✗ '+T('neaprobat'))+'</div></div></div><div class="sector-bd" style="'+(appr.reconst?'':'opacity:.4;pointer-events:none')+'">';
+  if(reconstRows.length){for(var x=0;x<reconstRows.length;x++)h+=renderRow(reconstRows[x])}
+  else h+='<div class="sector-empty">—</div>';
+  h+='</div></div>';
+
+  // === SECTOR 3: UPSELL — red/green ===
+  var uHrs=0;if(appr.upsell)upsellRows.forEach(function(r){var np=(r.paintType==='replace')?r.vopsire===true:true;if(np)uHrs+=parseFloat(r.hours)||0});
+  h+='<div class="sector" style="border-color:'+(appr.upsell?'var(--g)':'var(--r)')+'"><div class="sector-hdr '+(appr.upsell?'sector-hdr-green':'sector-hdr-red')+'" onclick="toggleAppr(\'upsell\')"><div class="sector-hdr-title"><div class="sector-dot '+(appr.upsell?'dot-on':'dot-off')+'"></div>'+T('secUpsell')+'</div><div style="display:flex;align-items:center;gap:10px"><div class="sector-hdr-badge">'+(appr.upsell?uHrs.toFixed(1):'—')+' <span>'+T('ore')+'</span></div><div style="font-size:10px;font-weight:800;color:#fff;padding:4px 10px;border-radius:4px;background:rgba(255,255,255,.2)">'+(appr.upsell?'✓ '+T('aprobat'):'✗ '+T('neaprobat'))+'</div></div></div><div class="sector-bd" style="'+(appr.upsell?'':'opacity:.4;pointer-events:none')+'">';
+  if(upsellRows.length){for(var x=0;x<upsellRows.length;x++)h+=renderRow(upsellRows[x])}
+  else h+='<div class="sector-empty">—</div>';
+  h+='</div></div>';
+
+  // Manual additions
+  if(manualRows.length){
+    h+='<div class="sec" style="margin-top:12px"><div class="sec-h"><div class="sec-t">'+T('extra')+'</div></div><div class="sec-bd">';
+    for(var x=0;x<manualRows.length;x++)h+=renderRow(manualRows[x]);
+    h+='</div></div>';
+  }
+  h+='<div style="padding:8px 16px 0"><div class="add-row" onclick="addRow()">'+T('addRow')+'</div></div>';
+
+  // Actions
+  h+='<div class="action-grid"><button class="btn btn-wa" onclick="waPaint()">'+IC.wa+' '+T('waBtn')+'</button><button class="btn btn-o" onclick="window.print()">'+IC.print+' '+T('print')+'</button></div>';
+  h+='<div style="padding:0 16px 10px"><button class="btn btn-g" onclick="advPh()">'+T('advance')+'</button></div>';
+
+  h+='<div class="bpad"></div>';
+  if(S.ts)h+='<div class="toast '+(S.te?'err':'')+'">'+S.ts+'</div>';
+  document.getElementById('app').innerHTML=h;
+}
+
+window.toggleAppr=async function(key){
+  if(!JOB)return;
+  if(!JOB.paintApproval)JOB.paintApproval={reconst:false,upsell:false};
+  JOB.paintApproval[key]=!JOB.paintApproval[key];
+  await saveJ();render();
+};
+window.setVops=async function(idx,val){
+  if(!JOB||!JOB.paintRows)return;
+  JOB.paintRows[idx].vopsire=val;
+  if(!val)JOB.paintRows[idx].hours=0;
+  else JOB.paintRows[idx].hours=DEF_HRS[JOB.paintRows[idx].paintType]||3;
+  await saveJ();render();
+};
+window.setHrs=async function(idx,val){
+  if(!JOB||!JOB.paintRows)return;
+  JOB.paintRows[idx].hours=parseFloat(val)||0;
+  await saveJ();render();
+};
+window.setNote=async function(idx,val){
+  if(!JOB||!JOB.paintRows)return;
+  JOB.paintRows[idx].note=val;
+  await saveJ();
+};
+window.setName=async function(idx,val){
+  if(!JOB||!JOB.paintRows)return;
+  JOB.paintRows[idx].name=val;
+  await saveJ();
+};
+window.setPType=async function(idx,val){
+  if(!JOB||!JOB.paintRows)return;
+  JOB.paintRows[idx].paintType=val;
+  JOB.paintRows[idx].vopsire=val==='replace'?null:true;
+  JOB.paintRows[idx].hours=DEF_HRS[val]||3;
+  await saveJ();render();
+};
+window.addRow=async function(){
+  if(!JOB)return;
+  if(!JOB.paintRows)JOB.paintRows=[];
+  JOB.paintRows.push({key:'paint_'+Date.now(),name:'',src:'manual',workType:'',paintType:'fix',vopsire:true,hours:3,note:''});
+  await saveJ();render();
+};
+window.delRow=async function(idx){
+  if(!JOB||!JOB.paintRows)return;
+  JOB.paintRows.splice(idx,1);
+  await saveJ();render();
+};
+
+window.waPaint=function(){
+  if(!JOB)return;
+  var rows=JOB.paintRows||[],appr=JOB.paintApproval||{};
+  var phone=(JOB.phone||'').replace(/[^0-9+]/g,'');
+  if(!phone||phone.length<6){phone=prompt('Numar telefon:','');if(!phone)return}
+  phone=phone.replace(/[^0-9]/g,'');
+  if(phone.length&&phone[0]==='0')phone='40'+phone.slice(1);
+
+  var msg='*RedAssistance — Comanda Vopsitorie*\n\n';
+  msg+='🚗 '+(JOB.brand||JOB.auto||'')+' · '+(JOB.plate||'')+'\n';
+  msg+='Client: '+(JOB.proprietar||JOB.client||'')+'\n';
+  msg+='Nr: '+(JOB.number||JOB.id)+'\n';
+
+  var totalHrs=0,cnt=0;
+  function addSection(title,srcRows,approved){
+    if(!srcRows.length)return;
+    msg+='\n*'+title+'* '+(approved?'✅':'❌')+'\n';
+    for(var x=0;x<srcRows.length;x++){
+      var r=srcRows[x];
+      var needsPaint=(r.paintType==='replace')?r.vopsire===true:true;
+      if(!needsPaint){msg+='  '+(x+1)+'. '+r.name+' [INLOCUIT — fara vopsire]\n';continue}
+      if(!approved)continue;
+      cnt++;var h=parseFloat(r.hours)||0;totalHrs+=h;
+      var typeL=r.paintType==='replace'?'INLOCUIT':r.paintType==='uni'?'UNIFORM.':'REVOPSIRE';
+      msg+='  '+cnt+'. *'+r.name+'* ['+typeL+'] — '+h+' ore'+(r.note?' ('+r.note+')':'')+'\n';
+    }
+  }
+  var constR=[],reconstR=[],upsellR=[];
+  rows.forEach(function(r){if(r.src==='evaluare')constR.push(r);else if(r.src==='reconstatare')reconstR.push(r);else if(r.src==='aftersales')upsellR.push(r);else{constR.push(r)}});
+  addSection('CONSTATARE',constR,true);
+  addSection('RECONSTATARE',reconstR,!!appr.reconst);
+  addSection('UPSELL',upsellR,!!appr.upsell);
+
+  msg+='\n*TOTAL: '+totalHrs.toFixed(1)+' ore vopsire ('+cnt+' elemente)*\n\n';
+  msg+='📞 0265318020\n📍 SC SZKALICZKI SERVICE SRL';
+
+  var _waA=document.createElement('a');_waA.href='https://wa.me/'+phone+'?text='+encodeURIComponent(msg);_waA.target='_blank';_waA.rel='noopener';document.body.appendChild(_waA);_waA.click();setTimeout(function(){document.body.removeChild(_waA)},100);
+};
+
+function rwPanelHtml(job,phase,ln){
+  var rws=(job.rework||[]).filter(function(r){return r.status==='open' && r.sourcePhase===phase;});
+  if(!rws.length)return '';
+  var h='<div class="sec" style="margin-top:8px;border:2px solid #E11D2E"><div class="sec-h" style="background:#fef2f2"><div class="sec-t" style="color:#E11D2E">⚠️ '+T('rwPanel')+' ('+rws.length+')</div></div><div class="sec-bd">';
+  rws.forEach(function(r){
+    h+='<div style="border:1px solid var(--b);border-radius:8px;padding:10px;margin-bottom:8px">';
+    h+='<div style="font-size:12px;font-weight:800;margin-bottom:4px">'+T('rwDescL')+': '+(r.description||'—')+'</div>';
+    h+='<div style="font-size:11px;color:var(--t3);line-height:1.6">'+T('rwCat')+': '+(r.category||'—')+' · '+T('rwBy')+': '+(r.createdBy||'—')+' · '+T('rwAt')+': '+((r.createdAt||'').slice(0,16).replace('T',' '))+'<br>'+T('rwAssignee')+': '+(r.assignedTo||'—')+' · '+T('rwStatus')+': '+r.status+(r.relatedControlAt?(' · ctrl '+String(r.relatedControlAt).slice(0,10)):'')+'</div>';
+    h+='<button onclick="resolveRw(\''+r.id+'\')" style="margin-top:8px;width:100%;padding:9px;border:none;border-radius:8px;background:#1E9D55;color:#fff;font-weight:800;font-family:inherit;cursor:pointer">✓ '+T('rwDoneBtn')+'</button>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+  return h;
+}
+window.resolveRw=async function(id){
+  if(!JOB)return;var _ln=(typeof gL==='function')?gL():'ro';
+  var who=prompt(T('execPrompt'),'');
+  if(who===null)return;
+  var note=prompt(T('rwNotePrompt'),'');
+  if(note===null)return;
+  var res=await RPWWorkflow.commitCriticalTransition(JOB, function(){
+    return RPWWorkflow.resolveRework(JOB,id,{resolvedBy:who,resolutionNote:note});
+  }, {save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  if(!res.ok){
+    if(res.notSynced){ toast(RPWWorkflow.t('wf_saved_not_synced',_ln),1); render(); return; }
+    var errs=(res.result&&res.result.errors)||[];
+    toast(errs.map(function(r){return RPWWorkflow.t(r,_ln);}).join('; ')||'?',1); return;
+  }
+  toast(T('rwResolved'));render();
+};
+window.setDone=async function(idx){
+  if(!JOB||!JOB.paintRows||!JOB.paintRows[idx])return;
+  var r=JOB.paintRows[idx];
+  if(r.completed){ r.completed=false; r.completedBy=null; r.completedAt=null; }
+  else{
+    var who=prompt(T('execPrompt'),r.completedBy||'');
+    if(who===null)return;
+    if(!RPWWorkflow.isRealPerson(who)){ toast(RPWWorkflow.t('wf_rw_placeholder',(typeof gL==='function'?gL():'ro')),1); return; }
+    r.completed=true; r.completedBy=who.trim(); r.completedAt=new Date().toISOString();
+  }
+  syncProduction();await saveJ();render();
+};
+function syncProduction(){
+  if(!JOB)return;
+  var rows=JOB.paintRows||[],appr=JOB.paintApproval||{};
+  var out=[];
+  rows.forEach(function(r){
+    var inProd=(r.src==='evaluare'||r.src==='manual')||(r.src==='reconstatare'&&appr.reconst)||(r.src==='aftersales'&&appr.upsell);
+    if(!inProd)return;
+    var needsPaint=(r.paintType==='replace')?(r.vopsire===true):(r.vopsire!==false);
+    out.push({name:r.name||'',op:r.paintType||r.workType||'',hours:parseFloat(r.hours)||0,approved:true,
+              notRequired:!needsPaint,
+              completed:!needsPaint?true:!!r.completed,completedBy:r.completedBy||'',completedAt:r.completedAt||null});
+  });
+  if(!JOB.production)JOB.production={};
+  JOB.production.paint=out;
+}
+window.advPh=async function(){
+  if(!JOB)return;
+  var _ln=(typeof gL==='function')?gL():'ro';
+  RPWWorkflow.migrateJob(JOB);
+  syncProduction();
+  var noWork=!RPWWorkflow.hasExecutableWork(JOB,5);
+  var res=await RPWWorkflow.commitCriticalTransition(JOB, function(){
+    return noWork ? RPWWorkflow.skipPhase(JOB,5,'no_paintwork',{actor:'vopsitorie'})
+                  : RPWWorkflow.completePhase(JOB,5,{actor:'vopsitorie'});
+  }, {save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  if(!res.ok){
+    if(res.notSynced){ toast(RPWWorkflow.t('wf_saved_not_synced',_ln),1); render(); return; }
+    var errs=(res.result&&(res.result.errors||res.result.missing))||[];
+    toast(errs.map(function(r){return RPWWorkflow.t(r,_ln);}).join('; ')||T('incomplete'),1); return;
+  }
+  toast(noWork?T('skipNoWork'):T('saved'));
+  setTimeout(function(){location.assign('rpw-dosar.html?job='+JOB.id)},1500);
+};
+
+loadJob();
+</script>
+<script>/* RPW központi workflow-őr — fázisbelépés + állapotsáv */try{RPWWorkflow.installPageGuard({phase:5});}catch(e){}</script>
+</body>
+</html>

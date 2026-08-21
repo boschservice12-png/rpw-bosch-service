@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23E11D2E'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FAF8F5">
+<title>RedAssistance — Curatare date test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="rpw-config.js"></script>
+<script src="rpw-guard.js"></script>
+<script src="rpw-roles.js"></script>
+<script src="rpw-auth.js"></script>
+<script src="rpw-capabilities.js"></script>
+<script src="rpw-util.js"></script>
+<script src="rpw-photos.js"></script>
+<script src="rpw-base64-migrate.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#FAF8F5;--w:#fff;--r:#E11D2E;--r50:#FDF3F4;--bad:#C81E33;--g:#1E9D55;--gl:#E1F4E8;--y:#A6701F;--yl:#FAEFD8;--t:#0F141A;--t2:#3F4956;--t3:#6B7280;--b:#E8EBEF;--b2:#D7DBE2;--rd:10px}
+html,body{font-family:'Geist',system-ui,sans-serif;background:var(--bg);color:var(--t);padding:16px;-webkit-tap-highlight-color:transparent}
+.mono{font-family:'Geist Mono',ui-monospace,monospace}
+.wrap{max-width:920px;margin:0 auto}
+h1{font-size:19px;font-weight:700}h1 span{color:var(--r)}
+.warn{margin:8px 0 14px;padding:10px 12px;background:var(--yl);border:1px solid #E8D08A;border-radius:8px;font-size:11px;font-weight:600;color:var(--y);line-height:1.5}
+.err{margin:8px 0 14px;padding:10px 12px;background:var(--r50);border:1px solid #E8B0B8;border-radius:8px;font-size:12px;font-weight:600;color:var(--bad);line-height:1.5}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.stp{flex:1;min-width:150px;background:var(--w);border:1px solid var(--b);border-radius:var(--rd);padding:10px 12px;font-size:11px}
+.stp b{font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;color:var(--t3);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em}
+.btn{border:none;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-bk{background:var(--g);color:#fff}.btn-del{background:var(--bad);color:#fff;margin-top:8px}.btn-sel{background:var(--w);color:var(--t2);border:1px solid var(--b2);margin-top:6px}
+.sec-t{font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--r);margin:16px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--b)}
+.row{background:var(--w);border:1px solid var(--b);border-radius:8px;padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.row.keep{border-left:3px solid var(--g);background:var(--gl)}
+.row.del{border-left:3px solid var(--bad);background:var(--r50)}
+.row-cb{width:20px;height:20px;flex-shrink:0;accent-color:var(--bad);cursor:pointer}
+.row-main{flex:1;min-width:0}
+.row-id{font-family:'Geist Mono',ui-monospace,monospace;font-size:13px;font-weight:700}
+.row-sub{font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;color:var(--t3);margin-top:1px}
+.row-flags{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+.fl{font-family:'Geist Mono',ui-monospace,monospace;font-size:9px;font-weight:600;padding:2px 7px;border-radius:4px}
+.fl-ph{background:var(--yl);color:var(--y)}.fl-b64{background:var(--r50);color:var(--bad)}.fl-ok{background:var(--gl);color:#14753F}
+.keeptag{font-family:'Geist Mono',ui-monospace,monospace;font-size:9px;font-weight:700;color:var(--g);background:#fff;border:1px solid #BFE5CD;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.log{margin-top:12px;background:var(--w);border:1px solid var(--b);border-radius:8px;padding:10px 12px;font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;line-height:1.7;white-space:pre-wrap;display:none}
+.log.on{display:block}
+.loading{text-align:center;padding:50px;color:var(--t3);font-size:14px}
+.foot{margin-top:16px;font-size:10px;color:var(--t3);text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1><span>Red</span>Assistance — Curatare date test</h1>
+<div class="warn">⚠️ Aceasta pagina POATE STERGE din baza de date. Stergerea e IREVERSIBILA.<br>
+Reguli: acces DOAR admin (sesiune valida) · toate operatiile prin RPC securizat + AUDIT · 1) fa BACKUP · 2) referintele (MS-26-15, MS-26-21) sunt BLOCATE · 3) stergerea cere confirmare dubla + motiv.</div>
+<div class="steps">
+  <div class="stp"><b>Pas 1 · Backup</b>Descarca toate lucrarile ca JSON (obligatoriu inainte de stergere).<button class="btn btn-bk" id="bkBtn" onclick="doBackup()" disabled>Descarca backup (—)</button></div>
+  <div class="stp"><b>Pas 2 · Selectie</b>Bifeaza ce vrei sa STERGI. Referintele sunt blocate.<button class="btn btn-sel" onclick="selectAllDel()">Marcheaza toate (fara referinte)</button></div>
+  <div class="stp"><b>Pas 3 · Stergere</b>Activ doar dupa backup + selectie.<button class="btn btn-del" id="delBtn" onclick="doDelete()" disabled>Sterge selectate (0)</button></div>
+  <div class="stp"><b>Foto · Dry-run</b>Verifica cate poze base64 s-ar muta in Storage (P0 #11). DOAR SIMULARE — nu scrie nimic.<button class="btn btn-sel" onclick="dryRunMigrate()">🔍 Dry-run migrare foto</button></div>
+</div>
+<div id="app"><div class="loading">Se incarca lucrarile...</div></div>
+<div class="log mono" id="log"></div>
+<div class="foot">Sursa: RPC securizat (rpw_cleanup_*) · doar admin · backup local, stergere cu audit + confirmare</div>
+</div>
+<script>
+// ── SECURE CLEANUP — admin-only, minden művelet token-ellenőrzött RPC-n (0017) ──
+// NINCS közvetlen tábla-hozzáférés (nincs közvetlen rpw_jobs olvasás/írás). A cleanup egy
+// destruktív admin eszköz → MINDIG kötelező érvényes admin munkamenet, függetlenül
+// az AUTH_REQUIRED globális kapcsolótól.
+var sb = (typeof RPW_CFG!=='undefined' && RPW_CFG) ? supabase.createClient(RPW_CFG.SB_URL, RPW_CFG.SB_KEY) : null;
+var ROWS=[];              // {uid,num,phase,hasB64,blob,keep,del,data}
+var BACKUP_DONE=false;
+var KEEP_HINTS=['2615','2621','26015','26021'];
+function norm(s){return String(s==null?'':s).toUpperCase().replace(/[^A-Z0-9]/g,'')}
+function isKeep(num){var n=norm(num);for(var i=0;i<KEEP_HINTS.length;i++){if(n.indexOf(KEEP_HINTS[i])>=0)return true}return false}
+function mb(b){return (b/1048576).toFixed(2)}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function hasB64(d){try{return JSON.stringify(d).indexOf('data:image')>=0}catch(e){return false}}
+function tok(){ return (typeof RPWAuth!=='undefined') ? RPWAuth.token() : null; }
+
+// Belépés-kényszer: nincs token → login; nem admin → tiltás.
+function requireAdmin(){
+  var app=document.getElementById('app');
+  if(!sb){ app.innerHTML='<div class="err">RPW_CFG lipseste (rpw-config.js) — pagina dezactivata.</div>'; return false; }
+  var t=tok();
+  if(!t){
+    var next=encodeURIComponent(location.pathname.split('/').pop()||'rpw-cleanup.html');
+    location.assign('rpw-login.html?next='+next);
+    return false;
+  }
+  var role=(typeof RPWAuth!=='undefined')?RPWAuth.role():null;
+  if(role!=='admin'){
+    app.innerHTML='<div class="err">Acces refuzat — curatarea e permisa DOAR pentru rol <b>admin</b> (Irodavezető). Rol curent: '+esc(String(role))+'.</div>';
+    return false;
+  }
+  return true;
+}
+
+async function load(){
+  var app=document.getElementById('app');
+  if(!requireAdmin()) return;
+  var res;
+  try{ res=await sb.rpc('rpw_cleanup_list',{p_token:tok()}); }
+  catch(e){ app.innerHTML='<div class="err">Eroare conexiune: '+esc(e.message||e)+'</div>'; return; }
+  if(res.error){ app.innerHTML='<div class="err">Eroare (RPC): '+esc(res.error.message||res.error)+'</div>'; return; }
+  ROWS=(res.data||[]).map(function(row){
+    var d=row.data||{}; var num=d.number||d.id||row.id;
+    var blob=0;try{blob=JSON.stringify(d).length}catch(e){}
+    var keep=isKeep(num);
+    return {uid:row.id,num:num,phase:(typeof d.phase),phaseVal:d.phase,hasB64:hasB64(d),blob:blob,keep:keep,del:false,data:d};
+  });
+  document.getElementById('bkBtn').disabled=false;
+  document.getElementById('bkBtn').textContent='Descarca backup ('+ROWS.length+')';
+  render();
+}
+
+function render(){
+  var keepN=ROWS.filter(function(r){return r.keep}).length;
+  var delN=ROWS.filter(function(r){return r.del&&!r.keep}).length;
+  var h='';
+  h+='<div class="sec-t">Lucrari pe server: '+ROWS.length+' · de pastrat (referinta): '+keepN+' · selectate pt. stergere: '+delN+'</div>';
+  ROWS.forEach(function(r,idx){
+    var cls=r.keep?'keep':(r.del?'del':'');
+    h+='<div class="row '+cls+'">';
+    if(r.keep)h+='<span class="keeptag">KEEP</span>';
+    else h+='<input type="checkbox" class="row-cb" '+(r.del?'checked':'')+' onchange="toggleDel('+idx+',this.checked)">';
+    h+='<div class="row-main"><div class="row-id">'+esc(r.num)+'</div><div class="row-sub">uid: '+esc(r.uid)+'</div>';
+    h+='<div class="row-flags">';
+    var phBad=!(r.phase==='number'&&r.phaseVal>=1&&r.phaseVal<=7);
+    h+=phBad?'<span class="fl fl-ph">phase: '+esc(String(r.phaseVal))+'</span>':'<span class="fl fl-ok">phase '+r.phaseVal+'</span>';
+    if(r.hasB64)h+='<span class="fl fl-b64">base64 · '+mb(r.blob)+' MB</span>';
+    h+='</div></div></div>';
+  });
+  document.getElementById('app').innerHTML=h;
+  var delBtn=document.getElementById('delBtn');
+  delBtn.textContent='Sterge selectate ('+delN+')';
+  delBtn.disabled=!(BACKUP_DONE&&delN>0);
+}
+
+window.toggleDel=function(idx,v){if(ROWS[idx].keep)return;ROWS[idx].del=v;render()};
+window.selectAllDel=function(){ROWS.forEach(function(r){if(!r.keep)r.del=true});render()};
+
+window.doBackup=async function(){
+  if(!requireAdmin()) return;
+  var res=await sb.rpc('rpw_cleanup_list',{p_token:tok()});
+  if(res.error){alert('Backup esuat: '+(res.error.message||res.error));return}
+  var payload={exported:new Date().toISOString(),count:(res.data||[]).length,jobs:res.data||[]};
+  var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='rpw_jobs_backup_'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  BACKUP_DONE=true;
+  document.getElementById('bkBtn').textContent='✓ Backup descarcat ('+payload.jobs.length+')';
+  render();
+};
+
+window.doDelete=async function(){
+  if(!requireAdmin()) return;
+  if(!BACKUP_DONE){alert('Fa mai intai BACKUP (Pas 1).');return}
+  var toDel=ROWS.filter(function(r){return r.del&&!r.keep});
+  if(!toDel.length){alert('Nimic selectat.');return}
+  var ids=toDel.map(function(r){return r.num}).join(', ');
+  if(!confirm('STERGI '+toDel.length+' lucrari IREVERSIBIL?\n\n'+ids+'\n\nReferintele MS-26-15 / MS-26-21 NU se sterg.'))return;
+  var typed=prompt('Confirmare finala — scrie exact:  STERG');
+  if(typed!=='STERG'){alert('Anulat (nu ai scris STERG).');return}
+  var reason=prompt('Motiv stergere (obligatoriu pentru audit):','curatare date test');
+  if(!reason || reason.trim().length<3){alert('Anulat — motivul e obligatoriu (audit).');return}
+  var log=document.getElementById('log');log.className='log mono on';log.textContent='Incepe stergerea (RPC securizat + audit)...\n';
+  var ok=0,fail=0;
+  for(var i=0;i<toDel.length;i++){
+    var r=toDel[i];
+    try{
+      var d=await sb.rpc('rpw_cleanup_hard_delete',{p_id:r.uid,p_reason:reason.trim(),p_token:tok()});
+      if(d.error)throw d.error;
+      var out=d.data||{};
+      ok++;log.textContent+='✓ sters: '+r.num+'  (op: '+(out.operation_id||'?')+')\n';
+    }
+    catch(e){fail++;log.textContent+='✗ EROARE '+r.num+': '+(e.message||e)+'\n';}
+  }
+  log.textContent+='\nGata. Sterse: '+ok+' · erori: '+fail+'.\nReincarc...';
+  setTimeout(function(){BACKUP_DONE=true;load()},1200);
+};
+
+// ── DRY-RUN: base64 foto → Storage migrare (P0 #11) — DOAR SIMULARE ──
+window.dryRunMigrate=function(){
+  if(!requireAdmin()) return;
+  var log=document.getElementById('log'); log.className='log mono on';
+  if(typeof RPWMigrate==='undefined'){ log.textContent='RPWMigrate lipseste (rpw-base64-migrate.js).\n'; return; }
+  var jobs=ROWS.map(function(r){ return r.data; }).filter(Boolean);
+  var p=RPWMigrate.plan(jobs);
+  var out='DRY-RUN migrare foto (base64 → Storage) — SIMULARE, nu se scrie nimic\n';
+  out+='Dosare cu base64: '+p.jobs+' · poze/documente: '+p.items+' · ~'+mb(p.approxBytes)+' MB\n';
+  out+='(Storage privat activ: '+(RPW_CFG&&RPW_CFG.STORAGE_PRIVATE?'DA':'NU — 0009 neaplicat')+')\n\n';
+  p.perJob.forEach(function(x){ out+='  · '+esc(x.id)+' : '+x.count+' fisiere (~'+mb(x.bytes)+' MB)\n'; });
+  if(!p.jobs) out+='  (niciun base64 de migrat — curat)\n';
+  out+='\nNOTA: migrarea reala + purgarea backup-ului se ruleaza separat, dupa activarea 0009 pe staging.';
+  log.textContent=out;
+};
+load();
+</script>
+</body>
+</html>

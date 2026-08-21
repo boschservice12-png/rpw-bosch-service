@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Autentificare — Red Body</title>
+<script src="rpw-config.js"></script>
+<script src="rpw-guard.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="rpw-auth.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f3f4f6;color:#1f2937;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:18px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:22px;max-width:360px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.08)}
+.brand{font-size:16px;font-weight:800;color:#E11D2E;margin-bottom:2px}.brand span{color:#111}
+.sub{font-size:12px;color:#6b7280;margin-bottom:16px}
+label{display:block;font-size:12px;font-weight:700;margin:10px 0 4px}
+input{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:10px;font-size:15px;font-family:inherit}
+.pin{letter-spacing:.3em;text-align:center;font-weight:800}
+button{width:100%;margin-top:16px;padding:12px;border:none;border-radius:10px;background:#E11D2E;color:#fff;font-weight:800;font-size:15px;font-family:inherit;cursor:pointer}
+button:disabled{opacity:.5}
+.err{color:#E11D2E;font-size:12px;font-weight:700;margin-top:10px;min-height:16px;text-align:center}
+.lng{display:flex;gap:6px;justify-content:center;margin-top:14px}
+.lng b{font-size:11px;color:#9ca3af;cursor:pointer;padding:3px 8px;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand"><span>Red</span> Body</div>
+  <div class="sub" id="sub">Autentificare cu PIN</div>
+  <label id="lPin">PIN</label>
+  <input id="pin" class="pin" type="password" inputmode="numeric" autocomplete="current-password" autofocus>
+  <button id="go">Autentificare</button>
+  <div class="err" id="err"></div>
+</div>
+<script src="rpw-roles.js"></script>
+<script>
+(function(){
+  var T={
+    ro:{sub:'Autentificare cu PIN de angajat',pin:'PIN',go:'Autentificare',invalid:'PIN greșit sau cont blocat',net:'Eroare de rețea',off:'Autentificarea nu este activată — puteți continua.',norole:'Cont valid, dar fără acces la fluxul de vopsitorie (RPW).'},
+    hu:{sub:'Bejelentkezés dolgozói PIN-nel',pin:'PIN',go:'Belépés',invalid:'Hibás PIN vagy zárolt fiók',net:'Hálózati hiba',off:'A hitelesítés nincs bekapcsolva — folytathatod.',norole:'Érvényes belépés, de nincs RPW (paint work) jogosultság.'},
+    en:{sub:'Sign in with employee PIN',pin:'PIN',go:'Sign in',invalid:'Wrong PIN or locked account',net:'Network error',off:'Authentication is not enabled — you may continue.',norole:'Valid sign-in, but no access to the paint workflow (RPW).'}
+  };
+  function gL(){try{return localStorage.getItem('rpw_lang')||'ro'}catch(e){return 'ro'}}
+  function tr(){var d=T[gL()]||T.ro;document.getElementById('sub').textContent=d.sub;document.getElementById('lPin').textContent=d.pin;document.getElementById('go').textContent=d.go;}
+  tr();
+  var CFG=window.RPW_CFG;
+  if(!CFG){document.getElementById('err').textContent='Config';return;}
+  var sb=supabase.createClient(CFG.SB_URL,CFG.SB_KEY);
+  var next=new URLSearchParams(location.search).get('next')||'index.html';
+  if(!(CFG.AUTH_REQUIRED===true)){ document.getElementById('err').textContent=(T[gL()]||T.ro).off; }
+  document.getElementById('go').onclick=async function(){
+    var d=T[gL()]||T.ro, err=document.getElementById('err'); err.textContent='';
+    var pin=document.getElementById('pin').value.trim();
+    if(!pin)return;
+    this.disabled=true;
+    // ERP employee_login(SHOP_ID, PIN) → token; a szerep KANONIKUS RPW-szerepre képződik
+    var res=await RPWAuth.login(sb,pin);
+    this.disabled=false;
+    if(res.ok && res.hasRpwAccess){ location.assign(next); }
+    else if(res.ok && !res.hasRpwAccess){ err.textContent=d.norole; RPWAuth.logout(); }
+    else{ err.textContent = res.error==='network'?d.net:d.invalid; }
+  };
+  document.getElementById('pin').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('go').click();});
+})();
+</script>
+</body>
+</html>

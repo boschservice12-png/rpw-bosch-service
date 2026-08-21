@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23E11D2E'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#FAF8F5">
+<title>RedAssistance — Reconstatare</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="rpw-config.js"></script>
+<script src="rpw-guard.js"></script>
+<script src="rpw-util.js"></script>
+<script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
+<script src="rpw-workflow.js"></script>
+<script src="rpw-auth.js"></script>
+<script src="rpw-db.js"></script>
+<script src="rpw-roles.js"></script>
+<script src="rpw-save.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#FAF8F5;--w:#fff;--r:#E11D2E;--r50:#FDF3F4;--r100:#FCE6E8;--r700:#B5121F;--bad:#C81E33;--g:#1E9D55;--gl:#E1F4E8;--y:#A6701F;--yl:#FAEFD8;--bl:#2A6FDB;--bll:#E2ECFA;--pl:#F2F4F7;--tl:#14753F;--tll:#E1F4E8;--t:#0F141A;--t2:#3F4956;--t3:#6B7280;--b:#E8EBEF;--b2:#D7DBE2;--rd:10px}
+html,body{font-family:'Geist',system-ui,sans-serif;background:var(--bg);color:var(--t);min-height:100dvh;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+.mono{font-family:'Geist Mono',ui-monospace,monospace}
+.loading{text-align:center;padding:60px;color:var(--t3);font-size:14px}
+.bpad{height:24px}
+.toast{position:fixed;bottom:20px;left:16px;right:16px;max-width:600px;margin:0 auto;background:var(--w);padding:11px 14px;border-radius:var(--rd);font-size:12px;font-weight:600;box-shadow:0 4px 16px rgba(15,20,26,.12);border-left:4px solid var(--g);z-index:250}.toast.err{border-left-color:var(--bad)}
+/* ── Workflow shell (etalon) ── */
+.shell{position:sticky;top:0;z-index:50;background:var(--w);border-bottom:1px solid var(--b)}
+.shell-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px}
+.sh-left{display:flex;align-items:center;gap:10px;min-width:0}
+.sh-back{width:32px;height:32px;border-radius:6px;border:1px solid var(--b);background:var(--w);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.sh-back svg{width:16px;height:16px;stroke:var(--t2);fill:none;stroke-width:2}
+.sh-plate{font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;font-weight:600;background:var(--pl);border:1px solid var(--b2);border-radius:4px;padding:3px 8px;white-space:nowrap}
+.sh-phase{font-size:13px;font-weight:700;letter-spacing:-0.012em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-phase .ph-idx{font-family:'Geist Mono',ui-monospace,monospace;color:var(--r);margin-right:6px}
+.sh-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.lsw{display:flex;border:1px solid var(--b);border-radius:6px;overflow:hidden}
+.lb{padding:4px 8px;font-size:9px;font-weight:700;cursor:pointer;border:none;background:var(--w);color:var(--t3);font-family:inherit}.lb.on{background:var(--r);color:#fff}.lb:not(:last-child){border-right:1px solid var(--b)}
+.stepA{display:flex;gap:4px;padding:0 16px 10px;overflow-x:auto;scrollbar-width:none}.stepA::-webkit-scrollbar{display:none}
+.stA{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--b);border-radius:6px;font-size:11px;font-weight:600;color:var(--t3);cursor:pointer;white-space:nowrap;background:var(--w);flex-shrink:0}
+.stA:hover{background:var(--pl)}.stA .n{font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:600}
+.stA.done{color:var(--t2);border-color:var(--b2)}.stA.done .n{color:var(--g)}
+.stA.cur{background:var(--r);border-color:var(--r);color:#fff;font-weight:700}.stA.cur .n{color:#fff}
+.stepB{display:flex;align-items:center;padding:2px 16px 12px}
+.stB{width:30px;height:30px;border-radius:50%;border:1px solid var(--b2);background:var(--w);font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:600;color:var(--t3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.stB.done{background:var(--t);border-color:var(--t);color:#fff}
+.stB.cur{background:var(--r);border-color:var(--r);color:#fff;box-shadow:0 0 0 3px rgba(225,29,46,.22)}
+.stB-line{flex:1;height:1px;background:var(--b2);min-width:6px}.stB-line.done{background:var(--t)}
+.stB-name{margin-left:10px;font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap}
+.stepC{padding:0 16px 12px}.stepC-bar{display:flex;gap:3px}
+.stC{flex:1;height:6px;border-radius:3px;background:var(--b);cursor:pointer}.stC.done{background:var(--t2)}.stC.cur{background:var(--r)}
+.stepC-meta{display:flex;justify-content:space-between;margin-top:6px;font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+/* ── Munkalap ── */
+.wrap{max-width:840px;margin:0 auto;padding:12px 16px 0}
+.doc{background:var(--w);border:1px solid var(--b);border-radius:var(--rd);padding:20px;margin-bottom:12px}
+.doc-head{display:flex;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:2px solid var(--t);flex-wrap:wrap}
+.dh-brand .ra-logo{font-size:16px;font-weight:700;letter-spacing:-0.012em;color:#6B7280}.dh-brand .ra-logo span{color:var(--r)}
+.dh-firm{font-size:10px;color:var(--t2);line-height:1.5;margin-top:4px}
+.dh-doc{text-align:right}
+.dh-doc-t{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--r);line-height:1.5;max-width:240px;margin-left:auto}
+.dh-doc-n{font-size:18px;font-weight:700;margin-top:2px}.dh-doc-d{font-size:10px;color:var(--t3);margin-top:2px}
+.doc-sub{font-size:10px;color:var(--t3);font-style:italic;margin:6px 0 2px}
+.sec-title{font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--r);margin:18px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--b)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.ff{background:var(--bg);border:1px solid var(--b);border-radius:6px;padding:6px 10px}
+.ff-l{font-family:'Geist Mono',ui-monospace,monospace;font-size:8px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;font-weight:500;margin-bottom:2px}
+.ff-v{width:100%;border:none;background:none;font-size:13px;font-weight:700;color:var(--t);font-family:inherit;outline:none}
+.ff-v.mono{font-family:'Geist Mono',ui-monospace,monospace}
+.fix-text{font-size:11px;color:var(--t2);line-height:1.55;background:var(--bg);border:1px solid var(--b);border-radius:6px;padding:8px 10px}
+.add-row{margin-top:8px;padding:8px;border:1px dashed var(--b2);border-radius:6px;text-align:center;cursor:pointer;font-size:11px;font-weight:600;color:var(--t3)}.add-row:hover{background:var(--pl);border-color:var(--t2);color:var(--t2)}
+/* ── Status bar ── */
+.status-bar{margin:12px 16px 0;padding:12px 14px;border-radius:var(--rd);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid}
+.status-bar .st-label{font-family:'Geist Mono',ui-monospace,monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;opacity:.75;margin-bottom:2px}
+.status-bar>div:first-child>div:nth-child(2){font-size:13px;font-weight:700}
+.st-draft{background:var(--pl);border-color:var(--b2);color:var(--t2)}
+.st-sent{background:var(--yl);border-color:#E8D08A;color:var(--y)}
+.st-accepted{background:var(--gl);border-color:#BFE5CD;color:var(--tl)}
+.st-rejected{background:var(--r50);border-color:#F5CBD0;color:var(--bad)}
+.st-btns{display:flex;gap:4px;flex-wrap:wrap}
+.st-btn{font-family:'Geist Mono',ui-monospace,monospace;font-size:9px;font-weight:600;padding:5px 9px;border-radius:6px;border:1px solid var(--b2);background:var(--w);color:var(--t3);cursor:pointer}
+.st-btn.active{background:var(--r);border-color:var(--r);color:#fff}
+/* ── Rows (rc) ── */
+.rc-line{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--b);flex-wrap:wrap}
+.rc-card-nr{width:22px;height:22px;border-radius:50%;background:var(--pl);border:1px solid var(--b2);font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:600;color:var(--t2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rc-line-nm{font-weight:700;font-size:13px;flex:1;min-width:80px}
+.rc-line-h{font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;font-weight:600;color:var(--t2)}
+.rc-line-obs{font-size:11px;color:var(--t3)}
+.rc-line-phw{position:relative;flex-shrink:0}
+.rc-line-ph{width:34px;height:26px;object-fit:cover;border-radius:4px;border:1px solid var(--b)}
+.rc-line-phx{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--bad);color:#fff;border:none;font-size:10px;line-height:1;cursor:pointer}
+.rc-line-edit{width:26px;height:26px;border-radius:6px;border:1px solid var(--b2);background:var(--w);color:var(--t2);cursor:pointer;font-size:12px}
+.rc-card{background:var(--bg);border:1px solid var(--b2);border-radius:8px;padding:10px;margin-bottom:8px}
+.rc-card-top{display:flex;align-items:center;gap:8px}
+.rc-name{flex:1;border:1px solid var(--b2);border-radius:6px;padding:7px 9px;font-size:13px;font-weight:700;font-family:inherit;outline:none;background:var(--w)}.rc-name:focus{border-color:var(--t)}
+.rc-card-del{width:26px;height:26px;border-radius:6px;border:none;background:var(--r50);color:var(--bad);cursor:pointer;font-size:14px;font-weight:700;flex-shrink:0}
+.op-btns{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.op-btn{font-family:'Geist Mono',ui-monospace,monospace;font-size:9px;font-weight:600;padding:5px 9px;border-radius:6px;border:1px solid var(--b2);background:var(--w);color:var(--t3);cursor:pointer}
+.op-btn.on{color:#fff}
+.op-btn.op-inl.on{background:var(--bad);border-color:var(--bad)}
+.op-btn.op-rep.on{background:var(--y);border-color:var(--y)}
+.op-btn.op-dem.on{background:var(--bl);border-color:var(--bl)}
+.op-btn.op-vop.on{background:var(--tl);border-color:var(--tl)}
+.op-btn.op-rvp.on{background:var(--t2);border-color:var(--t2)}
+.rc-row2{display:flex;gap:8px;margin-top:8px;align-items:center}
+.rc-ora{display:flex;align-items:center;gap:4px;background:var(--w);border:1px solid var(--b2);border-radius:6px;padding:4px 8px}
+.rc-ora input{width:50px;border:none;outline:none;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;font-weight:700;background:none}
+.rc-ora-lbl{font-size:9px;color:var(--t3)}
+.rc-obs{flex:1;border:1px solid var(--b2);border-radius:6px;padding:7px 9px;font-size:12px;font-family:inherit;outline:none;background:var(--w)}.rc-obs:focus{border-color:var(--t)}
+.rc-phs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.rc-ph{width:52px;height:40px;border-radius:6px;border:1.5px dashed var(--b2);background:var(--w);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden}
+.rc-ph.done{border-style:solid;border-color:var(--g)}
+.rc-ph img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.rc-ph svg{width:16px;height:16px;stroke:var(--t3);fill:none;stroke-width:1.5}
+.rc-ph input[type=file]{position:absolute;inset:0;opacity:0;font-size:0;cursor:pointer}
+.rc-ph-del{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--bad);color:#fff;border:none;font-size:10px;line-height:1;cursor:pointer;z-index:2}
+.rc-save{width:100%;margin-top:8px;padding:8px;border:none;border-radius:6px;background:var(--g);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+/* ── Docs checklist ── */
+.chk-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2);padding:5px 0}
+.chk-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--r)}
+/* ── Signatures (3) ── */
+.sig-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:16px}
+.sig-box{border:1px solid var(--b);border-radius:6px;padding:10px;text-align:center}
+.sig-box-t{font-family:'Geist Mono',ui-monospace,monospace;font-size:8px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+.sig-box input{width:100%;border:none;border-bottom:1px solid var(--b2);outline:none;font-size:11px;font-family:inherit;text-align:center;padding:3px 0;margin-bottom:4px;background:none}
+.sig-space{height:38px;border-bottom:1px solid var(--b2);margin:6px 4px 0}
+/* ── Photos ── */
+.photo-sec{margin:12px 16px 0;background:var(--w);border:1px solid var(--b);border-radius:var(--rd);padding:14px}
+.photo-title{display:flex;justify-content:space-between;align-items:center;font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--r);margin-bottom:10px}
+.pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.pslot{background:var(--bg);border:1.5px dashed var(--b2);border-radius:8px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden}
+.pslot.done{border-style:solid;border-color:var(--g)}
+.pslot img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.pslot input[type=file]{position:absolute;inset:0;opacity:0;font-size:0;cursor:pointer;z-index:1}
+.pslot-icon{width:24px;height:24px;stroke:var(--t3);fill:none;stroke-width:1.5}
+.pslot-n{position:absolute;bottom:3px;left:5px;font-family:'Geist Mono',ui-monospace,monospace;font-size:8px;color:var(--t3);z-index:1}
+.pslot-x{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:var(--bad);color:#fff;border:none;font-size:11px;line-height:1;cursor:pointer;z-index:2}
+/* ── Actions ── */
+.btn{border:none;border-radius:6px;padding:11px 16px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;width:100%}
+.btn:active{transform:translateY(1px)}
+.btn-g{background:var(--g);color:#fff}.btn-o{background:var(--w);color:var(--t2);border:1px solid var(--b2)}.btn-wa{background:#25D366;color:#fff}.btn-mail{background:var(--bl);color:#fff}.btn-b{background:var(--r);color:#fff}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 16px 8px}
+@media(max-width:560px){.pgrid{grid-template-columns:repeat(3,1fr)}.sig-grid{grid-template-columns:1fr}}
+@media print{*{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}.shell,.status-bar,.action-grid,.add-row,.photo-sec,.rc-card-del,.rc-line-edit,.rc-line-phx,.rc-ph-del,.btn,.toast{display:none!important}body{background:#fff}.wrap{max-width:none;padding:0}.doc{border:none;padding:0;margin:0}.sig-grid{margin-top:40px}}
+</style>
+</head>
+<body>
+<div id="rpw-sync" style="position:fixed;bottom:10px;right:12px;z-index:300;font:600 11px system-ui,Arial;background:#fff;border:1px solid #E8EBEF;border-radius:8px;padding:5px 10px;box-shadow:0 2px 8px rgba(0,0,0,.08);opacity:0;transition:opacity .2s"></div>
+<div id="app"><div class="loading">Se incarca...</div></div>
+<script>
+if(!window.RPW_CFG){(document.getElementById('app')||document.body).innerHTML='<div style="padding:40px;text-align:center;font-family:system-ui,Arial"><div style="font-size:40px">&#9888;&#65039;</div><div style="font-size:18px;font-weight:800;color:#C81E33;margin:12px 0 6px">Configurație lipsă</div><div style="color:#3F4956;font-size:14px;line-height:1.6">rpw-config.js nu s-a încărcat (sau rulează dintr-o copie locală file://).<br>Deschide sistemul live.</div></div>';throw new Error('RPW_CFG missing');}
+if(window.RPWAuth){try{RPWAuth.guard();}catch(e){}}
+var SB_URL=RPW_CFG.SB_URL;
+var SB_KEY=RPW_CFG.SB_KEY;
+var sb=supabase.createClient(SB_URL,SB_KEY);
+/* PHASE 1: látható szinkron-állapot + robusztus mentő (rpw-save.js) */
+function rpwSyncLabel(st){var m={saving_local:['Salvare…','#6B7280'],syncing:['Sincronizare…','#2A6FDB'],synced:['✓ Salvat pe server','#1E9D55'],offline:['⚠ Offline – salvat local','#A6701F'],retry:['↻ Reîncercare…','#A6701F'],failed:['✗ Eșec salvare – reîncearcă','#C81E33'],permission:['✗ Fără permisiune','#C81E33'],conflict:['⚠ Conflict de date','#C81E33'],auth:['✗ Autentificare','#C81E33'],idle:['','#6B7280']};return m[st]||[st,'#6B7280'];}
+function onSyncState(st){var el=document.getElementById('rpw-sync');if(el){var l=rpwSyncLabel(st);el.textContent=l[0];el.style.color=l[1];el.style.opacity=l[0]?'1':'0';if(st==='synced'){setTimeout(function(){if(el&&el.textContent===l[0])el.style.opacity='0'},2000)}}var cb=document.getElementById('rpw-conflict');if(st==='conflict'){if(!cb){cb=document.createElement('div');cb.id='rpw-conflict';cb.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,Arial';cb.innerHTML='<div style="max-width:360px;background:#fff;border-radius:12px;padding:22px;text-align:center"><div style="font-size:34px">\u26A0\uFE0F</div><div style="font-size:17px;font-weight:800;color:#C81E33;margin:8px 0">Conflict de date</div><div style="font-size:13px;color:#3F4956;line-height:1.6">Alt utilizator a modificat aceast\u0103 fi\u0219\u0103. Modificarea ta local\u0103 este p\u0103strat\u0103. Re\u00EEncarc\u0103 pentru versiunea de pe server.</div><button onclick="location.reload()" style="margin-top:16px;background:#E11D2E;color:#fff;border:none;border-radius:9px;padding:11px 20px;font-weight:800;cursor:pointer">Re\u00EEncarc\u0103</button></div>';document.body.appendChild(cb);}}else if(cb){cb.remove();}}
+var SAVER=(window.RPWSave&&RPWSave.createSaver)?RPWSave.createSaver({sb:sb,onState:onSyncState}):null;
+if(SAVER&&window.RPWSave&&RPWSave.bindBeforeUnload)RPWSave.bindBeforeUnload(SAVER,'Există modificări nesincronizate.');
+if(typeof saveJ==='function'){var _saveJ_orig=saveJ;saveJ=function(){if(typeof JOB==='undefined'||!JOB)return Promise.resolve();return SAVER?SAVER.save(JOB):_saveJ_orig();};}
+if(typeof saveJob==='function'){var _saveJob_orig=saveJob;saveJob=function(job){if(!job)return Promise.resolve();return SAVER?SAVER.save(job):_saveJob_orig(job);};}
+
+var JOB=null;
+var S={ts:null,te:0};
+
+function gJI(){return new URLSearchParams(location.search).get('job')}
+
+async function loadJob(){
+  var jid=gJI();if(!jid){render();return}
+  var cached=localStorage.getItem('rpw_job_'+jid);
+  if(cached){try{JOB=JSON.parse(cached);if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};render()}catch(e){}}
+  try{
+    var res=await RPWDb.getRow(sb,jid);
+    if(res.error)throw res.error;
+    var _lts=0,_sts=0;try{_lts=Date.parse(localStorage.getItem('rpw_job_ts_'+jid)||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
+    if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};
+    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+jid,res.data.updated_at||new Date().toISOString())}catch(e){}}
+    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB))}catch(e){}
+    /* nincs auto-mentes betolteskor */
+  }catch(e){if(!JOB)JOB=null}
+  render();
+}
+var _saveTimer=null;
+async function saveJ(){
+  if(!JOB)return;
+  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+JOB.id,new Date().toISOString())}catch(e){}
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(async function(){
+    try{await RPWDb.patch(sb,JOB)}
+    catch(e){console.error('Save:',e)}
+  },500);
+}
+
+function buildInitRows(){
+  var rows=[],el=JOB.elements||{},n=1;
+  for(var k in el){
+    if(el[k].status==='damaged'){rows.push({nr:n++,name:T(k),op:el[k].work==='replace'?'Inlocuire':'Reparare',hours:'',tipAvarie:el[k].note||'',pozAsig:''})}
+  }
+  return rows;
+}
+
+function toast(m,e){S.ts=m;S.te=e?1:0;render();setTimeout(function(){S.ts=null;render()},3000)}
+function resize(file,cb){var r=new FileReader();r.onload=function(e){var img=new Image();img.onload=function(){var c=document.createElement('canvas'),mx=1100,sc=img.width>mx?mx/img.width:1;c.width=img.width*sc;c.height=img.height*sc;c.getContext('2d').drawImage(img,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.7))};img.src=e.target.result};r.readAsDataURL(file)}
+
+var EK_NAMES={fb:{ro:'Bara fata',en:'Front bumper',hu:'Elso lokh.'},rb:{ro:'Bara spate',en:'Rear bumper',hu:'Hatso lokh.'},hood:{ro:'Capota',en:'Hood',hu:'Motorhazt.'},trunk:{ro:'Portbagaj',en:'Trunk',hu:'Csomagtarto'},roof:{ro:'Plafon',en:'Roof',hu:'Teto'},fl_f:{ro:'Aripa stg fata',en:'LF fender',hu:'BE sarvedo'},fr_f:{ro:'Aripa dr fata',en:'RF fender',hu:'JE sarvedo'},rl_f:{ro:'Aripa stg spate',en:'LR fender',hu:'BH sarvedo'},rr_f:{ro:'Aripa dr spate',en:'RR fender',hu:'JH sarvedo'},fl_d:{ro:'Usa stg fata',en:'LF door',hu:'BE ajto'},fr_d:{ro:'Usa dr fata',en:'RF door',hu:'JE ajto'},rl_d:{ro:'Usa stg spate',en:'LR door',hu:'BH ajto'},rr_d:{ro:'Usa dr spate',en:'RR door',hu:'JH ajto'},l_s:{ro:'Prag stg',en:'L sill',hu:'B kuszob'},r_s:{ro:'Prag dr',en:'R sill',hu:'J kuszob'},l_m:{ro:'Ogl. stg',en:'L mirror',hu:'B tukor'},r_m:{ro:'Ogl. dr',en:'R mirror',hu:'J tukor'},a_l:{ro:'Stalp A stg',en:'L A-pil.',hu:'B A oszl.'},a_r:{ro:'Stalp A dr',en:'R A-pil.',hu:'J A oszl.'},b_l:{ro:'Stalp B stg',en:'L B-pil.',hu:'B B oszl.'},b_r:{ro:'Stalp B dr',en:'R B-pil.',hu:'J B oszl.'},c_l:{ro:'Stalp C stg',en:'L C-pil.',hu:'B C oszl.'},c_r:{ro:'Stalp C dr',en:'R C-pil.',hu:'J C oszl.'}};
+
+var i={reconstatare:{ro:'Nota de Reconstatare',en:'Re-assessment Note',hu:'Ujrafelmeres'},noJob:{ro:'Nu exista lucrare',en:'No job',hu:'Nincs munka'},openD:{ro:'Dashboard',en:'Dashboard',hu:'Dashboard'},saved:{ro:'Salvat',en:'Saved',hu:'Mentve'},
+s1:{ro:'I. DATE DOSAR DE DAUNA SI PARTI IMPLICATE',en:'I. CLAIM FILE & PARTIES',hu:'I. DOSSZIE ES FELEK'},
+asigurator:{ro:'Asigurator RCA/CASCO',en:'Insurer RCA/CASCO',hu:'Biztosito'},nrDosar:{ro:'Nr. dosar dauna',en:'Claim file no.',hu:'Karszam'},polita:{ro:'Polita',en:'Policy',hu:'Kotveny'},valabila:{ro:'Valabila pana la',en:'Valid until',hu:'Ervenyes'},inspector:{ro:'Inspector / referent',en:'Inspector',hu:'Karszemlesz'},telInsp:{ro:'Tel inspector',en:'Phone',hu:'Tel'},emailInsp:{ro:'Email inspector',en:'Email insurer',hu:'Email biztosito'},pagubita:{ro:'Persoana pagubita',en:'Injured party',hu:'Karosult'},service:{ro:'Imputernicit / service',en:'Service',hu:'Szerviz'},
+s2:{ro:'II. DATE VEHICUL',en:'II. VEHICLE DATA',hu:'II. JARMU ADATOK'},
+marca:{ro:'Marca / model',en:'Brand / model',hu:'Marka / modell'},nrInm:{ro:'Nr. inmatriculare',en:'Plate no.',hu:'Rendszam'},serieSasiu:{ro:'Serie sasiu (VIN)',en:'VIN',hu:'Alvazszam'},anFabr:{ro:'An fabricatie',en:'Year',hu:'Gyartasi ev'},dataConst:{ro:'Data constatarii initiale',en:'Initial assessment date',hu:'Elso felm. datum'},dataReconst:{ro:'Data reconstatarii',en:'Re-assessment date',hu:'Ujrafelm. datum'},
+s3:{ro:'III. OBIECTUL RECONSTATARII',en:'III. PURPOSE',hu:'III. TARGY'},
+s3text:{ro:'In urma demontarii / verificarilor suplimentare efectuate pe parcursul reparatiei, au fost identificate avarii suplimentare si/sau operatiuni tehnologice suplimentare care nu au putut fi constatate la inspectia initiala. Prezenta nota are rolul de a consemna aceste elemente si de a solicita actualizarea constatarii de dauna.',en:'Following disassembly / additional checks during repair, additional damage and/or supplementary operations were identified that could not be detected during initial inspection. This note records these elements and requests an update to the damage assessment.',hu:'A javitas kozbeni szetszerelest / kiegeszito vizsgalatokat kovetoen olyan tovabbi serulemsek es/vagy kiegeszito technologiai muveletek kerultek azonositasra, amelyek az elso szemlen nem voltak megllapithatoak.'},
+s4:{ro:'IV. ELEMENTE CONSTATATE SUPLIMENTAR',en:'IV. ADDITIONAL ELEMENTS',hu:'IV. KIEGESZITO SERULESESK'},
+nr:{ro:'Nr.',en:'No.',hu:'Nr.'},elemName:{ro:'Ansamble / subansamble',en:'Assembly / sub-assembly',hu:'Szerkezet / resz'},operatiune:{ro:'Operatiune',en:'Operation',hu:'Muvelet'},normaTimp:{ro:'Norma timp (ore)',en:'Time norm (hrs)',hu:'Idanorma (ora)'},tipAvarie:{ro:'Tip avarie / obs.',en:'Damage type / notes',hu:'Serulestipus / megj.'},pozAsig:{ro:'Pozitia asiguratorului',en:'Insurer position',hu:'Biztosito allaspontja'},addRow:{ro:'+ Adauga rand',en:'+ Add row',hu:'+ Uj sor'},
+s5:{ro:'V. LEGATURA DE CAUZALITATE',en:'V. CAUSALITY',hu:'V. OKOZATI OSSZEFUGGES'},
+s5text:{ro:'Se consemneaza ca avariile si operatiunile de mai sus au fost identificate ulterior demontarii, fiind compatibile cu dinamica evenimentului rutier si/sau cu avariile deja constatate initial. Documentele justificative anexate pot include: fotografii, deviz preliminar, capturi din program de reparatie, documentatie tehnica a producatorului.',en:'It is noted that the above damage and operations were identified after disassembly and are compatible with the dynamics of the road event and/or initially assessed damage.',hu:'A fenti serulesesk es muveletek a szetszerelest kovetoen kerultek azonositasra, es oszhangban vannak a kozlekedesi esemeny dinamikajaval.'},
+s6:{ro:'VI. DOCUMENTE ANEXATE',en:'VI. ATTACHED DOCUMENTS',hu:'VI. CSATOLT DOKUMENTUMOK'},
+dFoto:{ro:'Fotografii color ale zonelor afectate',en:'Color photos of affected areas',hu:'Szines fotok'},dDeviz:{ro:'Deviz / calcul reparatie actualizat',en:'Updated repair estimate',hu:'Frissitett javitasi koltsegvetes'},dTehnica:{ro:'Documentatie tehnica / instructiuni producator',en:'Technical documentation',hu:'Muszaki dokumentacio'},dCopie:{ro:'Copie constatare initiala / PV initial',en:'Copy of initial assessment',hu:'Elso szemle masolat'},dAlte:{ro:'Alte documente',en:'Other documents',hu:'Egyeb dokumentumok'},
+s7:{ro:'VII. SOLICITARE CATRE ASIGURATOR',en:'VII. REQUEST TO INSURER',hu:'VII. KERES A BIZTOSITONAK'},
+s7text:{ro:'Va solicitam analizarea de urgenta a prezentei note de reconstatare si actualizarea dosarului de dauna prin acceptarea integrala a avariilor si operatiunilor suplimentare dovedite. In cazul unei acceptari partiale sau al unui refuz, va rugam sa comunicati in scris, punctual si motivat, pozitiile neacceptate.',en:'We request urgent analysis of this re-assessment note and update of the claim file by full acceptance of the proven additional damage and operations.',hu:'Kerjuk a jelen ujrafelmeres surgos elemzeset es a kardosszie frissiteset a bizonyitott tovabbi serulesesk es muveletek teljes elfogadasaval.'},
+s8:{ro:'VIII. CONFIRMARI SI SEMNATURI',en:'VIII. CONFIRMATIONS & SIGNATURES',hu:'VIII. MEGEROSITESEK ES ALAIRASOK'},
+sigUnit:{ro:'Unitatea reparatoare',en:'Repair unit',hu:'Javito egyseg'},sigClient:{ro:'Persoana pagubita',en:'Injured party',hu:'Karosult'},sigInsp:{ro:'Reprezentant asigurator',en:'Insurer representative',hu:'Biztosito kepviseloje'},
+sigName:{ro:'Nume',en:'Name',hu:'Nev'},sigFunc:{ro:'Functie',en:'Position',hu:'Beosztas'},
+photos:{ro:'FOTOGRAFII ANEXATE',en:'ATTACHED PHOTOS',hu:'CSATOLT FOTOK'},
+print:{ro:'Printeaza',en:'Print',hu:'Nyomtatas'},advance:{ro:'Avanseaza → Tinichigerie',en:'Advance → Bodywork',hu:'Tovabb → Lakatos'},waAsig:{ro:'WhatsApp asigurator',en:'WhatsApp insurer',hu:'WhatsApp biztosito'},waClient:{ro:'WhatsApp client',en:'WhatsApp client',hu:'WhatsApp ugyfel'},emailAsig:{ro:'Email asigurator',en:'Email insurer',hu:'Email biztosito'},sharePhBtn:{ro:'Trimite fotografii',en:'Share photos',hu:'Fotok kuldese'}};
+
+function gL(){return localStorage.getItem('rpw_lang')||'ro'}
+function sL(l){localStorage.setItem('rpw_lang',l);render()}
+function T(k){var e=i[k]||EK_NAMES[k];return e?e[gL()]||e.ro||k:k}
+
+var IC={back:'<svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>',cam:'<svg class="pslot-icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>',chk:'<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',print:'<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',wa:'<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492l4.636-1.467A11.932 11.932 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-2.168 0-4.19-.592-5.935-1.62l-.424-.253-2.748.87.884-2.678-.278-.44A9.768 9.768 0 012.182 12c0-5.423 4.395-9.818 9.818-9.818S21.818 6.577 21.818 12 17.423 21.818 12 21.818z"/></svg>',mail:'<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',share:'<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>'};
+
+// ────── WORKFLOW SHELL (etalon, valtoztatas nelkul, SHELL_CUR=2) ──────
+var SHELL_PHASES=[
+ {n:'01',page:'rpw-recepcio-red.html',ro:'Recepție',en:'Reception',hu:'Recepció'},
+ {n:'02',page:'rpw-evaluare-red.html',ro:'Evaluare',en:'Assessment',hu:'Felmérés'},
+ {n:'03',page:'rpw-reconstatare-red.html',ro:'Reconstatare',en:'Re-assessment',hu:'Újrafelmérés'},
+ {n:'04',page:'rpw-tinichigerie-red.html',ro:'Tinichigerie',en:'Bodywork',hu:'Lakatos'},
+ {n:'05',page:'rpw-vopsitorie-red.html',ro:'Vopsitorie',en:'Paint',hu:'Fényezés'},
+ {n:'06',page:'rpw-control-red.html',ro:'Control',en:'Check',hu:'Kontroll'},
+ {n:'07',page:'rpw-inchidere-red.html',ro:'Închidere',en:'Closing',hu:'Lezárás'}
+];
+var SHELL_CUR=2;
+function shellVariant(){try{return localStorage.getItem('rpw_shell_v')||'A'}catch(e){return 'A'}}
+window.setShellVariant=function(v){try{localStorage.setItem('rpw_shell_v',v)}catch(e){}render()};
+window.goPhase=function(i){if(i===SHELL_CUR)return;location.assign(SHELL_PHASES[i].page+'?job='+(JOB?JOB.id:''))};
+function shellHtml(job,ln){
+  var v=shellVariant();var plate=job.plate||job.number||job.id||'';var cur=SHELL_PHASES[SHELL_CUR];
+  function nm(p){return p[ln]||p.ro}
+  var h='<div class="shell"><div class="shell-top">';
+  h+='<div class="sh-left"><div class="sh-back" onclick="location.assign(\'rpw-dosar.html?job='+job.id+'\')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>';
+  h+='<span class="sh-plate">'+escH(plate)+'</span>';
+  h+='<div class="sh-phase"><span class="ph-idx">'+cur.n+'</span>'+nm(cur)+'</div></div>';
+  h+='<div class="sh-right"><div class="lsw">';
+  ['A','B','C'].forEach(function(x){h+='<button class="lb '+(v===x?'on':'')+'" onclick="setShellVariant(\''+x+'\')">'+x+'</button>'});
+  h+='</div><div class="lsw"><button class="lb '+(ln==='ro'?'on':'')+'" onclick="sL(\'ro\')">RO</button><button class="lb '+(ln==='en'?'on':'')+'" onclick="sL(\'en\')">EN</button><button class="lb '+(ln==='hu'?'on':'')+'" onclick="sL(\'hu\')">HU</button></div></div></div>';
+  if(v==='A'){h+='<div class="stepA">';SHELL_PHASES.forEach(function(p,i){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;var cls=i<SHELL_CUR?'done':i===SHELL_CUR?'cur':'';h+='<div class="stA '+cls+'" onclick="goPhase('+i+')"><span class="n">'+p.n+'</span>'+nm(p)+'</div>'});h+='</div>';}
+  else if(v==='B'){h+='<div class="stepB">';SHELL_PHASES.forEach(function(p,i){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;if(i>0)h+='<div class="stB-line'+(i<=SHELL_CUR?' done':'')+'"></div>';var cls=i<SHELL_CUR?' done':i===SHELL_CUR?' cur':'';h+='<div class="stB'+cls+'" onclick="goPhase('+i+')" title="'+p.n+' '+nm(p)+'">'+p.n+'</div>';});h+='<span class="stB-name">'+nm(cur)+'</span></div>';}
+  else{h+='<div class="stepC"><div class="stepC-bar">';SHELL_PHASES.forEach(function(p,i){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;var cls=i<SHELL_CUR?' done':i===SHELL_CUR?' cur':'';h+='<div class="stC '+cls+'" onclick="goPhase('+i+')" title="'+p.n+' '+nm(p)+'"></div>'});h+='</div><div class="stepC-meta"><span>'+cur.n+' '+nm(cur)+'</span><span>pasul '+cur.n+' / 07</span></div></div>';}
+  h+='</div>';return h;
+}
+
+function render(){
+  var ln=gL(),job=JOB;
+  if(!job){document.getElementById('app').innerHTML='<div class="loading">'+T('noJob')+'<br><br><button class="btn btn-b" style="width:auto;padding:10px 24px;display:inline-flex" onclick="location.assign(\'index.html\')">'+T('openD')+'</button></div>';return}
+  if(initReconst())saveJ();
+  var rc=job.reconst||{},rows=rc.rows||[],docs=rc.docs||{},photos=job.reconstPhotos||[];
+
+  var today=new Date().toLocaleDateString('ro-RO',{day:'2-digit',month:'2-digit',year:'numeric'});
+  var h=shellHtml(job,ln)+'<div class="wrap">';
+
+  // Status bar
+  var rcSt=rc.status||'draft';
+  var stCls=rcSt==='sent'?'st-sent':rcSt==='accepted'?'st-accepted':rcSt==='rejected'?'st-rejected':'st-draft';
+  var stLabel=rcSt==='sent'?'TRIMIS — ASTEPTAM RASPUNS':rcSt==='accepted'?'ACCEPTAT ✓':rcSt==='rejected'?'REFUZAT ✗':'CIORNA';
+  h+='<div class="status-bar '+stCls+'"><div><div class="st-label">STATUS RECONSTATARE</div><div>'+stLabel+'</div>'+(rc.responseDate?'<div style="font-size:9px;opacity:.8;margin-top:2px">Raspuns: '+rc.responseDate+'</div>':'')+'</div><div class="st-btns"><button class="st-btn '+(rcSt==='draft'?'active':'')+'" onclick="setRcSt(\'draft\')">Ciorna</button><button class="st-btn '+(rcSt==='sent'?'active':'')+'" onclick="setRcSt(\'sent\')">Trimis</button><button class="st-btn '+(rcSt==='accepted'?'active':'')+'" onclick="setRcSt(\'accepted\')">Acceptat</button><button class="st-btn '+(rcSt==='rejected'?'active':'')+'" onclick="setRcSt(\'rejected\')">Refuzat</button></div></div>';
+  if(rcSt==='sent'){
+    h+='<div style="margin:0 16px;padding:12px;background:var(--yl);border:2px solid var(--y);border-radius:var(--rd);display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div style="font-size:12px;font-weight:800;color:var(--y)">Raspuns primit?</div><button class="btn" style="width:auto;padding:8px 16px;background:var(--g);color:#fff;flex:none" onclick="rcResponse(\'accepted\')">✓ Acceptat</button><button class="btn" style="width:auto;padding:8px 16px;background:var(--r);color:#fff;flex:none" onclick="rcResponse(\'rejected\')">✗ Refuzat</button></div>';
+  }
+  if(rc.responseNote){
+    h+='<div style="margin:4px 16px;padding:8px 12px;background:var(--w);border:1px solid var(--b);border-radius:var(--rd);font-size:11px"><span style="font-weight:700;color:var(--t3)">Raspuns:</span> '+rc.responseNote+'</div>';
+  }
+
+  h+='<div class="doc">';
+  h+='<div class="doc-head"><div class="dh-brand"><div class="ra-logo"><span>Red</span>Assistance</div><div class="dh-firm">SC SZKALICZKI SERVICE SRL · CIF RO16250445<br>Str. Petki David, Nr.27/A, Sangeorgiu de Mures<br>Tel: 0265318020</div></div><div class="dh-doc"><div class="dh-doc-t">'+T('reconstatare')+'</div><div class="dh-doc-n mono">'+escH(job.number||job.id)+'</div><div class="dh-doc-d mono">'+today+'</div></div></div>';
+  h+='<div class="doc-sub">(constatare suplimentara a avariilor constatate pe parcursul reparatiei)</div>';
+
+  // I. Dosar dauna
+  h+='<div class="sec-title">'+T('s1')+'</div>';
+  h+='<div class="fg"><div class="ff"><div class="ff-l">'+T('asigurator')+'</div><input class="ff-v" value="'+(rc.asigurator||'')+'" onchange="uRC(\'asigurator\',this.value)"/></div><div class="ff"><div class="ff-l">'+T('nrDosar')+'</div><input class="ff-v mono" value="'+(rc.nrDosar||'')+'" onchange="uRC(\'nrDosar\',this.value)"/></div></div>';
+  h+='<div class="fg"><div class="ff"><div class="ff-l">'+T('polita')+'</div><input class="ff-v" value="'+(rc.polita||'')+'" onchange="uRC(\'polita\',this.value)"/></div><div class="ff"><div class="ff-l">'+T('valabila')+'</div><input class="ff-v" type="date" value="'+(rc.valabila||'')+'" onchange="uRC(\'valabila\',this.value)"/></div></div>';
+  h+='<div class="fg"><div class="ff"><div class="ff-l">'+T('inspector')+'</div><input class="ff-v" value="'+(rc.inspector||'')+'" onchange="uRC(\'inspector\',this.value)"/></div><div class="ff"><div class="ff-l">'+T('telInsp')+'</div><input class="ff-v" value="'+(rc.telInsp||'')+'" onchange="uRC(\'telInsp\',this.value)"/></div></div>';
+  h+='<div class="fg"><div class="ff"><div class="ff-l">'+T('pagubita')+'</div><input class="ff-v" value="'+escA(rc.pagubita||job.proprietar||job.client||'')+'" onchange="uRC(\'pagubita\',this.value)"/></div><div class="ff"><div class="ff-l">'+T('service')+'</div><input class="ff-v" value="'+(rc.service||'SC SZKALICZKI SERVICE SRL')+'" onchange="uRC(\'service\',this.value)"/></div></div>';
+
+  // II. Date vehicul
+  h+='<div class="sec-title">'+T('s2')+'</div>';
+  h+='<div class="fg"><div class="ff"><div class="ff-l">'+T('marca')+'</div><div class="ff-v">'+escH(job.brand||job.auto||'—')+'</div></div><div class="ff"><div class="ff-l">'+T('nrInm')+'</div><div class="ff-v mono" style="font-weight:800">'+escH(job.plate||'—')+'</div></div></div>';
+  h+='<div class="fg"><div class="ff"><div class="ff-l">'+T('serieSasiu')+'</div><div class="ff-v mono">'+escH(job.vin||'—')+'</div></div><div class="ff"><div class="ff-l">'+T('anFabr')+'</div><div class="ff-v mono">'+escH(job.year||'—')+'</div></div></div>';
+  h+='<div class="fg"><div class="ff"><div class="ff-l">'+T('dataConst')+'</div><input class="ff-v" type="date" value="'+(rc.dataConst||'')+'" onchange="uRC(\'dataConst\',this.value)"/></div><div class="ff"><div class="ff-l">'+T('dataReconst')+'</div><input class="ff-v" type="date" value="'+(rc.dataReconst||'')+'" onchange="uRC(\'dataReconst\',this.value)"/></div></div>';
+
+  // III. Obiectul
+  h+='<div class="sec-title">'+T('s3')+'</div>';
+  h+='<div class="fix-text">'+T('s3text')+'</div>';
+
+  // IV. Elemente
+  h+='<div class="sec-title">'+T('s4')+'</div>';
+  for(var x=0;x<rows.length;x++)h+=renderRcCard(rows[x],x);
+  h+='<div class="add-row" onclick="aRow()">'+T('addRow')+'</div>';
+
+  // V. Cauzalitate
+  h+='<div class="sec-title">'+T('s5')+'</div>';
+  h+='<div class="fix-text">'+T('s5text')+'</div>';
+
+  // VI. Documente
+  h+='<div class="sec-title">'+T('s6')+'</div>';
+  h+='<div class="chk-row"><input type="checkbox" '+(docs.foto?'checked':'')+' onchange="uDoc(\'foto\',this.checked)"/> '+T('dFoto')+'</div>';
+  h+='<div class="chk-row"><input type="checkbox" '+(docs.deviz?'checked':'')+' onchange="uDoc(\'deviz\',this.checked)"/> '+T('dDeviz')+'</div>';
+  h+='<div class="chk-row"><input type="checkbox" '+(docs.docTehnica?'checked':'')+' onchange="uDoc(\'docTehnica\',this.checked)"/> '+T('dTehnica')+'</div>';
+  h+='<div class="chk-row"><input type="checkbox" '+(docs.copieConst?'checked':'')+' onchange="uDoc(\'copieConst\',this.checked)"/> '+T('dCopie')+'</div>';
+  h+='<div class="chk-row"><input type="checkbox" '+(docs.alte?'checked':'')+' onchange="uDoc(\'alte\',this.checked)"/> '+T('dAlte')+': <input style="flex:1;border:none;border-bottom:1px solid var(--b2);outline:none;font-size:11px;font-family:inherit;margin-left:4px" value="'+(docs.alteText||'')+'" onchange="uDoc(\'alteText\',this.value)"/></div>';
+
+  // VII. Solicitare
+  h+='<div class="sec-title">'+T('s7')+'</div>';
+  h+='<div class="fix-text">'+T('s7text')+'</div>';
+
+  // VIII. Semnaturi
+  h+='<div class="sec-title">'+T('s8')+'</div>';
+  h+='<div class="sig-grid"><div class="sig-box"><div class="sig-box-t">'+T('sigUnit')+'</div><input placeholder="'+T('sigName')+'" value="'+(rc.sigUnit||'')+'" onchange="uRC(\'sigUnit\',this.value)"/><input placeholder="'+T('sigFunc')+'" value="'+(rc.sigUnitFunc||'')+'" onchange="uRC(\'sigUnitFunc\',this.value)"/><div class="sig-space"></div></div>';
+  h+='<div class="sig-box"><div class="sig-box-t">'+T('sigClient')+'</div><input placeholder="'+T('sigName')+'" value="'+(rc.sigClient||'')+'" onchange="uRC(\'sigClient\',this.value)"/><input placeholder="'+T('sigFunc')+'" value="'+(rc.sigClientFunc||'')+'" onchange="uRC(\'sigClientFunc\',this.value)"/><div class="sig-space"></div></div>';
+  h+='<div class="sig-box"><div class="sig-box-t">'+T('sigInsp')+'</div><input placeholder="'+T('sigName')+'" value="'+(rc.sigInsp||'')+'" onchange="uRC(\'sigInsp\',this.value)"/><input placeholder="'+T('sigFunc')+'" value="'+(rc.sigInspFunc||'')+'" onchange="uRC(\'sigInspFunc\',this.value)"/><div class="sig-space"></div></div></div>';
+
+  h+='</div>'; // end doc
+
+  // Photos section
+  h+='<div class="photo-sec"><div class="photo-title"><span>'+T('photos')+'</span><span style="font-size:10px;color:var(--t3)">'+photos.length+'/20</span></div><div class="pgrid">';
+  for(var x=0;x<20;x++){
+    var p=photos[x];
+    h+='<div class="pslot '+(p?'done':'')+'">'+(p?'<img src="'+escU(p.data)+'"/><button class="pslot-x" onclick="delPh('+x+')">×</button>':IC.cam)+'<div class="pslot-n">'+(x+1)+'</div><input type="file" accept="image/*" onchange="addPh('+x+',event)"/></div>';
+  }
+  h+='</div></div>';
+
+  // Actions
+  h+='<div class="action-grid"><button class="btn btn-wa" onclick="waReconst()">'+IC.wa+' '+T('waAsig')+'</button><button class="btn btn-mail" onclick="emailReconst()">'+IC.mail+' '+T('emailAsig')+'</button><button class="btn btn-o" onclick="shareReconst()">'+IC.share+' '+T('sharePhBtn')+'</button><button class="btn btn-o" onclick="window.print()">'+IC.print+' '+T('print')+'</button></div>';
+  h+='<div style="padding:0 16px 10px"><button class="btn btn-g" onclick="advPh()">'+T('advance')+'</button></div>';
+
+  h+='</div>'; // .wrap
+  h+='<div class="bpad"></div>';
+  if(S.ts)h+='<div class="toast '+(S.te?'err':'')+'">'+S.ts+'</div>';
+  document.getElementById('app').innerHTML=h;
+}
+
+window.uRC=async function(f,v){if(!JOB)return;if(!JOB.reconst)JOB.reconst={};JOB.reconst[f]=v;await saveJ()};
+window.uRow=async function(idx,f,v){if(!JOB)return;if(!JOB.reconst)JOB.reconst={};if(!JOB.reconst.rows)JOB.reconst.rows=[];if(JOB.reconst.rows[idx]){JOB.reconst.rows[idx][f]=v;await saveJ()}};
+window.dRow=async function(idx){if(!JOB||!JOB.reconst||!JOB.reconst.rows)return;var nm=(JOB.reconst.rows[idx]&&JOB.reconst.rows[idx].name)||('rand '+(idx+1));if(!confirm('Sterg "'+nm+'"?'))return;JOB.reconst.rows.splice(idx,1);await saveJ();render()};
+window.aRow=async function(){if(!JOB)return;if(!JOB.reconst)JOB.reconst={};if(!JOB.reconst.rows)JOB.reconst.rows=[];JOB.reconst.rows.push({nr:JOB.reconst.rows.length+1,name:'',op:'',hours:'',tipAvarie:'',pozAsig:'',photos:[],editing:true});await saveJ();render()};
+window.saveRow=async function(x){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[x])return;var r=JOB.reconst.rows[x];if(!r.name){alert('Completeaza numele elementului');return}r.editing=false;await saveJ();render()};
+window.editRow=async function(x){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[x])return;JOB.reconst.rows[x].editing=true;await saveJ();render()};
+window.setRowOp=async function(idx,op){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[idx])return;var r=JOB.reconst.rows[idx];r.op=(r.op===op?'':op);await saveJ();render()};
+window.addRowPhoto=function(idx,e){var f=e.target.files&&e.target.files[0];if(!f)return;resize(f,async function(d){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[idx])return;if(!JOB.reconst.rows[idx].photos)JOB.reconst.rows[idx].photos=[];JOB.reconst.rows[idx].photos.push(d);await saveJ();toast(T('saved'));render()})};
+window.delRowPhoto=async function(idx,pidx){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[idx]||!JOB.reconst.rows[idx].photos)return;if(!confirm('\u26A0\uFE0F Fotografia este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;JOB.reconst.rows[idx].photos.splice(pidx,1);await saveJ();render()};
+window.uDoc=async function(f,v){if(!JOB||!JOB.reconst)return;JOB.reconst.docs[f]=v;await saveJ()};
+// Reconstatare Acceptat → a plusz sorok a termelésbe (evalData.suplimentare), az evaluare pótmunkáit megőrizve
+function reconstToSuplim(){
+  if(!JOB||!JOB.reconst)return;
+  if(!JOB.evalData)JOB.evalData={};
+  var rows=JOB.reconst.rows||[];
+  var keep=(JOB.evalData.suplimentare||[]).filter(function(it){return String(it.id||'').indexOf('rc')!==0;});
+  var add=rows.map(function(r,i){
+    var op=/nlocuire/i.test(r.op)?'inlocuire':/epara/i.test(r.op)?'reparatie':'reparatie';
+    return {id:'rc'+i,name:r.name||'',op:op,hours:(r.hours!=null&&r.hours!==''?(parseFloat(r.hours)||0):null),note:r.tipAvarie||''};
+  }).filter(function(it){return it.name;});
+  JOB.evalData.suplimentare=keep.concat(add);
+}
+window.setRcSt=async function(st){if(!JOB||!JOB.reconst)return;JOB.reconst.status=st;if(st==='accepted')reconstToSuplim();await saveJ();render();toast(st==='sent'?'Trimis!':st==='accepted'?'Acceptat ✓ (trimis în producție)':st==='rejected'?'Refuzat ✗':'Ciorna')};
+window.rcResponse=async function(st){
+  if(!JOB||!JOB.reconst)return;
+  var note=prompt('Nota raspuns asigurator:','');
+  // Elutasításnál KÖTELEZŐ a válaszmegjegyzés (és -dátum) — nem lehet válasz nélkül lezárni
+  if(st==='rejected' && !(note&&note.trim())){ toast(RPWWorkflow.t('wf_reconst_need_note',(typeof gL==='function'?gL():'ro')),1); return; }
+  JOB.reconst.status=st;
+  if(st==='accepted')reconstToSuplim();
+  JOB.reconst.responseDate=new Date().toISOString().slice(0,10);
+  JOB.reconst.responseNote=note||'';
+  await saveJ();render();
+  toast(st==='accepted'?'Acceptat ✓':'Refuzat ✗');
+};
+window.addPh=function(x,e){var f=e.target.files&&e.target.files[0];if(!f)return;resize(f,async function(d){if(!JOB.reconstPhotos)JOB.reconstPhotos=[];if(JOB.reconstPhotos.length>x)JOB.reconstPhotos[x]={data:d,ts:new Date().toISOString()};else JOB.reconstPhotos.push({data:d,ts:new Date().toISOString()});await saveJ();toast(T('saved'));render()})};
+window.delPh=async function(x){if(!JOB||!JOB.reconstPhotos||!JOB.reconstPhotos[x])return;if(!confirm('\u26A0\uFE0F Fotografia '+(x+1)+' este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;JOB.reconstPhotos.splice(x,1);await saveJ();render()};
+window.advPh=async function(){
+  if(!JOB)return;
+  var _ln=(typeof gL==='function')?gL():'ro';
+  RPWWorkflow.migrateJob(JOB);
+  var res=await RPWWorkflow.commitCriticalTransition(JOB, function(){
+    return RPWWorkflow.completePhase(JOB,3,{actor:'reconstatare'});
+  }, {save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  if(!res.ok){
+    if(res.notSynced){ toast(RPWWorkflow.t('wf_saved_not_synced',_ln),1); render(); return; }
+    var errs=(res.result&&(res.result.errors||res.result.missing))||[];
+    toast(errs.map(function(r){return RPWWorkflow.t(r,_ln);}).join('; ')||T('incomplete'),1); return;
+  }
+  toast(T('saved'));
+  setTimeout(function(){location.assign('rpw-dosar.html?job='+JOB.id)},1500);
+};
+
+function isoDate(s){try{return new Date(s).toISOString().slice(0,10)}catch(e){return ''}}
+function initReconst(){
+  if(!JOB)return false;
+  if(!JOB.reconst)JOB.reconst={};
+  var rc=JOB.reconst,ch=false;
+  if(!rc.asigurator&&JOB.asigurator){rc.asigurator=JOB.asigurator;ch=true}
+  if(!rc.nrDosar&&JOB.nrDosar){rc.nrDosar=JOB.nrDosar;ch=true}
+  if(!rc.pagubita){var nm=JOB.proprietarDosar||JOB.proprietar||JOB.client;if(nm){rc.pagubita=nm;ch=true}}
+  if(!rc.dataConst){var d=(JOB.phases&&JOB.phases[1]&&JOB.phases[1].finished)||JOB.created;if(d){rc.dataConst=isoDate(d);ch=true}}
+  if(!rc.dataReconst){rc.dataReconst=isoDate(new Date());ch=true}
+  return ch;
+}
+
+function renderRcCard(r,x){
+  var ops=[['inlocuit','Inlocuit','op-inl'],['reparat','Reparat','op-rep'],['demontat','Demontat','op-dem'],['vopsit','Vopsit','op-vop'],['revopsit','Revopsit','op-rvp']];
+  var opL={inlocuit:'Inlocuit',reparat:'Reparat',demontat:'Demontat',vopsit:'Vopsit',revopsit:'Revopsit'};
+  var opC={inlocuit:'op-inl',reparat:'op-rep',demontat:'op-dem',vopsit:'op-vop',revopsit:'op-rvp'};
+  function esc(s){return String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+  var phs=r.photos||[];
+  if(r.editing!==true){
+    var o='<div class="rc-line"><div class="rc-card-nr">'+(x+1)+'</div><div class="rc-line-nm">'+esc(r.name||'—')+'</div>'+(r.op&&opL[r.op]?'<span class="op-btn on '+opC[r.op]+'" style="cursor:default">'+opL[r.op]+'</span>':'')+'<span class="rc-line-h">'+(r.hours?r.hours+' ore':'')+'</span>'+(r.tipAvarie?'<span class="rc-line-obs">'+esc(r.tipAvarie)+'</span>':'');
+    for(var p=0;p<phs.length;p++){o+='<span class="rc-line-phw"><img class="rc-line-ph" src="'+phs[p]+'"/><button class="rc-line-phx" onclick="delRowPhoto('+x+','+p+')">×</button></span>'}
+    o+='<button class="rc-line-edit" onclick="editRow('+x+')">✎</button><button class="rc-card-del" onclick="dRow('+x+')">×</button></div>';
+    return o;
+  }
+  var o='<div class="rc-card"><div class="rc-card-top"><div class="rc-card-nr">'+(x+1)+'</div><input class="rc-name" value="'+esc(r.name)+'" placeholder="Element (ex: Bara fata)" onchange="uRow('+x+',\'name\',this.value)"/><button class="rc-card-del" onclick="dRow('+x+')">×</button></div>';
+  o+='<div class="op-btns">';
+  for(var i=0;i<ops.length;i++){o+='<button class="op-btn '+ops[i][2]+(r.op===ops[i][0]?' on':'')+'" onclick="setRowOp('+x+',\''+ops[i][0]+'\')">'+ops[i][1]+'</button>'}
+  o+='</div>';
+  o+='<div class="rc-row2"><div class="rc-ora"><input type="number" step="0.25" min="0" value="'+(r.hours||'')+'" onchange="uRow('+x+',\'hours\',this.value)"/><span class="rc-ora-lbl">ore</span></div><input class="rc-obs" value="'+esc(r.tipAvarie)+'" placeholder="Tip avarie / obs." onchange="uRow('+x+',\'tipAvarie\',this.value)"/></div>';
+  o+='<div class="rc-phs">';
+  for(var p=0;p<phs.length;p++){o+='<div class="rc-ph done"><img src="'+phs[p]+'"/><button class="rc-ph-del" onclick="delRowPhoto('+x+','+p+')">×</button></div>'}
+  o+='<div class="rc-ph"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><input type="file" accept="image/*" onchange="addRowPhoto('+x+',event)"/></div>';
+  o+='</div><button class="rc-save" onclick="saveRow('+x+')">✓ Salveaza rand</button></div>';
+  return o;
+}
+
+function buildReconstText(){
+  var rc=JOB.reconst||{},rows=rc.rows||[];
+  var t='*NOTA DE RECONSTATARE*\n';
+  t+='_(constatare suplimentara a avariilor)_\n\n';
+  t+='*I. Dosar dauna*\n';
+  t+='Asigurator: '+(rc.asigurator||'—')+'\n';
+  t+='Nr. dosar: '+(rc.nrDosar||'—')+'\n';
+  t+='Polita: '+(rc.polita||'—')+'\n';
+  t+='Inspector: '+(rc.inspector||'—')+'\n';
+  t+='Tel: '+(rc.telInsp||'—')+'\n';
+  t+='Pagubita: '+(rc.pagubita||JOB.proprietar||JOB.client||'—')+'\n';
+  t+='Service: '+(rc.service||'SC SZKALICZKI SERVICE SRL')+'\n\n';
+  t+='*II. Vehicul*\n';
+  t+='🚗 '+(JOB.brand||JOB.auto||'')+' · '+(JOB.plate||'')+'\n';
+  t+='VIN: '+(JOB.vin||'—')+'\n';
+  t+='An: '+(JOB.year||'—')+'\n';
+  t+='Data constatarii initiale: '+(rc.dataConst||'—')+'\n';
+  t+='Data reconstatarii: '+(rc.dataReconst||'—')+'\n\n';
+  t+='*III. Elemente constatate suplimentar*\n';
+  if(rows.length){
+    for(var x=0;x<rows.length;x++){
+      var r=rows[x];
+      t+=(x+1)+'. *'+r.name+'* — '+(r.op||'?')+' — '+(r.hours?r.hours+' ore':'?')+(r.tipAvarie?' — '+r.tipAvarie:'')+'\n';
+    }
+  }else t+='(nu sunt elemente)\n';
+  t+='\n*IV. Solicitare*\n';
+  t+='Va solicitam analizarea de urgenta a prezentei note si actualizarea dosarului de dauna.\n\n';
+  t+='📞 0265318020\n';
+  t+='📍 SC SZKALICZKI SERVICE SRL\n';
+  t+='Str. Petki David, Nr.27/A, Sangeorgiu de Mures\n\n';
+  t+='_Fotografiile cu zonele afectate vor fi trimise separat._';
+  return t;
+}
+
+function loadJsPDF(){
+  if(window.jspdf&&window.jspdf.jsPDF)return Promise.resolve();
+  return new Promise(function(res,rej){
+    var s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
+    s.onload=res;s.onerror=function(){rej(new Error('jsPDF load failed'))};
+    document.head.appendChild(s);
+  });
+}
+
+async function buildReconstPdf(){
+  await loadJsPDF();
+  var rc=JOB.reconst||{},rows=rc.rows||[];
+  var doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+  var y=18,L=15,W=180;
+  function line(txt,size,bold,color){
+    doc.setFontSize(size||10);doc.setFont(undefined,bold?'bold':'normal');
+    if(color)doc.setTextColor(color[0],color[1],color[2]);else doc.setTextColor(30,30,30);
+    var ls=doc.splitTextToSize(String(txt),W);
+    for(var i=0;i<ls.length;i++){if(y>282){doc.addPage();y=18}doc.text(ls[i],L,y);y+=(size||10)*0.5+0.6}
+  }
+  function gap(h){y+=(h||3)}
+  line('SC SZKALICZKI SERVICE SRL',11,true);
+  line('RO16250445 · Str. Petki David Nr.27/A, Sangeorgiu de Mures · Tel: 0265318020',8,false,[120,120,120]);
+  gap(1);doc.setDrawColor(220,38,38);doc.setLineWidth(0.8);doc.line(L,y,L+W,y);gap(4);
+  line('NOTA DE RECONSTATARE',16,true,[220,38,38]);
+  line('(constatare suplimentara a avariilor)',9,false,[120,120,120]);gap(3);
+  line('I. DOSAR DAUNA',11,true,[220,38,38]);gap(1);
+  line('Asigurator: '+(rc.asigurator||'—'));
+  line('Nr. dosar: '+(rc.nrDosar||'—')+'    Polita: '+(rc.polita||'—'));
+  line('Inspector: '+(rc.inspector||'—')+'    Tel: '+(rc.telInsp||'—'));
+  line('Persoana pagubita: '+(rc.pagubita||JOB.proprietar||JOB.client||'—'));gap(3);
+  line('II. VEHICUL',11,true,[220,38,38]);gap(1);
+  line((JOB.brand||JOB.auto||'')+'  ·  '+(JOB.plate||''));
+  line('VIN: '+(JOB.vin||'—')+'    An: '+(JOB.year||'—'));
+  line('Data reconstatarii: '+(rc.dataReconst||'—'));gap(3);
+  line('III. ELEMENTE CONSTATATE SUPLIMENTAR',11,true,[220,38,38]);gap(1);
+  if(rows.length){for(var x=0;x<rows.length;x++){var r=rows[x];var nf=(r.photos||[]).length;line((x+1)+'. '+(r.name||'—')+'  —  '+(r.op||'?')+'  —  '+(r.hours?r.hours+' ore':'?')+(r.tipAvarie?'  —  '+r.tipAvarie:'')+(nf?'  ('+nf+' foto)':''));}}
+  else line('(nu sunt elemente)');gap(3);
+  line('IV. SOLICITARE',11,true,[220,38,38]);gap(1);
+  line('Va solicitam analizarea de urgenta a prezentei note si actualizarea dosarului de dauna conform elementelor constatate suplimentar.');gap(6);
+  line('Data: '+new Date().toLocaleDateString('ro-RO')+'                    Unitatea reparatoare: SC SZKALICZKI SERVICE SRL',9,false,[80,80,80]);
+  return doc.output('datauristring').split(',')[1];
+}
+
+window.waReconst=function(){
+  if(!JOB)return;
+  var rc=JOB.reconst||{};
+  var phone=(rc.telInsp||'').replace(/[^0-9+]/g,'');
+  if(!phone||phone.length<6){phone=prompt('Numar telefon asigurator / inspector:','');if(!phone)return}
+  phone=phone.replace(/[^0-9]/g,'');
+  if(phone.length&&phone[0]==='0')phone='40'+phone.slice(1);
+  var _waA=document.createElement('a');_waA.href='https://wa.me/'+phone+'?text='+encodeURIComponent(buildReconstText());_waA.target='_blank';_waA.rel='noopener';document.body.appendChild(_waA);_waA.click();setTimeout(function(){document.body.removeChild(_waA)},100);
+  if(JOB.reconst.status==='draft'){JOB.reconst.status='sent';saveJ();render()}
+};
+
+window.emailReconst=async function(){
+  if(!JOB)return;
+  var rc=JOB.reconst||{};
+  var to=rc.emailInsp||'';
+  if(!to){var em=(rc.telInsp||'').match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);to=em?em[0]:''}
+  if(!to){to=prompt('Email asigurator:','');if(!to)return}
+  var cfg={};try{cfg=JSON.parse(localStorage.getItem('rpw_config')||'{}')}catch(e){}
+  var fromName=cfg.unitate||'SC SZKALICZKI SERVICE SRL';
+  var replyTo=cfg.email||'';
+  var subj='Nota de reconstatare — '+(JOB.plate||'')+' — Dosar '+(rc.nrDosar||'');
+  var body='Buna ziua,\n\nAtasat va transmitem Nota de Reconstatare si fotografiile aferente pentru dosarul de dauna '+(rc.nrDosar||'—')+', autovehicul '+(JOB.brand||JOB.auto||'')+' '+(JOB.plate||'')+'.\n\nVa rugam sa analizati documentatia si sa actualizati dosarul de dauna conform elementelor constatate suplimentar.\n\nCu stima,\n'+fromName+'\nTel: 0265318020\nStr. Petki David Nr.27/A, Sangeorgiu de Mures';
+  toast('Se genereaza si se trimite...');
+  try{
+    var pdfB64=await buildReconstPdf();
+    var atts=[{filename:'Nota_reconstatare_'+(JOB.plate||'auto').replace(/[^A-Za-z0-9]/g,'')+'.pdf',content:pdfB64}];
+    var photos=JOB.reconstPhotos||[];
+    for(var x=0;x<photos.length;x++){if(photos[x]&&photos[x].data&&photos[x].data.indexOf(',')>0){atts.push({filename:'foto_'+(x+1)+'.jpg',content:photos[x].data.split(',')[1]})}}
+    var rws=(JOB.reconst&&JOB.reconst.rows)||[];
+    for(var ri=0;ri<rws.length;ri++){
+      var rp=rws[ri].photos||[];
+      var nmF=String(rws[ri].name||('element_'+(ri+1))).replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,30)||('element_'+(ri+1));
+      for(var pi=0;pi<rp.length;pi++){if(rp[pi]&&rp[pi].indexOf(',')>0)atts.push({filename:(ri+1)+'_'+nmF+'_'+(pi+1)+'.jpg',content:rp[pi].split(',')[1]})}
+    }
+    var res=await fetch('/.netlify/functions/sendmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:to,from_name:fromName,reply_to:replyTo,subject:subj,text:body,attachments:atts})});
+    var data=await res.json().catch(function(){return{}});
+    if(!res.ok||!data.ok){toast('Eroare email: '+(data.error||res.status),1);return}
+    toast('Email trimis ✓ ('+atts.length+' atasamente)');
+    if(JOB.reconst.status==='draft'){JOB.reconst.status='sent';await saveJ();render()}
+  }catch(e){toast('Eroare: '+e.message,1)}
+};
+
+window.shareReconst=async function(){
+  if(!JOB)return;
+  var photos=JOB.reconstPhotos||[],files=[];
+  for(var x=0;x<photos.length;x++){
+    if(photos[x]&&photos[x].data){
+      try{
+        var resp=await fetch(photos[x].data);
+        var blob=await resp.blob();
+        files.push(new File([blob],'reconst_'+(x+1)+'.jpg',{type:'image/jpeg'}));
+      }catch(e){}
+    }
+  }
+  if(!files.length){toast('Nu sunt fotografii',1);return}
+  if(navigator.canShare&&navigator.canShare({files:files})){
+    try{await navigator.share({title:'Reconstatare — '+(JOB.plate||''),text:'Nota de reconstatare '+(JOB.plate||'')+' — '+(JOB.brand||'')+' — Dosar '+(JOB.reconst.nrDosar||''),files:files})}catch(e){if(e.name!=='AbortError')toast('Share error',1)}
+  }else{
+    files.forEach(function(f){var a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click()});
+    toast(files.length+' fotografii descarcate');
+  }
+};
+
+loadJob();
+</script>
+<script>/* RPW központi workflow-őr — fázisbelépés + állapotsáv */try{RPWWorkflow.installPageGuard({phase:3});}catch(e){}</script>
+</body>
+</html>

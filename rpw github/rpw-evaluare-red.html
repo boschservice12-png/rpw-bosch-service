@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23E11D2E'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#FAF8F5">
+<title>RedAssistance — Evaluare</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="rpw-config.js"></script>
+<script src="rpw-guard.js"></script>
+<script src="rpw-util.js"></script>
+<script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
+<script src="rpw-workflow.js"></script>
+<script src="rpw-auth.js"></script>
+<script src="rpw-db.js"></script>
+<script src="rpw-roles.js"></script>
+<script src="rpw-save.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#FAF8F5;--w:#fff;--r:#E11D2E;--r50:#FDF3F4;--r100:#FCE6E8;--r700:#B5121F;--bad:#C81E33;--g:#1E9D55;--gl:#E1F4E8;--y:#A6701F;--yl:#FAEFD8;--bl:#2A6FDB;--bll:#E2ECFA;--p:#5B3FA6;--pl:#EDE9F5;--or:#B5601F;--orl:#FBF0E4;--tl:#14753F;--tll:#E1F4E8;--t:#0F141A;--t2:#3F4956;--t3:#6B7280;--b:#E8EBEF;--b2:#D7DBE2;--rd:10px;--bosch:#005691}
+html,body{font-family:'Geist',system-ui,sans-serif;background:var(--bg);color:var(--t);min-height:100dvh;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+.mono{font-family:'Geist Mono',ui-monospace,monospace}
+/* ── Workflow shell (etalon) ── */
+.shell{position:sticky;top:0;z-index:50;background:var(--w);border-bottom:1px solid var(--b)}
+.shell-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px}
+.sh-left{display:flex;align-items:center;gap:10px;min-width:0}
+.sh-back{width:32px;height:32px;border-radius:6px;border:1px solid var(--b);background:var(--w);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.sh-back svg{width:16px;height:16px;stroke:var(--t2);fill:none;stroke-width:2}
+.sh-plate{font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;font-weight:600;background:var(--pl);border:1px solid var(--b2);border-radius:4px;padding:3px 8px;white-space:nowrap}
+.sh-phase{font-size:13px;font-weight:700;letter-spacing:-0.012em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-phase .ph-idx{font-family:'Geist Mono',ui-monospace,monospace;color:var(--r);margin-right:6px}
+.sh-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.stepA{display:flex;gap:4px;padding:0 16px 10px;overflow-x:auto;scrollbar-width:none}.stepA::-webkit-scrollbar{display:none}
+.stA{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--b);border-radius:6px;font-size:11px;font-weight:600;color:var(--t3);cursor:pointer;white-space:nowrap;background:var(--w);flex-shrink:0}
+.stA .n{font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:600}
+.stA.done{color:var(--t2);border-color:var(--b2)}.stA.done .n{color:var(--g)}
+.stA.cur{background:var(--r);border-color:var(--r);color:#fff;font-weight:700}.stA.cur .n{color:#fff}
+.stepB{display:flex;align-items:center;padding:2px 16px 12px}
+.stB{width:30px;height:30px;border-radius:50%;border:1px solid var(--b2);background:var(--w);font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:600;color:var(--t3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.stB.done{background:var(--t);border-color:var(--t);color:#fff}
+.stB.cur{background:var(--r);border-color:var(--r);color:#fff;box-shadow:0 0 0 3px rgba(225,29,46,.22)}
+.stB-line{flex:1;height:1px;background:var(--b2);min-width:6px}.stB-line.done{background:var(--t)}
+.stB-name{margin-left:10px;font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap}
+.stepC{padding:0 16px 12px}.stepC-bar{display:flex;gap:3px}
+.stC{flex:1;height:6px;border-radius:3px;background:var(--b);cursor:pointer}.stC.done{background:var(--t2)}.stC.cur{background:var(--r)}
+.stepC-meta{display:flex;justify-content:space-between;margin-top:6px;font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+.hdr{background:var(--w);border-bottom:1px solid var(--b);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.hdr-left{display:flex;align-items:center;gap:8px}
+.back{width:32px;height:32px;border-radius:8px;border:1px solid var(--b);background:var(--w);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.back svg{width:18px;height:18px;stroke:var(--t2);fill:none;stroke-width:2}
+.hdr-title{font-size:14px;font-weight:800}.hdr-title span{color:var(--r)}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.hdr-job{text-align:right;font-size:11px;line-height:1.3}.hdr-job b{font-size:12px}
+.lsw{display:flex;border:1px solid var(--b);border-radius:6px;overflow:hidden}
+.lb{padding:4px 8px;font-size:9px;font-weight:700;cursor:pointer;border:none;background:var(--w);color:var(--t3);font-family:inherit}.lb.on{background:var(--r);color:#fff}.lb:not(:last-child){border-right:1px solid var(--b)}
+.tabs{display:flex;gap:4px;padding:10px 16px;background:var(--w);border-bottom:1px solid var(--b);position:relative;z-index:1}
+.tab{flex:1;padding:10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--b);background:var(--w);color:var(--t2);text-align:center;font-family:inherit}
+.tab.on-c{background:var(--r);color:#fff;border-color:var(--r)}
+.tab.on-u{background:var(--or);color:#fff;border-color:var(--or)}
+.tab-count{display:inline-block;background:rgba(255,255,255,.3);border-radius:10px;padding:1px 7px;margin-left:4px;font-size:9px}
+.tab.on-v{background:var(--bl);color:#fff;border-color:var(--bl)}
+/* ====== 23 elem checklist (recepcioból átemelve) ====== */
+.verif-wrap{padding:10px 16px 0}
+.verif-hint{font-size:10px;color:var(--t3);text-align:center;margin-bottom:8px}
+.sync-bar{display:flex;gap:8px;padding:0 16px 8px}
+.sync-btn{flex:1;border:1.5px solid var(--bl);background:var(--bll);color:var(--bl);border-radius:8px;padding:9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+.sync-btn:active{opacity:.7}
+.el{background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:10px 12px;margin-bottom:6px}
+.el.el-ok{border-color:var(--g);background:var(--gl)}.el.el-dmg{border-color:var(--r);background:var(--r50)}.el.el-sug{border-color:var(--or);background:var(--orl)}
+.el.el-missing-photo{border-color:var(--y);background:var(--yl)}
+.el-top{display:flex;justify-content:space-between;align-items:center;gap:4px}.el-n{font-size:12px;font-weight:700;flex:1;min-width:0}
+.el-btns{display:flex;gap:3px;flex-shrink:0}
+.eb{padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;border:1.5px solid var(--b);background:var(--w);font-family:inherit}
+.eb-ok.on{background:var(--gl);border-color:var(--g);color:var(--g)}
+.eb-dm.on{background:var(--r100);border-color:var(--r);color:var(--r)}
+.eb-sg{background:var(--w);color:var(--or);border-color:var(--or)}
+.eb-sg.on{background:var(--orl);border-color:var(--or);color:var(--or)}
+.el-det{margin-top:6px;display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap}
+.el-ph-row{display:flex;gap:4px;flex-wrap:wrap}
+.el-ph{width:50px;height:38px;background:var(--w);border:1.5px dashed var(--b2);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;flex-shrink:0}
+.el-ph.done{border:1.5px solid var(--g)}.el-ph img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.el-ph input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.el-ph svg{width:14px;height:14px;stroke:var(--t3);fill:none;stroke-width:1.5}
+.el-ph-del{position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:var(--r);color:#fff;border-radius:50%;font-size:10px;line-height:16px;cursor:pointer;z-index:3;border:none;font-family:inherit;padding:0}
+.el-nt{flex:1;min-width:100px;font-size:11px;background:var(--w);border:1px solid var(--b);border-radius:6px;padding:6px 8px;font-family:inherit;outline:none;resize:none;min-height:30px;color:var(--t)}.el-nt:focus{border-color:var(--r)}
+.el-wt{margin-top:6px;display:flex;gap:3px;flex-wrap:wrap;align-items:center}
+.wt{padding:3px 7px;border-radius:4px;font-size:9px;font-weight:700;cursor:pointer;border:1.5px solid var(--b);background:var(--w);font-family:inherit}
+.wt-inl.on{background:var(--r100);border-color:var(--r);color:var(--r)}
+.wt-rep.on{background:var(--yl);border-color:var(--y);color:var(--y)}
+.wt-vop.on{background:var(--pl);border-color:var(--p);color:var(--p)}
+.wt-rvp.on{background:var(--tll);border-color:var(--tl);color:var(--tl)}
+.wt-ora{display:inline-flex;align-items:center;gap:4px;background:var(--yl);border:1.5px solid var(--y);border-radius:4px;padding:2px 6px;margin-left:4px}
+.wt-ora input{width:44px;border:none;background:transparent;font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;font-weight:700;color:var(--y);outline:none;text-align:center}
+.wt-ora-lbl{font-size:9px;font-weight:700;color:var(--y)}
+.mismatch-warn{background:var(--yl);border:1px solid var(--y);border-radius:6px;padding:6px 10px;font-size:10px;color:var(--y);font-weight:700;margin-top:6px}
+.doc{max-width:820px;margin:12px auto;background:var(--w);box-shadow:0 2px 8px rgba(0,0,0,.05);border-radius:var(--rd);overflow:hidden;font-family:'Geist',system-ui,sans-serif}
+.doc .ra-logo,.doc .doc-rap-t,.doc .wt-title,.doc .party-t,.doc .tot-main .tot-label{font-family:'Geist',system-ui,sans-serif}
+.doc-hdr{padding:18px 24px;border-bottom:3px solid var(--r);display:flex;justify-content:space-between;align-items:center;gap:20px}
+.brand-left{display:flex;flex-direction:column;gap:2px}
+.ra-logo{font-size:25px;font-weight:800;letter-spacing:-.6px;line-height:1}
+.ra-logo .ra-r{color:var(--t)}
+.ra-logo .ra-a{color:var(--r)}
+.ra-firm{font-size:9px;color:var(--t2);font-weight:600;line-height:1.5;margin-top:5px}
+.ra-firm b{color:var(--t);font-weight:700}
+.doc-rap{text-align:right}
+.doc-rap-t{font-size:17px;font-weight:800;color:var(--t);letter-spacing:.5px;line-height:1.15}
+.doc-rap-m{font-size:10px;color:var(--t3);font-weight:600;margin-top:5px;line-height:1.7}
+.doc-rap-m b{color:var(--t)}
+.doc-title{padding:16px 24px;text-align:center;background:var(--bg);border-bottom:1px solid var(--b)}
+.doc-title h1{font-size:22px;font-weight:800;letter-spacing:1px;color:var(--t);margin-bottom:4px}
+.doc-title .dt-meta{font-size:11px;color:var(--t3);font-weight:600}
+.parties{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--b)}
+.party{padding:14px 18px}
+.party:first-child{border-right:1px solid var(--b);background:var(--orl)}
+.party:last-child{background:var(--bll)}
+.party-t{font-size:9px;font-weight:800;color:var(--t3);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.party-line{font-size:11px;line-height:1.5;color:var(--t);display:flex;gap:6px;align-items:baseline}
+.party-line b{font-weight:700;min-width:62px;color:var(--t2);font-size:10px}
+.party-line input{border:none;background:transparent;font-size:11px;color:var(--t);font-weight:700;font-family:inherit;outline:none;flex:1;border-bottom:1px dashed transparent;padding:1px 2px}
+.party-line input:hover,.party-line input:focus{border-bottom-color:var(--or);background:rgba(255,255,255,.5)}
+.party-line.p-name{font-size:13px;font-weight:800;color:var(--t);margin-bottom:4px}
+.party-line.p-name input{font-size:13px;font-weight:800}
+.vehbar{margin:14px 24px;border:1px solid var(--b2);border-radius:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;overflow:hidden}
+.vb-item{padding:9px 13px;border-right:1px solid var(--b)}
+.vb-item:nth-child(4){border-right:none}
+.vb-item.vb-wide{grid-column:1/5;border-right:none;border-top:1px solid var(--b);background:var(--bg)}
+.vb-l{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:1px}
+.vb-v{font-size:14px;font-weight:700;color:var(--t)}
+.vb-v input{border:none;background:transparent;color:var(--t);font-size:14px;font-weight:700;font-family:inherit;outline:none;width:100%;border-bottom:1px dashed transparent;padding:1px 2px}
+.vb-v input:hover,.vb-v input:focus{border-bottom-color:var(--r)}
+.vb-v.mono{font-family:'Geist Mono',ui-monospace,monospace}
+.vb-v.mono input{font-family:'Geist Mono',ui-monospace,monospace}
+.wt-wrap{padding:16px 20px}
+.wt-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:2px solid var(--r);padding-bottom:7px}
+.wt-title{font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.wt-title.c{color:var(--r)}
+.wt-title.u{color:var(--or)}
+.wt-meta{font-size:10px;color:var(--t3);font-weight:600}
+.wtable{width:100%;border-collapse:collapse;font-size:11px}
+.wtable thead th{background:var(--bg);padding:7px 6px;text-align:left;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--t2);border-bottom:2px solid var(--b2)}
+.wtable thead th.num{text-align:right}
+.wtable tbody td{padding:6px;border-bottom:1px solid var(--b);vertical-align:middle}
+.wtable tbody td.num{text-align:right;font-family:'Geist Mono',ui-monospace,monospace;font-weight:700}
+.wtable tbody tr:hover{background:var(--bg)}
+.wtable input,.wtable select{border:1px solid transparent;background:transparent;font-size:11px;font-family:inherit;outline:none;padding:3px 4px;border-radius:3px;width:100%}
+.wtable input:hover,.wtable select:hover,.wtable input:focus,.wtable select:focus{border-color:var(--b2);background:var(--w)}
+.wtable input.num{text-align:right;font-family:'Geist Mono',ui-monospace,monospace;font-weight:700}
+.wt-nr{width:30px;text-align:center;color:var(--t3);font-weight:700}
+.wt-op{width:110px}
+.wt-nm{width:65px}
+.wt-tf{width:65px}
+.wt-tt{width:75px;color:var(--r);font-weight:800}
+.wt-del{width:28px;text-align:center}
+.wt-del button{border:none;background:var(--r50);color:var(--r);width:22px;height:22px;border-radius:50%;cursor:pointer;font-weight:700;font-family:inherit}
+.wt-del button:hover{background:var(--r);color:#fff}
+.wt-photo{width:38px}
+.wt-photo img{width:38px;height:28px;object-fit:cover;border-radius:3px;border:1px solid var(--b);cursor:pointer}
+.empty-row{padding:24px;text-align:center;color:var(--t3);font-size:11px;background:var(--bg);border-radius:6px;margin-top:6px}
+.add-row{margin-top:8px;padding:9px;border:2px dashed var(--b2);border-radius:8px;text-align:center;cursor:pointer;font-size:11px;font-weight:700;color:var(--t3)}
+.add-row:hover{background:var(--orl);border-color:var(--or);color:var(--or)}
+.ax-btn{margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px;position:relative;padding:10px;border:2px dashed var(--bl);border-radius:8px;background:var(--bll);color:var(--bl);font-size:11px;font-weight:700;cursor:pointer}
+.ax-load{margin-top:8px;padding:11px;text-align:center;font-size:11px;font-weight:700;color:var(--bl);background:var(--bll);border-radius:8px}
+.ax-panel{margin-top:8px;border:1px solid var(--bl);border-radius:8px;overflow:hidden}
+.ax-h{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:var(--bll);color:var(--bl);font-size:11px;font-weight:800}
+.ax-del{border:none;background:transparent;color:var(--bl);font-size:16px;font-weight:700;cursor:pointer;line-height:1}
+.ax-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0}
+.ax-c{padding:8px 12px;border-right:1px solid var(--b);border-top:1px solid var(--b)}
+.ax-c:nth-child(2n){border-right:none}
+.ax-c.ax-hi{background:var(--yl)}
+.ax-l{font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t3)}
+.ax-v{font-size:14px;font-weight:800;color:var(--t);font-family:'Geist Mono',ui-monospace,monospace}
+.ax-c.ax-hi .ax-v{color:var(--y)}
+.termen{margin:12px 20px 0;display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:9px 12px}
+.termen-l{font-size:11px;font-weight:700;color:var(--t2)}
+.termen-i{border:1px solid var(--b2);background:var(--w);border-radius:6px;padding:5px 8px;font-size:12px;font-weight:700;font-family:inherit;color:var(--t);outline:none}
+.termen-i:focus{border-color:var(--r)}
+.piese-sec{margin-top:14px}
+.piese-ax{margin-top:14px;padding:10px 12px;background:var(--bll);border:1px solid var(--bl);border-radius:8px;font-size:11px;font-weight:700;color:var(--bl)}
+.ptable{width:100%;border-collapse:collapse;margin-top:4px}
+.ptable th{font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t3);text-align:left;padding:4px 6px;border-bottom:1px solid var(--b)}
+.ptable td{padding:3px 6px;border-bottom:1px solid var(--bg);font-size:12px;vertical-align:middle}
+.ptable .pt-c{text-align:center}
+.ptable .pt-tot{text-align:right;font-weight:700;white-space:nowrap}
+.pt-in{border:1px solid var(--b);background:var(--w);border-radius:5px;padding:5px 7px;font-size:12px;font-family:inherit;color:var(--t);outline:none;width:100%}
+.pt-in:focus{border-color:var(--r)}
+.pt-num{width:64px;text-align:center}
+.totals{margin:16px 20px 0;border:2px solid var(--t);border-radius:6px;overflow:hidden}
+.tot-row{display:grid;grid-template-columns:2fr 1fr 1fr;padding:7px 12px;border-bottom:1px solid var(--b);font-size:11px;align-items:center}
+.tot-row:last-child{border:none}
+.tot-row.tot-main{background:var(--t);color:#fff;font-weight:800;font-size:14px;padding:10px 12px}
+.tot-row.tot-sub{background:var(--bg)}
+.tot-label{font-weight:700}
+.tot-val{text-align:right;font-family:'Geist Mono',ui-monospace,monospace;font-weight:700}
+.tarif-panel{margin:0 20px 16px;background:var(--yl);border:1px solid var(--y);border-radius:6px;padding:12px}
+.tp-hdr{display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:10px;font-weight:800;color:var(--y);letter-spacing:1px;text-transform:uppercase}
+.tp-body{display:none;margin-top:10px}
+.tp-body.open{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tp-f{background:var(--w);border:1px solid var(--b);border-radius:5px;padding:6px 8px}
+.tp-l{font-size:8px;color:var(--t3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+.tp-v{width:100%;border:none;background:none;font-size:13px;font-weight:700;font-family:'Geist Mono',ui-monospace,monospace;outline:none;color:var(--t)}
+.actions{padding:16px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.btn{border:none;border-radius:8px;padding:11px 8px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit}
+.btn-print{background:var(--t);color:#fff}
+.btn-wa{background:#25D366;color:#fff}
+.btn-mail{background:#2563eb;color:#fff}
+.advance-bar{padding:0 20px 20px}
+.btn-adv{width:100%;background:var(--g);color:#fff;padding:13px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.toast{position:fixed;bottom:20px;left:16px;right:16px;background:var(--w);padding:11px 14px;border-radius:var(--rd);font-size:12px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.12);border-left:4px solid var(--g);z-index:250;max-width:600px;margin:0 auto}.toast.err{border-left-color:var(--r)}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.lightbox img{max-width:92vw;max-height:90vh;border-radius:8px}
+.loading{text-align:center;padding:60px;color:var(--t3);font-size:14px}
+@media(max-width:680px){
+  .parties{grid-template-columns:1fr}
+  .party:first-child{border-right:none;border-bottom:1px solid var(--b)}
+  .vehbar{grid-template-columns:repeat(2,1fr)}
+  .doc-hdr{flex-direction:column;gap:12px;text-align:center;align-items:center}
+  .tp-body.open{grid-template-columns:repeat(2,1fr)}
+  .actions{grid-template-columns:1fr}
+  .wtable{font-size:10px}
+  .wtable thead th{font-size:8px;padding:5px 3px}
+  .wtable tbody td{padding:4px 3px}
+  .wt-op{width:80px}
+  .wt-nm,.wt-tf{width:48px}
+  .wt-tt{width:60px}
+}
+@media print{*{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
+  body{background:#fff}
+  .shell,.hdr,.tabs,.actions,.advance-bar,.tarif-panel,.add-row,.wt-del,.toast,.no-print{display:none!important}
+  .doc{box-shadow:none;margin:0;max-width:none;border-radius:0;border:none}
+  .doc-hdr{padding:12mm}
+  .wt-wrap{padding:4mm 12mm}
+  .totals{margin:0 12mm 6mm}
+  .wtable input,.wtable select,.party-line input,.vb-v input,.tp-v{border:none!important;background:transparent!important}
+  .vehbar{color:#000;background:#f0f0f0;border:1px solid #000}
+  .vb-l{color:#555}
+  .vb-v input{color:#000!important}
+}</style>
+</head>
+<body>
+<div id="rpw-sync" style="position:fixed;bottom:10px;right:12px;z-index:300;font:600 11px system-ui,Arial;background:#fff;border:1px solid #E8EBEF;border-radius:8px;padding:5px 10px;box-shadow:0 2px 8px rgba(0,0,0,.08);opacity:0;transition:opacity .2s"></div>
+<div id="app"><div class="loading">Se incarca...</div></div>
+<script>
+if(!window.RPW_CFG){(document.getElementById('app')||document.body).innerHTML='<div style="padding:40px;text-align:center;font-family:system-ui,Arial"><div style="font-size:40px">&#9888;&#65039;</div><div style="font-size:18px;font-weight:800;color:#C81E33;margin:12px 0 6px">Configurație lipsă</div><div style="color:#3F4956;font-size:14px;line-height:1.6">rpw-config.js nu s-a încărcat (sau rulează dintr-o copie locală file://).<br>Deschide sistemul live.</div></div>';throw new Error('RPW_CFG missing');}
+if(window.RPWAuth){try{RPWAuth.guard();}catch(e){}}
+var SB_URL=RPW_CFG.SB_URL;
+var SB_KEY=RPW_CFG.SB_KEY;
+var sb=supabase.createClient(SB_URL,SB_KEY);
+/* PHASE 1: látható szinkron-állapot + robusztus mentő (rpw-save.js) */
+function rpwSyncLabel(st){var m={saving_local:['Salvare…','#6B7280'],syncing:['Sincronizare…','#2A6FDB'],synced:['✓ Salvat pe server','#1E9D55'],offline:['⚠ Offline – salvat local','#A6701F'],retry:['↻ Reîncercare…','#A6701F'],failed:['✗ Eșec salvare – reîncearcă','#C81E33'],permission:['✗ Fără permisiune','#C81E33'],conflict:['⚠ Conflict de date','#C81E33'],auth:['✗ Autentificare','#C81E33'],idle:['','#6B7280']};return m[st]||[st,'#6B7280'];}
+function onSyncState(st){var el=document.getElementById('rpw-sync');if(el){var l=rpwSyncLabel(st);el.textContent=l[0];el.style.color=l[1];el.style.opacity=l[0]?'1':'0';if(st==='synced'){setTimeout(function(){if(el&&el.textContent===l[0])el.style.opacity='0'},2000)}}var cb=document.getElementById('rpw-conflict');if(st==='conflict'){if(!cb){cb=document.createElement('div');cb.id='rpw-conflict';cb.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,Arial';cb.innerHTML='<div style="max-width:360px;background:#fff;border-radius:12px;padding:22px;text-align:center"><div style="font-size:34px">\u26A0\uFE0F</div><div style="font-size:17px;font-weight:800;color:#C81E33;margin:8px 0">Conflict de date</div><div style="font-size:13px;color:#3F4956;line-height:1.6">Alt utilizator a modificat aceast\u0103 fi\u0219\u0103. Modificarea ta local\u0103 este p\u0103strat\u0103. Re\u00EEncarc\u0103 pentru versiunea de pe server.</div><button onclick="location.reload()" style="margin-top:16px;background:#E11D2E;color:#fff;border:none;border-radius:9px;padding:11px 20px;font-weight:800;cursor:pointer">Re\u00EEncarc\u0103</button></div>';document.body.appendChild(cb);}}else if(cb){cb.remove();}}
+var SAVER=(window.RPWSave&&RPWSave.createSaver)?RPWSave.createSaver({sb:sb,onState:onSyncState}):null;
+if(SAVER&&window.RPWSave&&RPWSave.bindBeforeUnload)RPWSave.bindBeforeUnload(SAVER,'Există modificări nesincronizate.');
+if(typeof saveJ==='function'){var _saveJ_orig=saveJ;saveJ=function(){if(typeof JOB==='undefined'||!JOB)return Promise.resolve();return SAVER?SAVER.save(JOB):_saveJ_orig();};}
+if(typeof saveJob==='function'){var _saveJob_orig=saveJob;saveJob=function(job){if(!job)return Promise.resolve();return SAVER?SAVER.save(job):_saveJob_orig(job);};}
+
+var JOB=null;
+var NORME={};
+var CONFIG={
+  unitate:{
+    nume:'SC SZKALICZKI SERVICE SRL',
+    cif:'RO16250445',
+    nrord:'RO/ONRC.J20040004',
+    adresa:'Str. Petki David, Nr.27/A, 547530, Sangeorgiu de Mures, MURES',
+    tel:'0265318020',
+    rar:'4401/24112006'
+  },
+  tarif:{tinichigerie:180,vopsitorie:300,mecanic:180,tva:21}
+};
+var S={tab:'comanda',showTarif:0,ts:null,te:0,lightbox:null,uploading:{},photoCache:{}};
+
+var EK=['fb','rb','hood','trunk','roof','fl_f','fr_f','rl_f','rr_f','fl_d','fr_d','rl_d','rr_d','l_s','r_s','l_m','r_m','a_l','a_r','b_l','b_r','c_l','c_r'];
+
+var EK_NAMES={fb:{ro:'Bara fata',en:'Front bumper',hu:'Elso lokh.'},rb:{ro:'Bara spate',en:'Rear bumper',hu:'Hatso lokh.'},hood:{ro:'Capota',en:'Hood',hu:'Motorhazt.'},trunk:{ro:'Portbagaj',en:'Trunk',hu:'Csomagtarto'},roof:{ro:'Plafon',en:'Roof',hu:'Teto'},fl_f:{ro:'Aripa stg fata',en:'LF fender',hu:'BE sarvedo'},fr_f:{ro:'Aripa dr fata',en:'RF fender',hu:'JE sarvedo'},rl_f:{ro:'Aripa stg spate',en:'LR fender',hu:'BH sarvedo'},rr_f:{ro:'Aripa dr spate',en:'RR fender',hu:'JH sarvedo'},fl_d:{ro:'Usa stg fata',en:'LF door',hu:'BE ajto'},fr_d:{ro:'Usa dr fata',en:'RF door',hu:'JE ajto'},rl_d:{ro:'Usa stg spate',en:'LR door',hu:'BH ajto'},rr_d:{ro:'Usa dr spate',en:'RR door',hu:'JH ajto'},l_s:{ro:'Prag stg',en:'L sill',hu:'B kuszob'},r_s:{ro:'Prag dr',en:'R sill',hu:'J kuszob'},l_m:{ro:'Ogl. stg',en:'L mirror',hu:'B tukor'},r_m:{ro:'Ogl. dr',en:'R mirror',hu:'J tukor'},a_l:{ro:'Stalp A stg',en:'L A-pil.',hu:'B A oszl.'},a_r:{ro:'Stalp A dr',en:'R A-pil.',hu:'J A oszl.'},b_l:{ro:'Stalp B stg',en:'L B-pil.',hu:'B B oszl.'},b_r:{ro:'Stalp B dr',en:'R B-pil.',hu:'J B oszl.'},c_l:{ro:'Stalp C stg',en:'L C-pil.',hu:'B C oszl.'},c_r:{ro:'Stalp C dr',en:'R C-pil.',hu:'J C oszl.'}};
+
+var OPS=[
+  {id:'inlocuire',    ro:'Inlocuire',            en:'Replace',         hu:'Csere',           tarif:'tinichigerie'},
+  {id:'demontat',     ro:'Demontat/Remontat',    en:'Remove/Refit',    hu:'Le/felszereles',  tarif:'tinichigerie'},
+  {id:'dezasamblat',  ro:'Dezasamblat/Asamblat', en:'Disassemble',     hu:'Szetsz./Ossz.',   tarif:'tinichigerie'},
+  {id:'reparatie',    ro:'Reparatie',            en:'Repair',          hu:'Javitas',         tarif:'tinichigerie'},
+  {id:'vopsire',      ro:'Vopsire',              en:'Paint',           hu:'Fenyezes',        tarif:'vopsitorie'},
+  {id:'revopsire',    ro:'Revopsire',            en:'Repaint',         hu:'Atfenyezes',      tarif:'vopsitorie'},
+  {id:'mecanica',     ro:'Mecanica',             en:'Mechanical',      hu:'Mechanikus',      tarif:'mecanic'}
+];
+
+// ====== Foto-tár + 23-elem konstansok (recepcióval konzisztens) ======
+var STORAGE_BUCKET=RPW_CFG.BUCKET;
+var PAINTABLE={l_m:false,r_m:false};  // tükrök: nincs fenyezes
+var WORK_V2_TO_V1={inlocuire:'replace',reparatie:'fix',vopsire:'uni',revopsire:'uni'};
+
+var i={
+  titlu:{ro:'OFERTA DE PRET',en:'QUOTE',hu:'ARAJANLAT'},
+  data:{ro:'Data',en:'Date',hu:'Datum'},
+  unitate:{ro:'UNITATE',en:'UNIT',hu:'EGYSEG'},
+  client:{ro:'CLIENT',en:'CLIENT',hu:'UGYFEL'},
+  plate:{ro:'Nr. inmatr.',en:'Plate',hu:'Rendszam'},
+  vin:{ro:'Serie sasiu',en:'VIN',hu:'VIN'},
+  brand:{ro:'Marca / Model',en:'Make / Model',hu:'Marka / Model'},
+  year:{ro:'An fabr.',en:'Year',hu:'Evj.'},
+  km:{ro:'Km',en:'Odometer',hu:'Km'},
+  cif:{ro:'CIF / CNP',en:'Tax ID',hu:'Ado sz.'},
+  adresa:{ro:'Adresa',en:'Address',hu:'Cim'},
+  tel:{ro:'Telefon',en:'Phone',hu:'Tel'},
+  comanda:{ro:'LISTĂ LUCRĂRI',en:'WORK LIST',hu:'MUNKALISTA'},
+  comandaSub:{ro:'Lucrari conform constatarii',en:'Works per assessment',hu:'Felmeres szerint'},
+  suplim:{ro:'LUCRĂRI SUPLIMENTARE',en:'SUPPLEMENTARY WORKS',hu:'POTMUNKAK'},
+  suplimSub:{ro:'Avarii ascunse / suplimentare',en:'Hidden / extra damages',hu:'Rejtett karok'},
+  upsell:{ro:'OFERTA AFTERSALES',en:'AFTERSALES OFFER',hu:'UTANERTEKESITES'},
+  upsellSub:{ro:'Lucrari recomandate',en:'Additional work',hu:'Ajanlott munkak'},
+  nrCol:{ro:'Nr.',en:'No.',hu:'Nr.'},
+  elemCol:{ro:'Element',en:'Part',hu:'Elem'},
+  opCol:{ro:'Operatiune',en:'Operation',hu:'Muvelet'},
+  normaCol:{ro:'Norma',en:'Norm',hu:'Norma'},
+  tarifCol:{ro:'Tarif',en:'Rate',hu:'Tarifa'},
+  totalCol:{ro:'Total',en:'Total',hu:'Osszeg'},
+  totalManopera:{ro:'Total manopera',en:'Labor total',hu:'Munkadij'},
+  totalMateriale:{ro:'Total materiale',en:'Parts total',hu:'Anyagok'},
+  subtotal:{ro:'Subtotal fara TVA',en:'Subtotal (no VAT)',hu:'Alosszeg AFA nelkul'},
+  tva:{ro:'TVA',en:'VAT',hu:'AFA'},
+  totalGeneral:{ro:'TOTAL CU TVA',en:'TOTAL INCL. VAT',hu:'VEGOSSZEG AFA-VAL'},
+  ron:{ro:'RON',en:'RON',hu:'RON'},
+  addRowC:{ro:'+ Adauga lucrare',en:'+ Add work',hu:'+ Uj munka'},
+  addRowS:{ro:'+ Adauga lucrare suplimentara',en:'+ Add supplementary',hu:'+ Uj potmunka'},
+  addRowU:{ro:'+ Adauga recomandare',en:'+ Add suggestion',hu:'+ Uj ajanlas'},
+  noRowsC:{ro:'Nu exista avarii. Foloseste + sau revino la Receptie.',en:'No damages marked.',hu:'Nincs serules.'},
+  noRowsS:{ro:'Nicio lucrare suplimentara. Foloseste +.',en:'No supplementary works.',hu:'Nincs potmunka.'},
+  noRowsU:{ro:'Nicio recomandare. Foloseste +.',en:'No recommendations.',hu:'Nincs ajanlas.'},
+  tarife:{ro:'TARIFE / ORA',en:'RATES / HOUR',hu:'ORADIJAK'},
+  tarifTin:{ro:'Tinichigerie',en:'Bodywork',hu:'Lakatos'},
+  tarifVop:{ro:'Vopsitorie',en:'Paint',hu:'Fenyezes'},
+  tarifMec:{ro:'Mecanica',en:'Mechanic',hu:'Mechanikus'},
+  tarifTva:{ro:'TVA %',en:'VAT %',hu:'AFA %'},
+  btnPrint:{ro:'Printeaza',en:'Print',hu:'Nyomtatas'},
+  btnWA:{ro:'WhatsApp',en:'WhatsApp',hu:'WhatsApp'},
+  btnMail:{ro:'Email',en:'Email',hu:'Email'},
+  btnAdv:{ro:'Avanseaza → Reconstatare',en:'Advance → Re-assess',hu:'Tovabb → Ujrafelmeres'},
+  saved:{ro:'Salvat',en:'Saved',hu:'Mentve'},
+  noJob:{ro:'Nu exista lucrare',en:'No job',hu:'Nincs munka'},
+  tabC:{ro:'Lucrare',en:'Work',hu:'Munka'},
+  tabS:{ro:'Suplimentare',en:'Supplementary',hu:'Potmunka'},
+  axImport:{ro:'Import Audatex (PDF/foto)',en:'Import Audatex (PDF/photo)',hu:'Audatex import (PDF/foto)'},
+  axLoad:{ro:'Se citeste Audatex...',en:'Reading Audatex...',hu:'Audatex beolvasas...'},
+  axTitle:{ro:'Audatex',en:'Audatex',hu:'Audatex'},
+  axOreT:{ro:'Ore tinichigerie',en:'Bodywork hrs',hu:'Lakatos ora'},
+  axOreV:{ro:'Ore vopsitorie',en:'Paint hrs',hu:'Fenyezes ora'},
+  axManopera:{ro:'Manopera RON',en:'Labor RON',hu:'Munkadij RON'},
+  axVops:{ro:'Vopsitorie RON',en:'Paint RON',hu:'Fenyezes RON'},
+  axPiese:{ro:'Piese RON',en:'Parts RON',hu:'Alkatresz RON'},
+  axTva:{ro:'Total cu TVA',en:'Total w/ VAT',hu:'Vegosszeg AFA'},
+  termen:{ro:'Termen de predare',en:'Delivery date',hu:'Atadasi hatarido'},
+  piese:{ro:'PIESE',en:'PARTS',hu:'ALKATRESZ'},
+  pieseSub:{ro:'Piese de schimb',en:'Spare parts',hu:'Alkatreszek'},
+  pDenumire:{ro:'Denumire piesa',en:'Part name',hu:'Alkatresz megnevezes'},
+  pCant:{ro:'Cant.',en:'Qty',hu:'Db'},
+  pPret:{ro:'Pret unit.',en:'Unit price',hu:'Egysegar'},
+  addPiesa:{ro:'+ Adauga piesa',en:'+ Add part',hu:'+ Uj alkatresz'},
+  noPiese:{ro:'Nicio piesa. Foloseste +.',en:'No parts yet.',hu:'Nincs alkatresz.'},
+  pieseAx:{ro:'Piese preluate din Audatex',en:'Parts from Audatex',hu:'Alkatresz az Audatexbol'},
+  tabU:{ro:'Upsell',en:'Upsell',hu:'Upsell'},
+  ops:{ro:'Alege op.',en:'Op.',hu:'Muvelet'},
+  delConf:{ro:'Sterge linie?',en:'Delete row?',hu:'Sor torlese?'},
+  tabV:{ro:'Verificare 23',en:'23-Check',hu:'23 ellenorzes'},
+  verifHint:{ro:'Marcheaza fiecare element: OK / Avariat / Recomandat',en:'Mark each: OK / Damaged / Suggested',hu:'Jelold: OK / Serult / Ajanlott'},
+  okS:{ro:'OK',en:'OK',hu:'OK'},
+  avariata:{ro:'Avariat',en:'Damaged',hu:'Serult'},
+  recomandata:{ro:'Recomandat',en:'Suggested',hu:'Ajanlott'},
+  opsLabel:{ro:'Operatiuni',en:'Operations',hu:'Muveletek'},
+  oraLbl:{ro:'h norma',en:'h norm',hu:'norma h'},
+  noteP:{ro:'Observatii...',en:'Notes...',hu:'Megjegyzes...'},
+  fotoRequired:{ro:'⚠ Lipseste foto pentru element avariat',en:'⚠ Photo required',hu:'⚠ Hianyzik a foto'},
+  syncBtn:{ro:'🔄 Sincronizare din verificare',en:'🔄 Sync from check',hu:'🔄 Szinkron a 23-ból'},
+  syncDone:{ro:'Sincronizat',en:'Synced',hu:'Szinkronizalva'},
+  syncNone:{ro:'Nimic de adaugat',en:'Nothing to add',hu:'Nincs mit hozzaadni'},
+  inlocuire:{ro:'Inlocuire',en:'Replace',hu:'Csere'},
+  reparatie:{ro:'Reparatie',en:'Repair',hu:'Javitas'},
+  vopsire:{ro:'Vopsire',en:'Paint',hu:'Fenyezes'},
+  revopsire:{ro:'Revopsire',en:'Repaint',hu:'Atfenyezes'}
+};
+
+function gL(){return localStorage.getItem('rpw_lang')||'ro'}
+function sL(l){localStorage.setItem('rpw_lang',l);render()}
+function T(k){var e=i[k]||EK_NAMES[k];return e?e[gL()]||e.ro||k:k}
+function TOP(opId){var o=OPS.find(function(x){return x.id===opId});return o?(o[gL()]||o.ro):opId}
+function fmt(n){return (Math.round(n*100)/100).toFixed(2)}
+function today(){var d=new Date();return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear()}
+function esc(s){if(s==null)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function loadNorme(){
+  try{var n=localStorage.getItem('rpw_norme');if(n)NORME=JSON.parse(n)}catch(e){NORME={}}
+}
+function saveNorma(elKey,op,hours){
+  if(!elKey||!op||!hours)return;
+  NORME[elKey+'_'+op]=parseFloat(hours);
+  try{localStorage.setItem('rpw_norme',JSON.stringify(NORME))}catch(e){}
+}
+function getNorma(elKey,op){
+  if(!elKey||!op)return 0;
+  return NORME[elKey+'_'+op]||0;
+}
+function loadConfig(){
+  try{var c=localStorage.getItem('rpw_config');if(c){var p=JSON.parse(c);Object.assign(CONFIG.unitate,p.unitate||{});Object.assign(CONFIG.tarif,p.tarif||{})}}catch(e){}
+}
+function saveConfig(){try{localStorage.setItem('rpw_config',JSON.stringify(CONFIG))}catch(e){}}
+
+// ====== SUPABASE STORAGE FOTO-API (recepcióval azonos: elem_<key> kulcs) ======
+function resizeFile(file){
+  return new Promise(function(res){
+    var r=new FileReader();
+    r.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement('canvas'),mx=1600,sc=img.width>mx?mx/img.width:1;
+        c.width=img.width*sc;c.height=img.height*sc;
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        res(c.toDataURL('image/jpeg',.85));
+      };
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+async function uploadPhoto(photoKey,dataUrl){
+  if(!JOB||!JOB.id)throw new Error('no job');
+  S.uploading[photoKey]=true;render();
+  try{
+    var res=await fetch(dataUrl);var blob=await res.blob();
+    var path=JOB.id+'/'+photoKey+'.jpg';
+    var up=await sb.storage.from(STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg',upsert:true});
+    if(up.error)throw up.error;
+    var url=sb.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+    if(!JOB.photoKeys)JOB.photoKeys={};
+    if(!JOB.photoUrls)JOB.photoUrls={};
+    JOB.photoKeys[photoKey]=true;JOB.photoUrls[photoKey]=url;S.photoCache[photoKey]=url;
+    await saveJ();return url;
+  }finally{delete S.uploading[photoKey];render()}
+}
+async function deletePhoto(photoKey){
+  if(!JOB||!JOB.id)return;
+  var path=JOB.id+'/'+photoKey+'.jpg';
+  try{await sb.storage.from(STORAGE_BUCKET).remove([path])}catch(e){console.warn('Delete:',e)}
+  if(JOB.photoKeys)delete JOB.photoKeys[photoKey];
+  if(JOB.photoUrls)delete JOB.photoUrls[photoKey];
+  delete S.photoCache[photoKey];await saveJ();
+}
+function photoUrl(photoKey){
+  if(S.photoCache[photoKey])return S.photoCache[photoKey];
+  if(JOB&&JOB.photoUrls&&JOB.photoUrls[photoKey]){S.photoCache[photoKey]=JOB.photoUrls[photoKey];return JOB.photoUrls[photoKey]}
+  return null;
+}
+
+function gJI(){return new URLSearchParams(location.search).get('job')}
+
+async function loadJob(){
+  loadNorme();loadConfig();
+  var jid=gJI();if(!jid){render();return}
+  var cached=localStorage.getItem('rpw_job_'+jid);
+  if(cached){try{JOB=JSON.parse(cached);initJob();render()}catch(e){}}
+  try{
+    var res=await RPWDb.getRow(sb,jid);
+    if(res.error)throw res.error;
+    var _lts=0,_sts=0;try{_lts=Date.parse(localStorage.getItem('rpw_job_ts_'+jid)||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
+    if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;
+    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+jid,res.data.updated_at||new Date().toISOString())}catch(e){}}
+    initJob();
+    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB))}catch(e){}
+  }catch(e){if(!JOB)JOB=null}
+  render();
+}
+
+function initJob(){
+  if(!JOB)return;
+  if(!JOB.phases)JOB.phases={};
+  for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:'pending'}}
+  if(!JOB.evalData)JOB.evalData={};
+  if(!JOB.evalData.comanda)JOB.evalData.comanda=[];
+  if(!JOB.evalData.upsell)JOB.evalData.upsell=[];
+  if(JOB.evalData.comanda.length===0 && JOB.evalData.upsell.length===0){
+    syncFromElements();
+  }
+}
+
+function autoPopulate(){
+  var el=JOB.elements||{};
+  var cnt=0;
+  for(var k in el){
+    var e=el[k];
+    var target=null;
+    if(e.status==='damaged')target='comanda';
+    else if(e.status==='suggested')target='upsell';
+    if(!target)continue;
+    // Olvasd ki az ops objektumot (checkbox alapu), backward compat a work/workV2 mezokre
+    var ops=e.ops;
+    if(!ops){
+      ops={};
+      var oldW=e.workV2||e.work;
+      if(oldW==='replace'||oldW==='inlocuire'||oldW==='new')ops.inlocuire=true;
+      else if(oldW==='fix'||oldW==='reparatie')ops.reparatie=true;
+      else if(oldW==='vopsire'||oldW==='uni')ops.vopsire=true;
+      else if(oldW==='revopsire')ops.revopsire=true;
+    }
+    // Ket kulon sor mindegy ami bekapcsolva van
+    var opList=['inlocuire','demontat','dezasamblat','reparatie','vopsire','revopsire','mecanica'];
+    var added=false;
+    for(var oi=0;oi<opList.length;oi++){
+      var op=opList[oi];
+      if(ops[op]){
+        var prefix=target==='comanda'?'c_':'u_';
+        JOB.evalData[target].push({
+          id:prefix+Date.now().toString(36)+'_'+(cnt++),
+          elKey:k,
+          op:op,
+          hours:(op==='reparatie'&&e.oraNormata)?e.oraNormata:getNorma(k,op),
+          note:e.note||'',
+          photo:e.photo||null
+        });
+        added=true;
+      }
+    }
+    // Fallback: ha nincs ops de damaged/suggested (regi adat) - egy sor ures muvelettel
+    if(!added){
+      var prefix2=target==='comanda'?'c_':'u_';
+      JOB.evalData[target].push({
+        id:prefix2+Date.now().toString(36)+'_'+(cnt++),
+        elKey:k,op:'',hours:0,note:e.note||'',photo:e.photo||null
+      });
+    }
+  }
+}
+
+var _saveTimer=null;
+async function saveJ(){
+  if(!JOB)return;
+  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+JOB.id,new Date().toISOString())}catch(e){}
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(async function(){
+    try{await RPWDb.patch(sb,JOB)}
+    catch(e){console.error('Save:',e)}
+  },500);
+}
+
+function toast(m,e){S.ts=m;S.te=e?1:0;render();setTimeout(function(){S.ts=null;render()},3000)}
+
+// Tab → evalData kulcs feloldas (Lucrare=comanda, Suplimentare=suplimentare, Upsell=upsell)
+function curKey(){return S.tab==='suplim'?'suplimentare':(S.tab==='upsell'?'upsell':'comanda')}
+function curArr(){var k=curKey();if(!JOB.evalData)JOB.evalData={};if(!JOB.evalData[k])JOB.evalData[k]=[];return JOB.evalData[k]}
+
+// ────── AUDATEX OCR (Claude Vision via Netlify Function) ──────
+function num(v){var n=parseFloat(v);return isNaN(n)?null:n}
+function dataUrlToBase64(d){return d.split(',')[1]}
+async function callOCR(b64,type){
+  var resp=await fetch('/.netlify/functions/ocr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:b64,type:type})});
+  var data=await resp.json();
+  if(!resp.ok)throw new Error(data.error||'OCR failed (HTTP '+resp.status+')');
+  try{return JSON.parse(data.result)}catch(e){throw new Error('OCR result not JSON')}
+}
+window.importAudatex=function(e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  S.audatexRun=true;render();
+  var r=new FileReader();
+  r.onload=async function(ev){
+    try{
+      var p=await callOCR(dataUrlToBase64(ev.target.result),'audatex');
+      JOB.audatex={
+        ore_tinichigerie:num(p.ore_tinichigerie),
+        ore_vopsitorie:num(p.ore_vopsitorie),
+        pret_ora:num(p.pret_ora),
+        total_manopera_ron:num(p.total_manopera_ron),
+        total_vopsitorie_ron:num(p.total_vopsitorie_ron),
+        total_piese_ron:num(p.total_piese_ron),
+        total_cu_tva:num(p.total_cu_tva),
+        nr_dosar:(p.nr_dosar&&p.nr_dosar!=='null')?p.nr_dosar:null,
+        ts:new Date().toISOString()
+      };
+      S.audatexRun=false;await saveJ();
+      toast('Audatex: T '+(JOB.audatex.ore_tinichigerie!=null?JOB.audatex.ore_tinichigerie+'h':'?')+' / V '+(JOB.audatex.ore_vopsitorie!=null?JOB.audatex.ore_vopsitorie+'h':'?'));
+      render();
+    }catch(err){S.audatexRun=false;toast('Audatex OCR: '+err.message,1);render()}
+  };
+  r.readAsDataURL(f);
+};
+window.delAudatex=function(){if(JOB.audatex){delete JOB.audatex;saveJ();render()}};
+window.upTermen=function(v){JOB.termenPredare=v;saveJ()};
+
+// ────── PIESE (alkatresz-lista) ──────
+function calcPieseTotal(arr){if(!arr)return 0;var s=0;for(var i=0;i<arr.length;i++){s+=(parseFloat(arr[i].cant)||0)*(parseFloat(arr[i].pretUnit)||0)}return s}
+window.addPiesa=function(){if(!JOB.evalData)JOB.evalData={};if(!JOB.evalData.piese)JOB.evalData.piese=[];JOB.evalData.piese.push({id:'p'+Date.now().toString(36),denumire:'',cant:1,pretUnit:0});saveJ();render()};
+window.upPiesa=function(id,field,val){var l=JOB.evalData.piese||[];for(var i=0;i<l.length;i++){if(l[i].id===id){l[i][field]=val;break}}saveJ();if(field!=='denumire')render()};
+window.delPiesa=function(id){var l=JOB.evalData.piese||[];JOB.evalData.piese=l.filter(function(p){return p.id!==id});saveJ();render()};
+
+
+
+
+function calcRowTotal(row){
+  var tarifKey=row.tarifKey;
+  if(!tarifKey){
+    var op=OPS.find(function(x){return x.id===row.op});
+    if(op)tarifKey=op.tarif;
+  }
+  if(!tarifKey)return 0;
+  var tarif=CONFIG.tarif[tarifKey]||0;
+  return (parseFloat(row.hours)||0)*tarif;
+}
+function calcListTotal(list){var sum=0;list.forEach(function(r){sum+=calcRowTotal(r)});return sum}
+
+// ────── WORKFLOW SHELL (etalon, SHELL_CUR=1 = 02 Evaluare) ──────
+var SHELL_PHASES=[
+ {n:'01',page:'rpw-recepcio-red.html',ro:'Recepție',en:'Reception',hu:'Recepció'},
+ {n:'02',page:'rpw-evaluare-red.html',ro:'Evaluare',en:'Assessment',hu:'Felmérés'},
+ {n:'03',page:'rpw-reconstatare-red.html',ro:'Reconstatare',en:'Re-assessment',hu:'Újrafelmérés'},
+ {n:'04',page:'rpw-tinichigerie-red.html',ro:'Tinichigerie',en:'Bodywork',hu:'Lakatos'},
+ {n:'05',page:'rpw-vopsitorie-red.html',ro:'Vopsitorie',en:'Paint',hu:'Fényezés'},
+ {n:'06',page:'rpw-control-red.html',ro:'Control',en:'Check',hu:'Kontroll'},
+ {n:'07',page:'rpw-inchidere-red.html',ro:'Închidere',en:'Closing',hu:'Lezárás'}
+];
+var SHELL_CUR=1;
+function shellVariant(){try{return localStorage.getItem('rpw_shell_v')||'A'}catch(e){return 'A'}}
+window.setShellVariant=function(v){try{localStorage.setItem('rpw_shell_v',v)}catch(e){}render()};
+window.goPhase=function(i){if(i===SHELL_CUR)return;location.assign(SHELL_PHASES[i].page+'?job='+(JOB?JOB.id:''))};
+function shellHtml(job,ln){
+  var v=shellVariant();var plate=job.plate||job.number||job.id||'';var cur=SHELL_PHASES[SHELL_CUR];
+  function nm(p){return p[ln]||p.ro}
+  var h='<div class="shell no-print"><div class="shell-top">';
+  h+='<div class="sh-left"><div class="sh-back" onclick="location.assign(\'rpw-dosar.html?job='+job.id+'\')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>';
+  h+='<span class="sh-plate">'+escH(plate)+'</span>';
+  h+='<div class="sh-phase"><span class="ph-idx">'+cur.n+'</span>'+nm(cur)+'</div></div>';
+  h+='<div class="sh-right"><div class="lsw">';
+  ['A','B','C'].forEach(function(x){h+='<button class="lb '+(v===x?'on':'')+'" onclick="setShellVariant(\''+x+'\')">'+x+'</button>'});
+  h+='</div><div class="lsw"><button class="lb '+(ln==='ro'?'on':'')+'" onclick="sL(\'ro\')">RO</button><button class="lb '+(ln==='en'?'on':'')+'" onclick="sL(\'en\')">EN</button><button class="lb '+(ln==='hu'?'on':'')+'" onclick="sL(\'hu\')">HU</button></div></div></div>';
+  if(v==='A'){h+='<div class="stepA">';SHELL_PHASES.forEach(function(p,ix){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;var cls=ix<SHELL_CUR?'done':ix===SHELL_CUR?'cur':'';h+='<div class="stA '+cls+'" onclick="goPhase('+ix+')"><span class="n">'+p.n+'</span>'+nm(p)+'</div>'});h+='</div>';}
+  else if(v==='B'){h+='<div class="stepB">';SHELL_PHASES.forEach(function(p,ix){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;if(ix>0)h+='<div class="stB-line'+(ix<=SHELL_CUR?' done':'')+'"></div>';var cls=ix<SHELL_CUR?' done':ix===SHELL_CUR?' cur':'';h+='<div class="stB'+cls+'" onclick="goPhase('+ix+')" title="'+p.n+' '+nm(p)+'">'+p.n+'</div>';});h+='<span class="stB-name">'+nm(cur)+'</span></div>';}
+  else{h+='<div class="stepC"><div class="stepC-bar">';SHELL_PHASES.forEach(function(p,ix){if(p.page.indexOf('reconstatare')>=0&&job.damageType==='auto')return;var cls=ix<SHELL_CUR?' done':ix===SHELL_CUR?' cur':'';h+='<div class="stC '+cls+'" onclick="goPhase('+ix+')" title="'+p.n+' '+nm(p)+'"></div>'});h+='</div><div class="stepC-meta"><span>'+cur.n+' '+nm(cur)+'</span><span>pasul '+cur.n+' / 07</span></div></div>';}
+  h+='</div>';return h;
+}
+
+function render(){
+  var ln=gL(),job=JOB;
+  if(!job){
+    document.getElementById('app').innerHTML='<div class="loading">'+T('noJob')+'<br><br><button style="margin-top:12px;padding:10px 24px;border:none;border-radius:10px;background:var(--r);color:#fff;font-weight:700;font-family:inherit;cursor:pointer" onclick="location.assign(\'index.html\')">Dashboard</button></div>';
+    return;
+  }
+
+  var curList=curArr();
+  var tvaPct=parseFloat(CONFIG.tarif.tva)||0;
+  var ax=(S.tab==='comanda')?job.audatex:null;   // Audatex csak Lucrare tabon szamol
+  var axMode=!!ax;
+  var totalMan,totalVop,totalMat,totalFaraT,tvaVal,totalCuT;
+  if(axMode){
+    totalMan=ax.total_manopera_ron||0;
+    totalVop=ax.total_vopsitorie_ron||0;
+    totalMat=ax.total_piese_ron||0;
+    totalFaraT=totalMan+totalVop+totalMat;
+    totalCuT=(ax.total_cu_tva!=null)?ax.total_cu_tva:totalFaraT*(1+tvaPct/100);
+    tvaVal=totalCuT-totalFaraT;
+  }else{
+    totalMan=calcListTotal(curList);
+    totalVop=0;
+    totalMat=(S.tab==='comanda'&&job.evalData&&job.evalData.piese)?calcPieseTotal(job.evalData.piese):0;
+    totalFaraT=totalMan+totalMat;
+    tvaVal=totalFaraT*tvaPct/100;
+    totalCuT=totalFaraT+tvaVal;
+  }
+
+  var h=shellHtml(job,ln);
+
+  // STATUS EVALUARE + Termelésbe küldés (kapu)
+  var _est=(job.evalData&&job.evalData.status)||'draft';
+  h+='<div class="no-print" style="margin:10px 16px;padding:10px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:10px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-size:11px;font-weight:800;color:#6b7280">STATUS: <span style="color:'+(_est==='accepted'?'#1E9D55':_est==='sent'?'#A6701F':'#6b7280')+'">'+(_est==='accepted'?'ACCEPTAT ✓ (în producție)':_est==='sent'?'TRIMIS':'CIORNĂ')+'</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button onclick="setEvalSt(\'draft\')" style="padding:6px 12px;border-radius:8px;border:1px solid #e5e7eb;background:'+(_est==='draft'?'#eef2f7':'#fff')+';font-weight:700;font-size:12px;cursor:pointer">Ciornă</button><button onclick="setEvalSt(\'sent\')" style="padding:6px 12px;border-radius:8px;border:1px solid #e5e7eb;background:'+(_est==='sent'?'#FDEFD8':'#fff')+';font-weight:700;font-size:12px;cursor:pointer">Trimis</button><button onclick="sendToProd()" style="padding:6px 14px;border-radius:8px;border:none;background:#1E9D55;color:#fff;font-weight:800;font-size:12px;cursor:pointer">▶ Trimite în producție</button></div></div></div>';
+
+  var _vc=0,_vel=job.elements||{};for(var _vk in _vel){var _vs=_vel[_vk].statusV2||(_vel[_vk].status==='damaged'?'avariata':_vel[_vk].status==='suggested'?'recomandata':null);if(_vs==='avariata'||_vs==='recomandata')_vc++}
+  var _valt=job.alteParti||[];for(var _vi=0;_vi<_valt.length;_vi++){var _vas=_valt[_vi].statusV2||(_valt[_vi].status==='damaged'?'avariata':_valt[_vi].status==='suggested'?'recomandata':null);if(_vas==='avariata'||_vas==='recomandata')_vc++}
+  h+='<div class="tabs no-print"><button class="tab '+(S.tab==='comanda'?'on-c':'')+'" onclick="setTab(\'comanda\')">'+T('tabC')+'<span class="tab-count">'+(job.evalData.comanda||[]).length+'</span></button><button class="tab '+(S.tab==='suplim'?'on-c':'')+'" onclick="setTab(\'suplim\')">'+T('tabS')+'<span class="tab-count">'+((job.evalData.suplimentare||[]).length)+'</span></button></div>';
+
+  if(S.tab==='verif'){
+    var camMini='<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--t3);fill:none;stroke-width:1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+    var _ve=job.elements||{};
+    h+='<div class="sync-bar"><button class="sync-btn" onclick="syncEval()">'+T('syncBtn')+'</button></div>';
+    h+='<div class="verif-wrap"><div class="verif-hint">'+T('verifHint')+'</div>';
+    for(var vx=0;vx<EK.length;vx++){
+      var vk=EK[vx],e=_ve[vk]||{};
+      var s=e.statusV2||(e.status==='damaged'?'avariata':e.status==='suggested'?'recomandata':e.status==='ok'?'ok':null);
+      var isOk=s==='ok',isAv=s==='avariata',isRec=s==='recomandata';
+      var ePhUrl=photoUrl('elem_'+vk),missingPh=(isAv||isRec)&&!ePhUrl;
+      var cls='el';if(isOk)cls+=' el-ok';else if(isAv)cls+=' el-dmg';else if(isRec)cls+=' el-sug';if(missingPh)cls+=' el-missing-photo';
+      h+='<div class="'+cls+'"><div class="el-top"><div class="el-n">'+T(vk)+'</div><div class="el-btns">';
+      h+='<div class="eb eb-ok '+(isOk?'on':'')+'" onclick="mE(\''+vk+'\',\'ok\')">'+T('okS')+'</div>';
+      h+='<div class="eb eb-dm '+(isAv?'on':'')+'" onclick="mE(\''+vk+'\',\'avariata\')">'+T('avariata')+'</div>';
+      h+='<div class="eb eb-sg '+(isRec?'on':'')+'" onclick="mE(\''+vk+'\',\'recomandata\')">'+T('recomandata')+'</div>';
+      h+='</div></div>';
+      if(isAv||isRec){
+        var curOps=e.ops||{};
+        if(!e.ops){curOps={};var oldW=e.workV2||e.work;if(oldW==='replace'||oldW==='inlocuire'||oldW==='new')curOps.inlocuire=true;if(oldW==='fix'||oldW==='reparatie')curOps.reparatie=true;if(oldW==='vopsire'||oldW==='uni')curOps.vopsire=true;if(oldW==='revopsire')curOps.revopsire=true}
+        var paintable=PAINTABLE[vk]!==false;
+        h+='<div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:8px;margin-bottom:4px">'+T('opsLabel')+'</div><div class="el-wt">';
+        var workTypes=['inlocuire','reparatie','vopsire','revopsire'],wtClass={inlocuire:'wt-inl',reparatie:'wt-rep',vopsire:'wt-vop',revopsire:'wt-rvp'};
+        for(var wi=0;wi<workTypes.length;wi++){
+          var wtk=workTypes[wi],isPaint=wtk==='vopsire'||wtk==='revopsire',disabled=isPaint&&!paintable,checked=!!curOps[wtk],tick=checked?'☑ ':'☐ ';
+          if(disabled)h+='<div class="wt" style="opacity:.35;cursor:not-allowed">— '+T(wtk)+'</div>';
+          else h+='<div class="wt '+wtClass[wtk]+' '+(checked?'on':'')+'" onclick="sEOp(\''+vk+'\',\''+wtk+'\')">'+tick+T(wtk)+'</div>';
+        }
+        if(curOps.reparatie)h+='<div class="wt-ora"><input type="number" step="0.1" min="0" max="50" value="'+(e.oraNormata||'')+'" placeholder="h" onchange="sEO(\''+vk+'\',this.value)"/><span class="wt-ora-lbl">'+T('oraLbl')+'</span></div>';
+        h+='</div>';
+        h+='<div class="el-det"><div class="el-ph-row">';
+        if(ePhUrl)h+='<div class="el-ph done"><img src="'+escU(ePhUrl)+'"/><button class="el-ph-del" onclick="dElPh(\''+vk+'\')">×</button></div>';
+        h+='<div class="el-ph"><input type="file" accept="image/*" onchange="aEP(\''+vk+'\',event)"/>'+camMini+'</div>';
+        h+='</div><textarea class="el-nt" placeholder="'+T('noteP')+'" onchange="sEN(\''+vk+'\',this.value)">'+esc(e.note||'')+'</textarea></div>';
+        if(missingPh)h+='<div class="mismatch-warn">'+T('fotoRequired')+'</div>';
+      }
+      h+='</div>';
+    }
+    h+='</div><div style="height:24px"></div>';
+    if(S.ts)h+='<div class="toast '+(S.te?'err':'')+'">'+esc(S.ts)+'</div>';
+    if(S.lightbox)h+='<div class="lightbox" onclick="closeLb()"><img src="'+S.lightbox+'"/></div>';
+    document.getElementById('app').innerHTML=h;
+    return;
+  }
+
+  h+='<div class="doc" id="printDoc">';
+
+  // Header
+  h+='<div class="doc-hdr">';
+  h+='<div class="brand-left">';
+  h+='<div class="ra-logo"><span class="ra-r">Red</span><span class="ra-a">Assistance</span></div>';
+  h+='<div class="ra-firm"><b>'+esc(CONFIG.unitate.nume||'SC Szkaliczki Service SRL')+'</b> · Bosch Car Service<br>'+esc(CONFIG.unitate.adresa||'Str. Petki David 27/A, Sângeorgiu de Mureș')+'<br>CUI: '+esc(CONFIG.unitate.cif||'RO16250445')+'</div>';
+  h+='</div>';
+  h+='<div class="doc-rap">';
+  h+='<div class="doc-rap-t">RAPORT<br>EVALUARE</div>';
+  h+='<div class="doc-rap-m">'+T('data')+': <b>'+today()+'</b><br>Nr: <b>'+esc(job.number||job.id)+'</b>'+(job.nrDosar?'<br>Dosar: <b>'+esc(job.nrDosar)+'</b>':'')+'</div>';
+  h+='</div>';
+  h+='</div>';
+
+  // Vehicle bar (minta-stilus: 4 cella + VIN wide)
+  h+='<div class="vehbar">';
+  h+='<div class="vb-item"><div class="vb-l">'+T('plate')+'</div><div class="vb-v mono"><input value="'+esc(job.plate||'')+'" onchange="upJob(\'plate\',this.value)"/></div></div>';
+  h+='<div class="vb-item"><div class="vb-l">'+T('brand')+'</div><div class="vb-v"><input value="'+esc((job.brand||job.auto||'')+(job.model?' '+job.model:''))+'" onchange="upJob(\'brand\',this.value)"/></div></div>';
+  h+='<div class="vb-item"><div class="vb-l">'+T('year')+'</div><div class="vb-v mono"><input value="'+esc(job.year||'')+'" onchange="upJob(\'year\',this.value)"/></div></div>';
+  h+='<div class="vb-item"><div class="vb-l">'+T('km')+'</div><div class="vb-v mono"><input value="'+esc(job.km||'')+'" onchange="upJob(\'km\',this.value)"/></div></div>';
+  h+='<div class="vb-item vb-wide"><div class="vb-l">'+T('vin')+'</div><div class="vb-v mono"><input value="'+esc(job.vin||'')+'" onchange="upJob(\'vin\',this.value)"/></div></div>';
+  h+='</div>';
+
+  // Parties
+  h+='<div class="parties">';
+  h+='<div class="party"><div class="party-t">'+T('unitate')+'</div>';
+  h+='<div class="party-line p-name"><input value="'+esc(CONFIG.unitate.nume)+'" onchange="upCfg(\'unitate.nume\',this.value)"/></div>';
+  h+='<div class="party-line"><b>'+T('cif')+':</b><input value="'+esc(CONFIG.unitate.cif)+'" onchange="upCfg(\'unitate.cif\',this.value)"/></div>';
+  h+='<div class="party-line"><b>Nr.ord:</b><input value="'+esc(CONFIG.unitate.nrord)+'" onchange="upCfg(\'unitate.nrord\',this.value)"/></div>';
+  h+='<div class="party-line"><b>'+T('adresa')+':</b><input value="'+esc(CONFIG.unitate.adresa)+'" onchange="upCfg(\'unitate.adresa\',this.value)"/></div>';
+  h+='<div class="party-line"><b>'+T('tel')+':</b><input value="'+esc(CONFIG.unitate.tel)+'" onchange="upCfg(\'unitate.tel\',this.value)"/></div>';
+  h+='<div class="party-line"><b>RAR:</b><input value="'+esc(CONFIG.unitate.rar)+'" onchange="upCfg(\'unitate.rar\',this.value)"/></div>';
+  h+='</div>';
+  h+='<div class="party"><div class="party-t">'+T('client')+'</div>';
+  h+='<div class="party-line p-name"><input value="'+esc(job.proprietar||job.client||'')+'" onchange="upJob(\'proprietar\',this.value)"/></div>';
+  h+='<div class="party-line"><b>'+T('cif')+':</b><input value="'+esc(job.clientCif||job.cnp||'')+'" onchange="upJob(\'clientCif\',this.value)"/></div>';
+  h+='<div class="party-line"><b>'+T('adresa')+':</b><input value="'+esc(job.adresa||'')+'" onchange="upJob(\'adresa\',this.value)"/></div>';
+  h+='<div class="party-line"><b>'+T('tel')+':</b><input value="'+esc(job.phone||'')+'" onchange="upJob(\'phone\',this.value)"/></div>';
+  if(job.asigurator||job.damageType==='asig')h+='<div class="party-line"><b>Asig.:</b><input value="'+esc(job.asigurator||'')+'" onchange="upJob(\'asigurator\',this.value)"/></div>';
+  h+='</div>';
+  h+='</div>';
+
+  // Tarif panel
+  h+='<div class="tarif-panel no-print">';
+  h+='<div class="tp-hdr" onclick="toggleTarif()">💰 '+T('tarife')+' <span style="color:var(--t3);font-weight:600">▸ '+(S.showTarif?'inchide':'editeaza')+'</span></div>';
+  h+='<div class="tp-body '+(S.showTarif?'open':'')+'">';
+  h+='<div class="tp-f"><div class="tp-l">'+T('tarifTin')+' RON/h</div><input class="tp-v" type="number" value="'+CONFIG.tarif.tinichigerie+'" onchange="upTarif(\'tinichigerie\',this.value)"/></div>';
+  h+='<div class="tp-f"><div class="tp-l">'+T('tarifVop')+' RON/h</div><input class="tp-v" type="number" value="'+CONFIG.tarif.vopsitorie+'" onchange="upTarif(\'vopsitorie\',this.value)"/></div>';
+  h+='<div class="tp-f"><div class="tp-l">'+T('tarifMec')+' RON/h</div><input class="tp-v" type="number" value="'+CONFIG.tarif.mecanic+'" onchange="upTarif(\'mecanic\',this.value)"/></div>';
+  h+='<div class="tp-f"><div class="tp-l">'+T('tarifTva')+'</div><input class="tp-v" type="number" value="'+CONFIG.tarif.tva+'" onchange="upTarif(\'tva\',this.value)"/></div>';
+  h+='</div></div>';
+
+  // Work table
+  h+='<div class="wt-wrap">';
+  h+='<div class="wt-hdr">';
+  h+='<div class="wt-title '+(S.tab==='comanda'?'c':'u')+'">'+(S.tab==='comanda'?T('comanda'):S.tab==='suplim'?T('suplim'):T('upsell'))+'</div>';
+  h+='<div class="wt-meta">'+(S.tab==='comanda'?T('comandaSub'):S.tab==='suplim'?T('suplimSub'):T('upsellSub'))+'</div>';
+  h+='</div>';
+
+  if(curList.length===0){
+    h+='<div class="empty-row">'+(S.tab==='comanda'?T('noRowsC'):S.tab==='suplim'?T('noRowsS'):T('noRowsU'))+'</div>';
+  }else{
+    h+='<table class="wtable"><thead><tr>';
+    h+='<th class="wt-nr">'+T('nrCol')+'</th>';
+    h+='<th>'+T('elemCol')+'</th>';
+    h+='<th class="wt-op">'+T('opCol')+'</th>';
+    h+='<th class="wt-nm num">'+T('normaCol')+'</th>';
+    h+='<th class="wt-tf num">'+T('tarifCol')+'</th>';
+    h+='<th class="wt-tt num">'+T('totalCol')+'</th>';
+    h+='<th class="wt-del no-print"></th>';
+    h+='</tr></thead><tbody>';
+    curList.forEach(function(row,idx){
+      var op=OPS.find(function(x){return x.id===row.op});
+      var tarif=op?CONFIG.tarif[op.tarif]:0;
+      var tot=calcRowTotal(row);
+      h+='<tr>';
+      h+='<td class="wt-nr">'+(idx+1)+'</td>';
+      if(row.elKey){
+        h+='<td><input value="'+esc(T(row.elKey))+'" readonly style="cursor:default;color:var(--t2);font-weight:700"/></td>';
+      }else{
+        h+='<td><input value="'+esc(row.name||'')+'" placeholder="Element..." onchange="upRow(\''+row.id+'\',\'name\',this.value)"/></td>';
+      }
+      h+='<td class="wt-op"><select onchange="upRowOp(\''+row.id+'\',this.value)">';
+      h+='<option value="">'+T('ops')+'</option>';
+      OPS.forEach(function(o){h+='<option value="'+o.id+'" '+(row.op===o.id?'selected':'')+'>'+TOP(o.id)+'</option>'});
+      h+='</select></td>';
+      h+='<td class="wt-nm num"><input class="num" type="number" step="0.05" value="'+(row.hours||'')+'" placeholder="0" onchange="upRowHrs(\''+row.id+'\',this.value)"/></td>';
+      // Tarifa oszlop: dropdown a 3 tarifkategoriabol (tinichigerie/vopsitorie/mecanic)
+      var curTarifKey=row.tarifKey||(op?op.tarif:null);
+      var curTarifVal=curTarifKey?CONFIG.tarif[curTarifKey]:0;
+      h+='<td class="wt-tf num"><select onchange="upRowTarif(\''+row.id+'\',this.value)" style="font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700">';
+      h+='<option value="">—</option>';
+      h+='<option value="tinichigerie" '+(curTarifKey==='tinichigerie'?'selected':'')+'>T '+CONFIG.tarif.tinichigerie+'</option>';
+      h+='<option value="vopsitorie" '+(curTarifKey==='vopsitorie'?'selected':'')+'>V '+CONFIG.tarif.vopsitorie+'</option>';
+      h+='<option value="mecanic" '+(curTarifKey==='mecanic'?'selected':'')+'>M '+CONFIG.tarif.mecanic+'</option>';
+      h+='</select></td>';
+      h+='<td class="wt-tt num">'+(tot?fmt(tot):'—')+'</td>';
+      h+='<td class="wt-del no-print"><button onclick="delRow(\''+row.id+'\')">×</button></td>';
+      h+='</tr>';
+      if(row.note){
+        h+='<tr><td></td><td colspan="5" style="font-size:10px;color:var(--t3);font-style:italic;padding:2px 6px 6px">↳ '+esc(row.note)+'</td><td></td></tr>';
+      }
+    });
+    h+='</tbody></table>';
+  }
+
+  h+='<div class="add-row no-print" onclick="addRow()">'+(S.tab==='comanda'?T('addRowC'):S.tab==='suplim'?T('addRowS'):T('addRowU'))+'</div>';
+
+  // PIESE — csak Lucrare tab
+  if(S.tab==='comanda'){
+    if(job.audatex){
+      h+='<div class="piese-ax no-print">📦 '+T('pieseAx')+' · '+(job.audatex.total_piese_ron!=null?fmt(job.audatex.total_piese_ron)+' '+T('ron'):'—')+'</div>';
+    }else{
+      var pl=(job.evalData&&job.evalData.piese)?job.evalData.piese:[];
+      h+='<div class="piese-sec"><div class="wt-hdr"><div class="wt-title c">'+T('piese')+'</div><div class="wt-meta">'+T('pieseSub')+'</div></div>';
+      if(!pl.length){
+        h+='<div class="empty-row">'+T('noPiese')+'</div>';
+      }else{
+        h+='<table class="ptable"><thead><tr><th>'+T('pDenumire')+'</th><th class="pt-c">'+T('pCant')+'</th><th class="pt-c">'+T('pPret')+'</th><th class="pt-c">'+T('totalCol')+'</th><th class="wt-del no-print"></th></tr></thead><tbody>';
+        for(var pi=0;pi<pl.length;pi++){var pp=pl[pi];var pt=(parseFloat(pp.cant)||0)*(parseFloat(pp.pretUnit)||0);
+          h+='<tr><td><input class="pt-in" value="'+esc(pp.denumire||'')+'" placeholder="'+T('pDenumire')+'" onchange="upPiesa(\''+pp.id+'\',\'denumire\',this.value)"/></td>';
+          h+='<td class="pt-c"><input class="pt-in pt-num" type="number" step="1" value="'+esc(pp.cant)+'" onchange="upPiesa(\''+pp.id+'\',\'cant\',this.value)"/></td>';
+          h+='<td class="pt-c"><input class="pt-in pt-num" type="number" step="0.01" value="'+esc(pp.pretUnit)+'" onchange="upPiesa(\''+pp.id+'\',\'pretUnit\',this.value)"/></td>';
+          h+='<td class="pt-c pt-tot mono">'+fmt(pt)+'</td>';
+          h+='<td class="wt-del no-print"><button onclick="delPiesa(\''+pp.id+'\')">×</button></td></tr>';
+        }
+        h+='</tbody></table>';
+      }
+      h+='<div class="add-row no-print" onclick="addPiesa()">'+T('addPiesa')+'</div></div>';
+    }
+  }
+
+  // Audatex import — csak Lucrare tab
+  if(S.tab==='comanda'){
+    var ax=job.audatex;
+    if(S.audatexRun){
+      h+='<div class="ax-load no-print">⏳ '+T('axLoad')+'</div>';
+    }else if(ax){
+      h+='<div class="ax-panel no-print">';
+      h+='<div class="ax-h"><span>📎 '+T('axTitle')+(ax.nr_dosar?' · '+esc(ax.nr_dosar):'')+'</span><button class="ax-del no-print" onclick="delAudatex()">×</button></div>';
+      h+='<div class="ax-grid">';
+      h+='<div class="ax-c ax-hi"><div class="ax-l">'+T('axOreT')+'</div><div class="ax-v">'+(ax.ore_tinichigerie!=null?ax.ore_tinichigerie+' h':'—')+'</div></div>';
+      h+='<div class="ax-c ax-hi"><div class="ax-l">'+T('axOreV')+'</div><div class="ax-v">'+(ax.ore_vopsitorie!=null?ax.ore_vopsitorie+' h':'—')+'</div></div>';
+      h+='</div></div>';
+    }else{
+      h+='<label class="ax-btn no-print">📎 '+T('axImport')+'<input type="file" accept="application/pdf,image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0" onchange="importAudatex(event)"/></label>';
+    }
+  }
+  h+='</div>';
+
+  // Termen de predare
+  h+='<div class="termen no-print"><span class="termen-l">'+T('termen')+'</span><input class="termen-i" type="date" value="'+esc(job.termenPredare||'')+'" onchange="upTermen(this.value)"/></div>';
+
+  h+='<div class="totals">';
+  h+='<div class="tot-row tot-sub"><div class="tot-label">'+T('totalManopera')+'</div><div></div><div class="tot-val">'+fmt(totalMan)+' '+T('ron')+'</div></div>';
+  if(axMode){
+    h+='<div class="tot-row tot-sub"><div class="tot-label">'+T('axVops')+'</div><div></div><div class="tot-val">'+fmt(totalVop)+' '+T('ron')+'</div></div>';
+    h+='<div class="tot-row tot-sub"><div class="tot-label">'+T('axPiese')+'</div><div></div><div class="tot-val">'+fmt(totalMat)+' '+T('ron')+'</div></div>';
+  }else{
+    h+='<div class="tot-row tot-sub"><div class="tot-label">'+T('totalMateriale')+'</div><div></div><div class="tot-val">'+fmt(totalMat)+' '+T('ron')+'</div></div>';
+  }
+  h+='<div class="tot-row"><div class="tot-label">'+T('subtotal')+'</div><div></div><div class="tot-val">'+fmt(totalFaraT)+' '+T('ron')+'</div></div>';
+  h+='<div class="tot-row"><div class="tot-label">'+T('tva')+' '+tvaPct+'%</div><div></div><div class="tot-val">'+fmt(tvaVal)+' '+T('ron')+'</div></div>';
+  h+='<div class="tot-row tot-main"><div class="tot-label">'+T('totalGeneral')+(axMode?' · Audatex':'')+'</div><div></div><div class="tot-val">'+fmt(totalCuT)+' '+T('ron')+'</div></div>';
+  h+='</div>';
+
+  h+='<div class="actions no-print">';
+  h+='<button class="btn btn-print" onclick="printDoc()">🖨️ '+T('btnPrint')+'</button>';
+  h+='<button class="btn btn-wa" onclick="sendWA()">💬 '+T('btnWA')+'</button>';
+  h+='<button class="btn btn-mail" onclick="sendMail()">✉ '+T('btnMail')+'</button>';
+  h+='</div>';
+
+  h+='</div>';
+
+  h+='<div class="advance-bar no-print"><button class="btn-adv" onclick="advance()">'+T('btnAdv')+' →</button></div>';
+
+  if(S.ts)h+='<div class="toast '+(S.te?'err':'')+'">'+esc(S.ts)+'</div>';
+  if(S.lightbox)h+='<div class="lightbox" onclick="closeLb()"><img src="'+S.lightbox+'"/></div>';
+
+  document.getElementById('app').innerHTML=h;
+}
+
+window.setTab=function(t){S.tab=t;render()};
+
+// ====== 23-ELEM CHECKLIST INTERAKCIÓK (recepcióval azonos logika) ======
+window.mE=async function(k,stV2){
+  if(!JOB.elements)JOB.elements={};
+  if(!JOB.elements[k])JOB.elements[k]={};
+  JOB.elements[k].statusV2=stV2;
+  JOB.elements[k].status=stV2==='avariata'?'damaged':stV2==='recomandata'?'suggested':'ok';
+  if(stV2==='ok'){
+    JOB.elements[k].work=null;JOB.elements[k].workV2=null;
+    JOB.elements[k].oraNormata=null;JOB.elements[k].note='';JOB.elements[k].ops={};
+    if(JOB.photoKeys&&JOB.photoKeys['elem_'+k])await deletePhoto('elem_'+k);
+  }
+  await saveJ();render();
+};
+window.sEOp=async function(k,op){
+  if(!JOB.elements||!JOB.elements[k])return;
+  var e=JOB.elements[k];if(!e.ops)e.ops={};
+  e.ops[op]=!e.ops[op];
+  if(op==='inlocuire'&&e.ops.inlocuire)e.ops.reparatie=false;
+  if(op==='reparatie'&&e.ops.reparatie)e.ops.inlocuire=false;
+  if(op==='vopsire'&&e.ops.vopsire)e.ops.revopsire=false;
+  if(op==='revopsire'&&e.ops.revopsire)e.ops.vopsire=false;
+  if(e.ops.inlocuire)e.workV2='inlocuire';
+  else if(e.ops.reparatie)e.workV2='reparatie';
+  else if(e.ops.vopsire)e.workV2='vopsire';
+  else if(e.ops.revopsire)e.workV2='revopsire';
+  else e.workV2=null;
+  e.work=WORK_V2_TO_V1[e.workV2]||null;
+  await saveJ();render();
+};
+window.sEO=async function(k,v){
+  if(!JOB.elements||!JOB.elements[k])return;
+  var n=parseFloat((v||'').toString().replace(',','.'));
+  JOB.elements[k].oraNormata=isNaN(n)?null:n;await saveJ();
+};
+window.sEN=async function(k,n){if(!JOB.elements||!JOB.elements[k])return;JOB.elements[k].note=n;await saveJ()};
+function _wln(){try{return (typeof gL==='function')?gL():'ro';}catch(e){return 'ro';}}
+window.setEvalSt=async function(st){
+  if(!JOB)return;if(!JOB.evalData)JOB.evalData={};
+  // "Acceptat" csak teljes, jóváhagyható értékelésnél — a központi modulból
+  if(st==='accepted' && window.RPWWorkflow){
+    var acc=RPWWorkflow.canAcceptEval(JOB);
+    if(!acc.ok){ toast(acc.missing.map(function(r){return RPWWorkflow.t(r,_wln());}).join('; '),1); return; }
+  }
+  JOB.evalData.status=st;await saveJ();render();toast(st==='sent'?'Trimis!':st==='accepted'?'Acceptat ✓':'Ciornă')};
+// Fázis 2 lezárása — a KÖZPONTI modulon + MEGERŐSÍTETT mentésen át (nincs megkerülés)
+async function _finishEval(nav){
+  if(!JOB)return;
+  RPWWorkflow.migrateJob(JOB);
+  var res=await RPWWorkflow.commitCriticalTransition(JOB, function(){
+    var acc=RPWWorkflow.canAcceptEval(JOB);
+    if(!acc.ok) return {ok:false, errors:acc.missing};
+    if(!JOB.evalData)JOB.evalData={};
+    JOB.evalData.status='accepted'; JOB.evalData.prodReleasedAt=new Date().toISOString();
+    return RPWWorkflow.completePhase(JOB,2,{actor:'evaluare'});
+  }, {save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  if(!res.ok){
+    if(res.notSynced){ toast(RPWWorkflow.t('wf_saved_not_synced',_wln()),1); render(); return; }
+    var errs=(res.result&&(res.result.errors||res.result.missing))||[];
+    toast(errs.map(function(r){return RPWWorkflow.t(r,_wln());}).join('; ')||T('incomplete'),1); render(); return;
+  }
+  render(); toast('▶ Trimis în producție ✓');
+  if(nav) setTimeout(function(){location.assign('rpw-dosar.html?job='+JOB.id)},1000);
+}
+window.sendToProd=function(){ return _finishEval(false); };
+window.aEP=function(k,e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  resizeFile(f).then(async function(dataUrl){
+    try{await uploadPhoto('elem_'+k,dataUrl)}catch(err){toast('Upload: '+err.message,1);return}
+    toast(T(k)+' '+T('saved'));render();
+  });
+};
+window.dElPh=async function(k){if(!confirm('\u26A0\uFE0F Fotografia este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;await deletePhoto('elem_'+k);render()};
+
+// ====== ADDITÍV SZINKRON: 23-elem → deviz (comanda/upsell) ======
+function rowExists(list,refKey,op){return list.some(function(r){return (r.photoRef===refKey||r.elKey===refKey)&&r.op===op})}
+function syncFromElements(){
+  var el=JOB.elements||{},alt=JOB.alteParti||[];
+  if(!JOB.evalData)JOB.evalData={};
+  if(!JOB.evalData.comanda)JOB.evalData.comanda=[];
+  if(!JOB.evalData.upsell)JOB.evalData.upsell=[];
+  var added=0,cnt=0;
+  function proc(key,e,isAlt){
+    var s=e.statusV2||(e.status==='damaged'?'avariata':e.status==='suggested'?'recomandata':null);
+    if(s!=='avariata'&&s!=='recomandata')return;
+    var target=s==='avariata'?'comanda':'upsell';
+    var list=JOB.evalData[target],prefix=target==='comanda'?'c_':'u_';
+    var ref=isAlt?('alt_'+key):('elem_'+key);
+    var ops=e.ops||{},opList=['inlocuire','demontat','dezasamblat','reparatie','vopsire','revopsire','mecanica'],anyOp=false;
+    for(var oi=0;oi<opList.length;oi++){
+      var op=opList[oi];
+      if(ops[op]){anyOp=true;
+        if(!rowExists(list,ref,op)){
+          list.push({id:prefix+Date.now().toString(36)+'_'+(cnt++),elKey:isAlt?null:key,photoRef:ref,name:isAlt?(e.name||''):'',op:op,hours:(op==='reparatie'&&e.oraNormata)?e.oraNormata:getNorma(key,op),note:e.note||'',photo:null});added++;
+        }
+      }
+    }
+    if(!anyOp&&!rowExists(list,ref,'')){
+      list.push({id:prefix+Date.now().toString(36)+'_'+(cnt++),elKey:isAlt?null:key,photoRef:ref,name:isAlt?(e.name||''):'',op:'',hours:0,note:e.note||'',photo:null});added++;
+    }
+  }
+  for(var k in el)proc(k,el[k],false);
+  for(var ai=0;ai<alt.length;ai++)proc(alt[ai].id,alt[ai],true);
+  return added;
+}
+window.syncEval=async function(){
+  var n=syncFromElements();
+  await saveJ();
+  toast(n>0?(T('syncDone')+' (+'+n+')'):T('syncNone'));
+  render();
+};
+window.toggleTarif=function(){S.showTarif=S.showTarif?0:1;render()};
+window.lb=function(src){S.lightbox=src;render()};
+window.closeLb=function(){S.lightbox=null;render()};
+
+window.upJob=async function(field,val){if(!JOB)return;JOB[field]=val;if(field==='brand')JOB.auto=val;await saveJ()};
+window.upYrKm=async function(val){
+  if(!JOB)return;
+  var parts=val.split('/');
+  if(parts[0])JOB.year=parts[0].trim().replace(/—/g,'');
+  if(parts[1])JOB.km=parts[1].trim().replace(/—/g,'');
+  await saveJ();
+};
+window.upCfg=function(path,val){var parts=path.split('.');if(parts.length===2){CONFIG[parts[0]][parts[1]]=val}else{CONFIG[path]=val}saveConfig()};
+window.upTarif=function(field,val){CONFIG.tarif[field]=parseFloat(val)||0;saveConfig();render()};
+
+window.upRow=async function(id,field,val){
+  var l=JOB.evalData[curKey()];
+  var r=l.find(function(x){return x.id===id});if(!r)return;
+  r[field]=val;await saveJ();
+};
+
+window.upRowOp=async function(id,op){
+  var l=JOB.evalData[curKey()];
+  var r=l.find(function(x){return x.id===id});if(!r)return;
+  r.op=op;
+  // Tarifa reset: az uj muvelet default tarifjara vissza (ne a regi override)
+  r.tarifKey=null;
+  if(!r.hours && r.elKey && op){
+    var n=getNorma(r.elKey,op);
+    if(n)r.hours=n;
+  }
+  await saveJ();render();
+};
+
+window.upRowTarif=async function(id,tarifKey){
+  var l=JOB.evalData[curKey()];
+  var r=l.find(function(x){return x.id===id});if(!r)return;
+  r.tarifKey=tarifKey||null;
+  await saveJ();render();
+};
+
+window.upRowHrs=async function(id,hrs){
+  var l=JOB.evalData[curKey()];
+  var r=l.find(function(x){return x.id===id});if(!r)return;
+  r.hours=parseFloat(hrs)||0;
+  if(r.elKey && r.op && r.hours>0){
+    saveNorma(r.elKey,r.op,r.hours);
+  }
+  await saveJ();render();
+};
+
+window.addRow=async function(){
+  var l=JOB.evalData[curKey()];
+  var prefix=S.tab==='comanda'?'c_':'u_';
+  l.push({id:prefix+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6),elKey:null,name:'',op:'',hours:0,note:'',photo:null});
+  await saveJ();render();
+};
+
+window.delRow=async function(id){
+  if(!confirm(T('delConf')))return;
+  var tab=S.tab;
+  JOB.evalData[tab]=JOB.evalData[tab].filter(function(x){return x.id!==id});
+  await saveJ();render();
+};
+
+window.aRP=function(rowId,e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  var row=null,tabs=['comanda','upsell'];
+  for(var ti=0;ti<tabs.length;ti++){var l=(JOB.evalData&&JOB.evalData[tabs[ti]])||[];for(var ri=0;ri<l.length;ri++){if(l[ri].id===rowId){row=l[ri];break}}if(row)break}
+  if(!row)return;
+  var key=row.photoRef||('evrow_'+rowId);
+  resizeFile(f).then(async function(dataUrl){
+    try{await uploadPhoto(key,dataUrl)}catch(err){toast('Upload: '+err.message,1);return}
+    row.photoRef=key;await saveJ();toast(T('saved'));render();
+  });
+};
+
+window.printDoc=function(){window.print()};
+
+window.sendWA=function(){
+  var phone=(JOB.phone||'').replace(/[^0-9+]/g,'');
+  if(!phone||phone.length<6){phone=prompt('Telefon client (ex: 0740123456):','');if(!phone)return}
+  phone=phone.replace(/[^0-9]/g,'');
+  if(phone.length && phone[0]==='0')phone='40'+phone.slice(1);
+  var msg=buildOfferText();
+  var a=document.createElement('a');a.href='https://wa.me/'+phone+'?text='+encodeURIComponent(msg);a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();setTimeout(function(){document.body.removeChild(a)},100);
+};
+
+window.sendMail=function(){
+  var to=JOB.email||prompt('Email destinatar:','');if(!to)return;
+  var subj=(S.tab==='comanda'?'Comanda de lucru':'Oferta aftersales')+' — '+(JOB.plate||'')+' — '+(JOB.brand||JOB.auto||'');
+  var body=buildOfferText().replace(/\*/g,'').replace(/_/g,'');
+  var a=document.createElement('a');a.href='mailto:'+to+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);document.body.appendChild(a);a.click();setTimeout(function(){document.body.removeChild(a)},100);
+};
+
+function buildOfferText(){
+  var job=JOB,list=JOB.evalData[curKey()];
+  var m='*'+(S.tab==='comanda'?'COMANDA DE LUCRU':'OFERTA AFTERSALES')+'*\n';
+  m+='*'+CONFIG.unitate.nume+'*\n';
+  m+='CIF: '+CONFIG.unitate.cif+'\n';
+  m+='Tel: '+CONFIG.unitate.tel+'\n\n';
+  m+='Data: '+today()+'\n';
+  m+='Dosar: '+(job.number||job.id)+'\n';
+  if(job.nrDosar)m+='Dosar asig.: '+job.nrDosar+'\n';
+  m+='\n🚗 '+(job.brand||job.auto||'')+' · '+(job.plate||'')+'\n';
+  m+='VIN: '+(job.vin||'—')+'\n';
+  m+='An: '+(job.year||'—')+'\n';
+  m+='Client: '+(job.proprietar||job.client||'—')+'\n';
+  if(job.asigurator)m+='Asig: '+job.asigurator+'\n';
+  m+='\n';
+  if(list.length===0){m+='(fara lucrari)\n'}
+  else{
+    list.forEach(function(r,i){
+      var elN=r.elKey?T(r.elKey):(r.name||'—');
+      var opN=r.op?TOP(r.op):'—';
+      var tot=calcRowTotal(r);
+      m+=(i+1)+'. '+elN+' — '+opN;
+      if(r.hours)m+=' · '+r.hours+'h';
+      if(tot)m+=' · '+fmt(tot)+' RON';
+      m+='\n';
+      if(r.note)m+='   ↳ '+r.note+'\n';
+    });
+  }
+  var tmn=calcListTotal(list),tva=tmn*(parseFloat(CONFIG.tarif.tva)||0)/100,tcuT=tmn+tva;
+  m+='\n────────────────\n';
+  m+='Manopera: '+fmt(tmn)+' RON\n';
+  m+='TVA '+CONFIG.tarif.tva+'%: '+fmt(tva)+' RON\n';
+  m+='*TOTAL: '+fmt(tcuT)+' RON*\n\n';
+  m+='📍 '+CONFIG.unitate.adresa;
+  return m;
+}
+
+// Legacy „Tovább" gomb → már a központi modulon át (nincs közvetlen fázismódosítás)
+window.advance=function(){ return _finishEval(true); };
+
+loadJob();
+</script>
+<script>/* RPW központi workflow-őr — fázisbelépés + állapotsáv */try{RPWWorkflow.installPageGuard({phase:2});}catch(e){}</script>
+</body>
+</html>
