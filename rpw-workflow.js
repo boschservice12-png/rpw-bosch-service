@@ -61,6 +61,8 @@
     wf_elements_incomplete: {ro:'nu toate elementele de caroserie au status', hu:'nem minden karosszériaelem státusza kitöltött', en:'not all body elements have status'},
     wf_proof_photo_missing: {ro:'element avariat/recomandat fără foto dovadă', hu:'sérült/ajánlott elemhez hiányzik a bizonyító fotó', en:'damaged/suggested element without proof photo'},
     wf_kar_doc_missing:     {ro:'lipsește documentul de daună / numărul dosarului', hu:'hiányzik a kárdokumentum / kárszám', en:'damage document / claim number missing'},
+    wf_constatare_missing:  {ro:'lipsește constatarea / procesul verbal', hu:'hiányzik a constatare / rendőrségi jegyzőkönyv', en:'assessment / police report missing'},
+    wf_nrdosar_missing:     {ro:'lipsește nr. dosarului (dosarul e deja deschis la asigurător)', hu:'hiányzik a kárszám (a dosszié már nyitva a biztosítónál)', en:'claim number missing (file already open at insurer)'},
     wf_worktype_missing:    {ro:'tipul lucrării nu este setat', hu:'a munkatípus nincs megadva', en:'work type not set'},
     wf_damage_report_missing:{ro:'raportul de daună nu este creat', hu:'a damage report nincs létrehozva', en:'damage report not created'},
     wf_override_reason_short:{ro:'motivul override trebuie să aibă min. 10 caractere', hu:'a felülbírálás indoklása legalább 10 karakter legyen', en:'override reason must be at least 10 characters'},
@@ -275,9 +277,18 @@
     var hasTalon = !!pk.talon || !!pk.photo_talon || realPhotoCount(arr(job.photos).filter(function(p){return p&&p.type==='talon';}))>0;
     if(!hasTalon) m.push('wf_talon_missing');
     if(job.damageType==='asig'){
-      var nrDosar = nonEmpty(job.nrDosar)||nonEmpty(job.reconst&&job.reconst.nrDosar);
       var karDoc = !!(pk.doc_constatare) || arr(job.docs).some(function(d){return d&&/constatare|proces/i.test(d.type||'');}) || (job.dosarActe&&Object.keys(job.dosarActe).length);
-      if(!nrDosar || !karDoc) m.push('wf_kar_doc_missing');
+      // A karszam CSAK akkor kovetelheto, ha a dosszie mar nyitva van a
+      // biztositonal. Ha MI nyitjuk (dosarStatus='deschid'), a szam meg nem
+      // letezik — epp azert gyujtjuk az iratokat. Regi, dosarStatus nelkuli
+      // dossziekon a korabbi (szigorubb) szabaly marad ervenyben.
+      if(job.dosarStatus==='deschid'){
+        if(!karDoc) m.push('wf_constatare_missing');
+      } else {
+        var nrDosar = nonEmpty(job.nrDosar)||nonEmpty(job.reconst&&job.reconst.nrDosar);
+        if(!karDoc) m.push('wf_constatare_missing');
+        if(!nrDosar) m.push(job.dosarStatus==='deschis'?'wf_nrdosar_missing':'wf_kar_doc_missing');
+      }
     }
     if(overviewPhotoCount(job)<6) m.push('wf_overview_missing');
     var ec=elementsComplete(job);
