@@ -355,6 +355,10 @@ var i={
   reparatie:{ro:'Reparatie',en:'Repair',hu:'Javitas'},
   vopsire:{ro:'Vopsire',en:'Paint',hu:'Festes'},
   revopsire:{ro:'Revopsire',en:'Re-paint',hu:'Ujrafestes'},
+  demontat:{ro:'Demontat/Remontat',en:'Remove/Refit',hu:'Le/felszereles'},
+  dezasamblat:{ro:'Dezasamblat/Asamblat',en:'Disassemble',hu:'Szetsz./Ossz.'},
+  altele:{ro:'Altele',en:'Other',hu:'Egyeb'},
+  altelePh:{ro:'Ce lucrare? (ex: polish, centrat, finisaj)',en:'What work?',hu:'Milyen munka? (pl. polish, centrat, finisaj)'},
   oraLbl:{ro:'h',en:'h',hu:'h'},
   noteP:{ro:'Obs...',en:'Notes...',hu:'Megj...'},
   fotoRequired:{ro:'⚠ Foto obligatorie',en:'⚠ Photo required',hu:'⚠ Foto kotelezo'},
@@ -984,8 +988,8 @@ function render(){
         var paintable=PAINTABLE[k]!==false;
         h+='<div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:8px;margin-bottom:4px">'+T('opsLabel')+'</div>';
         h+='<div class="el-wt">';
-        var workTypes=['inlocuire','reparatie','vopsire','revopsire'];
-        var wtClass={inlocuire:'wt-inl',reparatie:'wt-rep',vopsire:'wt-vop',revopsire:'wt-rvp'};
+        var workTypes=['inlocuire','demontat','dezasamblat','reparatie','vopsire','revopsire','altele'];
+        var wtClass={inlocuire:'wt-inl',demontat:'wt-dem',dezasamblat:'wt-dez',reparatie:'wt-rep',vopsire:'wt-vop',revopsire:'wt-rvp',altele:'wt-alt'};
         for(var wi=0;wi<workTypes.length;wi++){
           var wtk=workTypes[wi];
           var isPaint=wtk==='vopsire'||wtk==='revopsire';
@@ -1001,6 +1005,9 @@ function render(){
         // Ha reparatie be van ikszelve, jelenjen meg a ora input
         if(curOps.reparatie){
           h+='<div class="wt-ora"><input type="number" step="0.1" min="0" max="50" value="'+(e.oraNormata||'')+'" placeholder="h" onchange="sEO(\''+k+'\',this.value)"/><span class="wt-ora-lbl">'+T('oraLbl')+'</span></div>';
+        if(curOps.altele){
+          h+='<div class="wt-ora" style="flex-basis:100%"><input type="text" value="'+escA(e.alteleText||'')+'" placeholder="'+T('altelePh')+'" onchange="sEAlt(\''+k+'\',this.value)" style="width:100%"/></div>';
+        }
         }
         h+='</div>';
 
@@ -1128,8 +1135,8 @@ function renderAltItem(p,pk){
     else if(p.work==='uni')curWork='vopsire';
   }
   h+='<div class="el-wt">';
-  var workTypes=['inlocuire','reparatie','vopsire','revopsire'];
-  var wtClass={inlocuire:'wt-inl',reparatie:'wt-rep',vopsire:'wt-vop',revopsire:'wt-rvp'};
+  var workTypes=['inlocuire','demontat','dezasamblat','reparatie','vopsire','revopsire','altele'];
+  var wtClass={inlocuire:'wt-inl',demontat:'wt-dem',dezasamblat:'wt-dez',reparatie:'wt-rep',vopsire:'wt-vop',revopsire:'wt-rvp',altele:'wt-alt'};
   for(var wi=0;wi<workTypes.length;wi++){
     var wtk=workTypes[wi];
     h+='<div class="wt '+wtClass[wtk]+' '+(curWork===wtk?'on':'')+'" onclick="updAlt(\''+p.id+'\',\'work\',\''+wtk+'\')">'+T(wtk)+'</div>';
@@ -1171,8 +1178,8 @@ function renderRecCarosItem(k,e,pk){
     else if(e.work==='uni')curWork='vopsire';
   }
   h+='<div class="el-wt">';
-  var workTypes=['inlocuire','reparatie','vopsire','revopsire'];
-  var wtClass={inlocuire:'wt-inl',reparatie:'wt-rep',vopsire:'wt-vop',revopsire:'wt-rvp'};
+  var workTypes=['inlocuire','demontat','dezasamblat','reparatie','vopsire','revopsire','altele'];
+  var wtClass={inlocuire:'wt-inl',demontat:'wt-dem',dezasamblat:'wt-dez',reparatie:'wt-rep',vopsire:'wt-vop',revopsire:'wt-rvp',altele:'wt-alt'};
   for(var wi=0;wi<workTypes.length;wi++){
     var wtk=workTypes[wi];
     h+='<div class="wt '+wtClass[wtk]+' '+(curWork===wtk?'on':'')+'" onclick="sEW(\''+k+'\',\''+wtk+'\')">'+T(wtk)+'</div>';
@@ -1387,6 +1394,7 @@ window.sEOp=async function(k,op){
   if(!e.ops.reparatie)e.oraNormata=null;
   await saveJ();render();
 };
+window.sEAlt=async function(k,v){if(!JOB.elements||!JOB.elements[k])return;JOB.elements[k].alteleText=(v||'').trim();await saveJ();};
 window.sEO=async function(k,v){
   if(!JOB.elements||!JOB.elements[k])return;
   var n=parseFloat((v||'').toString().replace(',','.'));

@@ -270,7 +270,7 @@ var CONFIG={
     tel:'0265318020',
     rar:'4401/24112006'
   },
-  tarif:{tinichigerie:180,vopsitorie:300,mecanic:180,tva:21}
+  tarif:{tinichigerie:180,vopsitorie:300,mecanic:180,altele:180,tva:21}
 };
 var S={tab:'comanda',showTarif:0,ts:null,te:0,lightbox:null,uploading:{},photoCache:{}};
 
@@ -285,6 +285,7 @@ var OPS=[
   {id:'reparatie',    ro:'Reparatie',            en:'Repair',          hu:'Javitas',         tarif:'tinichigerie'},
   {id:'vopsire',      ro:'Vopsire',              en:'Paint',           hu:'Fenyezes',        tarif:'vopsitorie'},
   {id:'revopsire',    ro:'Revopsire',            en:'Repaint',         hu:'Atfenyezes',      tarif:'vopsitorie'},
+  {id:'altele',       ro:'Altele',               en:'Other',           hu:'Egyeb',           tarif:'altele'},
   {id:'mecanica',     ro:'Mecanica',             en:'Mechanical',      hu:'Mechanikus',      tarif:'mecanic'}
 ];
 
@@ -379,7 +380,11 @@ var i={
   inlocuire:{ro:'Inlocuire',en:'Replace',hu:'Csere'},
   reparatie:{ro:'Reparatie',en:'Repair',hu:'Javitas'},
   vopsire:{ro:'Vopsire',en:'Paint',hu:'Fenyezes'},
-  revopsire:{ro:'Revopsire',en:'Repaint',hu:'Atfenyezes'}
+  demontat:{ro:'Demontat/Remontat',en:'Remove/Refit',hu:'Le/felszereles'},
+  dezasamblat:{ro:'Dezasamblat/Asamblat',en:'Disassemble',hu:'Szetsz./Ossz.'},
+  revopsire:{ro:'Revopsire',en:'Repaint',hu:'Atfenyezes'},
+  altele:{ro:'Altele',en:'Other',hu:'Egyeb'},
+  altelePh:{ro:'Ce lucrare? (ex: polish far, centrat, finisaj)',en:'What work? (e.g. polish, centering)',hu:'Milyen munka? (pl. polish, centrat, finisaj)'}
 };
 
 function gL(){return localStorage.getItem('rpw_lang')||'ro'}
@@ -696,13 +701,14 @@ function render(){
         if(!e.ops){curOps={};var oldW=e.workV2||e.work;if(oldW==='replace'||oldW==='inlocuire'||oldW==='new')curOps.inlocuire=true;if(oldW==='fix'||oldW==='reparatie')curOps.reparatie=true;if(oldW==='vopsire'||oldW==='uni')curOps.vopsire=true;if(oldW==='revopsire')curOps.revopsire=true}
         var paintable=PAINTABLE[vk]!==false;
         h+='<div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:8px;margin-bottom:4px">'+T('opsLabel')+'</div><div class="el-wt">';
-        var workTypes=['inlocuire','reparatie','vopsire','revopsire'],wtClass={inlocuire:'wt-inl',reparatie:'wt-rep',vopsire:'wt-vop',revopsire:'wt-rvp'};
+        var workTypes=['inlocuire','demontat','dezasamblat','reparatie','vopsire','revopsire','altele'],wtClass={inlocuire:'wt-inl',demontat:'wt-dem',dezasamblat:'wt-dez',reparatie:'wt-rep',vopsire:'wt-vop',revopsire:'wt-rvp',altele:'wt-alt'};
         for(var wi=0;wi<workTypes.length;wi++){
           var wtk=workTypes[wi],isPaint=wtk==='vopsire'||wtk==='revopsire',disabled=isPaint&&!paintable,checked=!!curOps[wtk],tick=checked?'☑ ':'☐ ';
           if(disabled)h+='<div class="wt" style="opacity:.35;cursor:not-allowed">— '+T(wtk)+'</div>';
           else h+='<div class="wt '+wtClass[wtk]+' '+(checked?'on':'')+'" onclick="sEOp(\''+vk+'\',\''+wtk+'\')">'+tick+T(wtk)+'</div>';
         }
         if(curOps.reparatie)h+='<div class="wt-ora"><input type="number" step="0.1" min="0" max="50" value="'+(e.oraNormata||'')+'" placeholder="h" onchange="sEO(\''+vk+'\',this.value)"/><span class="wt-ora-lbl">'+T('oraLbl')+'</span></div>';
+        if(curOps.altele)h+='<div class="wt-ora" style="flex-basis:100%"><input type="text" value="'+esc(e.alteleText||'')+'" placeholder="'+T('altelePh')+'" onchange="sEAlt(\''+vk+'\',this.value)" style="width:100%"/></div>';
         h+='</div>';
         h+='<div class="el-det"><div class="el-ph-row">';
         if(ePhUrl)h+='<div class="el-ph done"><img src="'+escU(ePhUrl)+'"/><button class="el-ph-del" onclick="dElPh(\''+vk+'\')">×</button></div>';
@@ -937,6 +943,7 @@ window.sEO=async function(k,v){
   var n=parseFloat((v||'').toString().replace(',','.'));
   JOB.elements[k].oraNormata=isNaN(n)?null:n;await saveJ();
 };
+window.sEAlt=async function(k,v){if(!JOB.elements||!JOB.elements[k])return;JOB.elements[k].alteleText=(v||'').trim();await saveJ();};
 window.sEN=async function(k,n){if(!JOB.elements||!JOB.elements[k])return;JOB.elements[k].note=n;await saveJ()};
 function _wln(){try{return (typeof gL==='function')?gL():'ro';}catch(e){return 'ro';}}
 window.setEvalSt=async function(st){
@@ -990,12 +997,12 @@ function syncFromElements(){
     var target=s==='avariata'?'comanda':'upsell';
     var list=JOB.evalData[target],prefix=target==='comanda'?'c_':'u_';
     var ref=isAlt?('alt_'+key):('elem_'+key);
-    var ops=e.ops||{},opList=['inlocuire','demontat','dezasamblat','reparatie','vopsire','revopsire','mecanica'],anyOp=false;
+    var ops=e.ops||{},opList=['inlocuire','demontat','dezasamblat','reparatie','vopsire','revopsire','altele','mecanica'],anyOp=false;
     for(var oi=0;oi<opList.length;oi++){
       var op=opList[oi];
       if(ops[op]){anyOp=true;
         if(!rowExists(list,ref,op)){
-          list.push({id:prefix+Date.now().toString(36)+'_'+(cnt++),elKey:isAlt?null:key,photoRef:ref,name:isAlt?(e.name||''):'',op:op,hours:(op==='reparatie'&&e.oraNormata)?e.oraNormata:getNorma(key,op),note:e.note||'',photo:null});added++;
+          list.push({id:prefix+Date.now().toString(36)+'_'+(cnt++),elKey:isAlt?null:key,photoRef:ref,name:isAlt?(e.name||''):(op==='altele'?(e.alteleText||''):''),op:op,hours:(op==='reparatie'&&e.oraNormata)?e.oraNormata:getNorma(key,op),note:e.note||'',photo:null});added++;
         }
       }
     }
