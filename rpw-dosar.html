@@ -416,10 +416,11 @@ window.exportDosar=async function(){
     }catch(e){errs++;index.push('!!  LIPSA (eroare): '+folder+'/'+base);}
   }
   for(var gi=0;gi<DA.length;gi++){var g=DA[gi];
+    var gfolder=('0'+(gi+1)).slice(-2)+'_'+sani(g.label);
     for(var ii=0;ii<g.items.length;ii++){var it=g.items[ii];var fs=slotFiles(it.key);
       for(var fi=0;fi<fs.length;fi++){
-        var base=sani(g.label)+'__'+sani(it.label)+(fs.length>1?('_'+(fi+1)):'');
-        await add('dosar',base,fs[fi]);
+        var base=sani(it.label)+(fs.length>1?('_'+(fi+1)):'');
+        await add(gfolder,base,fs[fi]);
       }
     }
   }

@@ -737,7 +737,7 @@ function renderPanou(){
       h+='<td><div class="cond-row" title="'+tt+'">'+renderCondIcon(cnd.programare)+renderCondIcon(cnd.loc)+renderCondIcon(cnd.om)+renderCondIcon(cnd.piese,'piese')+renderCondIcon(cnd.whatsapp)+'</div></td>';
       h+='<td>'+(phoneClean?'<button class="wa-btn '+waCls+'" '+waOnclick+' title="'+waTitle+'">💬</button>':'<button class="wa-btn dis" title="'+T('wa_no_phone')+'" disabled>💬</button>')+'</td>';
       if(tab==='viitoare'){
-        h+='<td><button class="edit-btn '+editCls+'" onclick="event.stopPropagation();deschideLucrare(\''+j.id+'\')" '+(canOpen?'':'disabled title="'+T('no_wa_yet')+'"')+'>'+T('deschide_lucrarea')+'</button> <button class="edit-btn eb-ratat" onclick="event.stopPropagation();markRatat(\''+j.id+'\')">'+T('ratat_btn')+'</button></td>';
+        h+='<td><button class="edit-btn '+editCls+'" onclick="event.stopPropagation();deschideLucrare(\''+j.id+'\')" '+(canOpen?'':'disabled title="'+T('no_wa_yet')+'"')+'>'+T('deschide_lucrarea')+'</button> <button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')" title="'+T('dosar_dauna')+'">📁</button> <button class="edit-btn eb-ratat" onclick="event.stopPropagation();markRatat(\''+j.id+'\')">'+T('ratat_btn')+'</button></td>';
       } else {
         h+='<td><button class="edit-btn eb-r" onclick="event.stopPropagation();oP(\''+j.id+'\','+(j.phase||1)+')">'+T('edit')+'</button> '+(tab==='ratate'?'<button class="edit-btn eb-react" onclick="event.stopPropagation();reactiveaza(\''+j.id+'\')">'+T('reactiveaza_btn')+'</button> ':'')+'<button class="edit-btn eb-del" onclick="event.stopPropagation();dJ(\''+j.id+'\')" title="'+T('sterge')+'">🗑</button></td>';
       }
@@ -1077,6 +1077,7 @@ window.startReceptie=async function(asig){
     location.assign('rpw-recepcio-red.html?job='+j.id);
   }catch(e){toast('Error: '+e.message)}
 };
+window.deschideDosar=function(id){location.assign('rpw-dosar.html?job='+id)};
 window.openDosarModal=function(){S.showDosar=1;render()};
 window.closeDosarModal=function(){S.showDosar=0;render()};
 window.dosarAici=function(){S.showDosar=0;startReceptie(true)};
