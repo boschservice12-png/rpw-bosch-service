@@ -95,6 +95,9 @@ html,body{font-family:'Geist',system-ui,sans-serif;background:var(--bg);color:va
 .wt-rep.on{background:var(--yl);border-color:var(--y);color:var(--y)}
 .wt-vop.on{background:var(--pl);border-color:var(--p);color:var(--p)}
 .wt-rvp.on{background:var(--tll);border-color:var(--tl);color:var(--tl)}
+.wt-dem.on{background:#e6f0fb;border-color:#2A6FDB;color:#2A6FDB}
+.wt-dez.on{background:#e7f6f4;border-color:#0F9B8E;color:#0F9B8E}
+.wt-alt.on{background:#eef0f2;border-color:#5b6570;color:#5b6570}
 .wt-ora{display:inline-flex;align-items:center;gap:4px;background:var(--yl);border:1.5px solid var(--y);border-radius:4px;padding:2px 6px;margin-left:4px}
 .wt-ora input{width:44px;border:none;background:transparent;font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;font-weight:700;color:var(--y);outline:none;text-align:center}
 .wt-ora-lbl{font-size:9px;font-weight:700;color:var(--y)}
@@ -403,9 +406,12 @@ function saveNorma(elKey,op,hours){
   NORME[elKey+'_'+op]=parseFloat(hours);
   try{localStorage.setItem('rpw_norme',JSON.stringify(NORME))}catch(e){}
 }
+var DEFAULT_OP_HOURS={inlocuire:1.0,demontat:0.5,dezasamblat:0.8,reparatie:0,vopsire:1.5,revopsire:1.0,altele:0.5,mecanica:1.0};
 function getNorma(elKey,op){
   if(!elKey||!op)return 0;
-  return NORME[elKey+'_'+op]||0;
+  var v=NORME[elKey+'_'+op];
+  if(v!=null&&v!=="")return v;
+  return DEFAULT_OP_HOURS[op]||0;
 }
 function loadConfig(){
   try{var c=localStorage.getItem('rpw_config');if(c){var p=JSON.parse(c);Object.assign(CONFIG.unitate,p.unitate||{});Object.assign(CONFIG.tarif,p.tarif||{})}}catch(e){}
