@@ -72,6 +72,8 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .talon-box.done{border:2px solid var(--g);background:var(--gl)}
 .talon-box img{width:100%;border-radius:8px;margin-bottom:8px}
 .talon-box input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2;font-size:0}
+.talon-box .pslot-acts{position:absolute;left:0;right:0;bottom:0;display:flex;z-index:5}
+.talon-box .pslot-act input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0;z-index:auto}
 .tb-icon{width:36px;height:36px;stroke:var(--t3);fill:none;stroke-width:1.5;margin:0 auto 6px;display:block}
 .tb-t{font-size:14px;font-weight:700;color:var(--t2)}.tb-s{font-size:10px;color:var(--t3);margin-top:3px}
 .reocr-btn{margin-top:8px;display:inline-flex;align-items:center;gap:4px;background:var(--bll);color:var(--bl);border:1px solid var(--bl);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit}
@@ -842,7 +844,7 @@ function render(){
     if(bulUrl)h+='<img src="'+escU(bulUrl)+'" style="max-height:100px;object-fit:contain;margin:0 auto 4px;display:block"/>';
     else h+='<svg class="tb-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
     h+='<div class="tb-t">'+T('scanBuletin')+'</div><div class="tb-s">'+T('scanBuletinS')+'</div>';
-    h+='<input type="file" accept="image/*" onchange="upBuletin(event)"/></div>';
+    h+='<div class="pslot-acts"><label class="pslot-act" title="Fotografiază">📷 Foto<input type="file" accept="image/*" capture="environment" onchange="upBuletin(event)"/></label><label class="pslot-act" title="Importă din fișier">📁 Import<input type="file" accept="image/*" onchange="upBuletin(event)"/></label></div></div>';
     if(S.ocrRun.buletin)h+='<div class="ocr-text">'+T('scanning')+'</div><div class="ocr-bar"><div class="ocr-fill" style="width:60%"></div></div>';
     if(hasBuletin){
       h+='<div class="info-grid" style="margin-top:8px"><div class="info-f"><div class="info-l">'+T('adresa')+'</div><input class="info-v" value="'+escA(job.adresa||'')+'" onchange="updF(\'adresa\',this.value);mark(\'_adresaEdited\')"/></div><div class="info-f"><div class="info-l">'+T('cnp')+'</div><input class="info-v mono" value="'+escA(job.cnp||'')+'" onchange="updF(\'cnp\',this.value);mark(\'_cnpEdited\')"/></div></div>';
@@ -857,7 +859,7 @@ function render(){
     if(talonUrl)h+='<img src="'+escU(talonUrl)+'"/>';
     else h+='<svg class="tb-icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>';
     h+='<div class="tb-t">'+(hasTalon?T('reScan'):T('scanT'))+'</div><div class="tb-s">'+T('scanTS')+'</div>';
-    h+='<input type="file" accept="image/*" onchange="upTalon(event)"/></div>';
+    h+='<div class="pslot-acts"><label class="pslot-act" title="Fotografiază">📷 Foto<input type="file" accept="image/*" capture="environment" onchange="upTalon(event)"/></label><label class="pslot-act" title="Importă din fișier">📁 Import<input type="file" accept="image/*" onchange="upTalon(event)"/></label></div></div>';
     if(hasTalon&&!S.ocrRun.talon)h+='<button class="reocr-btn" onclick="reOcrTalon()">'+T('reOcr')+'</button>';
     if(S.ocrRun.talon)h+='<div class="ocr-text">'+T('scanning')+'</div><div class="ocr-bar"><div class="ocr-fill" style="width:60%"></div></div>';
     if(S.uploading['talon'])h+='<div class="ocr-text">'+T('uploading')+'</div>';
@@ -877,7 +879,7 @@ function render(){
       if(constUrl)h+='<img src="'+constUrl+'"/>';
       else h+='<svg class="tb-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
       h+='<div class="tb-t">'+(hasConstatare?T('reScan'):T('scanC'))+'</div><div class="tb-s">'+T('scanCS')+'</div>';
-      h+='<input type="file" accept="image/*" onchange="upConstatare(event)"/></div>';
+      h+='<div class="pslot-acts"><label class="pslot-act" title="Fotografiază">📷 Foto<input type="file" accept="image/*" capture="environment" onchange="upConstatare(event)"/></label><label class="pslot-act" title="Importă din fișier">📁 Import<input type="file" accept="image/*" onchange="upConstatare(event)"/></label></div></div>';
       if(hasConstatare&&!S.ocrRun.constatare)h+='<button class="reocr-btn" onclick="reOcrConstatare()">'+T('reOcr')+'</button>';
       if(S.ocrRun.constatare)h+='<div class="ocr-text">'+T('scanning')+'</div><div class="ocr-bar"><div class="ocr-fill" style="width:60%"></div></div>';
       if(S.uploading['doc_constatare'])h+='<div class="ocr-text">'+T('uploading')+'</div>';
