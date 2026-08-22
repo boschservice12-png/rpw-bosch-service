@@ -1145,10 +1145,10 @@ window.submitProgramare=async function(){
     };
     JOBS.push(j);
     await saveJob(j);
-    var goDosar=(j.damageType==='asig');
     S.showProg=0;S.progPlate='';S.progPhone='';S.progAsig=0;
     S.panouTab='viitoare';
-    if(goDosar){ location.assign('rpw-dosar.html?job='+j.id); return; }
+    // Egyelőre CSAK programare: nincs automatikus ugrás a (zárolt) dosar oldalra.
+    // A daună dossziét később a sor 📁 gombjával lehet megnyitni, ha kész a logika.
     toast(T('prog_created')+': '+plate);
     render();
   }catch(e){toast('Error: '+e.message)}
