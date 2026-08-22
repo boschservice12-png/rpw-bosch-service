@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<!-- BUILD: ONE-LIST+ONEWAY-L1N 2026-08-23 -->
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Red Body">
+<meta name="theme-color" content="#E11D2E">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<title>Red Body</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="rpw-util.js"></script>
+<script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
+<script src="rpw-auth.js"></script>
+<script src="rpw-db.js"></script>
+<script>/* Opt-in PIN-őr: CSAK ha RPW_CFG.AUTH_REQUIRED===true; egyébként nincs hatása */
+try{ if(window.RPWAuth) RPWAuth.guard(); }catch(e){}
+/* PWA: service worker regisztráció (csak élő https oldalon) */
+if('serviceWorker' in navigator && location.protocol==='https:'){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})});}</script>
+<script src="rpw-config.js"></script>
+<script src="rpw-guard.js"></script>
+<script src="rpw-workflow.js"></script>
+<script src="rpw-save.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f5f5f3;--w:#fff;--r:#dc2626;--r50:#fef2f2;--r100:#fee2e2;--r700:#b91c1c;--g:#16a34a;--gl:#dcfce7;--y:#ca8a04;--yl:#fef9c3;--bl:#2563eb;--bll:#dbeafe;--p:#7c3aed;--pl:#ede9fe;--or:#ea580c;--orl:#fff7ed;--tl:#0d9488;--tll:#ccfbf1;--t:#1a1a1a;--t2:#555;--t3:#999;--b:#e5e5e5;--b2:#d0d0d0;--rd:10px}
+html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100dvh;-webkit-tap-highlight-color:transparent}
+.mono{font-family:'JetBrains Mono','Courier New',monospace}
+.layout{display:flex;min-height:100dvh}
+.sidebar{width:240px;background:var(--w);border-right:1px solid var(--b);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:40}
+.sb-logo{padding:18px 16px;display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--b)}
+.sb-logo-c{width:40px;height:40px;border-radius:50%;background:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+.sb-logo-ring{width:24px;height:24px;border-radius:50%;background:#fff}
+.sb-logo-d{position:absolute;width:11px;height:11px;border-radius:50%;background:var(--r)}
+.sb-logo-tx{display:flex;flex-direction:column;gap:3px}
+.sb-logo-t{font-size:17px;font-weight:800;line-height:1;color:var(--t)}.sb-logo-t span{color:var(--r)}
+.sb-logo-sub{font-size:8px;font-weight:700;color:var(--r);letter-spacing:2.5px;border-top:1px solid var(--b);padding-top:4px}
+.sb-nav{flex:1;padding:14px 12px}
+.sb-item{display:flex;align-items:center;gap:11px;padding:11px 14px;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer;border-radius:10px;margin-bottom:4px}
+.sb-item.on{background:var(--r);color:#fff;font-weight:700}
+.sb-item.sb-admin-on{background:var(--gl,#dcfce7);color:var(--g,#16a34a);font-weight:800}
+.sb-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8}
+.sb-lang{padding:12px 18px;border-top:1px solid var(--b);display:flex;gap:4px}
+.lb{padding:4px 10px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid var(--b);background:var(--w);color:var(--t3);font-family:inherit}.lb.on{background:var(--r);color:#fff;border-color:var(--r)}
+
+/* ═══ Panou (Lean Dashboard) modul ═══ */
+.panou-hdr{padding:18px 24px 12px;background:var(--w);border-bottom:1px solid var(--b)}
+.panou-label{font-size:11px;font-weight:700;color:var(--r);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
+.panou-title{font-size:28px;font-weight:800;color:var(--t)}
+.panou-tabs{display:inline-flex;gap:4px;background:var(--w);border:1px solid var(--b);border-radius:12px;padding:5px;margin:18px 24px 0}
+.panou-tab{padding:10px 18px;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:8px;font-family:inherit;background:none;border:none}
+.panou-tab.on{color:var(--r);background:var(--r50);font-weight:700}
+.panou-tab .tab-count{background:var(--bg);color:var(--t2);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;min-width:22px;text-align:center}
+.panou-tab.on .tab-count{background:var(--r);color:#fff}
+.panou-footer{padding:16px 24px;display:flex;justify-content:flex-end;align-items:center;gap:16px;font-size:12px;color:var(--t3);border-top:1px solid var(--b);margin-top:24px}
+.panou-footer .ft-brand{margin-right:auto;color:var(--t2);font-weight:600}
+.panou-footer a{color:var(--t3);text-decoration:underline;cursor:pointer}
+.prm-wrap{padding:18px 24px 0}
+.prm-hint{font-size:12px;color:var(--t2);background:var(--r50);border:1px solid var(--r100);border-radius:10px;padding:10px 14px;margin-bottom:16px}
+.prm-card{background:var(--w);border:1px solid var(--b);border-radius:14px;padding:18px 20px;margin-bottom:16px}
+.prm-ct{font-size:11px;font-weight:800;color:var(--r);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px}
+.prm-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.prm-f{display:flex;flex-direction:column;gap:4px}
+.prm-f label{font-size:11px;font-weight:600;color:var(--t3)}
+.prm-f input{border:1px solid var(--b);border-radius:8px;padding:9px 11px;font-size:13px;font-weight:600;color:var(--t);font-family:inherit;outline:none}
+.prm-f input:focus{border-color:var(--r)}
+.prm-capac{margin-top:12px;padding:10px 14px;background:var(--gl);border:1px solid var(--g);border-radius:8px;font-size:13px;color:var(--g);font-weight:600}
+.panou-tbl-wrap{padding:14px 24px 24px;background:var(--bg);min-height:60vh}
+.panou-tbl{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:13px}
+.panou-tbl th{text-align:left;padding:8px 12px;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase}
+.panou-tbl td{padding:12px;vertical-align:middle;background:var(--w);border-top:1px solid var(--b);border-bottom:1px solid var(--b)}
+.panou-tbl td:first-child{border-left:1px solid var(--b);border-radius:8px 0 0 8px}
+.panou-tbl td:last-child{border-right:1px solid var(--b);border-radius:0 8px 8px 0}
+.panou-row.row-ok td{background:#dcfce7;border-color:#86efac}
+.panou-row.row-ok td:first-child{border-left:3px solid var(--g)}
+.panou-row.row-warn td{background:#fef9c3;border-color:#fde047}
+.panou-row.row-warn td:first-child{border-left:3px solid var(--y)}
+.panou-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:14px;font-size:10px;font-weight:700;white-space:nowrap}
+.pill-ready{background:var(--g);color:#fff}
+.pill-wait{background:var(--y);color:#fff}
+.pill-prog{background:var(--t3);color:#fff}
+.cond-row{display:inline-flex;gap:4px;align-items:center;cursor:help}
+.cond-ic{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
+.cond-ic.ok{background:var(--g)}
+.cond-ic.no{background:var(--r)}
+.cond-ic.comandat{background:var(--or)}
+.cond-ic svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3}
+
+/* Cond modal */
+.cond-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px}
+.cond-box{background:var(--w);border-radius:var(--rd);padding:22px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18);max-height:90vh;overflow-y:auto}
+.cond-mt{font-size:18px;font-weight:800;margin-bottom:4px}
+.cond-ms{font-size:12px;color:var(--t3);margin-bottom:18px}
+.cond-q{margin-bottom:14px}
+.cond-q-label{display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px}
+.cond-btns{display:flex;gap:6px;flex-wrap:wrap}
+.cb{flex:1;padding:10px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--b);background:var(--w);color:var(--t3);font-family:inherit;min-width:70px;transition:all .15s}
+.cb.no-on{background:var(--r);color:#fff;border-color:var(--r)}
+.cb.yes-on{background:var(--g);color:#fff;border-color:var(--g)}
+.cb.cmd-on{background:var(--or);color:#fff;border-color:var(--or)}
+.cond-actions{display:flex;gap:8px;margin-top:18px}
+.cond-actions button{flex:1;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:inherit}
+.cond-actions .cancel{background:var(--w);color:var(--t2);border:1.5px solid var(--b2)}
+.cond-actions .submit{background:var(--g);color:#fff}
+.panou-row{cursor:pointer}
+.panou-row:hover td{background-color:rgba(220,38,38,.04)}
+.panou-row.row-ok:hover td{background-color:#bbf7d0}
+.panou-row.row-warn:hover td{background-color:#fef08a}
+.panou-hint{font-size:11px;color:var(--t3);padding:6px 24px;background:var(--w);border-bottom:1px solid var(--b);text-align:center;font-style:italic}
+.edit-btn{padding:7px 16px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
+.edit-btn.eb-go{background:var(--g);color:#fff}
+.edit-btn.eb-no{background:var(--b2);color:var(--t3);cursor:not-allowed}
+.edit-btn.eb-r{background:var(--r);color:#fff}
+.edit-btn.eb-del{background:var(--r50,#fef2f2);color:var(--r);border:1px solid var(--r100,#fee2e2);padding:7px 10px}
+.edit-btn.eb-del:hover{background:var(--r100,#fee2e2)}
+.edit-btn.eb-ratat{background:var(--yl,#fef9c3);color:var(--y,#ca8a04);border:1px solid #fde68a}
+.edit-btn.eb-ratat:hover{background:#fde68a}
+.edit-btn.eb-react{background:var(--gl,#dcfce7);color:var(--g,#16a34a);border:1px solid #bbf7d0}
+.edit-btn.eb-react:hover{background:#bbf7d0}
+.wa-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#25d366;text-decoration:none;font-size:16px;cursor:pointer;border:none;color:#fff}
+.wa-btn.dark{background:#1a1a1a}
+.wa-btn.dis{background:var(--b);cursor:not-allowed;opacity:.5}
+.wa-btn svg{width:16px;height:16px;fill:#fff}
+
+/* Programare modal */
+.panou-hdr-actions{display:flex;justify-content:space-between;align-items:flex-end;padding:18px 24px 12px;background:var(--w);border-bottom:1px solid var(--b);gap:16px;flex-wrap:wrap}
+.btn-prog-new{background:var(--r);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
+.btn-prog-new:hover{background:var(--r700)}
+.prog-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px}
+.prog-box{background:var(--w);border-radius:var(--rd);padding:22px;max-width:420px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.prog-t{font-size:18px;font-weight:800;margin-bottom:4px}
+.prog-s{font-size:12px;color:var(--t3);margin-bottom:16px}
+.prog-field{margin-bottom:14px}
+.prog-field label{display:block;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.prog-field input{width:100%;border:1.5px solid var(--b);border-radius:8px;padding:10px 12px;font-size:14px;font-weight:600;font-family:inherit;outline:none}
+.prog-field input:focus{border-color:var(--r)}
+.prog-actions{display:flex;gap:8px;margin-top:6px}
+.prog-actions button{flex:1;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:inherit}
+.prog-actions .cancel{background:var(--w);color:var(--t2);border:1.5px solid var(--b2)}
+.prog-actions .submit{background:var(--g);color:#fff}
+
+/* ═══ Statistici modul ═══ */
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:0 24px 24px}
+.stat-card{background:var(--w);border:1px solid var(--b);border-radius:var(--rd);padding:16px;min-height:180px}
+.stat-card.full{grid-column:span 2}
+.stat-card-h{font-size:11px;font-weight:700;color:var(--r);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+.stat-card-v{font-size:32px;font-weight:800;color:var(--t);margin:8px 0}
+.stat-card-sub{font-size:11px;color:var(--t3);margin-top:4px}
+.stat-period{display:inline-flex;gap:2px;background:var(--w);border:1px solid var(--b);border-radius:8px;padding:3px}
+.stat-period button{padding:6px 12px;border-radius:6px;border:none;background:transparent;font-size:11px;font-weight:600;color:var(--t3);cursor:pointer;font-family:inherit}
+.stat-period button.on{background:var(--r);color:#fff}
+.stat-canvas{position:relative;height:200px}
+.stat-canvas.tall{height:260px}
+.stuck-list{margin-top:6px}
+.stuck-row{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;background:var(--bg);margin-bottom:6px;font-size:12px}
+.stuck-row .stuck-id{font-weight:700;font-family:'JetBrains Mono',monospace}
+.stuck-row .stuck-meta{font-size:10px;color:var(--t3)}
+.stuck-row .stuck-days{font-weight:800;color:var(--r)}
+.stat-empty{text-align:center;color:var(--t3);padding:30px 0;font-size:12px;font-style:italic}
+.ftr-num{font-size:48px;font-weight:900;color:var(--g)}
+.ftr-num.bad{color:var(--r)}.ftr-num.warn{color:var(--y)}
+@media (max-width:900px){.stat-grid{grid-template-columns:1fr}.stat-card.full{grid-column:span 1}}
+.main{margin-left:240px;flex:1}
+.partner-bar{background:var(--r);padding:14px 24px;display:flex;align-items:center;gap:10px;color:#fff}
+.partner-bar svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2}
+.pb-name{font-size:15px;font-weight:700}
+.tabs{background:var(--w);border-bottom:1px solid var(--b);padding:0 24px;display:flex}
+.tab{padding:14px 20px;font-size:13px;color:var(--t3);font-weight:500;cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px}
+.tab.on{color:var(--r);border-bottom-color:var(--r);font-weight:600}
+.tab svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8}
+.page-hdr{padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px}
+.ph-label{font-size:11px;font-weight:700;color:var(--r);letter-spacing:1.5px;text-transform:uppercase}
+.ph-title{font-size:22px;font-weight:800;margin-top:2px}
+.btn{border:none;border-radius:var(--rd);padding:10px 20px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
+.btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.btn-r{background:var(--r);color:#fff}.btn-r:active{background:var(--r700)}
+.btn-o{background:var(--w);color:var(--t2);border:1px solid var(--b2)}
+.stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;margin:0 24px;background:var(--b);border:1px solid var(--b);border-radius:var(--rd);overflow:hidden}
+.stat-cell{background:var(--w);padding:12px 16px}
+.stat-cell-label{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px}
+.stat-cell-val{font-size:22px;font-weight:800;margin-top:2px}
+.tbl-wrap{margin:16px 24px;background:var(--w);border:1px solid var(--b);border-radius:var(--rd);overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;min-width:600px}
+.tbl thead th{padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--r);border-bottom:1px solid var(--b)}
+.tbl thead th.c{text-align:center}
+.tbl tbody tr{border-bottom:1px solid var(--bg)}.tbl tbody tr:last-child{border-bottom:none}
+.tbl tbody tr:hover{background:var(--r50)}
+.tbl td{padding:10px 16px;font-size:13px;vertical-align:middle}.tbl td.c{text-align:center}
+.badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:10px;font-weight:700}
+.badge-r{background:var(--r100);color:var(--r700)}.badge-g{background:var(--gl);color:var(--g)}.badge-y{background:var(--yl);color:var(--y)}.badge-bl{background:var(--bll);color:var(--bl)}.badge-p{background:var(--pl);color:var(--p)}.badge-or{background:var(--orl);color:var(--or)}.badge-tl{background:var(--tll);color:var(--tl)}
+.prog{height:4px;background:var(--bg);border-radius:2px;display:flex;gap:1px;overflow:hidden;width:100px}
+.prog-s{height:100%;border-radius:1px;flex:1}
+.ps1{background:var(--r)}.ps2{background:var(--or)}.ps3{background:var(--y)}.ps4{background:var(--bl)}.ps5{background:var(--p)}.ps6{background:var(--tl)}.ps7{background:var(--g)}.pse{background:var(--b)}
+.psr{background:var(--r)}.psy{background:var(--y)}.psg{background:var(--g)}
+.act-btn{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:none}
+.cell-inp{display:block;width:100%;min-width:90px;border:1px solid var(--b2);border-radius:6px;padding:4px 6px;font-size:11px;font-family:inherit;margin:2px 0;outline:none;background:#fffbeb}
+.cell-inp:focus{border-color:var(--r)}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px;margin-bottom:12px}
+.kpi-card{background:#fff;border:1px solid var(--b);border-radius:10px;padding:10px 8px;text-align:center}
+.kpi-v{font-size:22px;font-weight:800;line-height:1.1}
+.kpi-l{font-size:8px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;font-weight:700;margin-top:3px}
+.yr-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.yr-tbl th,.yr-tbl td{padding:6px 10px;border-bottom:1px solid var(--b);text-align:right}
+.yr-tbl th:first-child,.yr-tbl td:first-child{text-align:left}
+.yr-tbl tr.tot{background:var(--bg);font-weight:800}
+.act-data{background:#eff6ff;color:#1d4ed8;font-size:14px;font-weight:800}
+.act-data.on{background:#16a34a;color:#fff}
+.act-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.act-edit{background:var(--r);color:#fff}.act-del{background:var(--bg);color:var(--t3)}
+.empty{text-align:center;padding:60px 24px;color:var(--t3)}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--w);padding:12px 20px;border-radius:var(--rd);font-size:12px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.12);border-left:4px solid var(--g);z-index:200}
+.loading{text-align:center;padding:60px;color:var(--t3);font-size:14px}
+@media(max-width:768px){.sidebar{width:56px}.sb-logo-t,.sb-item span,.sb-lang{display:none}.sb-logo{padding:14px 12px;justify-content:center}.sb-item{padding:12px 0;justify-content:center;margin-right:0;border-radius:0}.sb-item.on{border-radius:0;margin-right:0}.main{margin-left:56px}.stat-row{grid-template-columns:repeat(3,1fr)}.page-hdr{padding:16px}.tbl-wrap{margin:12px 16px}}
+@media(max-width:480px){.stat-row{grid-template-columns:1fr 1fr}}
+.nj-sub{font-size:12px;color:var(--t3);margin-bottom:16px}
+.nj-box{max-width:520px;max-height:92vh;overflow:auto}
+.nj-pick{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.nj-opt{border:1.5px solid var(--b);background:var(--w);border-radius:8px;padding:9px 8px;text-align:left;cursor:pointer;font-family:inherit}
+.nj-opt b{display:block;font-size:12px;font-weight:700;color:#111}
+.nj-opt i{display:block;font-size:10px;color:var(--t3);font-style:normal;margin-top:2px;line-height:1.3}
+.nj-opt.on{border-color:var(--r);background:#fff5f6;box-shadow:inset 0 0 0 1px var(--r)}
+.nj-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:7px}
+.nj-chip{border:1.5px solid var(--b);background:var(--w);border-radius:20px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.nj-chip.on{border-color:var(--r);background:#fff5f6}
+.nj-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.nj-in{width:100%;border:1.5px solid var(--b);border-radius:8px;padding:10px 12px;font-size:14px;font-weight:600;font-family:inherit;outline:none;background:var(--w)}
+.nj-in:focus{border-color:var(--r)}
+.nj-dup{background:#fef3c7;border:1px solid #fcd34d;color:#7c4a03;border-radius:8px;padding:9px 11px;font-size:12px;margin-bottom:10px;line-height:1.4}
+.nj-why{font-size:11px;color:var(--r);font-weight:700;min-height:14px;margin-bottom:6px}
+.nj-note{font-size:11px;color:var(--t3);margin:-6px 0 12px}
+.nj-more{margin-bottom:14px}
+.nj-more summary{font-size:10px;font-weight:700;color:var(--t3);cursor:pointer;text-transform:uppercase;letter-spacing:1px;padding:4px 0}
+.nj-badge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.5px;background:#e0e7ff;color:#3730a3;border-radius:10px;padding:2px 6px;vertical-align:middle;margin-left:5px}
+@media(max-width:560px){.nj-pick{grid-template-columns:1fr}}
+.pg-cell{font-size:12px;white-space:nowrap}
+.pg-b{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.3px;border-radius:10px;padding:2px 7px}
+.pg-azi{background:#dbeafe;color:#1d4ed8}
+.pg-late{background:#fee2e2;color:#b91c1c}
+.pg-none{background:#f1f5f9;color:#64748b}
+.pg-time{color:var(--t3);font-size:11px;margin-left:4px}
+.pg-repro{display:inline-block;font-size:10px;font-weight:800;background:#fef3c7;color:#92400e;border-radius:10px;padding:2px 6px;margin-left:4px}
+.pg-banner{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.eb-repro{background:#e0e7ff;color:#3730a3;border:1px solid #c7d2fe}
+.eb-repro:hover{background:#c7d2fe}
+.eb-need{background:#fff7ed;color:#9a3412;border:1px solid #fdba74;font-weight:800}
+.eb-need:hover{background:#ffedd5}
+.ac-b{display:inline-block;font-size:12px;font-weight:800;border-radius:10px;padding:3px 9px;font-variant-numeric:tabular-nums}
+.ac-b.ac-ok{background:#dcfce7;color:#15803d}
+.ac-b.ac-part{background:#fef3c7;color:#92400e}
+.ac-b.ac-none{background:#f1f5f9;color:#64748b}
+.fx-b{display:inline-block;font-size:11px;border-radius:6px;padding:1px 5px;vertical-align:middle;margin-left:5px}
+.fx-p{background:#dbeafe}
+.fx-d{background:#e0e7ff}
+</style>
+</head>
+<body>
+<div id="rpw-sync" style="position:fixed;bottom:10px;right:12px;z-index:300;font:600 11px system-ui,Arial;background:#fff;border:1px solid #E8EBEF;border-radius:8px;padding:5px 10px;box-shadow:0 2px 8px rgba(0,0,0,.08);opacity:0;transition:opacity .2s"></div>
+<div id="app"><div class="loading">Se incarca...</div></div>
+<script>
+if(!window.RPW_CFG){(document.getElementById('app')||document.body).innerHTML='<div style="padding:40px;text-align:center;font-family:system-ui,Arial"><div style="font-size:40px">&#9888;&#65039;</div><div style="font-size:18px;font-weight:800;color:#C81E33;margin:12px 0 6px">Configurație lipsă</div><div style="color:#3F4956;font-size:14px;line-height:1.6">rpw-config.js nu s-a încărcat (sau rulează dintr-o copie locală file://).<br>Deschide sistemul live.</div></div>';throw new Error('RPW_CFG missing');}
+var SB_URL=RPW_CFG.SB_URL;
+var SB_KEY=RPW_CFG.SB_KEY;
+var sb=supabase.createClient(SB_URL,SB_KEY);
+/* PHASE 1: látható szinkron-állapot + robusztus mentő (rpw-save.js) */
+function rpwSyncLabel(st){var m={saving_local:['Salvare…','#6B7280'],syncing:['Sincronizare…','#2A6FDB'],synced:['✓ Salvat pe server','#1E9D55'],offline:['⚠ Offline – salvat local','#A6701F'],retry:['↻ Reîncercare…','#A6701F'],failed:['✗ Eșec salvare – reîncearcă','#C81E33'],permission:['✗ Fără permisiune','#C81E33'],conflict:['⚠ Conflict de date','#C81E33'],auth:['✗ Autentificare','#C81E33'],idle:['','#6B7280']};return m[st]||[st,'#6B7280'];}
+function onSyncState(st){var el=document.getElementById('rpw-sync');if(el){var l=rpwSyncLabel(st);el.textContent=l[0];el.style.color=l[1];el.style.opacity=l[0]?'1':'0';if(st==='synced'){setTimeout(function(){if(el&&el.textContent===l[0])el.style.opacity='0'},2000)}}var cb=document.getElementById('rpw-conflict');if(st==='conflict'){if(!cb){cb=document.createElement('div');cb.id='rpw-conflict';cb.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,Arial';cb.innerHTML='<div style="max-width:360px;background:#fff;border-radius:12px;padding:22px;text-align:center"><div style="font-size:34px">\u26A0\uFE0F</div><div style="font-size:17px;font-weight:800;color:#C81E33;margin:8px 0">Conflict de date</div><div style="font-size:13px;color:#3F4956;line-height:1.6">Alt utilizator a modificat aceast\u0103 fi\u0219\u0103. Modificarea ta local\u0103 este p\u0103strat\u0103. Re\u00EEncarc\u0103 pentru versiunea de pe server.</div><button onclick="location.reload()" style="margin-top:16px;background:#E11D2E;color:#fff;border:none;border-radius:9px;padding:11px 20px;font-weight:800;cursor:pointer">Re\u00EEncarc\u0103</button></div>';document.body.appendChild(cb);}}else if(cb){cb.remove();}}
+var SAVER=(window.RPWSave&&RPWSave.createSaver)?RPWSave.createSaver({sb:sb,onState:onSyncState}):null;
+if(SAVER&&window.RPWSave&&RPWSave.bindBeforeUnload)RPWSave.bindBeforeUnload(SAVER,'Există modificări nesincronizate.');
+if(typeof saveJ==='function'){var _saveJ_orig=saveJ;saveJ=function(){if(typeof JOB==='undefined'||!JOB)return Promise.resolve();return SAVER?SAVER.save(JOB):_saveJ_orig();};}
+if(typeof saveJob==='function'){var _saveJob_orig=saveJob;saveJob=function(job){if(!job)return Promise.resolve();return SAVER?SAVER.save(job):_saveJob_orig(job);};}
+
+var JOBS=[];
+var S={ts:null,screen:'lucrari',statPeriod:'month',statThreshold:5,panouTab:'viitoare',showProg:0,progPlate:'',progPhone:'',showRepro:null,reproDate:'',reproTime:'',showNew:0,njMode:null,njPlate:'',njPhone:'',njTip:null,njPay:null,njDate:'',njTime:'08:00',njClient:'',njAuto:'',njAsig:'',njDosar:'',showCondModal:0,condDraft:null,editJobId:null};
+
+// ====== PARAMETRI — single source of truth (rpw_config, megosztva az evaluare/deviz oldalakkal) ======
+var CONFIG={
+  unitate:{nume:'SC SZKALICZKI SERVICE SRL',cif:'RO16250445',nrord:'RO/ONRC.J20040004',adresa:'Str. Petki David, Nr.27/A, 547530, Sangeorgiu de Mures, MURES',tel:'0265318020',rar:'4401/24112006',email:'',iban:''},
+  tarif:{tinichigerie:180,vopsitorie:300,mecanic:180,tva:21},
+  posturi:{tinichigerie:0,vopsitorie:0,oreZi:8,zileSapt:5}
+};
+function loadConfig(){
+  try{var c=localStorage.getItem('rpw_config');if(c){var p=JSON.parse(c);
+    if(p.unitate)Object.assign(CONFIG.unitate,p.unitate);
+    if(p.tarif)Object.assign(CONFIG.tarif,p.tarif);
+    if(p.posturi)Object.assign(CONFIG.posturi,p.posturi);
+  }}catch(e){}
+}
+function saveConfig(){try{localStorage.setItem('rpw_config',JSON.stringify(CONFIG))}catch(e){}}
+var _charts={};  // Chart.js peldanyok cache (destroy elott)
+
+async function loadJobs(){
+  // 1. localStorage lista
+  var cached=localStorage.getItem('rpw_jobs_list');
+  if(cached){try{JOBS=JSON.parse(cached)}catch(e){}}
+  // 2. Individual job-ok localStorage-ból (import után)
+  var allKeys=Object.keys(localStorage);
+  allKeys.forEach(function(k){
+    if(k.indexOf('rpw_job_'===0||k.startsWith('rpw_job_'))&&k!=='rpw_jobs_list'){
+      try{
+        var j=JSON.parse(localStorage.getItem(k));
+        if(j&&j.id&&typeof j.phase==='number'){
+          var exists=JOBS.some(function(x){return x.id===j.id});
+          if(!exists)JOBS.push(j);
+        }
+      }catch(e){}
+    }
+  });
+  render();
+  // 3. Supabase — max 4mp timeout
+  try{
+    var p=RPWDb.listActive(sb);
+    var t=new Promise(function(_,rej){setTimeout(function(){rej('timeout')},4000)});
+    var res=await Promise.race([p,t]);
+    if(res&&!res.error&&res.data){
+      var sbJobs=(res.data||[]).map(function(r){return r.data}).filter(function(d){return d&&typeof d.phase==='number'}).map(migrateState);
+      sbJobs.forEach(function(sj){
+        var idx=JOBS.findIndex(function(x){return x.id===sj.id});
+        if(idx>=0)JOBS[idx]=sj;else JOBS.push(sj);
+      });
+      var lite=JOBS.map(function(j){return{id:j.id,number:j.number,auto:j.auto,plate:j.plate,vin:j.vin,client:j.client,phone:j.phone,phase:j.phase,created:j.created,phases:j.phases}});
+      try{localStorage.setItem('rpw_jobs_list',JSON.stringify(lite))}catch(e){}
+      render();
+    }
+  }catch(e){console.warn('SB offline, localStorage OK')}
+}
+async function saveJob(job){
+  // 1. localStorage ELOSZOR
+  try{localStorage.setItem('rpw_job_'+job.id,JSON.stringify(job));localStorage.setItem('rpw_job_ts_'+job.id,new Date().toISOString())}catch(e){}
+  try{localStorage.removeItem("rpw_jobs_list")}catch(e){}
+  // 2. Supabase — max 4mp timeout
+  try{
+    var p=RPWDb.patch(sb,job);
+    var t=new Promise(function(_,rej){setTimeout(function(){rej('timeout')},4000)});
+    await Promise.race([p,t]);
+  }catch(e){console.warn('SB offline, localStorage OK')}
+}
+var _freshAt={};
+async function freshJob(id){
+  var idx=JOBS.findIndex(function(x){return x.id===id});
+  if(_freshAt[id]&&(Date.now()-_freshAt[id])<15000)return idx>=0?JOBS[idx]:null;
+  var j=null;
+  try{
+    var p=RPWDb.getRow(sb,id,'data,updated_at');
+    var t=new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'))},3000)});
+    var r=await Promise.race([p,t]);
+    if(r&&r.data&&r.data.data)j=r.data.data;
+  }catch(e){}
+  if(!j){try{var c=localStorage.getItem('rpw_job_'+id);if(c)j=JSON.parse(c)}catch(e){}}
+  if(!j&&idx>=0)j=JOBS[idx];
+  if(j&&idx>=0)JOBS[idx]=j;
+  _freshAt[id]=Date.now();
+  return j;
+}
+async function deleteJob(id){
+  try{localStorage.removeItem("rpw_jobs_list")}catch(e){}
+  try{localStorage.removeItem('rpw_job_'+id)}catch(e){}
+  JOBS=JOBS.filter(function(j){return j.id!==id});
+  render();
+  // SOFT-DELETE: nem törlünk fizikailag, csak archiváljuk (Coș/Kuka) — visszaállítható
+  try{await RPWDb.softDelete(sb,id);}catch(e){console.error('Soft-delete SB:',e)}
+}
+
+var i={
+dashboard:{ro:'Dashboard',en:'Dashboard',hu:'Dashboard'},
+paintWf:{ro:'Paint Workflow',en:'Paint Workflow',hu:'Paint Workflow'},
+listJobs:{ro:'LISTA LUCRARI',en:'JOB LIST',hu:'MUNKAK LISTAJA'},
+jobMgmt:{ro:'Gestiune lucrari',en:'Job management',hu:'Munka kezeles'},
+ph1:{ro:'Receptie',en:'Reception',hu:'Recepcio'},ph2:{ro:'Evaluare',en:'Assessment',hu:'Karfelmeres'},
+ph3:{ro:'Reconstatare',en:'Re-assessment',hu:'Ujrafelm.'},ph4:{ro:'Tinichigerie',en:'Bodywork',hu:'Lakatos'},ph5:{ro:'Vopsitorie',en:'Paint',hu:'Festode'},
+ph6:{ro:'Control',en:'Check',hu:'Kontrol'},ph7:{ro:'Inchis',en:'Closed',hu:'Lezart'},
+newJob:{ro:'Lucrare noua',en:'New job',hu:'Uj munka'},
+nr:{ro:'Nr.',en:'No.',hu:'Szam'},auto:{ro:'Auto',en:'Car',hu:'Auto'},
+client:{ro:'Client',en:'Client',hu:'Ugyfel'},phase:{ro:'Faza',en:'Phase',hu:'Fazis'},
+progress:{ro:'Progres',en:'Progress',hu:'Haladas'},date:{ro:'Data',en:'Date',hu:'Datum'},
+actions:{ro:'Actiuni',en:'Actions',hu:'Muveletek'},
+noJobs:{ro:'Nu sunt lucrari',en:'No jobs',hu:'Nincs munka'},
+addFirst:{ro:'Adauga prima lucrare',en:'Add first job',hu:'Vegyel fel munkat'},
+panou:{ro:'Programări',en:'Schedule',hu:'Programok'},lucrari:{ro:'Lucrari',en:'Jobs',hu:'Munkak'},
+parametri:{ro:'Parametri',en:'Parameters',hu:'Parameterek'},health:{ro:'Health',en:'Health',hu:'Health'},
+prm_label:{ro:'CONFIGURARE',en:'CONFIGURATION',hu:'BEALLITASOK'},
+prm_title:{ro:'Parametrii unitatii',en:'Unit parameters',hu:'Egyseg parameterek'},
+prm_firma:{ro:'Date firma',en:'Company data',hu:'Cegadatok'},
+prm_tarife:{ro:'Tarife orare',en:'Hourly rates',hu:'Oradijak'},
+prm_posturi:{ro:'Posturi & capacitate',en:'Workstations & capacity',hu:'Munkaposztok & kapacitas'},
+prm_nume:{ro:'Denumire',en:'Name',hu:'Nev'},prm_cif:{ro:'CIF',en:'Tax ID',hu:'Adoszam'},prm_orc:{ro:'Nr. ORC',en:'Reg. no.',hu:'Cegjegyzek'},prm_adresa:{ro:'Adresa',en:'Address',hu:'Cim'},prm_tel:{ro:'Telefon',en:'Phone',hu:'Telefon'},prm_rar:{ro:'Autorizatie RAR',en:'RAR auth.',hu:'RAR eng.'},prm_email:{ro:'Email',en:'Email',hu:'Email'},prm_iban:{ro:'IBAN',en:'IBAN',hu:'IBAN'},
+prm_t_tin:{ro:'Tinichigerie RON/h',en:'Bodywork RON/h',hu:'Lakatos RON/o'},prm_t_vop:{ro:'Vopsitorie RON/h',en:'Paint RON/h',hu:'Fenyezes RON/o'},prm_t_mec:{ro:'Mecanica RON/h',en:'Mechanic RON/h',hu:'Mechanika RON/o'},prm_tva:{ro:'TVA %',en:'VAT %',hu:'AFA %'},
+prm_p_tin:{ro:'Posturi tinichigerie',en:'Bodywork stations',hu:'Lakatos posztok'},prm_p_vop:{ro:'Posturi vopsitorie',en:'Paint stations',hu:'Fenyezo posztok'},prm_ore:{ro:'Ore / zi / post',en:'Hours / day / station',hu:'Ora / nap / poszt'},prm_zile:{ro:'Zile lucratoare / sapt.',en:'Working days / week',hu:'Munkanap / het'},
+prm_capac:{ro:'Capacitate calculata',en:'Calculated capacity',hu:'Szamitott kapacitas'},prm_saved:{ro:'Parametri salvati',en:'Parameters saved',hu:'Parameterek mentve'},prm_hint:{ro:'Aceste valori alimenteaza oferta si KPI-urile. Fara date nu exista KPI.',en:'These values feed the quote and KPIs.',hu:'Ezek az ertekek taplaljak az oferta-t es a KPI-kat.'},
+statistici:{ro:'Statistici',en:'Stats',hu:'Stat.'},programare:{ro:'Programare',en:'Schedule',hu:'Progr.'},
+deleted:{ro:'Sters',en:'Deleted',hu:'Torolve'},
+sterge:{ro:'Sterge programarea',en:'Delete',hu:'Torles'},
+admin_lbl:{ro:'Admin',en:'Admin',hu:'Admin'},
+admin_on:{ro:'Mod admin ACTIV',en:'Admin mode ON',hu:'Admin mod BE'},
+admin_off:{ro:'Mod admin oprit',en:'Admin mode OFF',hu:'Admin mod KI'},
+admin_set_pin:{ro:'Seteaza PIN admin (prima data):',en:'Set admin PIN (first time):',hu:'Admin PIN beallitasa (eloszor):'},
+admin_enter_pin:{ro:'PIN admin:',en:'Admin PIN:',hu:'Admin PIN:'},
+admin_wrong:{ro:'PIN gresit',en:'Wrong PIN',hu:'Hibas PIN'},
+admin_only:{ro:'Doar admin poate sterge — activeaza modul admin (lacatul)',en:'Admin only — unlock admin mode',hu:'Csak admin torolhet — kapcsold be az admin modot (lakat)'},
+
+// === Panou (Lean Dashboard) modul ===
+panou_label:{ro:'PANOUL REDASSISTANCE',en:'REDASSISTANCE PANEL',hu:'REDASSISTANCE PANEL'},
+panou_title:{ro:'Centru de Control Operational',en:'Operational Control Center',hu:'Operativ Iranyitokozpont'},
+panou_viitoare:{ro:'Lucrari viitoare',en:'Upcoming jobs',hu:'Jovobeli munkak'},
+panou_ratate:{ro:'Lucrari ratate',en:'Cancelled jobs',hu:'Lemondott munkak'},
+panou_arhivate:{ro:'Arhivate',en:'Archived',hu:'Arhivalt'},
+ratat_btn:{ro:'Ratat',en:'Missed',hu:'Elmaradt'},
+moved_ratat:{ro:'Mutat la lucrari ratate',en:'Moved to missed',hu:'Athelyezve a ratate-ba'},
+reactiveaza_btn:{ro:'Reactiveaza',en:'Reactivate',hu:'Visszaallitas'},
+reactivat:{ro:'Reactivat',en:'Reactivated',hu:'Visszaallitva'},
+pill_ready:{ro:'Gata de lucru',en:'Ready to work',hu:'Munkara kesz'},
+pill_wait:{ro:'In Asteptare',en:'Waiting',hu:'Varakozik'},
+pill_prog:{ro:'Programat',en:'Scheduled',hu:'Programalva'},
+cond_programare:{ro:'Programare',en:'Schedule',hu:'Idopont'},
+cond_loc:{ro:'Loc',en:'Place',hu:'Hely'},
+cond_om:{ro:'Om',en:'Person',hu:'Ember'},
+cond_piese:{ro:'Piese',en:'Parts',hu:'Alkatresz'},
+cond_whatsapp:{ro:'WhatsApp',en:'WhatsApp',hu:'WhatsApp'},
+cond_blocked_by:{ro:'Blocat de',en:'Blocked by',hu:'Akadalyozo'},
+status_cond:{ro:'Status / Conditii',en:'Status / Conditions',hu:'Allapot / Felteteles'},
+contact:{ro:'Contact',en:'Contact',hu:'Kapcsolat'},
+edit:{ro:'Editeaza',en:'Edit',hu:'Szerkesztes'},
+plate:{ro:'Nr. inmatr.',en:'Plate',hu:'Rendszam'},
+// === Programare modal + Deschide flow ===
+new_programare:{ro:'+ Programare noua',en:'+ New schedule',hu:'+ Uj programalas'},
+prog_dauna:{ro:'Dosar daună (asigurare) — deschide dosarul',en:'Damage file (insurance) — open dossier',hu:'Kárdosszié (biztosítás) — nyisd meg a dossziét'},
+receptie_auto:{ro:'Receptie auto',en:'Car reception',hu:'Auto atvetel'},
+dosar_dauna:{ro:'Dosar dauna',en:'Damage file',hu:'Kardosszie'},
+dosar_q:{ro:'Autovehiculul este in service?',en:'Is the car at the shop?',hu:'Az auto itt van a szervizben?'},
+dosar_aici:{ro:'Auto este aici — receptie acum',en:'Car is here — reception now',hu:'Itt van — atvetel most'},
+dosar_fisier:{ro:'Preluare date din fisier (constatare / PV)',en:'Import data from file',hu:'Adatok atvetele fajlbol'},
+dosar_citire:{ro:'Se citeste documentul...',en:'Reading document...',hu:'Dokumentum beolvasasa...'},
+dosar_tarziu:{ro:'Auto vine mai tarziu — programare',en:'Comes later — schedule',hu:'Kesobb jon — programalas'},
+prog_modal_title:{ro:'Programare noua',en:'New schedule',hu:'Uj programalas'},
+prog_modal_sub:{ro:'Min. necesar pentru a deschide o lucrare',en:'Minimum to open a job',hu:'Minimum a munka megnyitasahoz'},
+plate_label:{ro:'Nr. inmatricolare',en:'Plate number',hu:'Rendszam'},
+phone_label:{ro:'Telefon client',en:'Client phone',hu:'Ugyfel telefon'},
+plate_ph:{ro:'ex. MS-26-ABC',en:'e.g. MS-26-ABC',hu:'pl. MS-26-ABC'},
+phone_ph:{ro:'ex. 0721234567',en:'e.g. 0721234567',hu:'pl. 0721234567'},
+btn_cancel:{ro:'Anuleaza',en:'Cancel',hu:'Megse'},
+btn_programeaza:{ro:'Programeaza',en:'Schedule',hu:'Programaljuk'},
+deschide_lucrarea:{ro:'Recepție auto',en:'Car reception',hu:'Auto atvetel'},
+prog_required:{ro:'Numar inmatr. si telefon obligatoriu',en:'Plate and phone required',hu:'Rendszam es telefon kell'},
+prog_created:{ro:'Programare creata',en:'Schedule created',hu:'Programalas letrejott'},
+nj_title:{ro:'Lucrare noua',en:'New job',hu:'Uj munka'},
+nj_sub:{ro:'Ce facem + cum se plateste',en:'What we do + how it is paid',hu:'Mit csinalunk + hogyan fizetik'},
+nj_here:{ro:'Masina e aici',en:'Car is here',hu:'Auto itt van'},
+nj_here_note:{ro:'Masina e aici, incepe receptia acum',en:'Car is here, reception starts now',hu:'Az auto itt van, indul a recepcio'},
+nj_do:{ro:'Ce facem acum',en:'What we do now',hu:'Mit csinalunk most'},
+nj_t_prog:{ro:'Programare',en:'Schedule',hu:'Programalas'},
+nj_t_prog_s:{ro:'Masina vine mai tarziu',en:'Car comes later',hu:'Az auto kesobb jon'},
+nj_t_rep:{ro:'Reparatie',en:'Repair',hu:'Javitas'},
+nj_t_rep_s:{ro:'Reparam la noi',en:'We repair it',hu:'Nalunk javitjuk'},
+nj_t_dos:{ro:'Dosar',en:'File',hu:'Dosszie'},
+nj_t_dos_s:{ro:'Colectare date pt. asigurator',en:'Data collection for insurer',hu:'Adatgyujtes a biztositohoz'},
+nj_pay:{ro:'Plata / dosar',en:'Payment / file',hu:'Fizetes / dosszie'},
+nj_pay_a:{ro:'Dosar de deschis',en:'File to be opened',hu:'Dossziet nyitunk'},
+nj_pay_a_s:{ro:'Noi colectam actele si deschidem',en:'We collect docs and open it',hu:'Mi gyujtjuk az iratokat'},
+nj_pay_b:{ro:'Dosar deja deschis',en:'File already open',hu:'Dosszie mar nyitva'},
+nj_pay_b_s:{ro:'Lucram pe baza constatarii',en:'We work from the assessment',hu:'Constatare alapjan dolgozunk'},
+nj_pay_c:{ro:'Plateste clientul',en:'Client pays',hu:'Ugyfel fizet'},
+nj_pay_c_s:{ro:'Fara asigurare',en:'No insurance',hu:'Sajat zsebre'},
+nj_nrdosar_hint:{ro:'Nr. dosar se obtine la deschidere',en:'Claim no. comes at opening',hu:'A karszam a nyitaskor lesz meg'},
+nj_date:{ro:'Data reparatiei',en:'Repair date',hu:'Javitas datuma'},
+nj_today:{ro:'Azi',en:'Today',hu:'Ma'},
+nj_tomorrow:{ro:'Maine',en:'Tomorrow',hu:'Holnap'},
+nj_after:{ro:'Poimaine',en:'In 2 days',hu:'Holnaputan'},
+nj_asigurator:{ro:'Asigurator',en:'Insurer',hu:'Biztosito'},
+nj_nrdosar:{ro:'Nr. dosar asigurator',en:'Claim number',hu:'Karszam'},
+nj_more:{ro:'Date optionale (client, masina)',en:'Optional (client, car)',hu:'Opcionalis (ugyfel, auto)'},
+nj_client:{ro:'Client',en:'Client',hu:'Ugyfel'},
+nj_auto:{ro:'Marca / model',en:'Make / model',hu:'Marka / modell'},
+nj_missing:{ro:'Lipseste',en:'Missing',hu:'Hianyzik'},
+nj_m_plate:{ro:'nr. inmatriculare',en:'plate',hu:'rendszam'},
+nj_m_phone:{ro:'telefon valid',en:'valid phone',hu:'ervenyes telefon'},
+nj_m_do:{ro:'ce facem (min. 1)',en:'what we do (min. 1)',hu:'mit csinalunk (min. 1)'},
+nj_m_pay:{ro:'plata / dosar',en:'payment / file',hu:'fizetes / dosszie'},
+nj_m_date:{ro:'data reparatiei',en:'repair date',hu:'javitas datuma'},
+nj_m_nrdosar:{ro:'nr. dosar (dosarul e deja deschis)',en:'claim no. (file already open)',hu:'karszam (a dosszie mar nyitva)'},
+nj_dup:{ro:'Exista deja o lucrare activa pe acest numar',en:'An active job already exists for this plate',hu:'Erre a rendszamra mar van elo munka'},
+nj_open:{ro:'Salveaza',en:'Save',hu:'Mentes'},
+nj_open_prog:{ro:'Programeaza',en:'Schedule',hu:'Elojegyzes'},
+nj_open_dosar:{ro:'Deschide dosarul',en:'Open the file',hu:'Dosszie megnyitasa'},
+nj_open_lucrare:{ro:'Recepție auto',en:'Car reception',hu:'Auto atvetel'},
+nj_ok_prog:{ro:'Programare creata',en:'Schedule created',hu:'Programalas letrejott'},
+nj_ok_dosar:{ro:'Dosar creat (fara reparatie)',en:'File created (no repair)',hu:'Dosszie letrejott (javitas nelkul)'},
+col_data:{ro:'Data',en:'Date',hu:'Datum'},
+pg_azi:{ro:'Azi',en:'Today',hu:'Ma'},
+pg_maine:{ro:'Maine',en:'Tomorrow',hu:'Holnap'},
+pg_fara_data:{ro:'Fara data',en:'No date',hu:'Nincs datum'},
+pg_intarziat:{ro:'Intarziat',en:'Overdue',hu:'Kesett'},
+pg_zi:{ro:'zi',en:'day',hu:'nap'},
+pg_zile:{ro:'zile',en:'days',hu:'nap'},
+pg_restante:{ro:'programari restante — decide ce faci cu ele',en:'overdue appointments — decide what to do',hu:'kesett elojegyzes — dontsd el, mi legyen veluk'},
+repro_btn:{ro:'Reprogramare',en:'Reschedule',hu:'Atutemezes'},
+repro_title:{ro:'Reprogramare',en:'Reschedule',hu:'Atutemezes'},
+repro_sub:{ro:'Data noua pentru sosirea masinii',en:'New arrival date',hu:'Az auto uj erkezesi datuma'},
+repro_prev:{ro:'Data anterioara',en:'Previous date',hu:'Elozo datum'},
+repro_count:{ro:'reprogramari pana acum',en:'reschedules so far',hu:'atutemezes eddig'},
+repro_save:{ro:'Salveaza data noua',en:'Save new date',hu:'Uj datum mentese'},
+repro_ok:{ro:'Reprogramat',en:'Rescheduled',hu:'Atutemezve'},
+repro_need:{ro:'Alege o data',en:'Pick a date',hu:'Valassz datumot'},
+need_wa_btn:{ro:'Contacteaza clientul',en:'Contact the client',hu:'Ertesitsd az ugyfelet'},
+btn_prog_nou:{ro:'Programare noua',en:'New appointment',hu:'Uj elojegyzes'},
+btn_dosar_nou:{ro:'Deschide dosar dauna',en:'Open claim file',hu:'Kardosszie nyitasa'},
+btn_lucrare_noua:{ro:'Lucrare noua',en:'New job',hu:'Uj munka'},
+panou_dosare:{ro:'Dosare daună',en:'Claim files',hu:'Kárdossziék'},
+col_asig:{ro:'Asigurator',en:'Insurer',hu:'Biztosito'},
+col_acte:{ro:'Acte',en:'Docs',hu:'Iratok'},
+col_status:{ro:'Status',en:'Status',hu:'Allapot'},
+st_astept:{ro:'Asteptam masina',en:'Waiting for the car',hu:'Varjuk az autot'},
+st_acte:{ro:'acte',en:'docs',hu:'irat'},
+st_predat:{ro:'Predat asiguratorului',en:'Handed to insurer',hu:'Atadva a biztositonak'},
+st_inchis:{ro:'Inchis',en:'Closed',hu:'Lezarva'},
+badge_prog:{ro:'Programare',en:'Appointment',hu:'Elojegyzes'},
+badge_dosar:{ro:'Dosar dauna',en:'Claim file',hu:'Kardosszie'},
+open_dosar_btn:{ro:'Deschide dosarul',en:'Open the file',hu:'Dosszie megnyitasa'},
+m_prog_t:{ro:'Programare noua',en:'New appointment',hu:'Uj elojegyzes'},
+m_prog_s:{ro:'Masina vine mai tarziu — rezervam ora',en:'Car comes later — we book the slot',hu:'Az auto kesobb jon — idopontot foglalunk'},
+m_dosar_t:{ro:'Deschide dosar dauna',en:'Open claim file',hu:'Kardosszie nyitasa'},
+m_dosar_s:{ro:'Colectare acte pentru asigurator — fara reparatie',en:'Document collection for the insurer — no repair',hu:'Iratgyujtes a biztositohoz — javitas nelkul'},
+m_lucrare_t:{ro:'Lucrare noua',en:'New job',hu:'Uj munka'},
+m_lucrare_s:{ro:'Masina e aici — incepe lucrarea',en:'Car is here — work starts',hu:'Az auto itt van — indul a munka'},
+m_tip:{ro:'Tipul lucrarii',en:'Job type',hu:'A munka tipusa'},
+m_tip_asig:{ro:'Dauna asigurare',en:'Insurance claim',hu:'Biztositoi kar'},
+m_tip_asig_s:{ro:'Deconteaza asiguratorul',en:'Insurer settles',hu:'A biztosito fizet'},
+m_tip_auto:{ro:'Dauna auto',en:'Direct repair',hu:'Sajat zsebre'},
+m_tip_auto_s:{ro:'Plateste clientul',en:'Client pays',hu:'Az ugyfel fizet'},
+m_m_tip:{ro:'tipul lucrarii',en:'job type',hu:'a munka tipusa'},
+m_ok_prog:{ro:'Programare creata',en:'Appointment created',hu:'Elojegyzes letrejott'},
+m_ok_dosar:{ro:'Dosar deschis',en:'Claim file opened',hu:'Dosszie megnyitva'},
+need_wa_tip:{ro:'Masina nu intra in atelier pana nu vorbesti cu clientul. Click: marcheaza contactul (sau bifeaza manual, daca ai vorbit la telefon).',en:'The car does not enter the workshop until the client is contacted. Click to mark it (or tick manually if you spoke by phone).',hu:'Az auto nem all be, amig nem beszeltel az ugyfellel. Kattints a jelolesehez (vagy pipald be kezzel, ha telefonon egyeztettel).'},
+wa_sent_marked:{ro:'WhatsApp marcat ca trimis',en:'WhatsApp marked as sent',hu:'WhatsApp jeloltve'},
+wa_no_phone:{ro:'Lipseste telefon',en:'No phone',hu:'Nincs telefon'},
+nu_sterg_programat:{ro:'Lucrare programată — nu se poate șterge (folosiți „Ratat")',en:'Scheduled job — cannot delete (use "Missed")',hu:'Programált munka — nem törölhető (használd a „Ratat"-ot)'},
+no_wa_yet:{ro:'Trimite WhatsApp pentru a debloca',en:'Send WhatsApp to unlock',hu:'WhatsApp uzenetet kuldj'},
+
+// === Conditii modal ===
+cond_modal_title:{ro:'Conditii lucrare',en:'Job conditions',hu:'Munka feltetelek'},
+cond_q_prog:{ro:'Programare confirmata?',en:'Schedule confirmed?',hu:'Idopont megerositve?'},
+cond_q_loc:{ro:'Loc / Box rezervat?',en:'Place / Box reserved?',hu:'Hely / Box lefoglalva?'},
+cond_q_om:{ro:'Mecanic asignat?',en:'Mechanic assigned?',hu:'Szerelo hozzarendelve?'},
+cond_q_piese:{ro:'Piese?',en:'Parts?',hu:'Alkatresz?'},
+cond_q_wa:{ro:'WhatsApp trimis?',en:'WhatsApp sent?',hu:'WhatsApp elkuldve?'},
+piese_nu:{ro:'Necomandate',en:'Not ordered',hu:'Nincs rendelve'},
+piese_comandat:{ro:'Comandat',en:'Ordered',hu:'Megrendelve'},
+piese_livrat:{ro:'Livrat',en:'Delivered',hu:'Megerkezett'},
+yes_da:{ro:'DA',en:'YES',hu:'IGEN'},
+no_nu:{ro:'NU',en:'NO',hu:'NEM'},
+btn_save:{ro:'Salveaza',en:'Save',hu:'Mentes'},
+cond_saved:{ro:'Conditii salvate',en:'Conditions saved',hu:'Feltetelek elmentve'},
+th_conditii:{ro:'Conditii',en:'Conditions',hu:'Feltetelek'},
+kpi_inchise:{ro:'Inchise',en:'Closed',hu:'Lezart'},
+kpi_inlucru:{ro:'In lucru',en:'In progress',hu:'Folyamatban'},
+kpi_oretin:{ro:'Ore tinichigerie',en:'Body hours',hu:'Lakatos ora'},
+kpi_orevop:{ro:'Ore vopsitorie',en:'Paint hours',hu:'Festo ora'},
+kpi_totore:{ro:'Total ore',en:'Total hours',hu:'Ossz ora'},
+kpi_medie:{ro:'Medie ore/lucrare',en:'Avg hrs/job',hu:'Atlag ora/munka'},
+stat_hours_series:{ro:'Ore lucrate (lucrari inchise)',en:'Worked hours (closed jobs)',hu:'Ledolgozott orak (lezart munkak)'},
+sumar_anual:{ro:'Sumar anual',en:'Annual summary',hu:'Eves osszegzes'},
+luna_lbl:{ro:'Luna',en:'Month',hu:'Honap'},
+field_saved:{ro:'Salvat',en:'Saved',hu:'Mentve'},
+edit_date:{ro:'Editeaza date',en:'Edit data',hu:'Adatok szerkesztese'},
+double_click_hint:{ro:'Dublu-click pe rand pentru a edita conditiile',en:'Double-click row to edit conditions',hu:'Dupla-klikk a sorra a feltetelek szerkesztesehez'},
+
+// === Statistici modul ===
+statTitle:{ro:'STATISTICI WORKFLOW',en:'WORKFLOW STATS',hu:'WORKFLOW STATISZTIKA'},
+statSub:{ro:'KPI-uri performanta',en:'Performance KPIs',hu:'Teljesitmeny KPI-k'},
+periodToday:{ro:'Azi',en:'Today',hu:'Ma'},
+periodWeek:{ro:'Sapt.',en:'Week',hu:'Hét'},
+periodMonth:{ro:'Luna',en:'Month',hu:'Hó'},
+periodYear:{ro:'An',en:'Year',hu:'Év'},
+periodAll:{ro:'Tot',en:'All',hu:'Összes'},
+
+stat_phaseDist:{ro:'Distributia pe faze',en:'Phase distribution',hu:'Fazis eloszlas'},
+stat_throughput:{ro:'Lucrari finalizate',en:'Completed jobs',hu:'Lezart munkak'},
+stat_cycleTime:{ro:'Ciclu mediu total',en:'Avg total cycle',hu:'Atlag ciklusido'},
+stat_phaseAvg:{ro:'Timp mediu / faza',en:'Avg time per phase',hu:'Atlag ido / fazis'},
+stat_stuck:{ro:'Lucrari blocate',en:'Stuck jobs',hu:'Megrekedt munkak'},
+stat_ftr:{ro:'First-Time-Right',en:'First-Time-Right',hu:'Elsore-Jol'},
+
+stat_days:{ro:'zile',en:'days',hu:'nap'},
+stat_hours:{ro:'ore',en:'hrs',hu:'óra'},
+stat_avg:{ro:'medie',en:'avg',hu:'átlag'},
+stat_total:{ro:'total',en:'total',hu:'össz.'},
+stat_noData:{ro:'Date insuficiente',en:'Insufficient data',hu:'Nincs eleg adat'},
+stat_reconstNeeded:{ro:'au necesitat reconstatare',en:'needed re-assessment',hu:'igenyelt ujrafelmerest'},
+stat_stuckInPhase:{ro:'in faza',en:'in phase',hu:'fazisban'},
+stat_thresholdDays:{ro:'Prag (zile)',en:'Threshold (days)',hu:'Hatar (nap)'},
+
+};
+var PK=['ph1','ph2','ph3','ph4','ph5','ph6','ph7'];
+// Status color: red=active, yellow=waiting(reconstatare), green=done
+function phBadge(phase){if(phase===7)return 'badge-g';if(phase===3)return 'badge-y';return 'badge-r'}
+var PS=['ps1','ps2','ps3','ps4','ps5','ps6','ps7'];
+function gL(){return localStorage.getItem('rpw_lang')||'ro'}
+function sL(l){localStorage.setItem('rpw_lang',l);render()}
+function T(k){var e=i[k];return e?e[gL()]||e.ro||k:k}
+function toast(m){S.ts=m;render();setTimeout(function(){S.ts=null;render()},2500)}
+
+// ─── INDEXEDDB (fotok) ────────────────────────────────────────────────────
+var _idb=null;
+function openIDB(){
+  return new Promise(function(res,rej){
+    if(_idb){res(_idb);return}
+    var req=indexedDB.open('rpw_photos',1);
+    req.onupgradeneeded=function(e){e.target.result.createObjectStore('photos')};
+    req.onsuccess=function(e){_idb=e.target.result;res(_idb)};
+    req.onerror=function(){rej('IDB failed')};
+  });
+}
+async function idbPut(key,val){
+  var db=await openIDB();
+  return new Promise(function(res,rej){
+    var tx=db.transaction('photos','readwrite');
+    tx.objectStore('photos').put(val,key);
+    tx.oncomplete=res;tx.onerror=rej;
+  });
+}
+
+// ─── ZIP IMPORT ────────────────────────────────────────────────────────────
+window.triggerImport=function(){document.getElementById('zipImportInput').click()};
+window.importZIP=async function(e){
+  var file=e.target.files&&e.target.files[0];
+  if(!file)return;
+  try{
+    toast('Se importa ZIP...');
+    var zip=await JSZip.loadAsync(file);
+    // Gaseste receptie_report.json
+    var reportFile=null;
+    zip.forEach(function(path,f){if(path.indexOf('receptie_report.json')>=0)reportFile=f});
+    if(!reportFile){toast('ZIP invalid: nu contine receptie_report.json');return}
+    var reportStr=await reportFile.async('string');
+    var report=JSON.parse(reportStr);
+    // Reconstruieste job
+    var job={
+      id:report.job.id,
+      number:report.job.number||'',
+      client:report.job.client||'',
+      phone:report.job.phone||'',
+      note:report.job.note||'',
+      plate:report.vehicle.plate||'',
+      vin:report.vehicle.vin||'',
+      brand:report.vehicle.brand||'',
+      auto:report.vehicle.auto||'',
+      year:report.vehicle.year||'',
+      proprietar:report.vehicle.proprietar||'',
+      damageType:report.damageType||null,
+      elements:report.elements||{},
+      damageReport:report.damageReport||{},
+      created:report.generatedAt||new Date().toISOString(),
+      phase:2,
+      photoKeys:{},
+      phases:{1:{status:'done',finished:report.generatedAt},2:{status:'active',started:report.generatedAt},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}}
+    };
+    // Importa fotók IndexedDB-be
+    var photoCount=0;
+    var photoPromises=[];
+    zip.forEach(function(path,f){
+      if(path.indexOf('photos/')>=0&&path.indexOf('.jpg')>=0){
+        var key=path.split('/').pop().replace('.jpg','');
+        photoPromises.push(
+          f.async('base64').then(function(b64){
+            var fullB64='data:image/jpeg;base64,'+b64;
+            job.photoKeys[key]=true;
+            photoCount++;
+            return idbPut(job.id+'_'+key,fullB64);
+          })
+        );
+      }
+    });
+    await Promise.all(photoPromises);
+    // Mentés localStorage
+    try{localStorage.setItem('rpw_job_'+job.id,JSON.stringify(job))}catch(err){}
+    // Lista frissítés
+    var exists=JOBS.some(function(x){return x.id===job.id});
+    if(!exists)JOBS.unshift(job);
+    else{var idx=JOBS.findIndex(function(x){return x.id===job.id});JOBS[idx]=job}
+    try{localStorage.removeItem('rpw_jobs_list')}catch(err){}
+    render();
+    toast('Import OK: '+(job.number||job.id)+' — '+photoCount+' foto');
+  }catch(err){toast('Import eroare: '+err.message)}
+  e.target.value='';
+};
+
+var IC={panou:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',jobs:'<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',stats:'<svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>',prog:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',plus:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',edit:'<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',del:'<svg viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>',user:'<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',params:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>'};
+
+function sbNav(active){
+  var ln=gL();
+  function it(scr,ic,t,key){return '<div class="sb-item '+(active===key?'on':'')+'" onclick="setScreen(\''+scr+'\')">'+ic+'<span>'+t+'</span></div>';}
+  return '<div class="sidebar"><div class="sb-logo"><div class="sb-logo-c"><div class="sb-logo-ring"></div><div class="sb-logo-d"></div></div><div class="sb-logo-tx"><div class="sb-logo-t"><span>Red</span>Assistance</div><div class="sb-logo-sub">DIGITAL ECOSYSTEM</div></div></div><div class="sb-nav">'+
+    it('panou',IC.prog,T('panou'),'panou')+
+    it('lucrari',IC.jobs,T('lucrari'),'lucrari')+
+    it('statistici',IC.stats,T('statistici'),'statistici')+
+    it('parametri',IC.params,T('parametri'),'parametri')+
+    (isAdmin()?'<div class="sb-item" onclick="location.assign(\'rpw-cleanup.html\')"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg><span>Curatare</span></div>':'')+
+    (isAdmin()?'<div class="sb-item" onclick="location.assign(\'rpw-cos.html\')"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M10 11v6M14 11v6"/></svg><span>Coș (șterse)</span></div>':'')+
+    '</div><div style="padding:6px 4px;border-top:1px solid var(--b)"><div class="sb-item'+(isAdmin()?' sb-admin-on':'')+'" onclick="toggleAdmin()"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="'+(isAdmin()?'M7 11V7a5 5 0 019.9-1':'M7 11V7a5 5 0 0110 0v4')+'"/></svg><span>'+(isAdmin()?'ADMIN ✓':T('admin_lbl'))+'</span></div></div><div class="sb-lang"><button class="lb '+(ln==='ro'?'on':'')+'" onclick="sL(\'ro\')">RO</button><button class="lb '+(ln==='en'?'on':'')+'" onclick="sL(\'en\')">EN</button><button class="lb '+(ln==='hu'?'on':'')+'" onclick="sL(\'hu\')">HU</button></div></div>';
+}
+
+function render(){
+  if(S.screen==='statistici'){renderStatistici();return}
+  if(S.screen==='panou'){renderPanou();return}
+  if(S.screen==='parametri'){renderParametri();return}
+  var ln=gL(),allJobs=JOBS;
+  var jobs=allJobs.filter(function(j){return categorizeJob(j)==='lucrari'});
+  var act=jobs.filter(function(j){return j.phase<7}).length;
+  var pc=[0,0,0,0,0,0,0];jobs.forEach(function(j){if(j.phase>=1&&j.phase<=7)pc[j.phase-1]++});
+  var loc=ln==='hu'?'hu-HU':ln==='ro'?'ro-RO':'en-GB';
+
+  var h=sbNav('lucrari');
+
+  h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
+  h+='<div class="page-hdr"><div><div class="ph-label">'+T('listJobs')+'</div><div class="ph-title">'+T('jobMgmt')+'</div></div><div style="display:flex;gap:8px"><button class="btn btn-o" onclick="triggerImport()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import ZIP</button><button class="btn btn-r" onclick="openNewJob()">'+IC.plus+' '+T('newJob')+'</button></div></div><input type="file" id="zipImportInput" accept=".zip" style="display:none" onchange="importZIP(event)">';
+  h+='<div class="stat-row"><div class="stat-cell"><div class="stat-cell-label">'+T('ph1')+'</div><div class="stat-cell-val" style="color:var(--r)">'+pc[0]+'</div></div><div class="stat-cell"><div class="stat-cell-label">'+T('ph2')+'</div><div class="stat-cell-val" style="color:var(--r)">'+pc[1]+'</div></div><div class="stat-cell"><div class="stat-cell-label">'+T('ph3')+'</div><div class="stat-cell-val" style="color:var(--y)">'+pc[2]+'</div></div><div class="stat-cell"><div class="stat-cell-label">'+T('ph4')+'/'+T('ph5')+'</div><div class="stat-cell-val" style="color:var(--r)">'+(pc[3]+pc[4])+'</div></div><div class="stat-cell"><div class="stat-cell-label">'+T('ph6')+'/'+T('ph7')+'</div><div class="stat-cell-val" style="color:var(--g)">'+(pc[5]+pc[6])+'</div></div></div>';
+
+  h+='<div class="tbl-wrap">';
+  if(!jobs.length){h+='<div class="empty"><div style="font-size:16px;font-weight:700;margin-bottom:6px">'+T('noJobs')+'</div><div style="font-size:12px">'+T('addFirst')+'</div></div>'}
+  else{
+    h+='<table class="tbl"><thead><tr><th>'+T('nr')+'</th><th>'+T('auto')+'</th><th>'+T('client')+'</th><th>'+T('phase')+'</th><th>'+T('progress')+'</th><th>'+T('th_conditii')+'</th><th>'+T('date')+'</th><th class="c">'+T('actions')+'</th></tr></thead><tbody>';
+    var sorted=jobs.slice().sort(function(a,b){return(a.phase===7?1:0)-(b.phase===7?1:0)||new Date(b.created)-new Date(a.created)});
+    sorted.forEach(function(j){
+      var ed=(S.editJobId===j.id);
+      function inp(f,v,ph){return '<input class="cell-inp" value="'+escA(v||'')+'" placeholder="'+ph+'" onchange="updJobField(\''+j.id+'\',\''+f+'\',this.value)"/>'}
+      h+='<tr><td class="mono" style="font-weight:800">'+(ed?inp('number',j.number,'Nr'):escH(j.number||j.id))+'</td>';
+      h+='<td>'+(ed?inp('auto',j.auto,'Auto')+inp('plate',j.plate,'Nr. inmatr.')+inp('vin',j.vin,'VIN'):(escH(j.auto||'—')+'<br><span style="font-size:10px;color:var(--t3)">'+escH(j.plate||'')+' '+(j.vin?'· '+escH(j.vin.slice(-6)):'')+'</span>'))+'</td>';
+      h+='<td>'+(ed?inp('client',j.client,'Client')+inp('phone',j.phone,'Telefon'):(escH(j.client||'—')+'<br><span style="font-size:10px;color:var(--t3)">'+escH(j.phone||'')+'</span>'))+'</td>';
+      h+='<td><span class="badge '+phBadge(j.phase)+'">'+T(PK[j.phase-1])+'</span></td>';
+      h+='<td><div class="prog">';for(var p=1;p<=7;p++){var pc2=p<j.phase?'psg':p===j.phase?(p===3?'psy':'psr'):'pse';h+='<div class="prog-s '+pc2+'"></div>'}h+='</div></td>';
+      var cnd=computeConditions(j);
+      h+='<td><div class="cond-row" style="cursor:pointer" title="'+T('cond_modal_title')+'" onclick="openCondModal(\''+j.id+'\')">'+renderCondIcon(cnd.programare)+renderCondIcon(cnd.loc)+renderCondIcon(cnd.om)+renderCondIcon(cnd.piese,'piese')+renderCondIcon(cnd.whatsapp)+'</div></td>';
+      h+='<td style="font-size:12px;color:var(--t3)">'+(j.created?new Date(j.created).toLocaleDateString(loc,{day:'2-digit',month:'2-digit',year:'numeric'}):'')+'</td>';
+      h+='<td class="c"><button class="act-btn act-data'+(ed?' on':'')+'" title="'+T('edit_date')+'" onclick="toggleEditJob(\''+j.id+'\')">'+(ed?'✓':'✎')+'</button> <button class="act-btn act-edit" onclick="oP(\''+j.id+'\','+j.phase+')">'+IC.edit+'</button> <button class="act-btn act-del" onclick="dJ(\''+j.id+'\')">'+IC.del+'</button></td></tr>';
+    });
+    h+='</tbody></table>';
+  }
+  h+='</div></div>';
+  h+=newJobModalHtml();
+  h+=reproModalHtml();
+  h+=condModalHtml();
+  if(S.ts)h+='<div class="toast">'+S.ts+'</div>';
+  document.getElementById('app').innerHTML=h;if(window.njAfterRender)njAfterRender();
+}
+
+// ════════════════════════════════════════════════════════════════
+// PANOU MODUL — Lean Dashboard 5 konditiokkal
+// ════════════════════════════════════════════════════════════════
+
+function computeConditions(job){
+  var c=job.conditions||{};
+  var prog=!!c.programare, loc=!!c.loc, om=!!c.om, wa=!!c.whatsapp;
+  // piese: false / 'comandat' / 'livrat'  (backward-compat: true → 'livrat')
+  var piese=c.piese;
+  if(piese===true)piese='livrat';
+  if(!piese)piese=false;
+  var pieseOK=(piese==='livrat');
+  return {
+    programare:prog, loc:loc, om:om, piese:piese, whatsapp:wa,
+    all: prog && loc && om && pieseOK && wa,
+    count: (prog?1:0)+(loc?1:0)+(om?1:0)+(pieseOK?1:0)+(wa?1:0)
+  };
+}
+
+function categorizeJob(job){
+  if(window.RPWWorkflow&&job)try{RPWWorkflow.migrateJob(job)}catch(e){}
+  migrateState(job);                       // sosire / flux / inchis biztositasa
+  // EGYETLEN dontesi lanc — nincs ket allapotgep, nincs sorrendfuggo keveredes.
+  if(job.separat)               return 'separat';
+  if(job.inchis===true)         return 'arhivate';
+  if(job.sosire==='ratat')      return 'ratate';
+  if(job.flux==='doar_dosar')   return 'dosare';
+  if(job.sosire==='programat')  return 'viitoare';
+  return 'lucrari';
+}
+
+// ── MIGRACIO: a regi ket allapotgepbol az uj, egyertelmu mezokbe ──
+// Idempotens: barhanyszor futhat. A regi programare.status TUKORKENT megmarad
+// (egy koron at), hogy semmi ne torjon — de dontest tobbe nem hoz belole senki.
+function migrateState(job){
+  if(!job||typeof job!=='object')return job;
+  var p=job.programare||{};
+  if(job.flux!=='reparatie'&&job.flux!=='doar_dosar'){
+    job.flux=(job.doarDosar===true)?'doar_dosar':'reparatie';
+  }
+  if(['programat','sosit','ratat'].indexOf(job.sosire)<0){
+    if(p.status==='ratat')                          job.sosire='ratat';
+    else if(p.status==='in_lucru')                  job.sosire='sosit';
+    else if(typeof job.phase==='number'&&job.phase>=1&&p.status!=='viitor') job.sosire='sosit';
+    else                                            job.sosire='programat';
+  }
+  if(typeof job.inchis!=='boolean'){
+    var f7=(job.phases&&job.phases[7]&&job.phases[7].status)||null;
+    job.inchis=(p.status==='arhivat'||f7==='done');
+  }
+  // phase: SOHA nem 0. Az elojegyzes = phase 1, de phases[1] meg 'pending'.
+  if(typeof job.phase!=='number'||job.phase<1)job.phase=1;
+  syncMirror(job);
+  return job;
+}
+// A regi mezo tukrozese — biztonsagi halo, amig minden oldal at nem all.
+function syncMirror(job){
+  if(!job.programare)job.programare={};
+  job.programare.status = job.inchis ? 'arhivat'
+    : (job.sosire==='ratat' ? 'ratat'
+    : (job.sosire==='sosit' ? 'in_lucru' : 'viitor'));
+  job.doarDosar = (job.flux==='doar_dosar');
+  return job;
+}
+
+function renderCondIcon(state, type){
+  // type: 'piese' → 3 allapot, false/comandat/livrat
+  if(type==='piese'){
+    if(state==='livrat') return '<span class="cond-ic ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>';
+    if(state==='comandat') return '<span class="cond-ic comandat"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>';
+    return '<span class="cond-ic no"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>';
+  }
+  if(state) return '<span class="cond-ic ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>';
+  return '<span class="cond-ic no"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>';
+}
+
+function renderPanou(){
+  var ln=gL(),jobs=JOBS;
+  var loc=ln==='hu'?'hu-HU':ln==='ro'?'ro-RO':'en-GB';
+
+  var viitoare=jobs.filter(function(j){return categorizeJob(j)==='viitoare'});
+  var ratate=jobs.filter(function(j){return categorizeJob(j)==='ratate'});
+  var arhivate=jobs.filter(function(j){return categorizeJob(j)==='arhivate'});
+  var separat=jobs.filter(function(j){return categorizeJob(j)==='separat'});
+  var dosare=jobs.filter(function(j){return categorizeJob(j)==='dosare'});
+
+  viitoare.sort(function(a,b){
+    var pa=((a.programare||{}).date)||'9999-12-31', pb=((b.programare||{}).date)||'9999-12-31';
+    if(pa!==pb)return pa<pb?-1:1;
+    var ta=((a.programare||{}).time)||'99:99', tb=((b.programare||{}).time)||'99:99';
+    return ta<tb?-1:(ta>tb?1:0);
+  });
+
+  var tab=S.panouTab||'viitoare';
+  if(tab==='dosare')tab='viitoare';            // a kulon ful megszunt
+  // EGY LISTA: programare + dosar egyutt. A categorizeJob tovabbra is
+  // kulon kezeli oket (az allapotmodell erintetlen) — csak a NEZET kozos.
+  var deAzi=viitoare.concat(dosare).sort(function(a,b){
+    var pa=((a.programare||{}).date)||'9999-12-31', pb=((b.programare||{}).date)||'9999-12-31';
+    if(pa!==pb)return pa<pb?-1:1;
+    var ta=((a.programare||{}).time)||'99:99', tb=((b.programare||{}).time)||'99:99';
+    return ta<tb?-1:(ta>tb?1:0);
+  });
+  var displayed=tab==='ratate'?ratate:tab==='arhivate'?arhivate:tab==='separat'?separat:deAzi;
+
+  // Sidebar
+  var h=sbNav('panou');
+
+  // Main
+  h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
+
+  // Header + Programare noua gomb
+  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-prog-new" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="background:var(--bl,#2563eb)" onclick="openNewJob(\'dosar\')">&#128193; '+T('btn_dosar_nou')+'</button><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="openNewJob(\'lucrare\')">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
+
+  // Tabs
+  h+='<div class="panou-tabs">';
+  h+='<button class="panou-tab '+(tab==='viitoare'?'on':'')+'" onclick="setPanouTab(\'viitoare\')">'+T('panou_viitoare')+'<span class="tab-count">'+deAzi.length+'</span></button>';
+  h+='<button class="panou-tab '+(tab==='ratate'?'on':'')+'" onclick="setPanouTab(\'ratate\')">'+T('panou_ratate')+'<span class="tab-count">'+ratate.length+'</span></button>';
+  h+='<button class="panou-tab '+(tab==='arhivate'?'on':'')+'" onclick="setPanouTab(\'arhivate\')">'+T('panou_arhivate')+'<span class="tab-count">'+arhivate.length+'</span></button>';
+  h+='<button class="panou-tab '+(tab==='separat'?'on':'')+'" onclick="setPanouTab(\'separat\')">📂 Separat<span class="tab-count">'+separat.length+'</span></button>';
+  h+='</div>';
+
+  // Restante figyelmezteto
+  if(tab==='viitoare'){
+    var restN=deAzi.filter(function(j){return progInfo(j).state==='late'}).length;
+    if(restN)h+='<div class="pg-banner">⚠ <span>'+restN+' '+T('pg_restante')+'</span></div>';
+  }
+
+  // Hint sav
+  if(displayed.length)h+='<div class="panou-hint">💡 '+T('double_click_hint')+'</div>';
+
+  // Table
+  h+='<div class="panou-tbl-wrap">';
+  if(!displayed.length){
+    h+='<div class="empty" style="background:var(--w);border-radius:var(--rd);padding:60px 20px;text-align:center;color:var(--t3)"><div style="font-size:14px;font-weight:600">'+T('noJobs')+'</div></div>';
+  } else {
+    h+='<table class="panou-tbl"><thead><tr><th>'+T('client')+'</th><th>'+T('plate')+'</th><th>'+T('col_data')+'</th>'
+      + (tab==='viitoare'
+          ? '<th>'+T('col_status')+'</th>'
+          : '<th>'+T('phase')+'</th><th>'+T('status_cond')+'</th>')
+      + '<th>'+T('contact')+'</th><th>'+T('actions')+'</th></tr></thead><tbody>';
+    displayed.forEach(function(j){
+      var cnd=computeConditions(j);
+      var canOpen=cnd.whatsapp; // CSAK a WhatsApp kotelezo!
+      var rowCls=cnd.all?'row-ok':(cnd.count>=3?'row-warn':'');
+      var pillCls=canOpen?'pill-ready':(cnd.count>=2?'pill-wait':'pill-prog');
+      var pillText=canOpen?T('pill_ready'):(cnd.count>=2?T('pill_wait'):T('pill_prog'));
+      var editCls=canOpen?'eb-go':'eb-no';
+
+      var missing=[];
+      if(!cnd.programare)missing.push(T('cond_programare'));
+      if(!cnd.loc)missing.push(T('cond_loc'));
+      if(!cnd.om)missing.push(T('cond_om'));
+      if(cnd.piese!=='livrat')missing.push(T('cond_piese')+(cnd.piese==='comandat'?' ('+T('piese_comandat')+')':''));
+      if(!cnd.whatsapp)missing.push(T('cond_whatsapp'));
+      var tt=missing.length?T('cond_blocked_by')+': '+missing.join(' + '):T('pill_ready');
+
+      var phName=T(PK[(j.phase||1)-1]);
+      var phoneClean=(j.phone||'').replace(/[^0-9+]/g,'');
+      var waText='Buna ziua! Va contactam de la SC Szkaliczki Service.';
+      var waCls=cnd.whatsapp?'':'dark';
+      var waOnclick=phoneClean?'onclick="event.stopPropagation();clickWhatsApp(\''+j.id+'\',\''+phoneClean.replace(/^\+/,'')+'\')"':'';
+      var waTitle=phoneClean?(cnd.whatsapp?T('cond_whatsapp'):T('no_wa_yet')):T('wa_no_phone');
+
+      h+='<tr class="panou-row '+rowCls+'" ondblclick="openCondModal(\''+j.id+'\')">';
+      h+='<td><div style="font-weight:700">'+escH(j.client||j.proprietar||'—')+'</div><div style="font-size:10px;color:var(--t3)">'+escH(j.number||j.id||'')+'</div></td>';
+      var _dd=(j.flux==='doar_dosar')||(j.flux==null&&j.doarDosar===true);
+      h+='<td class="mono" style="font-weight:700">'+escH(j.plate||'—')
+        +(_dd?' <span class="fx-b fx-d" title="'+T('badge_dosar')+'">&#128193;</span>'
+             :' <span class="fx-b fx-p" title="'+T('badge_prog')+'">&#128197;</span>')+'</td>';
+      h+='<td class="pg-cell">'+progCell(j)+'</td>';
+      if(tab==='viitoare'){
+        // A status SAVONKENT mast mond, mert mas a lenyeg.
+        if(_dd){
+          var ac=acteCount(j);
+          var acCls=(ac.done>=ac.total)?'ac-ok':(ac.done?'ac-part':'ac-none');
+          var acTxt=j.inchis?T('st_inchis'):(j.dosarPredat?T('st_predat'):(ac.done+'/'+ac.total+' '+T('st_acte')));
+          h+='<td><span class="ac-b '+(j.inchis?'ac-ok':acCls)+'">'+escH(acTxt)+'</span>'
+            +(j.asigurator?'<div style="font-size:10px;color:var(--t3);font-weight:600;margin-top:3px">'+escH(j.asigurator)+'</div>':'')+'</td>';
+        } else {
+          h+='<td><span class="panou-pill '+pillCls+'" title="'+tt+'">'+(canOpen?T('pill_ready'):T('st_astept'))+'</span></td>';
+        }
+      } else {
+        h+='<td><span class="panou-pill '+pillCls+'" title="'+phName+'">'+pillText+'</span></td>';
+        h+='<td><div class="cond-row" title="'+tt+'">'+renderCondIcon(cnd.programare)+renderCondIcon(cnd.loc)+renderCondIcon(cnd.om)+renderCondIcon(cnd.piese,'piese')+renderCondIcon(cnd.whatsapp)+'</div></td>';
+      }
+      h+='<td>'+(phoneClean?'<button class="wa-btn '+waCls+'" '+waOnclick+' title="'+waTitle+'">💬</button>':'<button class="wa-btn dis" title="'+T('wa_no_phone')+'" disabled>💬</button>')+'</td>';
+      if(tab==='viitoare' && _dd){
+        h+='<td><button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')">&#128193; '+T('open_dosar_btn')+'</button> <button class="edit-btn eb-repro" onclick="event.stopPropagation();openRepro(\''+j.id+'\')">'+T('repro_btn')+'</button> <button class="edit-btn eb-ratat" onclick="event.stopPropagation();markRatat(\''+j.id+'\')">'+T('ratat_btn')+'</button></td>';
+      } else if(tab==='viitoare'){
+        h+='<td>'+(canOpen
+        ? '<button class="edit-btn '+editCls+'" onclick="event.stopPropagation();deschideLucrare(\''+j.id+'\')">'+T('deschide_lucrarea')+'</button>'
+        : '<button class="edit-btn eb-need" title="'+T('need_wa_tip')+'" onclick="event.stopPropagation();openCondModal(\''+j.id+'\')">&#128172; '+T('need_wa_btn')+'</button>')+' <button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')" title="'+T('dosar_dauna')+'">📁</button> <button class="edit-btn eb-repro" onclick="event.stopPropagation();openRepro(\''+j.id+'\')">'+T('repro_btn')+'</button> <button class="edit-btn eb-ratat" onclick="event.stopPropagation();markRatat(\''+j.id+'\')">'+T('ratat_btn')+'</button></td>';
+      } else {
+        h+='<td><button class="edit-btn eb-r" onclick="event.stopPropagation();oP(\''+j.id+'\','+(j.phase||1)+')">'+T('edit')+'</button> '+(tab==='ratate'?'<button class="edit-btn eb-react" onclick="event.stopPropagation();reactiveaza(\''+j.id+'\')">'+T('reactiveaza_btn')+'</button> ':'')+'<button class="edit-btn eb-del" onclick="event.stopPropagation();dJ(\''+j.id+'\')" title="'+T('sterge')+'">🗑</button></td>';
+      }
+      h+='</tr>';
+    });
+    h+='</tbody></table>';
+  }
+  h+='</div>';
+  h+='<div class="panou-footer"><span class="ft-brand">© RedAssistance</span><a onclick="return false">Politica de confidentialitate</a><span style="color:var(--b2)">|</span><a onclick="return false">Termeni si conditii</a></div>';
+  h+='</div>';
+
+  // Programare Modal
+  if(S.showDosar){
+    h+='<div class="prog-modal" onclick="closeDosarModal()"><div class="prog-box" onclick="event.stopPropagation()">';
+    h+='<div class="prog-t">'+T('dosar_dauna')+'</div>';
+    h+='<div class="prog-s">'+T('dosar_q')+'</div>';
+    h+='<button class="btn-prog-new" style="width:100%;margin-bottom:8px;justify-content:center" onclick="dosarAici()">'+T('dosar_aici')+'</button>';
+    h+='<label class="btn-prog-new" style="width:100%;background:var(--bl,#2563eb);justify-content:center;position:relative;display:flex;cursor:pointer;box-sizing:border-box">'+T('dosar_fisier')+'<input type="file" accept="image/*,.pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0" onchange="dosarFisier(event)"/></label>';
+    h+='</div></div>';
+  }
+  h+=newJobModalHtml();
+  h+=reproModalHtml();
+
+
+  h+=condModalHtml();
+
+  if(S.ts)h+='<div class="toast">'+S.ts+'</div>';
+  document.getElementById('app').innerHTML=h;if(window.njAfterRender)njAfterRender();
+
+  // Auto-focus input ha modal nyitva
+
+}
+
+// ════════════════════════════════════════════════════════════════
+// STATISTICI MODUL — KPI szamitas + Chart.js renderek
+// ════════════════════════════════════════════════════════════════
+
+function statPeriodRange(period){
+  var now=new Date(), start;
+  if(period==='today'){start=new Date(now);start.setHours(0,0,0,0)}
+  else if(period==='week'){start=new Date(now);start.setDate(now.getDate()-7);start.setHours(0,0,0,0)}
+  else if(period==='month'){start=new Date(now);start.setMonth(now.getMonth()-1);start.setHours(0,0,0,0)}
+  else if(period==='year'){start=new Date(now);start.setFullYear(now.getFullYear()-1);start.setHours(0,0,0,0)}
+  else {start=new Date(0)}
+  return {start:start, end:now};
+}
+function filterByPeriod(jobs,period){
+  if(period==='all')return jobs.slice();
+  var range=statPeriodRange(period);
+  return jobs.filter(function(j){var d=j.created?new Date(j.created):null;return d && d>=range.start && d<=range.end});
+}
+function kpiPhaseDistribution(jobs){
+  var dist=[0,0,0,0,0,0,0];
+  jobs.forEach(function(j){if(j.phase>=1&&j.phase<=7)dist[j.phase-1]++});
+  return dist;
+}
+function kpiThroughput(jobs,buckets){
+  buckets=buckets||12;
+  var now=new Date(), weekMs=7*24*60*60*1000;
+  var data=new Array(buckets).fill(0), labels=new Array(buckets).fill('');
+  for(var i=0;i<buckets;i++){
+    var weekEnd=new Date(now-(buckets-1-i)*weekMs);
+    var weekStart=new Date(weekEnd-weekMs);
+    labels[i]=(weekStart.getMonth()+1)+'/'+weekStart.getDate();
+    jobs.forEach(function(j){
+      if(j.phase===7 && j.phases && j.phases[7] && j.phases[7].finished){
+        var d=new Date(j.phases[7].finished);
+        if(d>=weekStart && d<weekEnd)data[i]++;
+      }
+    });
+  }
+  return {labels:labels, data:data};
+}
+function kpiAvgCycleTime(jobs){
+  var times=[];
+  jobs.forEach(function(j){
+    if(j.phase===7 && j.phases && j.phases[1] && j.phases[7] && j.phases[1].started && j.phases[7].finished){
+      var s=new Date(j.phases[1].started), e=new Date(j.phases[7].finished);
+      var days=(e-s)/(1000*60*60*24);
+      if(days>=0 && days<365)times.push(days);
+    }
+  });
+  if(!times.length)return null;
+  var avg=times.reduce(function(a,b){return a+b},0)/times.length;
+  return {avg:avg, count:times.length, min:Math.min.apply(null,times), max:Math.max.apply(null,times)};
+}
+function kpiPhaseAverages(jobs){
+  var sums=[0,0,0,0,0,0,0],counts=[0,0,0,0,0,0,0];
+  jobs.forEach(function(j){
+    if(!j.phases)return;
+    for(var p=1;p<=7;p++){
+      var ph=j.phases[p];if(!ph||!ph.started||!ph.finished)continue;
+      var s=new Date(ph.started), e=new Date(ph.finished);
+      var hrs=(e-s)/(1000*60*60);
+      if(hrs>=0 && hrs<24*365){sums[p-1]+=hrs;counts[p-1]++}
+    }
+  });
+  return sums.map(function(s,i){return counts[i]?s/counts[i]:0});
+}
+function kpiStuckJobs(jobs,thresholdDays){
+  var now=new Date(), stuck=[];
+  jobs.forEach(function(j){
+    if(j.phase===7)return;
+    if(!j.phases || !j.phases[j.phase] || !j.phases[j.phase].started)return;
+    var s=new Date(j.phases[j.phase].started);
+    var days=(now-s)/(1000*60*60*24);
+    if(days>=thresholdDays){stuck.push({id:j.id, number:j.number||j.id, phase:j.phase, days:Math.floor(days), plate:j.plate||'', client:j.client||''})}
+  });
+  return stuck.sort(function(a,b){return b.days-a.days});
+}
+function kpiFirstTimeRight(jobs){
+  var done=jobs.filter(function(j){return j.phase===7});
+  if(!done.length)return null;
+  var reconst=done.filter(function(j){
+    if(!j.reconst)return false;
+    var hasRows=j.reconst.rows && j.reconst.rows.length>0;
+    var hasPhase3=j.phases && j.phases[3] && j.phases[3].started;
+    return hasRows || hasPhase3;
+  });
+  var ftrCount=done.length-reconst.length;
+  return {total:done.length, ftr:ftrCount, reconst:reconst.length, pct:Math.round((ftrCount/done.length)*100)};
+}
+
+function jobHours(j){
+  var tin=0,vop=0;
+  (j.bodyRows||[]).forEach(function(r){tin+=parseFloat(r.hours)||0});
+  (j.paintRows||[]).forEach(function(r){vop+=parseFloat(r.hours)||0});
+  return {tin:tin,vop:vop,tot:tin+vop};
+}
+function kpiHourSeries(period){
+  var now=new Date(),buckets=[],labels=[];
+  function push(st,en,l){buckets.push({s:st,e:en,tin:0,vop:0});labels.push(l)}
+  if(period==='today'||period==='week'){for(var i=6;i>=0;i--){var d=new Date(now);d.setDate(now.getDate()-i);d.setHours(0,0,0,0);var e=new Date(d);e.setDate(d.getDate()+1);push(d,e,(d.getMonth()+1)+'/'+d.getDate())}}
+  else if(period==='month'){for(var i=3;i>=0;i--){var e2=new Date(now.getTime()-i*7*864e5);var s2=new Date(e2.getTime()-7*864e5);push(s2,e2,(s2.getMonth()+1)+'/'+s2.getDate())}}
+  else{for(var i=11;i>=0;i--){var s3=new Date(now.getFullYear(),now.getMonth()-i,1);var e3=new Date(now.getFullYear(),now.getMonth()-i+1,1);push(s3,e3,(s3.getMonth()+1)+'/'+String(s3.getFullYear()).slice(-2))}}
+  JOBS.forEach(function(j){
+    if(j.phase!==7||!j.phases||!j.phases[7]||!j.phases[7].finished)return;
+    var d=new Date(j.phases[7].finished),hh=jobHours(j);
+    buckets.forEach(function(b){if(d>=b.s&&d<b.e){b.tin+=hh.tin;b.vop+=hh.vop}});
+  });
+  return {labels:labels,tin:buckets.map(function(b){return +b.tin.toFixed(1)}),vop:buckets.map(function(b){return +b.vop.toFixed(1)})};
+}
+function kpiYearTable(year){
+  var rows=[];for(var m=0;m<12;m++)rows.push({n:0,tin:0,vop:0});
+  JOBS.forEach(function(j){
+    if(j.phase!==7||!j.phases||!j.phases[7]||!j.phases[7].finished)return;
+    var d=new Date(j.phases[7].finished);
+    if(d.getFullYear()!==year)return;
+    var hh=jobHours(j),m=d.getMonth();
+    rows[m].n++;rows[m].tin+=hh.tin;rows[m].vop+=hh.vop;
+  });
+  return rows;
+}
+function renderStatistici(){
+  var ln=gL(), period=S.statPeriod, jobs=filterByPeriod(JOBS,period);
+  var dist=kpiPhaseDistribution(jobs);
+  var ftr=kpiFirstTimeRight(jobs);
+  var cycle=kpiAvgCycleTime(jobs);
+  var stuck=kpiStuckJobs(JOBS, S.statThreshold);
+
+  var h=sbNav('statistici');
+
+  h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
+
+  h+='<div class="page-hdr"><div><div class="ph-label">'+T('statTitle')+'</div><div class="ph-title">'+T('statSub')+'</div></div>';
+  h+='<div class="stat-period">';
+  [['today',T('periodToday')],['week',T('periodWeek')],['month',T('periodMonth')],['year',T('periodYear')],['all',T('periodAll')]].forEach(function(p){
+    h+='<button class="'+(period===p[0]?'on':'')+'" onclick="setStatPeriod(\''+p[0]+'\')">'+p[1]+'</button>';
+  });
+  h+='</div></div>';
+
+  var _cl=jobs.filter(function(j){return j.phase===7}).length,_iw=jobs.length-_cl,_hT=0,_hV=0;
+  jobs.forEach(function(j){var hh=jobHours(j);_hT+=hh.tin;_hV+=hh.vop});
+  var _md=jobs.length?((_hT+_hV)/jobs.length):0;
+  h+='<div class="kpi-row">';
+  [[_cl,T('kpi_inchise'),'var(--g)'],[_iw,T('kpi_inlucru'),'var(--r)'],[_hT.toFixed(1),T('kpi_oretin'),'#2563eb'],[_hV.toFixed(1),T('kpi_orevop'),'var(--g)'],[(_hT+_hV).toFixed(1),T('kpi_totore'),'var(--t)'],[_md.toFixed(1),T('kpi_medie'),'#7c3aed']].forEach(function(k){
+    h+='<div class="kpi-card"><div class="kpi-v" style="color:'+k[2]+'">'+k[0]+'</div><div class="kpi-l">'+k[1]+'</div></div>';
+  });
+  h+='</div>';
+  h+='<div class="stat-grid">';
+  // 1) Phase distribution
+  h+='<div class="stat-card"><div class="stat-card-h">'+T('stat_phaseDist')+'</div>';
+  if(jobs.length===0){h+='<div class="stat-empty">'+T('stat_noData')+'</div>'}
+  else{h+='<div class="stat-canvas"><canvas id="cPhaseDist"></canvas></div>'}
+  h+='</div>';
+  // 2) Throughput
+  h+='<div class="stat-card"><div class="stat-card-h">'+T('stat_throughput')+'</div><div class="stat-canvas"><canvas id="cThroughput"></canvas></div></div>';
+  h+='<div class="stat-card full"><div class="stat-card-h">'+T('stat_hours_series')+'</div><div class="stat-canvas"><canvas id="cHours"></canvas></div></div>';
+  // 3) Cycle
+  h+='<div class="stat-card"><div class="stat-card-h">'+T('stat_cycleTime')+'</div>';
+  if(cycle){h+='<div class="stat-card-v">'+cycle.avg.toFixed(1)+' <span style="font-size:18px;color:var(--t3)">'+T('stat_days')+'</span></div><div class="stat-card-sub">Min: '+cycle.min.toFixed(1)+' · Max: '+cycle.max.toFixed(1)+' · N='+cycle.count+'</div>'}
+  else{h+='<div class="stat-empty">'+T('stat_noData')+'</div>'}
+  h+='</div>';
+  // 4) Phase averages
+  h+='<div class="stat-card"><div class="stat-card-h">'+T('stat_phaseAvg')+'</div><div class="stat-canvas"><canvas id="cPhaseAvg"></canvas></div></div>';
+  // 5) Stuck — full
+  h+='<div class="stat-card full"><div class="stat-card-h">'+T('stat_stuck')+' (≥<input type="number" min="1" max="60" value="'+S.statThreshold+'" onchange="setStuckThreshold(this.value)" style="width:42px;padding:2px 6px;font-size:11px;border:1px solid var(--b);border-radius:4px;font-family:inherit"> '+T('stat_days')+')</div>';
+  if(stuck.length===0){h+='<div class="stat-empty">✅ —</div>'}
+  else{h+='<div class="stuck-list">';stuck.forEach(function(s){h+='<div class="stuck-row"><div><div class="stuck-id">'+s.number+'</div><div class="stuck-meta">'+(s.plate||'')+' '+(s.client?'· '+s.client:'')+' · '+T(PK[s.phase-1])+'</div></div><div class="stuck-days">'+s.days+' '+T('stat_days')+'</div></div>'});h+='</div>'}
+  h+='</div>';
+  // 6) FTR — full
+  h+='<div class="stat-card full"><div class="stat-card-h">'+T('stat_ftr')+'</div>';
+  if(ftr){var cls=ftr.pct>=90?'':(ftr.pct>=70?'warn':'bad');h+='<div style="display:flex;align-items:center;justify-content:center;gap:30px;padding:10px 0"><div style="text-align:center"><div class="ftr-num '+cls+'">'+ftr.pct+'%</div><div class="stat-card-sub">'+T('stat_ftr')+'</div></div><div style="text-align:left"><div style="font-size:14px;margin-bottom:6px"><b>'+ftr.total+'</b> '+T('stat_total')+'</div><div style="font-size:12px;color:var(--g)">✓ <b>'+ftr.ftr+'</b> '+T('stat_avg')+'</div><div style="font-size:12px;color:var(--r)">⚠ <b>'+ftr.reconst+'</b> '+T('stat_reconstNeeded')+'</div></div></div>'}
+  else{h+='<div class="stat-empty">'+T('stat_noData')+'</div>'}
+  h+='</div>';
+  var _yr=new Date().getFullYear(),_yt=kpiYearTable(_yr),_mN=['Ian','Feb','Mar','Apr','Mai','Iun','Iul','Aug','Sep','Oct','Nov','Dec'],_tN=0,_tT=0,_tV=0;
+  h+='<div class="stat-card full"><div class="stat-card-h">'+T('sumar_anual')+' '+_yr+'</div><table class="yr-tbl"><thead><tr><th>'+T('luna_lbl')+'</th><th>'+T('kpi_inchise')+'</th><th>'+T('kpi_oretin')+'</th><th>'+T('kpi_orevop')+'</th><th>'+T('kpi_totore')+'</th></tr></thead><tbody>';
+  _yt.forEach(function(r,i){_tN+=r.n;_tT+=r.tin;_tV+=r.vop;h+='<tr><td>'+_mN[i]+'</td><td>'+r.n+'</td><td>'+r.tin.toFixed(1)+'</td><td>'+r.vop.toFixed(1)+'</td><td><b>'+(r.tin+r.vop).toFixed(1)+'</b></td></tr>'});
+  h+='<tr class="tot"><td>TOTAL '+_yr+'</td><td>'+_tN+'</td><td>'+_tT.toFixed(1)+'</td><td>'+_tV.toFixed(1)+'</td><td>'+(_tT+_tV).toFixed(1)+'</td></tr></tbody></table></div>';
+  h+='</div></div>';
+  if(S.ts)h+='<div class="toast">'+S.ts+'</div>';
+  document.getElementById('app').innerHTML=h;if(window.njAfterRender)njAfterRender();
+
+  Object.keys(_charts).forEach(function(k){try{_charts[k].destroy()}catch(e){}});
+  _charts={};
+  setTimeout(function(){
+    var c1=document.getElementById('cPhaseDist');
+    if(c1 && jobs.length){
+      var phaseColors=['#dc2626','#dc2626','#ca8a04','#dc2626','#dc2626','#16a34a','#16a34a'];
+      _charts.phaseDist=new Chart(c1,{type:'doughnut',data:{labels:PK.map(function(k){return T(k)}),datasets:[{data:dist,backgroundColor:phaseColors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11}}}}}});
+    }
+    var c2=document.getElementById('cThroughput');
+    if(c2){
+      var tp=kpiThroughput(JOBS,12);
+      _charts.throughput=new Chart(c2,{type:'line',data:{labels:tp.labels,datasets:[{label:T('stat_throughput'),data:tp.data,borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,0.1)',tension:0.3,fill:true,pointBackgroundColor:'#dc2626'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}}});
+    }
+    var c4=document.getElementById('cPhaseAvg');
+    if(c4){
+      var avg=kpiPhaseAverages(jobs);
+      _charts.phaseAvg=new Chart(c4,{type:'bar',data:{labels:PK.map(function(k){return T(k)}),datasets:[{label:T('stat_hours'),data:avg.map(function(h){return parseFloat(h.toFixed(1))}),backgroundColor:'#7c3aed',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,title:{display:true,text:T('stat_hours')}}}}});
+    var c5=document.getElementById('cHours');
+    if(c5){var hs=kpiHourSeries(period);_charts.hours=new Chart(c5,{type:'bar',data:{labels:hs.labels,datasets:[{label:T('kpi_oretin'),data:hs.tin,backgroundColor:'#2563eb',borderRadius:3},{label:T('kpi_orevop'),data:hs.vop,backgroundColor:'#16a34a',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}},plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}})}
+    }
+  },50);
+}
+
+function pf(lk,path,val,type,span){
+  type=type||'text';
+  var st=span==='full'?' style="grid-column:1/3"':'';
+  var safe=val==null?'':String(val).replace(/"/g,'&quot;');
+  return '<div class="prm-f"'+st+'><label>'+T('prm_'+lk)+'</label><input type="'+type+'" value="'+safe+'" onchange="upParam(\''+path+'\',this.value,\''+type+'\')"/></div>';
+}
+function renderParametri(){
+  var c=CONFIG;
+  var cap=((c.posturi.tinichigerie||0)+(c.posturi.vopsitorie||0))*(c.posturi.oreZi||0)*(c.posturi.zileSapt||0);
+  var h=sbNav('parametri');
+  h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
+  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('prm_label')+'</div><div class="panou-title">'+T('prm_title')+'</div></div></div>';
+  h+='<div class="prm-wrap"><div class="prm-hint">💡 '+T('prm_hint')+'</div>';
+  h+='<div class="prm-card"><div class="prm-ct">'+T('prm_firma')+'</div><div class="prm-grid">';
+  h+=pf('nume','unitate.nume',c.unitate.nume,'text','full');
+  h+=pf('cif','unitate.cif',c.unitate.cif);
+  h+=pf('orc','unitate.nrord',c.unitate.nrord);
+  h+=pf('adresa','unitate.adresa',c.unitate.adresa,'text','full');
+  h+=pf('tel','unitate.tel',c.unitate.tel);
+  h+=pf('rar','unitate.rar',c.unitate.rar);
+  h+=pf('email','unitate.email',c.unitate.email);
+  h+=pf('iban','unitate.iban',c.unitate.iban);
+  h+='</div></div>';
+  h+='<div class="prm-card"><div class="prm-ct">'+T('prm_tarife')+'</div><div class="prm-grid">';
+  h+=pf('t_tin','tarif.tinichigerie',c.tarif.tinichigerie,'number');
+  h+=pf('t_vop','tarif.vopsitorie',c.tarif.vopsitorie,'number');
+  h+=pf('t_mec','tarif.mecanic',c.tarif.mecanic,'number');
+  h+=pf('tva','tarif.tva',c.tarif.tva,'number');
+  h+='</div></div>';
+  h+='<div class="prm-card"><div class="prm-ct">'+T('prm_posturi')+'</div><div class="prm-grid">';
+  h+=pf('p_tin','posturi.tinichigerie',c.posturi.tinichigerie,'number');
+  h+=pf('p_vop','posturi.vopsitorie',c.posturi.vopsitorie,'number');
+  h+=pf('ore','posturi.oreZi',c.posturi.oreZi,'number');
+  h+=pf('zile','posturi.zileSapt',c.posturi.zileSapt,'number');
+  h+='</div><div class="prm-capac">'+T('prm_capac')+': <b>'+cap+' h / săpt.</b></div></div>';
+  h+='</div>';
+  h+='<div class="panou-footer"><span class="ft-brand">© RedAssistance</span><a onclick="return false">Politica de confidentialitate</a><span style="color:var(--b2)">|</span><a onclick="return false">Termeni si conditii</a></div>';
+  h+='</div>';
+  if(S.ts)h+='<div class="toast">'+S.ts+'</div>';
+  document.getElementById('app').innerHTML=h;if(window.njAfterRender)njAfterRender();
+}
+window.upParam=function(path,val,type){
+  var parts=path.split('.');
+  var v=type==='number'?(parseFloat((val||'').toString().replace(',','.'))||0):val;
+  if(!CONFIG[parts[0]])CONFIG[parts[0]]={};
+  CONFIG[parts[0]][parts[1]]=v;
+  saveConfig();
+  if(parts[0]==='posturi')render();
+};
+
+window.setScreen=function(scr){
+  S.screen=scr;
+  if(scr!=='statistici'){Object.keys(_charts).forEach(function(k){try{_charts[k].destroy()}catch(e){}});_charts={}}
+  render();
+};
+window.setStatPeriod=function(p){S.statPeriod=p;render()};
+window.setStuckThreshold=function(v){var n=parseInt(v,10);if(n>=1&&n<=60){S.statThreshold=n;render()}};
+window.setPanouTab=function(t){S.panouTab=t;render()};
+
+// === Programare modal ===
+function newJobModalHtml(){
+  if(!S.showNew) return '';
+  var mode=S.njMode||'prog';
+  var TT={prog:['m_prog_t','m_prog_s'],dosar:['m_dosar_t','m_dosar_s'],lucrare:['m_lucrare_t','m_lucrare_s']}[mode];
+  var h='';
+  h+='<div class="prog-modal"><div class="prog-box nj-box">';
+  h+='<div class="prog-t">'+T(TT[0])+'</div>';
+  h+='<div class="nj-sub">'+T(TT[1])+'</div>';
+  h+='<div class="prog-field"><label>'+T('plate_label')+' *</label><input id="iPlate" type="text" value="'+escH(S.njPlate||'')+'" placeholder="'+T('plate_ph')+'" oninput="S.njPlate=njPlate(this.value);this.value=S.njPlate;njSync()"/></div>';
+  h+='<div class="prog-field"><label>'+T('phone_label')+' *</label><input id="iPhone" type="tel" value="'+escH(S.njPhone||'')+'" placeholder="'+T('phone_ph')+'" oninput="S.njPhone=this.value;njSync()"/></div>';
+
+  // TIPUS — csak a "Lucrare noua"-nal kerdes. A dosar mindig asig.
+  if(mode==='lucrare'){
+    h+='<div class="prog-field"><label>'+T('m_tip')+' *</label><div class="nj-pick">';
+    h+='<button class="nj-opt'+(S.njTip==='asig'?' on':'')+'" onclick="njSetTip(\'asig\')"><b>&#128737; '+T('m_tip_asig')+'</b><i>'+T('m_tip_asig_s')+'</i></button>';
+    h+='<button class="nj-opt'+(S.njTip==='auto'?' on':'')+'" onclick="njSetTip(\'auto\')"><b>&#128176; '+T('m_tip_auto')+'</b><i>'+T('m_tip_auto_s')+'</i></button>';
+    h+='</div></div>';
+  }
+
+  // DOSSZIE-ALLAPOT — dosar modban mindig, lucrare modban csak asig eseten
+  var kellDosar = (mode==='dosar') || (mode==='lucrare' && S.njTip==='asig');
+  if(kellDosar){
+    // "Deschide dosar dauna" = MI nyitjuk -> nincs ket varians, nem kerdes.
+    // A "mar nyitva" eset a Lucrare noua (asig) again jon elo.
+    if(mode!=='dosar'){
+      h+='<div class="prog-field"><label>'+T('nj_pay')+' *</label><div class="nj-pick">';
+      h+='<button class="nj-opt'+(S.njPay==='deschid'?' on':'')+'" onclick="njSet(\'njPay\',\'deschid\')"><b>&#128737; '+T('nj_pay_a')+'</b><i>'+T('nj_pay_a_s')+'</i></button>';
+      h+='<button class="nj-opt'+(S.njPay==='deschis'?' on':'')+'" onclick="njSet(\'njPay\',\'deschis\')"><b>&#128196; '+T('nj_pay_b')+'</b><i>'+T('nj_pay_b_s')+'</i></button>';
+      h+='</div></div>';
+    }
+    h+='<div class="prog-field"><label>'+T('nj_asigurator')+'</label><select class="nj-in" onchange="S.njAsig=this.value">';
+    var _AS=['','Allianz Tiriac','Groupama','Omniasig','Euroins','Asirom','Generali','Altul'];
+    _AS.forEach(function(a){h+='<option value="'+escH(a)+'"'+(S.njAsig===a?' selected':'')+'>'+(a||'—')+'</option>'});
+    h+='</select></div>';
+    if(S.njPay==='deschis'){
+      h+='<div class="prog-field"><label>'+T('nj_nrdosar')+' *</label><input type="text" value="'+escH(S.njDosar||'')+'" oninput="S.njDosar=this.value;njSync()"/></div>';
+    }else if(S.njPay==='deschid'){
+      h+='<div class="nj-note">&#128737; '+T('nj_nrdosar_hint')+'</div>';
+    }
+  }
+
+  // DATUM — programare-nal es lucrare-nal (Ferenc dontese: a lucrare is kap datumot)
+  if(mode==='prog'||mode==='lucrare'){
+    h+='<div class="prog-field"><label>'+T('nj_date')+' *</label><div class="nj-chips">';
+    h+='<button class="nj-chip'+(S.njDate===njDay(0)?' on':'')+'" onclick="njQuick(0)">'+T('nj_today')+'</button>';
+    h+='<button class="nj-chip'+(S.njDate===njDay(1)?' on':'')+'" onclick="njQuick(1)">'+T('nj_tomorrow')+'</button>';
+    h+='<button class="nj-chip'+(S.njDate===njDay(2)?' on':'')+'" onclick="njQuick(2)">'+T('nj_after')+'</button>';
+    h+='</div><div class="nj-two"><input class="nj-in" type="date" value="'+escH(S.njDate||'')+'" onchange="S.njDate=this.value;njSet()"/><input class="nj-in" type="time" value="'+escH(S.njTime||'08:00')+'" onchange="S.njTime=this.value;njSync()"/></div></div>';
+  }
+
+  h+='<details class="nj-more"><summary>'+T('nj_more')+'</summary>';
+  h+='<div class="prog-field" style="margin-top:8px"><label>'+T('nj_client')+'</label><input type="text" value="'+escH(S.njClient||'')+'" oninput="S.njClient=this.value"/></div>';
+  h+='<div class="prog-field"><label>'+T('nj_auto')+'</label><input type="text" value="'+escH(S.njAuto||'')+'" oninput="S.njAuto=this.value"/></div>';
+  h+='</details>';
+  h+='<div id="njDup" class="nj-dup" style="display:none"></div>';
+  h+='<div id="njWhy" class="nj-why"></div>';
+  h+='<div class="prog-actions"><button class="cancel" onclick="closeNewJob()">'+T('btn_cancel')+'</button><button id="njSave" class="submit" onclick="submitNewJob()">'+T('nj_open_'+mode)+'</button></div>';
+  h+='</div></div>';
+  return h;
+}
+
+// === PROGRAMARE IDO — megjelenites, kesettseg, atutemezes ==================
+// Dontesek: keses = a datum elmult VAGY ma van es mar delutan (14:00) van.
+// A rendszer SOHA nem ir automatikusan 'ratat' statuszt — csak jelzi, es a
+// recepcios dont egy kattintassal (A venit / Reprogramare / Ratat).
+var PG_DELUTAN=14;  // ora, amitol az aznapi programare kesettnek szamit
+
+function pgDaysDiff(a,b){
+  var da=new Date(a+'T00:00:00'), db=new Date(b+'T00:00:00');
+  return Math.round((db-da)/86400000);
+}
+window.progInfo=function(j){
+  var p=(j&&j.programare)||{};
+  var repro=p.reprogramari||0;
+  if(!p.date) return {state:'nodate',repro:repro};
+  var today=njDay(0);
+  var o={state:'future',date:p.date,time:p.time||null,repro:repro,days:0};
+  if(p.date<today){ o.state='late'; o.days=pgDaysDiff(p.date,today); return o; }
+  if(p.date===today){
+    o.days=0;
+    o.state=(new Date().getHours()>=PG_DELUTAN)?'late':'today';
+    return o;
+  }
+  if(p.date===njDay(1)) o.state='tomorrow';
+  return o;
+};
+function progCell(j){
+  var i=progInfo(j);
+  var rb=i.repro?'<span class="pg-repro" title="'+T('repro_count')+'">&#8635;'+i.repro+'</span>':'';
+  if(i.state==='nodate')return '<span class="pg-b pg-none">'+T('pg_fara_data')+'</span>'+rb;
+  var t=i.time?'<span class="pg-time">'+escH(i.time)+'</span>':'';
+  if(i.state==='late'){
+    var lbl=i.days>0?(T('pg_intarziat')+' &middot; '+i.days+' '+(i.days===1?T('pg_zi'):T('pg_zile'))):T('pg_intarziat');
+    return '<span class="pg-b pg-late">'+lbl+'</span>'+t+rb;
+  }
+  if(i.state==='today') return '<span class="pg-b pg-azi">'+T('pg_azi')+'</span>'+t+rb;
+  if(i.state==='tomorrow') return '<span class="pg-b pg-none">'+T('pg_maine')+'</span>'+t+rb;
+  var d=i.date.split('-');
+  return '<span style="font-weight:600">'+d[2]+'.'+d[1]+'</span>'+t+rb;
+}
+
+// ── Reprogramare ──
+window.openRepro=function(id){
+  var j=JOBS.filter(function(x){return x.id===id})[0];
+  var p=(j&&j.programare)||{};
+  S.showRepro=id; S.reproDate=''; S.reproTime=p.time||'08:00';
+  render();
+};
+window.closeRepro=function(){S.showRepro=null;render()};
+window.reproQuick=function(off){S.reproDate=njDay(off);render()};
+
+function reproModalHtml(){
+  if(!S.showRepro) return '';
+  var j=JOBS.filter(function(x){return x.id===S.showRepro})[0]||{};
+  var p=j.programare||{};
+  var h='';
+  h+='<div class="prog-modal"><div class="prog-box nj-box">';
+  h+='<div class="prog-t">'+T('repro_title')+'</div>';
+  h+='<div class="nj-sub">'+escH(j.plate||j.number||'')+' &middot; '+T('repro_sub')+'</div>';
+  if(p.date)h+='<div class="nj-note">'+T('repro_prev')+': <b>'+escH(p.date)+' '+escH(p.time||'')+'</b>'+(p.reprogramari?(' &middot; '+p.reprogramari+' '+T('repro_count')):'')+'</div>';
+  h+='<div class="prog-field"><label>'+T('nj_date')+' *</label><div class="nj-chips">';
+  h+='<button class="nj-chip'+(S.reproDate===njDay(0)?' on':'')+'" onclick="reproQuick(0)">'+T('nj_today')+'</button>';
+  h+='<button class="nj-chip'+(S.reproDate===njDay(1)?' on':'')+'" onclick="reproQuick(1)">'+T('nj_tomorrow')+'</button>';
+  h+='<button class="nj-chip'+(S.reproDate===njDay(2)?' on':'')+'" onclick="reproQuick(2)">'+T('nj_after')+'</button>';
+  h+='<button class="nj-chip'+(S.reproDate===njDay(7)?' on':'')+'" onclick="reproQuick(7)">+7</button>';
+  h+='</div><div class="nj-two"><input class="nj-in" type="date" value="'+escH(S.reproDate||'')+'" onchange="S.reproDate=this.value;render()"/><input class="nj-in" type="time" value="'+escH(S.reproTime||'08:00')+'" onchange="S.reproTime=this.value"/></div></div>';
+  h+='<div class="prog-actions"><button class="cancel" onclick="closeRepro()">'+T('btn_cancel')+'</button><button class="submit" onclick="saveRepro()">'+T('repro_save')+'</button></div>';
+  h+='</div></div>';
+  return h;
+}
+
+window.saveRepro=async function(){
+  if(!S.reproDate){toast(T('repro_need'),1);return}
+  var id=S.showRepro;
+  var job=await freshJob(id);
+  if(!job){toast('?',1);return}
+  if(!job.programare)job.programare={};
+  var vechi=job.programare.date||null;
+  job.programare.date=S.reproDate;
+  job.programare.time=S.reproTime||'08:00';
+  job.sosire='programat'; job.inchis=false; syncMirror(job);
+  job.programare.reprogramari=(job.programare.reprogramari||0)+1;
+  if(!Array.isArray(job.programare.istoric))job.programare.istoric=[];
+  job.programare.istoric.push({din:vechi,catre:S.reproDate,la:new Date().toISOString()});
+  await saveJob(job);
+  S.showRepro=null;
+  toast(T('repro_ok')+': '+job.programare.date);
+  render();
+};
+// === /PROGRAMARE IDO =======================================================
+
+// === MUNKASZAM — utkozesbiztos kiosztas ====================================
+// A regi kod JOBS.length+1-bol szamolt, ezert torles utan ujraosztotta a mar
+// hasznalt szamokat. Most a szerver atomi szamlaloja ad szamot
+// (rpw_next_job_number). Offline eseten a helyi maximum+1 a tartalek.
+window.njNextNumber=async function(){
+  var yr=new Date().getFullYear().toString().slice(-2);
+  var prefix='MS-'+yr+'-';
+  try{
+    var r=await sb.rpc('rpw_next_job_number',{p_prefix:prefix});
+    if(r && !r.error && r.data) return String(r.data);
+  }catch(e){}
+  var mx=0;
+  JOBS.forEach(function(j){
+    var s=String(j.number||'');
+    if(s.indexOf(prefix)!==0)return;
+    var n=parseInt(s.slice(prefix.length),10);
+    if(!isNaN(n)&&n>mx)mx=n;
+  });
+  return prefix+String(mx+1).padStart(3,'0');
+};
+
+// ── IRATSZAMLALO — a dosszie-oldallal AZONOS szabaly (egy forras, ket nezet)
+// deschid = mi nyitjuk -> teljes csomag | deschis = mar nyitva -> constatare+fotok+karszam
+window.acteCount=function(job){
+  var DA=window.RPW_DAUNA_DOCS||[], acte=(job&&job.dosarActe)||{};
+  var mod=(job&&job.dosarStatus==='deschis')?'deschis':'deschid';
+  var slot=function(k){var a=acte[k];return a?(Array.isArray(a)?a.length:1):0};
+  var tot=0,done=0;
+  DA.forEach(function(g){
+    if(g.optional)return;
+    if(g.req && g.req.indexOf(mod)<0)return;
+    if(g.either){tot++;if(g.items.some(function(it){return slot(it.key)}))done++;}
+    else g.items.forEach(function(it){tot++;if(slot(it.key))done++;});
+  });
+  if(mod==='deschis'){tot++;if(String((job&&job.nrDosar)||'').trim())done++;}
+  return {done:done,total:tot,mod:mod};
+};
+
+// === BELEPESI PONTOK — harom megnevezett muvelet (L1-H) ====================
+//   prog    : az auto kesobb jon      -> sosire=programat · flux=reparatie
+//   dosar   : csak karugyintezes      -> flux=doar_dosar  · sosire=programat
+//   lucrare : az auto itt van         -> sosire=sosit     · flux=reparatie
+// A gomb donti el a fluxot, nem a felhasznalo pipalgatasa.
+window.njDay=function(off){var d=new Date();d.setDate(d.getDate()+off);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+window.njPlate=function(v){
+  var raw=String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  var m=raw.match(/^([A-Z]{1,2})(\d{2,3})([A-Z]{3})$/);
+  return m?(m[1]+'-'+m[2]+'-'+m[3]):raw;
+};
+function njOkPlate(v){return /^[A-Z]{1,2}-\d{2,3}-[A-Z]{3}$/.test(String(v||''))}
+function njOkPhone(v){return /^(\+40|0)\d{9}$/.test(String(v||'').replace(/[^\d+]/g,''))}
+function njKey(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
+
+window.openNewJob=function(mode){
+  S.showNew=1;
+  S.njMode=(mode==='dosar'||mode==='lucrare')?mode:'prog';
+  S.njPlate='';S.njPhone='';S.njClient='';S.njAuto='';S.njAsig='';S.njDosar='';
+  S.njTip=(S.njMode==='dosar')?'asig':null;
+  S.njPay=(S.njMode==='dosar')?'deschid':null;   // mi nyitjuk — nincs mit kerdezni
+  S.njDate=(S.njMode==='lucrare')?njDay(0):'';
+  S.njTime='08:00';
+  render();
+};
+window.closeNewJob=function(){S.showNew=0;render()};
+window.njSet=function(k,v){if(k)S[k]=v;render()};
+window.njSetTip=function(v){S.njTip=v;if(v==='auto')S.njPay=null;render()};
+window.njQuick=function(off){S.njDate=njDay(off);render()};
+
+// legacy aliasok
+window.openNewJobRec=function(){openNewJob('lucrare')};
+window.openProgModal=function(){openNewJob('prog')};
+window.closeProgModal=function(){closeNewJob()};
+window.startReceptie=function(){openNewJob('lucrare')};
+
+function njMissing(){
+  var m=[], mode=S.njMode||'prog';
+  if(!njOkPlate(S.njPlate))m.push(T('nj_m_plate'));
+  if(!njOkPhone(S.njPhone))m.push(T('nj_m_phone'));
+  if(mode==='lucrare'&&!S.njTip)m.push(T('m_m_tip'));
+  var kellDosar=(mode==='dosar')||(mode==='lucrare'&&S.njTip==='asig');
+  if(kellDosar&&mode!=='dosar'&&!S.njPay)m.push(T('nj_m_pay'));
+  if(kellDosar&&S.njPay==='deschis'&&!String(S.njDosar||'').trim())m.push(T('nj_m_nrdosar'));
+  if((mode==='prog'||mode==='lucrare')&&!S.njDate)m.push(T('nj_m_date'));
+  return m;
+}
+function njDup(){
+  var k=njKey(S.njPlate);if(!k)return null;
+  for(var x=0;x<JOBS.length;x++){
+    var j=JOBS[x];if(njKey(j.plate)!==k)continue;
+    var c=categorizeJob(j);
+    if(c==='arhivate'||c==='ratate')continue;
+    return j;
+  }
+  return null;
+}
+window.njSync=function(){
+  var miss=njMissing();
+  var w=document.getElementById('njWhy');
+  if(w)w.textContent=miss.length?(T('nj_missing')+': '+miss.join(', ')):'';
+  var b=document.getElementById('njSave');
+  if(b){b.disabled=miss.length>0;b.style.opacity=miss.length?'.45':'1';b.style.cursor=miss.length?'not-allowed':'pointer'}
+  var d=document.getElementById('njDup');
+  if(d){
+    var dup=njDup();
+    if(dup){d.style.display='block';
+      d.innerHTML='&#9888; '+T('nj_dup')+'<br><b>'+escH(dup.number||dup.id)+'</b> &middot; '+escH(dup.client||'—');}
+    else d.style.display='none';
+  }
+};
+window.njAfterRender=function(){
+  if(!S.showNew)return;
+  var ip=document.getElementById('iPlate');
+  if(ip&&!S.njPlate){try{ip.focus()}catch(e){}}
+  njSync();
+};
+
+window.submitNewJob=async function(){
+  var miss=njMissing();
+  if(miss.length){toast(T('nj_missing')+': '+miss.join(', '),1);return}
+  try{
+    var mode=S.njMode||'prog', now=new Date().toISOString();
+    var num=await njNextNumber();
+    var flux   = (mode==='dosar') ? 'doar_dosar' : 'reparatie';
+    var sosire = (mode==='lucrare') ? 'sosit' : 'programat';
+    var asig   = (mode==='dosar') || (mode==='lucrare' && S.njTip==='asig');
+    var ph={1:{status:'pending'},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}};
+    if(sosire==='sosit')ph[1]={status:'active',started:now};
+    var j={
+      id:(window.RPWUtil?RPWUtil.jobId():('RPW-'+String(Date.now()).slice(-6))),
+      number:num,
+      auto:(S.njAuto||''),vin:'',plate:S.njPlate,client:(S.njClient||''),phone:S.njPhone,
+      note:'',szinkod:'',
+      // ── AZ UJ, EGYERTELMU ALLAPOT ──
+      sosire:sosire,
+      flux:flux,
+      inchis:false,
+      phase:1,                       // SOHA nem 0
+      damageType:(asig?'asig':null),
+      dosarStatus:(asig?(S.njPay||null):null),
+      created:now,
+      photos:[],docs:[],panels:{},elements:{},materials:[],
+      programare:{
+        date:(S.njDate||null), time:(S.njTime||null),
+        confirmed:(sosire==='sosit'), reprogramari:0, istoric:[]
+      },
+      conditions:(sosire==='sosit')
+        ?{programare:true,loc:true,om:true,piese:false,whatsapp:true}
+        :{programare:true,loc:false,om:false,piese:false,whatsapp:false},
+      phases:ph
+    };
+    if(asig){j.asigurator=(S.njAsig||'');j.nrDosar=(S.njDosar||'')}
+    syncMirror(j);                   // regi mezo tukrozese
+    JOBS.push(j);
+    await saveJob(j);
+    var plate=j.plate;
+    S.showNew=0;
+    if(mode==='lucrare'){
+      location.assign('rpw-recepcio-red.html?job='+j.id);
+    }else{
+      S.screen='panou';
+      S.panouTab=(mode==='dosar')?'dosare':'viitoare';
+      toast((mode==='dosar'?T('m_ok_dosar'):T('m_ok_prog'))+': '+plate);
+      render();
+    }
+  }catch(e){toast('Error: '+e.message,1)}
+};
+// === /BELEPESI PONTOK ======================================================
+
+function isAdmin(){try{return localStorage.getItem('rpw_admin')==='1'}catch(e){return false}}
+window.toggleAdmin=function(){
+  try{
+    var pin=localStorage.getItem('rpw_admin_pin')||'';
+    if(isAdmin()){localStorage.setItem('rpw_admin','0');toast(T('admin_off'));render();return}
+    if(!pin){var np=prompt(T('admin_set_pin'),'');if(!np)return;localStorage.setItem('rpw_admin_pin',np);localStorage.setItem('rpw_admin','1');toast(T('admin_on'));render();return}
+    var p=prompt(T('admin_enter_pin'),'');if(p===null)return;
+    if(p===pin){localStorage.setItem('rpw_admin','1');toast(T('admin_on'))}else{toast(T('admin_wrong'),1)}
+    render();
+  }catch(e){}
+};
+
+window.deschideDosar=function(id){location.assign('rpw-dosar.html?job='+id)};
+window.openDosarModal=function(){S.showDosar=1;render()};
+window.closeDosarModal=function(){S.showDosar=0;render()};
+window.dosarAici=function(){S.showDosar=0;openNewJob({rep:1,pay:'deschid'})};
+window.dosarTarziu=function(){S.showDosar=0;openNewJob({prog:1,rep:1,pay:'deschid'})};
+
+window.dosarFisier=function(e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=async function(ev){
+    var dataUrl=ev.target.result;
+    var b64=(dataUrl.split(',')[1])||'';
+    S.showDosar=0;render();
+    toast(T('dosar_citire'));
+    try{
+      var res=await fetch('/.netlify/functions/ocr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:b64,type:'constatare'})});
+      var p=await res.json().catch(function(){return{}});
+      if(!res.ok)throw new Error(p.error||('HTTP '+res.status));
+      function v(x){return (x&&x!=='null')?String(x):''}
+      var num=await njNextNumber();
+      var now=new Date().toISOString();
+      var j={
+        id:(window.RPWUtil?RPWUtil.jobId():('RPW-'+String(Date.now()).slice(-6))),number:num,
+        auto:'',vin:'',plate:v(p.plate).toUpperCase(),
+        client:v(p.proprietar),phone:'',
+        note:'',szinkod:'',damageType:'asig',created:now,phase:0,
+        nrDosar:v(p.nrDosar),proprietarDosar:v(p.proprietar),asigurator:v(p.asigurator),
+        photos:[],docs:[{type:'constatare',data:dataUrl,ts:now}],panels:{},elements:{},materials:[],
+        programare:{date:null,time:null,confirmed:false,status:'viitor'},
+        conditions:{programare:true,loc:false,om:false,piese:false,whatsapp:false},
+        phases:{1:{status:'pending'},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}}
+      };
+      if(p.daune)j.listaDauneRaw=JSON.stringify(p.daune,null,2);
+      JOBS.push(j);
+      await saveJob(j);
+      S.panouTab='viitoare';
+      toast('Dosar creat: '+(j.nrDosar||'?')+' · '+(j.asigurator||'?')+' · '+(j.proprietarDosar||'?'));
+      render();
+    }catch(err){toast('OCR eroare: '+err.message)}
+  };
+  r.readAsDataURL(f);
+};
+
+// === WhatsApp klick = auto-set + open wa.me ===
+window.clickWhatsApp=async function(jobId,phoneClean){
+  var job=await freshJob(jobId);
+  if(!job)return;
+  if(!job.conditions)job.conditions={};
+  job.conditions.whatsapp=true;
+  await saveJob(job);
+  toast(T('wa_sent_marked'));
+  // Megnyit a wa.me-t uj tabban
+  var url='https://wa.me/'+phoneClean;
+  window.open(url,'_blank','noopener');
+  render();
+};
+
+// === Conditii Modal handlers ===
+function condModalHtml(){
+  var h='';
+  if(S.showCondModal && S.condDraft){
+    var d=S.condDraft, dj=JOBS.find(function(j){return j.id===S.showCondModal});
+    var subTxt=dj?((dj.plate||'—')+' · '+(dj.phone||'—')):'';
+    h+='<div class="cond-modal"><div class="cond-box">';
+    h+='<div class="cond-mt">'+T('cond_modal_title')+(dj?(' — '+(dj.number||dj.id)):'')+'</div>';
+    h+='<div class="cond-ms">'+subTxt+'</div>';
+    // programare
+    h+='<div class="cond-q"><span class="cond-q-label">📅 '+T('cond_q_prog')+'</span><div class="cond-btns">';
+    h+='<button class="cb '+(d.programare===false?'no-on':'')+'" onclick="setCondDraft(\'programare\',false)">'+T('no_nu')+'</button>';
+    h+='<button class="cb '+(d.programare===true?'yes-on':'')+'" onclick="setCondDraft(\'programare\',true)">'+T('yes_da')+'</button>';
+    h+='</div></div>';
+    // loc
+    h+='<div class="cond-q"><span class="cond-q-label">🏢 '+T('cond_q_loc')+'</span><div class="cond-btns">';
+    h+='<button class="cb '+(d.loc===false?'no-on':'')+'" onclick="setCondDraft(\'loc\',false)">'+T('no_nu')+'</button>';
+    h+='<button class="cb '+(d.loc===true?'yes-on':'')+'" onclick="setCondDraft(\'loc\',true)">'+T('yes_da')+'</button>';
+    h+='</div></div>';
+    // om
+    h+='<div class="cond-q"><span class="cond-q-label">👤 '+T('cond_q_om')+'</span><div class="cond-btns">';
+    h+='<button class="cb '+(d.om===false?'no-on':'')+'" onclick="setCondDraft(\'om\',false)">'+T('no_nu')+'</button>';
+    h+='<button class="cb '+(d.om===true?'yes-on':'')+'" onclick="setCondDraft(\'om\',true)">'+T('yes_da')+'</button>';
+    h+='</div></div>';
+    // piese — 3 allapot
+    h+='<div class="cond-q"><span class="cond-q-label">📦 '+T('cond_q_piese')+'</span><div class="cond-btns">';
+    h+='<button class="cb '+(!d.piese||d.piese===false?'no-on':'')+'" onclick="setCondDraft(\'piese\',false)">'+T('piese_nu')+'</button>';
+    h+='<button class="cb '+(d.piese==='comandat'?'cmd-on':'')+'" onclick="setCondDraft(\'piese\',\'comandat\')">'+T('piese_comandat')+'</button>';
+    h+='<button class="cb '+(d.piese==='livrat'?'yes-on':'')+'" onclick="setCondDraft(\'piese\',\'livrat\')">'+T('piese_livrat')+'</button>';
+    h+='</div></div>';
+    // whatsapp
+    h+='<div class="cond-q"><span class="cond-q-label">💬 '+T('cond_q_wa')+'</span><div class="cond-btns">';
+    h+='<button class="cb '+(d.whatsapp===false?'no-on':'')+'" onclick="setCondDraft(\'whatsapp\',false)">'+T('no_nu')+'</button>';
+    h+='<button class="cb '+(d.whatsapp===true?'yes-on':'')+'" onclick="setCondDraft(\'whatsapp\',true)">'+T('yes_da')+'</button>';
+    h+='</div></div>';
+    // actions
+    h+='<div class="cond-actions"><button class="cancel" onclick="closeCondModal()">'+T('btn_cancel')+'</button><button class="submit" onclick="saveCondModal()">'+T('btn_save')+'</button></div>';
+    h+='</div></div>';
+  }
+  return h;
+}
+window.openCondModal=async function(jobId){
+  var job=await freshJob(jobId);
+  if(!job)return;
+  var c=job.conditions||{};
+  // backward-compat: piese===true → 'livrat'
+  var piese=c.piese; if(piese===true)piese='livrat'; if(!piese)piese=false;
+  S.condDraft={
+    programare: !!c.programare,
+    loc: !!c.loc,
+    om: !!c.om,
+    piese: piese,
+    whatsapp: !!c.whatsapp
+  };
+  S.showCondModal=jobId;
+  render();
+};
+window.closeCondModal=function(){S.showCondModal=0;S.condDraft=null;render()};
+window.toggleEditJob=function(id){var closing=(S.editJobId===id);S.editJobId=closing?null:id;render();if(closing)toast(T('field_saved'))};
+window.updJobField=async function(id,f,v){var j=await freshJob(id);if(!j)return;if(f==='plate'||f==='vin')v=String(v).toUpperCase();j[f]=v;await saveJob(j)};
+window.setCondDraft=function(key,val){
+  if(!S.condDraft)return;
+  S.condDraft[key]=val;
+  render();
+};
+window.saveCondModal=async function(){
+  if(!S.condDraft||!S.showCondModal)return;
+  var job=await freshJob(S.showCondModal);
+  if(!job)return;
+  if(!job.conditions)job.conditions={};
+  job.conditions.programare = S.condDraft.programare;
+  job.conditions.loc = S.condDraft.loc;
+  job.conditions.om = S.condDraft.om;
+  job.conditions.piese = S.condDraft.piese;
+  job.conditions.whatsapp = S.condDraft.whatsapp;
+  await saveJob(job);
+  S.showCondModal=0;
+  S.condDraft=null;
+  toast(T('cond_saved'));
+  render();
+};
+
+// === Deschide lucrarea (Panou → Lucrari) ===
+window.deschideLucrare=async function(jobId){
+  var job=await freshJob(jobId);
+  if(!job)return;
+  if(!job.conditions||!job.conditions.whatsapp){toast(T('no_wa_yet'),1);return}
+  if(!job.programare)job.programare={};
+  job.sosire='sosit'; syncMirror(job);
+  if(!job.phase||job.phase<1)job.phase=1;
+  if(!job.phases)job.phases={};
+  for(var p=1;p<=7;p++){if(!job.phases[p])job.phases[p]={status:'pending'}}
+  if(job.phases[1].status==='pending'){job.phases[1].status='active';job.phases[1].started=new Date().toISOString()}
+  await saveJob(job);
+  location.assign('rpw-recepcio-red.html?job='+job.id);
+};
+
+window.markRatat=async function(jobId){
+  var job=await freshJob(jobId);
+  if(!job)return;
+  if(!job.programare)job.programare={};
+  job.sosire='ratat'; syncMirror(job);
+  await saveJob(job);
+  toast(T('moved_ratat'));
+  render();
+};
+
+window.reactiveaza=async function(jobId){
+  var job=await freshJob(jobId);
+  if(!job)return;
+  if(!job.programare)job.programare={};
+  job.sosire='programat'; job.inchis=false; syncMirror(job);
+  await saveJob(job);
+  toast(T('reactivat'));
+  render();
+};
+
+window.oP=function(id,ph){
+  location.assign('rpw-dosar.html?job='+id);
+};
+window.dJ=async function(id){
+  if(!isAdmin()){toast(T('admin_only'),1);return}
+  // Programált (viitoare) munka NEM törölhető — csak "Ratat"-ra állítható
+  var _j=JOBS.find(function(x){return x.id===id});
+  if(_j && categorizeJob(_j)==='viitoare'){toast(T('nu_sterg_programat'),1);return}
+  if(!confirm('Stergi lucrarea? / Delete job? / Törlöd?'))return;
+  await deleteJob(id);
+  toast(T('deleted'));
+};
+
+// Auto-refresh every 10 seconds
+setInterval(loadJobs,60000);
+loadConfig();
+loadJobs();
+</script>
+</body>
+</html>
