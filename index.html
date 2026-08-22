@@ -394,6 +394,7 @@ edit:{ro:'Editeaza',en:'Edit',hu:'Szerkesztes'},
 plate:{ro:'Nr. inmatr.',en:'Plate',hu:'Rendszam'},
 // === Programare modal + Deschide flow ===
 new_programare:{ro:'+ Programare noua',en:'+ New schedule',hu:'+ Uj programalas'},
+prog_dauna:{ro:'Dosar daună (asigurare) — deschide dosarul',en:'Damage file (insurance) — open dossier',hu:'Kárdosszié (biztosítás) — nyisd meg a dossziét'},
 receptie_auto:{ro:'Receptie auto',en:'Car reception',hu:'Auto atvetel'},
 dosar_dauna:{ro:'Dosar dauna',en:'Damage file',hu:'Kardosszie'},
 dosar_q:{ro:'Autovehiculul este in service?',en:'Is the car at the shop?',hu:'Az auto itt van a szervizben?'},
@@ -688,7 +689,7 @@ function renderPanou(){
   h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
 
   // Header + Programare noua gomb
-  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-prog-new" onclick="openProgModal()">'+IC.plus+' '+T('new_programare')+'</button><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="startReceptie(false)">'+T('receptie_auto')+'</button><button class="btn-prog-new" style="background:var(--bl,#2563eb)" onclick="openDosarModal()">'+T('dosar_dauna')+'</button></div></div>';
+  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-prog-new" onclick="openProgModal()">'+IC.plus+' '+T('new_programare')+'</button><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="startReceptie(false)">'+T('receptie_auto')+'</button></div></div>';
 
   // Tabs
   h+='<div class="panou-tabs">';
@@ -764,6 +765,7 @@ function renderPanou(){
     h+='<div class="prog-s">'+T('prog_modal_sub')+'</div>';
     h+='<div class="prog-field"><label>'+T('plate_label')+'</label><input id="iPlate" type="text" value="'+(S.progPlate||'')+'" placeholder="'+T('plate_ph')+'" oninput="S.progPlate=this.value.toUpperCase();this.value=S.progPlate"/></div>';
     h+='<div class="prog-field"><label>'+T('phone_label')+'</label><input id="iPhone" type="tel" value="'+(S.progPhone||'')+'" placeholder="'+T('phone_ph')+'" oninput="S.progPhone=this.value"/></div>';
+    h+='<label class="prog-field" style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-direction:row"><input type="checkbox" '+(S.progAsig?'checked':'')+' onchange="S.progAsig=this.checked?1:0" style="width:18px;height:18px"/><span style="font-size:13px">'+T('prog_dauna')+'</span></label>';
     h+='<div class="prog-actions"><button class="cancel" onclick="closeProgModal()">'+T('btn_cancel')+'</button><button class="submit" onclick="submitProgramare()">'+T('btn_programeaza')+'</button></div>';
     h+='</div></div>';
   }
@@ -1040,7 +1042,7 @@ window.setStuckThreshold=function(v){var n=parseInt(v,10);if(n>=1&&n<=60){S.stat
 window.setPanouTab=function(t){S.panouTab=t;render()};
 
 // === Programare modal ===
-window.openProgModal=function(){S.showProg=1;S.progPlate='';S.progPhone='';render()};
+window.openProgModal=function(){S.showProg=1;S.progPlate='';S.progPhone='';S.progAsig=1;render()};
 
 function isAdmin(){try{return localStorage.getItem('rpw_admin')==='1'}catch(e){return false}}
 window.toggleAdmin=function(){
@@ -1143,8 +1145,10 @@ window.submitProgramare=async function(){
     };
     JOBS.push(j);
     await saveJob(j);
+    var goDosar=(j.damageType==='asig');
     S.showProg=0;S.progPlate='';S.progPhone='';S.progAsig=0;
     S.panouTab='viitoare';
+    if(goDosar){ location.assign('rpw-dosar.html?job='+j.id); return; }
     toast(T('prog_created')+': '+plate);
     render();
   }catch(e){toast('Error: '+e.message)}
