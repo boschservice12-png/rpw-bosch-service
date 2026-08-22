@@ -210,6 +210,7 @@ function render(){
     var slotFiles=function(k){var a=acte[k];return a?(Array.isArray(a)?a:[a]):[]};
     var reqTotal=0,reqDone=0;
     DA.forEach(function(g){
+      if(g.optional)return;
       if(g.either){reqTotal++;if(g.items.some(function(it){return slotFiles(it.key).length}))reqDone++;}
       else g.items.forEach(function(it){reqTotal++;if(slotFiles(it.key).length)reqDone++;});
     });
@@ -393,6 +394,7 @@ window.exportDosar=async function(){
   var slotFiles=function(k){var a=acte[k];return a?(Array.isArray(a)?a:[a]):[]};
   var missing=[];
   DA.forEach(function(g){
+    if(g.optional)return;
     if(g.either){if(!g.items.some(function(it){return slotFiles(it.key).length}))missing.push(g.label);}
     else g.items.forEach(function(it){if(!slotFiles(it.key).length)missing.push(g.label+' / '+it.label);});
   });

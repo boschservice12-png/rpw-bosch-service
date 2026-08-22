@@ -75,6 +75,12 @@ window.RPW_DAUNA_DOCS = [
   { key:'declaratie', label:'Declarație daună', items:[
     { key:'declaratie_dauna', label:'Declarație daună' }
   ]},
+  { key:'polita', label:'Poliță asigurare', items:[
+    { key:'polita_rca', label:'Poliță RCA / CASCO' }
+  ]},
+  { key:'imputernicire', label:'Împuternicire', optional:true, items:[
+    { key:'imputernicire_doc', label:'Împuternicire (firmă / leasing)' }
+  ]},
   { key:'vinovat', label:'Acte vinovat', items:[
     { key:'vin_buletin', label:'Buletin' },
     { key:'vin_talon',   label:'Talon' },
