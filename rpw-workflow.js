@@ -1,4 +1,4 @@
-/* BUILD: MODAL-GENERIC-L1N 2026-08-23 */
+/* BUILD: FRIENDLY-DIALOGS-L1R 2026-08-23 */
 /* ============================================================
    rpw-workflow.js — RPW KÖZPONTI WORKFLOW-MODUL (EGYETLEN IGAZSÁGFORRÁS)
    ------------------------------------------------------------
@@ -781,6 +781,32 @@
     '.rpw-bm-b:hover{filter:brightness(.96)}';
     document.head.appendChild(s);
   }
+  // Hangnem: a fejlec szine es a kabala hangulata ehhez igazodik.
+  var BM_TONE={
+    info:  {bg:'linear-gradient(135deg,#15181C 0%,#2a2f36 100%)', accent:'#2563eb'},
+    ok:    {bg:'linear-gradient(135deg,#0f2e1d 0%,#1a4d31 100%)', accent:'#1E9D55'},
+    warn:  {bg:'linear-gradient(135deg,#3a2a08 0%,#5c4210 100%)', accent:'#E9A700'},
+    danger:{bg:'linear-gradient(135deg,#3a0e12 0%,#6b171f 100%)', accent:'#E11D2E'}
+  };
+  // Rovid kerdes gombokkal. Nincs blokkolo confirm() — visszahivassal dolgozik.
+  function ask(o){
+    o=o||{};
+    showBlockModal({
+      lang:o.lang, tone:o.tone||'info', title:o.title||'', subtitle:o.subtitle||'',
+      lead:o.text||'', items:o.items||[],
+      cancelText:o.cancelText, confirmText:o.confirmText,
+      onConfirm:o.onConfirm||function(){}, onClose:o.onCancel
+    });
+  }
+  // Csak kozles, egy gombbal.
+  function say(o){
+    o=o||{};
+    showBlockModal({
+      lang:o.lang, tone:o.tone||'info', title:o.title||'', subtitle:o.subtitle||'',
+      lead:o.text||'', items:o.items||[], onlyOk:true,
+      cancelText:o.okText, onClose:o.onClose
+    });
+  }
   function bmEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 
   // reasons: kodlista | job+targetPhase: a HASZNOS lista (mi hianyzik valojaban)
@@ -809,7 +835,7 @@
       items=arr(opts.reasons).filter(function(r){return r!=='wf_future_phase'&&r!=='wf_prev_not_closed'})
                              .map(function(r){return t(r,lang)});
     }
-    if(!items.length)items=[t('wf_prev_not_closed',lang)];
+    if(!items.length && !opts.lead && !opts.title)items=[t('wf_prev_not_closed',lang)];
 
     if(typeof opts.pct==='number')pct=opts.pct;
     var tgtName = isNum(target)?phaseName(target,lang):'';
@@ -818,10 +844,11 @@
       ? um('bm_prev',lang).replace('{p}',bmEsc(prvName))
       : um('bm_sub',lang).replace('{f}',bmEsc(tgtName)));
 
+    var tone=BM_TONE[opts.tone]||BM_TONE.info;
     var ov=document.createElement('div'); ov.className='rpw-bm';
     var h='';
     h+='<div class="rpw-bm-box" role="dialog" aria-modal="true">';
-    h+='<div class="rpw-bm-hd"><div class="rpw-bm-av" style="background-image:url(rpw-mascot.png)"></div>';
+    h+='<div class="rpw-bm-hd" style="background:'+tone.bg+'"><div class="rpw-bm-av" style="background-image:url(rpw-mascot.png);box-shadow:0 4px 14px rgba(0,0,0,.35),0 0 0 2px '+tone.accent+'"></div>';
     h+='<div><div class="rpw-bm-ht">'+bmEsc(opts.title||um('bm_title',lang))+'</div>';
     h+='<div class="rpw-bm-hs">'+bmEsc(opts.subtitle||(tgtName?phaseName(target,lang):''))+'</div></div></div>';
     h+='<div class="rpw-bm-bd"><div class="rpw-bm-lead">'+lead+'</div>';
@@ -831,7 +858,8 @@
       h+='<div class="rpw-bm-prb"><div class="rpw-bm-prf" style="width:0%"></div></div></div>';
     }
     h+='</div><div class="rpw-bm-ft"><button class="rpw-bm-b rpw-bm-b1" data-x>'+bmEsc(opts.cancelText||um('bm_ok',lang))+'</button>';
-    h+='<button class="rpw-bm-b rpw-bm-b2" '+(opts.onConfirm?'data-go':'data-x')+'>'+bmEsc(opts.confirmText||um('bm_go',lang))+'</button></div></div>';
+    if(!opts.onlyOk)h+='<button class="rpw-bm-b rpw-bm-b2" style="background:'+tone.accent+'" '+(opts.onConfirm?'data-go':'data-x')+'>'+bmEsc(opts.confirmText||um('bm_go',lang))+'</button>';
+    h+='</div></div>';
     ov.innerHTML=h;
     document.body.appendChild(ov);
     if(pct!=null){ var f=ov.querySelector('.rpw-bm-prf'); if(f) setTimeout(function(){f.style.width=pct+'%'},60); }
@@ -1004,6 +1032,8 @@
     reasonsText: reasonsText,
     barColor: barColor,
     showBlockModal: showBlockModal,
+    ask: ask,
+    say: say,
     statusBarHtml: statusBarHtml,
     pathnamePhase: pathnamePhase,
     stateName: stateName,
