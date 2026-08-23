@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: CASE-IDENTITY-L1S 2026-08-23 -->
+<!-- BUILD: CE-FACEM-AZI-L1U 2026-08-23 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -269,6 +269,75 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .nj-dup-bad{background:#fef2f2;border-color:#fecaca;color:#991b1b}
 .nj-case{margin-top:4px;padding:3px 0 0;font-size:12px}
 .nj-warn-soft{font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 9px;margin-top:6px}
+/* ── Ce facem azi ── */
+.az-ov{position:fixed;inset:0;background:rgba(12,14,18,.55);backdrop-filter:blur(3px);z-index:2000;
+ display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow:auto;animation:azf .2s ease-out}
+@keyframes azf{from{opacity:0}to{opacity:1}}
+@keyframes azu{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes azb{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.az-box{background:#fff;border-radius:20px;max-width:780px;width:100%;margin:auto;overflow:hidden;
+ box-shadow:0 30px 70px rgba(0,0,0,.34);animation:azu .26s cubic-bezier(.2,.9,.3,1.15)}
+.az-hd{background:linear-gradient(135deg,#15181C 0%,#2a2f36 100%);padding:20px 22px;display:flex;gap:16px;align-items:center}
+.az-av{width:84px;height:84px;border-radius:18px;flex:0 0 84px;background:#0e1013 center/cover no-repeat;
+ box-shadow:0 8px 22px rgba(0,0,0,.4);animation:azb 3.4s ease-in-out infinite}
+.az-hi{color:#9AA3AE;font-size:12px;font-weight:700}
+.az-q{color:#fff;font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:2px}
+.az-dt{color:#7C8794;font-size:11px;font-weight:600;margin-top:4px;font-family:ui-monospace,Menlo,monospace}
+.az-x{margin-left:auto;align-self:flex-start;background:none;border:0;color:#7C8794;font-size:26px;cursor:pointer;line-height:1}
+.az-hz{display:flex;gap:5px;background:#EDEFF2;padding:4px;border-radius:10px;margin:14px 22px 2px}
+.az-hz button{flex:1;border:0;background:none;padding:9px;border-radius:7px;font:800 13px inherit;color:var(--t3);cursor:pointer}
+.az-hz button[aria-pressed="true"]{background:#fff;color:var(--t1);box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.az-bd{padding:8px 22px 4px;max-height:56vh;overflow:auto}
+.az-say{font-size:14px;color:#33414F;font-weight:600;margin:12px 0 14px;line-height:1.5}
+.az-say b{color:var(--t1)}
+.az-band{border:1px solid var(--b);border-radius:12px;margin-bottom:9px;overflow:hidden}
+.az-band.hot{border-color:#fecaca;box-shadow:0 0 0 3px #fef2f2}
+.az-bh{display:flex;align-items:center;gap:11px;padding:12px 14px;cursor:pointer;user-select:none}
+.az-bh:hover{background:#FAFBFC}
+.az-ic{width:38px;height:26px;border-radius:5px;display:grid;place-items:center;flex:0 0 38px;
+ font:800 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.06em;border:1px solid rgba(0,0,0,.09)}
+.az-bt{font-weight:800;font-size:14px}
+.az-bs{font-size:11px;color:var(--t3);font-weight:600;margin-top:1px}
+.az-cnt{margin-left:auto;min-width:28px;height:24px;padding:0 8px;border-radius:12px;display:grid;place-items:center;font:800 12px inherit}
+.az-cv{color:#9AA3AE;font:800 16px/1 ui-monospace,Menlo,monospace;margin-left:8px;width:14px;text-align:center;transition:transform .2s}
+.az-band.open .az-cv{transform:rotate(45deg)}
+.az-in{display:none;border-top:1px solid var(--b)}
+.az-band.open .az-in{display:block}
+.az-r{display:flex;align-items:center;gap:9px;padding:10px 14px;border-top:1px solid #F1F3F5;font-size:13px;flex-wrap:wrap}
+.az-r:first-child{border-top:0}
+.az-pl{font-weight:800;font-family:ui-monospace,Menlo,monospace;letter-spacing:.4px;min-width:96px}
+.az-nr{font-size:10px;color:var(--t3);font-weight:600;font-family:ui-monospace,Menlo,monospace}
+.az-tg{font:800 10px ui-monospace,Menlo,monospace;border-radius:11px;padding:3px 8px;white-space:nowrap}
+.az-mt{margin-left:auto;font:600 10.5px ui-monospace,Menlo,monospace;color:var(--t3);text-align:right}
+.az-ab{border:1px solid var(--b);background:#fff;border-radius:8px;padding:6px 11px;font:800 11px inherit;cursor:pointer;color:var(--t1);white-space:nowrap}
+.az-ab.p{background:var(--r);border-color:var(--r);color:#fff}
+.az-ab.b{background:#2563eb;border-color:#2563eb;color:#fff}
+.az-em{padding:13px 14px;color:var(--t3);font-size:12px}
+.az-wl{font:600 10.5px ui-monospace,Menlo,monospace;color:#92400E;background:#FFFBEB;border-top:1px solid #FDE68A;padding:8px 14px}
+.az-ph{display:flex;gap:3px;width:100%;margin-top:6px}
+.az-ph i{flex:1;height:6px;border-radius:3px;background:#EEF1F4;font-style:normal}
+.az-ph i.d{background:#1E9D55}.az-ph i.a{background:#E9A700}.az-ph i.s{background:#CBD5E1}
+.az-pn{font:700 10px ui-monospace,Menlo,monospace;color:var(--t3);margin-top:4px;width:100%}
+.az-ft{padding:13px 22px 18px;display:flex;gap:9px;border-top:1px solid var(--b);background:#FAFBFC}
+.az-fb{flex:1;padding:13px;border:0;border-radius:10px;font:800 13px inherit;cursor:pointer}
+.az-f1{background:#EDEFF2;color:#33414F}.az-f2{background:var(--r);color:#fff}
+.az-bang{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:3px;background:#B91C1C;color:#fff;
+ font:800 10px/1 ui-monospace,Menlo,monospace;margin-right:5px;vertical-align:-2px}
+.azc-red{background:#FEE2E2;color:#B91C1C}.azc-amb{background:#FEF3C7;color:#92400E}
+.azc-grn{background:#DCFCE7;color:#15803D}.azc-blu{background:#DBEAFE;color:#1D4ED8}
+.azc-gry{background:#F1F5F9;color:#475569}
+/* ── ellenorzopont ── */
+.ck-sec{padding:12px 14px;border-top:1px solid #F1F3F5}
+.ck-lb{font:800 11px ui-monospace,Menlo,monospace;color:var(--t3);letter-spacing:.05em;margin-bottom:7px}
+.ck-yn{display:flex;gap:6px}
+.ck-yn button{flex:1;border:1.5px solid var(--b);background:#fff;border-radius:9px;padding:9px;font:800 12px inherit;cursor:pointer;color:var(--t3)}
+.ck-yn button.on{border-color:#1E9D55;background:#f0fdf4;color:#15803D}
+.ck-seen{font:700 11px ui-monospace,Menlo,monospace;color:#15803D;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 11px}
+.ck-two{display:flex;gap:8px}
+.ck-in{flex:1;border:1.5px solid var(--b);border-radius:9px;padding:11px;font:800 15px ui-monospace,Menlo,monospace;text-align:center}
+.ck-in:focus{outline:0;border-color:var(--r)}
+.ck-hint{font:600 11px ui-monospace,Menlo,monospace;color:#1D4ED8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 11px;margin-top:8px}
+@media(max-width:620px){.az-mt{display:none}.az-q{font-size:20px}.az-av{width:64px;height:64px;flex:0 0 64px}}
 </style>
 </head>
 <body>
@@ -512,6 +581,56 @@ m_edit_t:{ro:'Editează datele',en:'Edit details',hu:'Adatok javitasa'},
 m_edit_s:{ro:'Data se schimbă doar prin Reprogramare',en:'Date changes only via Reschedule',hu:'A datum csak Atutemezessel valtozik'},
 edit_btn:{ro:'Editează',en:'Edit',hu:'Javitas'},
 edit_ok:{ro:'Date salvate',en:'Details saved',hu:'Adatok mentve'},
+az_hi:{ro:'Bună, Ferenc!',en:'Hello, Ferenc!',hu:'Szia, Ferenc!'},
+az_q:{ro:'Ce facem azi?',en:'What are we doing today?',hu:'Mit csinálunk ma?'},
+az_h1:{ro:'Azi',en:'Today',hu:'Ma'},
+az_h3:{ro:'3 zile',en:'3 days',hu:'3 nap'},
+az_h7:{ro:'7 zile',en:'7 days',hu:'7 nap'},
+az_later:{ro:'Mai târziu',en:'Later',hu:'Később'},
+az_start:{ro:'Începem',en:"Let's start",hu:'Kezdjük'},
+az_open:{ro:'Deschide',en:'Open',hu:'Megnyit'},
+az_sos:{ro:'Sosiri',en:'Arrivals',hu:'Érkezések'},
+az_sos_s:{ro:'mașini programate să vină',en:'cars scheduled to arrive',hu:'érkezésre beütemezve'},
+az_rst:{ro:'Restante',en:'Overdue',hu:'Elakadt'},
+az_rst_s:{ro:'programări depășite / blocate — cer decizie',en:'overdue / stuck — need a decision',hu:'lejárt vagy beragadt — döntést vár'},
+az_atl:{ro:'În atelier',en:'In the workshop',hu:'A műhelyben'},
+az_atl_s:{ro:'mașini în incintă — stare pe faze',en:'cars on site — phase status',hu:'bent lévő autók — fázisállapot'},
+az_dos:{ro:'Dosare daună',en:'Claim files',hu:'Kárdossziék'},
+az_dos_s:{ro:'termene legale față de asigurător',en:'legal deadlines toward the insurer',hu:'törvényes határidők a biztosító felé'},
+az_chk:{ro:'De verificat',en:'To check',hu:'Ellenőrizendő'},
+az_chk_s:{ro:'recepție închisă de 1 zi — ce urmează?',en:'reception done 1 day ago — what next?',hu:'a recepció egy napja megvolt — mi jön?'},
+az_ver:{ro:'De pus în ordine',en:'To tidy up',hu:'Rendezendő'},
+az_ver_s:{ro:'date lipsă — nu blochează, dar va fi cerut',en:'missing data — not blocking, but will be asked',hu:'hiányzó adat — nem blokkol, de kérni fogják'},
+az_none_sos:{ro:'Nicio sosire programată.',en:'No arrivals scheduled.',hu:'Nincs beütemezett érkezés.'},
+az_none:{ro:'Nimic aici.',en:'Nothing here.',hu:'Itt nincs semmi.'},
+az_contact:{ro:'Contactează',en:'Contact',hu:'Kapcsolat'},
+az_nocontact:{ro:'fara contact',en:'no contact',hu:'nincs kapcsolat'},
+az_contactok:{ro:'contact OK',en:'contact OK',hu:'kapcsolat OK'},
+az_repro:{ro:'Reprogramare',en:'Reschedule',hu:'Átütemezés'},
+az_fixit:{ro:'Completează',en:'Complete',hu:'Pótold'},
+az_check:{ro:'Verifică',en:'Check',hu:'Ellenőrzés'},
+az_stuck:{ro:'blocat de {n}z',en:'stuck {n}d',hu:'{n} napja áll'},
+az_late:{ro:'întârziat {n}z',en:'{n}d late',hu:'{n} napja késik'},
+az_noasig:{ro:'fara asigurator / nr. dosar',en:'no insurer / claim no.',hu:'nincs biztosító / kárszám'},
+az_noclient:{ro:'fara numele pagubitului',en:'no claimant name',hu:'nincs károsult név'},
+az_nodeviz:{ro:'FARA DEVIZ',en:'NO DEVIZ',hu:'NINCS DEVIZ'},
+az_terms:{ro:'TERMENE de la predare — CONST: 3 zile lucratoare · OFERTA: 30 zile.',en:'DEADLINES from handover — ASSESS: 3 working days · OFFER: 30 days.',hu:'HATÁRIDŐK az átadástól — FELMÉRÉS: 3 munkanap · AJÁNLAT: 30 nap.'},
+// ── 24 orás ellenőrzőpont
+ck_t:{ro:'Ce urmează la {p}?',en:'What next for {p}?',hu:'Mi jön a {p} munkán?'},
+ck_s:{ro:'Recepția s-a făcut ieri. Completează ce lipsește.',en:'Reception was yesterday. Fill in what is missing.',hu:'A recepció tegnap megvolt. Pótold, ami hiányzik.'},
+ck_eval:{ro:'Evaluare făcută?',en:'Evaluation done?',hu:'Megvolt az értékelés?'},
+ck_reconst:{ro:'Reconstatare trimisă?',en:'Reassessment sent?',hu:'Elküldve az újrafelmérés?'},
+ck_piese:{ro:'Piese comandate?',en:'Parts ordered?',hu:'Alkatrész megrendelve?'},
+ck_ore:{ro:'Ore din deviz',en:'Hours from the deviz',hu:'Órák a devizből'},
+ck_tin:{ro:'ore tinichigerie',en:'bodywork hours',hu:'lakatos óra'},
+ck_vop:{ro:'ore vopsitorie',en:'paint hours',hu:'fényezés óra'},
+ck_seen:{ro:'văd deja — nu întreb',en:'already visible — not asking',hu:'már látom — nem kérdezem'},
+ck_save:{ro:'Salvează',en:'Save',hu:'Mentés'},
+ck_skip:{ro:'Mai târziu',en:'Later',hu:'Később'},
+ck_da:{ro:'Da',en:'Yes',hu:'Igen'},
+ck_nu:{ro:'Nu încă',en:'Not yet',hu:'Még nem'},
+ck_expl:{ro:'Din ore rezultă durata așteptată: {n} zile lucrătoare (4 h/zi).',en:'The hours give the expected duration: {n} working days (4 h/day).',hu:'Az órákból jön a várható átfutás: {n} munkanap (4 ó/nap).'},
+ck_ok:{ro:'Salvat',en:'Saved',hu:'Mentve'},
 dlg_del_t:{ro:'Ștergi lucrarea?',en:'Delete the job?',hu:'Törlöd a munkát?'},
 dlg_del_s:{ro:'Trece în Coș — o poți recupera de acolo.',en:'It goes to the Bin — recoverable from there.',hu:'A Kosárba kerül — onnan visszahozható.'},
 dlg_sterge:{ro:'Șterge',en:'Delete',hu:'Törlés'},
@@ -888,7 +1007,7 @@ function renderPanou(){
   h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
 
   // Header + Programare noua gomb
-  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-prog-new" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="background:var(--bl,#2563eb)" onclick="openNewJob(\'dosar\')">&#128193; '+T('btn_dosar_nou')+'</button><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="openNewJob(\'lucrare\')">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
+  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn" style="background:#15181C;color:#fff;border-color:#15181C" onclick="azOpen()">'+T('az_q')+'</button>'+'<button class="btn-prog-new" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="background:var(--bl,#2563eb)" onclick="openNewJob(\'dosar\')">&#128193; '+T('btn_dosar_nou')+'</button><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="openNewJob(\'lucrare\')">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
 
   // Tabs
   h+='<div class="panou-tabs">';
@@ -1884,8 +2003,276 @@ window._dJgo=async function(id){
   toast(T('deleted'));
 };
 
+
+// ====================================================================
+//  CE FACEM AZI  —  a nap vezerlopultja
+//  --------------------------------------------------------------
+//  Nem lista: RANGSOR. Ami tetet hordoz, az van felul.
+//  Naponta EGYSZER nyilik magatol; utana gombbal barmikor.
+//  Ez NEM poka-yoke (nem akadalyoz meg hibat) — ez VEZERLES:
+//  a recepcios ne vesztodjon el a munkapultnal.
+// ====================================================================
+window.azH=1;
+function azDay(o){var d=new Date();d.setDate(d.getDate()+(o||0));
+ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function azDiff(a,b){return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5)}
+function azFmt(s){if(!s)return '';var p=s.split('-');return p[2]+'.'+p[1]}
+function azWM(j){ return (window.RPWWorkflow&&RPWWorkflow.workMetrics)?RPWWorkflow.workMetrics(j):null }
+
+// ── 24 oras ellenorzopont: a recepcio ELOZO munkanapon indult, es meg hianyzik valami
+function azNextWorkday(iso){
+  var d=new Date(iso+'T00:00:00');
+  do{ d.setDate(d.getDate()+1); }while(d.getDay()===0||d.getDay()===6);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+// Mit LAT mar a rendszer, es mit kell KERDEZNIE
+window.azCheckNeeds=function(j){
+  var need={eval:false,reconst:false,piese:false,ore:false,any:false};
+  if(((j.evalData||{}).status)!=='accepted') need.eval=true;
+  var rs=((j.reconst||{}).status)||((j.reconst||{}).response)||'draft';
+  if(j.damageType!=='auto' && rs==='draft') need.reconst=true;   // 'sent' = elkuldve, nem kerdez
+  if((((j.conditions||{}).piese)||'nu')==='nu') need.piese=true;
+  var d=j.deviz||{};
+  if(!(isFinite(parseFloat(d.oreTinichigerie))||isFinite(parseFloat(d.oreVopsitorie)))) need.ore=true;
+  need.any=need.eval||need.reconst||need.piese||need.ore;
+  return need;
+};
+function azCheckList(){
+  var azi=azDay(0);
+  return JOBS.filter(function(j){
+    if(categorizeJob(j)!=='lucrari')return false;
+    var st=(j.phases&&j.phases[1])||{};
+    var startd=String(st.started||'').slice(0,10);
+    if(!startd)return false;
+    if(azNextWorkday(startd)>azi)return false;          // meg nem jott el a kovetkezo munkanap
+    return azCheckNeeds(j).any;
+  });
+}
+// ── fazis-csik
+function azPhases(j){
+  var h='<div class="az-ph">';
+  for(var i=1;i<=7;i++){
+    var st=((j.phases||{})[i]||{}).status||'pending';
+    h+='<i class="'+(st==='done'?'d':st==='active'?'a':st==='skipped'?'s':'')+'"></i>';
+  }
+  h+='</div><div class="az-pn">F'+(j.phase||1)+'/7 '+String(T('ph'+(j.phase||1))||'').toUpperCase();
+  var m=azWM(j);
+  if(m){
+    if(m.state==='fara_deviz') h+=' · '+m.elapsed+'z · '+T('az_nodeviz');
+    else if(m.expected!=null) h+=' · '+m.elapsed+'/'+m.expected+'z'+(m.gap>0?(' · GAP +'+m.gap+'z'):'');
+  }
+  h+='</div>';
+  return h;
+}
+// ── a sávok osszeallitasa
+function azBuild(){
+  var azi=azDay(0), veg=azDay(azH-1), B=[];
+  var jon=JOBS.filter(function(j){var p=(j.programare||{});
+    return j.sosire==='programat'&&j.flux!=='doar_dosar'&&p.date&&p.date>=azi&&p.date<=veg})
+    .sort(function(a,b){return (a.programare.date<b.programare.date)?-1:1});
+  var kesett=JOBS.filter(function(j){var p=(j.programare||{});
+    return j.sosire==='programat'&&p.date&&p.date<azi});
+  var ragadt=JOBS.filter(function(j){return j.sosire==='ratat'});
+  var itt=JOBS.filter(function(j){return categorizeJob(j)==='lucrari'});
+  var chk=azCheckList();
+  var dos=JOBS.filter(function(j){return categorizeJob(j)==='dosare'});
+  var gond=JOBS.filter(function(j){
+    if(j.damageType!=='asig')return false;
+    return (!String(j.asigurator||'').trim()&&!String(j.nrDosar||'').trim())||!String(j.client||'').trim();
+  });
+
+  B.push({k:'sos',ic:'SOS',c:'azc-blu',t:T('az_sos'),s:T('az_sos_s'),n:jon.length,open:jon.length>0,
+    rows:jon.map(function(j){var wa=((j.conditions||{}).whatsapp===true);
+      return{id:j.id,pl:j.plate,nr:j.number,tg:{t:azFmt(j.programare.date)+' '+((j.programare||{}).time||''),c:'azc-blu'},
+        mt:(wa?T('az_contactok'):'<span class="az-bang">!</span>'+T('az_nocontact')),
+        ab:(wa?{t:T('deschide_lucrarea'),c:'p',f:'deschideLucrare'}:{t:T('az_contact'),c:'',f:'openCondModal'})}}),
+    em:T('az_none_sos')});
+
+  B.push({k:'rst',ic:'RST',c:'azc-red',t:T('az_rst'),s:T('az_rst_s'),n:kesett.length+ragadt.length,
+    hot:(kesett.length+ragadt.length)>0,open:(kesett.length+ragadt.length)>0,
+    rows:kesett.map(function(j){return{id:j.id,pl:j.plate,nr:j.number,
+        tg:{t:T('az_late').replace('{n}',azDiff(j.programare.date,azi)),c:'azc-red'},
+        mt:azFmt(j.programare.date),ab:{t:T('az_repro'),c:'b',f:'openRepro'}}})
+      .concat(ragadt.map(function(j){var d=(j.programare||{}).date;
+        return{id:j.id,pl:j.plate,nr:j.number,
+        tg:{t:'RATAT'+(d?(' '+azDiff(d,azi)+'z'):''),c:'azc-red'},
+        mt:azFmt(d),ab:{t:T('az_repro'),c:'',f:'openRepro'}}})),
+    em:T('az_none')});
+
+  B.push({k:'chk',ic:'CHK',c:'azc-amb',t:T('az_chk'),s:T('az_chk_s'),n:chk.length,hot:chk.length>0,open:chk.length>0,
+    rows:chk.map(function(j){var nd=azCheckNeeds(j);var q=[];
+      if(nd.eval)q.push('EVAL'); if(nd.reconst)q.push('RECONST'); if(nd.piese)q.push('PIESE'); if(nd.ore)q.push('ORE');
+      return{id:j.id,pl:j.plate,nr:j.number,tg:{t:q.join(' '),c:'azc-amb'},mt:'',
+        ab:{t:T('az_check'),c:'p',f:'azOpenCheck'}}}),
+    em:T('az_none')});
+
+  B.push({k:'atl',ic:'ATL',c:'azc-amb',t:T('az_atl'),s:T('az_atl_s'),n:itt.length,open:itt.length>0,
+    rows:itt.map(function(j){var m=azWM(j);
+      return{id:j.id,pl:j.plate,nr:j.number,
+        tg:{t:String(T('ph'+(j.phase||1))||'').toUpperCase(),c:(m&&m.over?'azc-red':'azc-gry')},
+        mt:(m&&m.over?('GAP +'+m.gap+'z'):''),ab:{t:T('az_open'),c:'',f:'oP'},ph:j}}),
+    em:T('az_none')});
+
+  var surgos=0;
+  var dosRows=dos.map(function(j){
+    var txt='',hot=false;
+    if(j.dosarPredat&&window.RPWWorkflow){
+      var W=RPWWorkflow, c=W.addWorkdays?null:null;
+      var dc=azDiff(azi,_azAddWork(j.dosarPredat,3)), df=azDiff(azi,_azAddDays(j.dosarPredat,30));
+      txt='CONST '+(dc<0?('DEPASIT +'+(-dc)+'z'):('T-'+dc+'z'))+' / OFERTA '+(df<0?('DEPASIT +'+(-df)+'z'):('T-'+df+'z'));
+      hot=(dc<=1||df<=3); if(hot)surgos++;
+    } else { var a=acteCount(j); txt='ACTE '+a.done+'/'+a.total+' · nepredat'; }
+    return{id:j.id,pl:j.plate,nr:j.number,
+      tg:{t:(j.asigurator||'FARA ASIG'),c:(j.asigurator?'azc-gry':'azc-amb')},
+      mt:txt,ab:{t:T('open_dosar_btn'),c:'b',f:'deschideDosar'}};
+  });
+  B.push({k:'dos',ic:'DOS',c:(surgos?'azc-red':'azc-grn'),t:T('az_dos'),s:T('az_dos_s'),
+    n:dos.length,hot:surgos>0,open:surgos>0,rows:dosRows,em:T('az_none'),terms:dos.length>0});
+
+  B.push({k:'ver',ic:'VER',c:'azc-gry',t:T('az_ver'),s:T('az_ver_s'),n:gond.length,
+    rows:gond.map(function(j){
+      var miss=(!String(j.asigurator||'').trim()&&!String(j.nrDosar||'').trim())?T('az_noasig'):T('az_noclient');
+      return{id:j.id,pl:j.plate,nr:j.number,tg:{t:miss,c:'azc-amb'},mt:'',ab:{t:T('az_fixit'),c:'',f:'openEditJob'}}}),
+    em:T('az_none')});
+  return B;
+}
+function _azAddDays(iso,n){var d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);
+ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function _azAddWork(iso,n){var d=new Date(iso+'T00:00:00'),l=n;
+ while(l>0){d.setDate(d.getDate()+1);var w=d.getDay();if(w!==0&&w!==6)l--}
+ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+
+window.azRender=function(){
+  var el=document.getElementById('azOv'); if(!el)return;
+  var B=azBuild(), ln=gL();
+  var loc=ln==='hu'?'hu-HU':ln==='ro'?'ro-RO':'en-GB';
+  var dt=new Date().toLocaleDateString(loc,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  var n=function(k){var b=B.filter(function(x){return x.k===k})[0];return b?b.n:0};
+  var say='';
+  say+= n('sos') ? ('<b>'+n('sos')+'</b> '+T('az_sos_s')+'. ') : (T('az_none_sos')+' ');
+  if(n('atl')) say+='<b>'+n('atl')+'</b> '+T('az_atl_s')+'. ';
+  if(n('dos')) say+='<b>'+n('dos')+'</b> '+T('az_dos')+'. ';
+  if(n('chk')) say+='<span style="color:#92400E"><b>'+n('chk')+'</b> '+T('az_chk_s')+'</span> ';
+  if(n('rst')) say+='<span style="color:var(--r)"><span class="az-bang">!</span><b>'+n('rst')+'</b> '+T('az_rst')+'.</span>';
+
+  var h='<div class="az-box">';
+  h+='<div class="az-hd"><div class="az-av" style="background-image:url(rpw-mascot.png)"></div><div>';
+  h+='<div class="az-hi">'+escH(T('az_hi'))+'</div><div class="az-q">'+escH(T('az_q'))+'</div>';
+  h+='<div class="az-dt">'+escH(dt)+'</div></div><button class="az-x" onclick="azClose()">&times;</button></div>';
+  h+='<div class="az-hz">';
+  [[1,'az_h1'],[3,'az_h3'],[7,'az_h7']].forEach(function(x){
+    h+='<button aria-pressed="'+(azH===x[0])+'" onclick="azSetH('+x[0]+')">'+T(x[1])+'</button>'});
+  h+='</div><div class="az-bd"><div class="az-say">'+say+'</div>';
+  B.forEach(function(b){
+    h+='<div class="az-band'+(b.hot?' hot':'')+((b.open&&b.n)?' open':'')+'">';
+    h+='<div class="az-bh" onclick="this.parentNode.classList.toggle(\'open\')">';
+    h+='<div class="az-ic '+b.c+'">'+b.ic+'</div><div><div class="az-bt">'+escH(b.t)+'</div>';
+    h+='<div class="az-bs">'+escH(b.s)+'</div></div>';
+    h+='<div class="az-cnt '+b.c+'">'+b.n+'</div><div class="az-cv">+</div></div><div class="az-in">';
+    if(!b.rows.length)h+='<div class="az-em">'+escH(b.em)+'</div>';
+    b.rows.forEach(function(r){
+      h+='<div class="az-r"><span class="az-pl">'+escH(r.pl||'—')+'</span><span class="az-nr">'+escH(r.nr||'')+'</span>';
+      if(r.tg&&r.tg.t)h+='<span class="az-tg '+r.tg.c+'">'+escH(r.tg.t)+'</span>';
+      h+='<span class="az-mt">'+(r.mt||'')+'</span>';
+      h+='<button class="az-ab '+(r.ab.c||'')+'" onclick="azGo(\''+r.ab.f+'\',\''+r.id+'\')">'+escH(r.ab.t)+'</button>';
+      if(r.ph)h+=azPhases(r.ph);
+      h+='</div>';
+    });
+    if(b.terms)h+='<div class="az-wl">'+escH(T('az_terms'))+'</div>';
+    h+='</div></div>';
+  });
+  h+='</div><div class="az-ft"><button class="az-fb az-f1" onclick="azClose()">'+T('az_later')+'</button>';
+  h+='<button class="az-fb az-f2" onclick="azClose()">'+T('az_start')+'</button></div></div>';
+  el.innerHTML=h;
+};
+window.azSetH=function(v){azH=v;azRender()};
+window.azOpen=function(){
+  var el=document.getElementById('azOv');
+  if(!el){el=document.createElement('div');el.id='azOv';el.className='az-ov';document.body.appendChild(el)}
+  el.style.display='flex'; azRender();
+};
+window.azClose=function(){
+  var el=document.getElementById('azOv'); if(el)el.style.display='none';
+  try{localStorage.setItem('rpw_az_seen',azDay(0))}catch(e){}
+};
+window.azGo=function(fn,id){ azClose(); try{ window[fn](id) }catch(e){} };
+// Naponta EGYSZER magatol
+window.azMaybeAuto=function(){
+  var seen=''; try{seen=localStorage.getItem('rpw_az_seen')||''}catch(e){}
+  if(seen===azDay(0))return;
+  if(!JOBS.length)return;
+  azOpen();
+};
+
+// ── 24 orás ELLENORZOPONT: csak azt kerdi, amit nem lat
+window.azCheckId=null; window.azCk={};
+window.azOpenCheck=function(id){
+  var j=JOBS.filter(function(x){return x.id===id})[0]; if(!j)return;
+  azCheckId=id; azCk={eval:null,reconst:null,piese:null,tin:'',vop:''};
+  azCheckRender();
+};
+function azCheckRender(){
+  var j=JOBS.filter(function(x){return x.id===azCheckId})[0]; if(!j)return;
+  var nd=azCheckNeeds(j);
+  var el=document.getElementById('azCk');
+  if(!el){el=document.createElement('div');el.id='azCk';el.className='az-ov';el.style.zIndex=2100;document.body.appendChild(el)}
+  el.style.display='flex';
+  var yn=function(key,label){
+    if(!nd[key])return '<div class="ck-sec"><div class="ck-lb">'+label+'</div><div class="ck-seen">&#10003; '+escH(T('ck_seen'))+'</div></div>';
+    return '<div class="ck-sec"><div class="ck-lb">'+label+'</div><div class="ck-yn">'
+      +'<button class="'+(azCk[key]===false?'on':'')+'" onclick="azCkSet(\''+key+'\',false)">'+T('ck_nu')+'</button>'
+      +'<button class="'+(azCk[key]===true?'on':'')+'" onclick="azCkSet(\''+key+'\',true)">'+T('ck_da')+'</button></div></div>';
+  };
+  var h='<div class="az-box" style="max-width:520px">';
+  h+='<div class="az-hd"><div class="az-av" style="width:64px;height:64px;flex:0 0 64px;background-image:url(rpw-mascot.png)"></div><div>';
+  h+='<div class="az-hi">'+escH(j.plate||'')+'</div>';
+  h+='<div class="az-q" style="font-size:19px">'+escH(T('ck_t').replace('{p}',j.number||''))+'</div>';
+  h+='<div class="az-dt">'+escH(T('ck_s'))+'</div></div>';
+  h+='<button class="az-x" onclick="azCkClose()">&times;</button></div>';
+  h+='<div class="az-bd" style="padding:0">';
+  h+=yn('eval',T('ck_eval'));
+  if(j.damageType!=='auto')h+=yn('reconst',T('ck_reconst'));
+  h+=yn('piese',T('ck_piese'));
+  if(nd.ore){
+    var tin=parseFloat(azCk.tin)||0, vop=parseFloat(azCk.vop)||0, sum=tin+vop;
+    h+='<div class="ck-sec"><div class="ck-lb">'+T('ck_ore')+'</div><div class="ck-two">';
+    h+='<input class="ck-in" id="ckTin" type="number" step="0.1" min="0" placeholder="'+T('ck_tin')+'" value="'+escA(azCk.tin)+'" oninput="azCk.tin=this.value;azCkHint()"/>';
+    h+='<input class="ck-in" id="ckVop" type="number" step="0.1" min="0" placeholder="'+T('ck_vop')+'" value="'+escA(azCk.vop)+'" oninput="azCk.vop=this.value;azCkHint()"/>';
+    h+='</div><div id="ckHint">'+(sum>0?('<div class="ck-hint">'+T('ck_expl').replace('{n}',Math.max(1,Math.ceil(sum/4)))+'</div>'):'')+'</div></div>';
+  } else {
+    h+='<div class="ck-sec"><div class="ck-lb">'+T('ck_ore')+'</div><div class="ck-seen">&#10003; '+escH(T('ck_seen'))+'</div></div>';
+  }
+  h+='</div><div class="az-ft"><button class="az-fb az-f1" onclick="azCkClose()">'+T('ck_skip')+'</button>';
+  h+='<button class="az-fb az-f2" onclick="azCkSave()">'+T('ck_save')+'</button></div></div>';
+  el.innerHTML=h;
+}
+window.azCkSet=function(k,v){azCk[k]=v;azCheckRender()};
+window.azCkHint=function(){
+  var sum=(parseFloat(azCk.tin)||0)+(parseFloat(azCk.vop)||0);
+  var el=document.getElementById('ckHint'); if(!el)return;
+  el.innerHTML = sum>0 ? ('<div class="ck-hint">'+T('ck_expl').replace('{n}',Math.max(1,Math.ceil(sum/4)))+'</div>') : '';
+};
+window.azCkClose=function(){var el=document.getElementById('azCk');if(el)el.style.display='none';azCheckId=null};
+window.azCkSave=async function(){
+  var job=await freshJob(azCheckId); if(!job){azCkClose();return}
+  if(azCk.eval===true){ job.evalData=job.evalData||{}; if(job.evalData.status!=='accepted')job.evalData.status='accepted'; }
+  if(azCk.reconst===true){ job.reconst=job.reconst||{}; if(!job.reconst.status||job.reconst.status==='draft')job.reconst.status='sent'; }
+  if(azCk.piese===true){ job.conditions=job.conditions||{}; job.conditions.piese='comandat'; }
+  var t=parseFloat(azCk.tin), v=parseFloat(azCk.vop);
+  if(isFinite(t)||isFinite(v)){
+    job.deviz=job.deviz||{};
+    if(isFinite(t))job.deviz.oreTinichigerie=t;
+    if(isFinite(v))job.deviz.oreVopsitorie=v;
+    job.deviz.sursa='manual'; job.deviz.introdusLa=new Date().toISOString();
+  }
+  await saveJob(job);
+  azCkClose(); toast(T('ck_ok')); render();
+  if(document.getElementById('azOv')&&document.getElementById('azOv').style.display!=='none')azRender();
+};
+
 // Auto-refresh every 10 seconds
 setInterval(loadJobs,60000);
+setTimeout(function(){try{azMaybeAuto()}catch(e){}},1400);
 loadConfig();
 loadJobs();
 </script>
