@@ -1940,7 +1940,7 @@ window.dosarFisier=function(e){
     S.showDosar=0;render();
     toast(T('dosar_citire'));
     try{
-      var res=await fetch('/.netlify/functions/ocr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:b64,type:'constatare'})});
+      var res=await fetch('/.netlify/functions/ocr',{method:'POST',headers:(window.RPWAuth?RPWAuth.fnHeaders():{'Content-Type':'application/json'}),body:JSON.stringify({image:b64,type:'constatare'})});
       var p=await res.json().catch(function(){return{}});
       if(!res.ok)throw new Error(p.error||('HTTP '+res.status));
       function v(x){return (x&&x!=='null')?String(x):''}
