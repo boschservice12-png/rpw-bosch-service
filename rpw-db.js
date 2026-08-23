@@ -1,4 +1,4 @@
-/* BUILD: MULTITENANT-L1Z 2026-08-23 */
+/* BUILD: MULTITENANT+ACTOR-L2A 2026-08-23 */
 /* ============================================================
    rpw-db.js — AUTH-TUDATOS ADATRÉTEG (egyetlen belépési pont a DB-hez)
    ------------------------------------------------------------
@@ -29,13 +29,27 @@
   // opts.rpc: felülírható RPC-név. ALAP: RPW_CFG.PATCH_RPC || 'rpw_patch_v2'
   //   → változatlan élő viselkedés. A valódi verzió-zárt a 0013 (rpw_patch_v3)
   //   alkalmazása UTÁN a RPW_CFG.PATCH_RPC='rpw_patch_v3' kapcsolja be.
+  // ── KI CSINALTA (2026-08-23) ────────────────────────────────────
+  // Eddig minden mentes 'service' nevre ment — 20 ember, egy nev.
+  // Ha valaki be van jelentkezve, a VALODI neve kerul a naploba.
+  // Bejelentkezes nelkul marad a regi viselkedes (nem torik el semmi).
+  function actorOf(opts){
+    try{
+      var AU=root.RPWAuth;
+      if(AU && typeof AU.name==='function'){
+        var n=AU.name();
+        if(n && String(n).trim()) return String(n).trim();
+      }
+    }catch(e){}
+    return (opts && opts.actor) || null;
+  }
   function patchRpc(opts){
     return (opts&&opts.rpc) || (root.RPW_CFG&&root.RPW_CFG.PATCH_RPC) || 'rpw_patch_v2';
   }
   async function patchV2(sb, id, partial, opts){
     opts=opts||{};
     if(useSecure()) return await sb.rpc('rpw_patch_secure', {p_id:id, p_patch:partial, p_token:tok()});
-    return await sb.rpc(patchRpc(opts), {p_id:id, p_patch:partial, p_expected_version:(opts.expected!==undefined?opts.expected:null), p_actor:opts.actor||null, p_phase:opts.phase||null});
+    return await sb.rpc(patchRpc(opts), {p_id:id, p_patch:partial, p_expected_version:(opts.expected!==undefined?opts.expected:null), p_actor:actorOf(opts), p_phase:opts.phase||null});
   }
 
   // ── TÖBB-BÉRLŐS SZŰRÉS (2026-08-23) ────────────────────────────
@@ -97,7 +111,7 @@
     return await scoped(sb.from('rpw_jobs').delete().not('deleted_at','is',null));
   }
 
-  var API={ shopId:shopId, useSecure:useSecure, patch:patch, patchV2:patchV2, getRow:getRow, listActive:listActive,
+  var API={ shopId:shopId, actorOf:actorOf, useSecure:useSecure, patch:patch, patchV2:patchV2, getRow:getRow, listActive:listActive,
             listTrashed:listTrashed, softDelete:softDelete, restore:restore, purge:purge, purgeAllTrashed:purgeAllTrashed };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWDb=API;
