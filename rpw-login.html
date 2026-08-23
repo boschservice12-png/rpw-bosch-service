@@ -28,6 +28,8 @@ button:disabled{opacity:.5}
 <div class="card">
   <div class="brand"><span>Red</span> Body</div>
   <div class="sub" id="sub">Autentificare cu PIN</div>
+  <label id="lWho">Cine ești?</label>
+  <select id="who" class="pin" style="text-align:left"><option value="">…</option></select>
   <label id="lPin">PIN</label>
   <input id="pin" class="pin" type="password" inputmode="numeric" autocomplete="current-password" autofocus>
   <button id="go">Autentificare</button>
@@ -37,27 +39,47 @@ button:disabled{opacity:.5}
 <script>
 (function(){
   var T={
-    ro:{sub:'Autentificare cu PIN de angajat',pin:'PIN',go:'Autentificare',invalid:'PIN greșit sau cont blocat',net:'Eroare de rețea',off:'Autentificarea nu este activată — puteți continua.',norole:'Cont valid, dar fără acces la fluxul de vopsitorie (RPW).'},
-    hu:{sub:'Bejelentkezés dolgozói PIN-nel',pin:'PIN',go:'Belépés',invalid:'Hibás PIN vagy zárolt fiók',net:'Hálózati hiba',off:'A hitelesítés nincs bekapcsolva — folytathatod.',norole:'Érvényes belépés, de nincs RPW (paint work) jogosultság.'},
-    en:{sub:'Sign in with employee PIN',pin:'PIN',go:'Sign in',invalid:'Wrong PIN or locked account',net:'Network error',off:'Authentication is not enabled — you may continue.',norole:'Valid sign-in, but no access to the paint workflow (RPW).'}
+    ro:{sub:'Autentificare cu PIN de angajat',who:'Cine ești?',pickwho:'Alege numele',pin:'PIN',go:'Autentificare',invalid:'PIN greșit sau cont blocat',net:'Eroare de rețea',off:'Autentificarea nu este activată — puteți continua.',norole:'Cont valid, dar fără acces la fluxul de vopsitorie (RPW).'},
+    hu:{sub:'Bejelentkezés dolgozói PIN-nel',who:'Ki vagy?',pickwho:'Válaszd ki a neved',pin:'PIN',go:'Belépés',invalid:'Hibás PIN vagy zárolt fiók',net:'Hálózati hiba',off:'A hitelesítés nincs bekapcsolva — folytathatod.',norole:'Érvényes belépés, de nincs RPW (paint work) jogosultság.'},
+    en:{sub:'Sign in with employee PIN',who:'Who are you?',pickwho:'Pick your name',pin:'PIN',go:'Sign in',invalid:'Wrong PIN or locked account',net:'Network error',off:'Authentication is not enabled — you may continue.',norole:'Valid sign-in, but no access to the paint workflow (RPW).'}
   };
   function gL(){try{return localStorage.getItem('rpw_lang')||'ro'}catch(e){return 'ro'}}
-  function tr(){var d=T[gL()]||T.ro;document.getElementById('sub').textContent=d.sub;document.getElementById('lPin').textContent=d.pin;document.getElementById('go').textContent=d.go;}
+  function tr(){var d=T[gL()]||T.ro;document.getElementById('sub').textContent=d.sub;document.getElementById('lWho').textContent=d.who;document.getElementById('lPin').textContent=d.pin;document.getElementById('go').textContent=d.go;}
   tr();
   var CFG=window.RPW_CFG;
   if(!CFG){document.getElementById('err').textContent='Config';return;}
   var sb=supabase.createClient(CFG.SB_URL,CFG.SB_KEY);
   var next=new URLSearchParams(location.search).get('next')||'index.html';
+  // Nevsor betoltese — csak nev es szerep, PIN nelkul.
+  (async function(){
+    try{
+      var r=await sb.rpc('rpw_roster',{p_shop_id:CFG.SHOP_ID});
+      var list=r&&r.data; if(typeof list==='string'){try{list=JSON.parse(list)}catch(e){list=[]}}
+      var sel=document.getElementById('who'); if(!Array.isArray(list))return;
+      var last=''; try{last=localStorage.getItem('rpw_last_who')||''}catch(e){}
+      list.forEach(function(e){
+        var o=document.createElement('option');
+        o.value=e.id; o.textContent=e.name+'  ·  '+(e.role||'');
+        if(e.id===last)o.selected=true;
+        sel.appendChild(o);
+      });
+    }catch(e){}
+  })();
   if(!(CFG.AUTH_REQUIRED===true)){ document.getElementById('err').textContent=(T[gL()]||T.ro).off; }
   document.getElementById('go').onclick=async function(){
     var d=T[gL()]||T.ro, err=document.getElementById('err'); err.textContent='';
     var pin=document.getElementById('pin').value.trim();
+    var who=document.getElementById('who').value;
     if(!pin)return;
+    if(!who){ err.textContent=d.pickwho; return; }
     this.disabled=true;
-    // ERP employee_login(SHOP_ID, PIN) → token; a szerep KANONIKUS RPW-szerepre képződik
-    var res=await RPWAuth.login(sb,pin);
+    // Nev + PIN: igy nem lehet PIN-utkozes (ket ember ugyanazzal a PIN-nel).
+    var res=await RPWAuth.login(sb,pin,{employeeId:who});
     this.disabled=false;
-    if(res.ok && res.hasRpwAccess){ location.assign(next); }
+    if(res.ok && res.hasRpwAccess){
+      try{localStorage.setItem('rpw_last_who',who)}catch(e){}
+      location.assign(next);
+    }
     else if(res.ok && !res.hasRpwAccess){ err.textContent=d.norole; RPWAuth.logout(); }
     else{ err.textContent = res.error==='network'?d.net:d.invalid; }
   };
