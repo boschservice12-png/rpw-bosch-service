@@ -19,6 +19,7 @@
 <script src="rpw-workflow.js"></script>
 <script src="rpw-auth.js"></script>
 <script src="rpw-db.js"></script>
+<script src="rpw-photos.js"></script><!-- P0.6: alairt URL-hez -->
 <script src="rpw-roles.js"></script>
 <script src="rpw-save.js"></script>
 <style>
@@ -443,7 +444,8 @@ async function uploadPhoto(photoKey,dataUrl){
     var path=JOB.id+'/'+photoKey+'.jpg';
     var up=await sb.storage.from(STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg',upsert:true});
     if(up.error)throw up.error;
-    var url=sb.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+    // P0.6: a bucket PRIVÁT — a publikus URL halott. Aláírt URL kell.
+    var url=await RPWPhotos.signedUrl(sb,path,{bucket:STORAGE_BUCKET});
     if(!JOB.photoKeys)JOB.photoKeys={};
     if(!JOB.photoUrls)JOB.photoUrls={};
     JOB.photoKeys[photoKey]=true;JOB.photoUrls[photoKey]=url;S.photoCache[photoKey]=url;
