@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: PROG-TYPE-L1O 2026-08-23 -->
+<!-- BUILD: EDIT-JOB-L1P 2026-08-23 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -263,6 +263,8 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .fx-b{display:inline-block;font-size:11px;border-radius:6px;padding:1px 5px;vertical-align:middle;margin-left:5px}
 .fx-p{background:#dbeafe}
 .fx-d{background:#e0e7ff}
+.edit-btn.eb-edit2{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;font-size:14px;line-height:1}
+.edit-btn.eb-edit2:hover{background:#e2e8f0}
 </style>
 </head>
 <body>
@@ -282,7 +284,7 @@ if(typeof saveJ==='function'){var _saveJ_orig=saveJ;saveJ=function(){if(typeof J
 if(typeof saveJob==='function'){var _saveJob_orig=saveJob;saveJob=function(job){if(!job)return Promise.resolve();return SAVER?SAVER.save(job):_saveJob_orig(job);};}
 
 var JOBS=[];
-var S={ts:null,screen:'lucrari',statPeriod:'month',statThreshold:5,panouTab:'viitoare',showProg:0,progPlate:'',progPhone:'',showRepro:null,reproDate:'',reproTime:'',showNew:0,njMode:null,njPlate:'',njPhone:'',njTip:null,njPay:null,njDate:'',njTime:'08:00',njClient:'',njAuto:'',njAsig:'',njDosar:'',showCondModal:0,condDraft:null,editJobId:null};
+var S={ts:null,screen:'lucrari',statPeriod:'month',statThreshold:5,panouTab:'viitoare',showProg:0,progPlate:'',progPhone:'',showRepro:null,reproDate:'',reproTime:'',showNew:0,njMode:null,njEditId:null,njPlate:'',njPhone:'',njTip:null,njPay:null,njDate:'',njTime:'08:00',njClient:'',njAuto:'',njAsig:'',njDosar:'',showCondModal:0,condDraft:null,editJobId:null};
 
 // ====== PARAMETRI — single source of truth (rpw_config, megosztva az evaluare/deviz oldalakkal) ======
 var CONFIG={
@@ -493,6 +495,11 @@ nj_open:{ro:'Salveaza',en:'Save',hu:'Mentes'},
 nj_open_prog:{ro:'Programeaza',en:'Schedule',hu:'Elojegyzes'},
 nj_open_dosar:{ro:'Deschide dosarul',en:'Open the file',hu:'Dosszie megnyitasa'},
 nj_open_lucrare:{ro:'Recepție auto',en:'Car reception',hu:'Auto atvetel'},
+nj_open_edit:{ro:'Salvează modificările',en:'Save changes',hu:'Modositasok mentese'},
+m_edit_t:{ro:'Editează datele',en:'Edit details',hu:'Adatok javitasa'},
+m_edit_s:{ro:'Data se schimbă doar prin Reprogramare',en:'Date changes only via Reschedule',hu:'A datum csak Atutemezessel valtozik'},
+edit_btn:{ro:'Editează',en:'Edit',hu:'Javitas'},
+edit_ok:{ro:'Date salvate',en:'Details saved',hu:'Adatok mentve'},
 nj_ok_prog:{ro:'Programare creata',en:'Schedule created',hu:'Programalas letrejott'},
 nj_ok_dosar:{ro:'Dosar creat (fara reparatie)',en:'File created (no repair)',hu:'Dosszie letrejott (javitas nelkul)'},
 col_data:{ro:'Data',en:'Date',hu:'Datum'},
@@ -941,11 +948,11 @@ function renderPanou(){
       }
       h+='<td>'+(phoneClean?'<button class="wa-btn '+waCls+'" '+waOnclick+' title="'+waTitle+'">💬</button>':'<button class="wa-btn dis" title="'+T('wa_no_phone')+'" disabled>💬</button>')+'</td>';
       if(tab==='viitoare' && _dd){
-        h+='<td><button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')">&#128193; '+T('open_dosar_btn')+'</button> <button class="edit-btn eb-repro" onclick="event.stopPropagation();openRepro(\''+j.id+'\')">'+T('repro_btn')+'</button> <button class="edit-btn eb-ratat" onclick="event.stopPropagation();markRatat(\''+j.id+'\')">'+T('ratat_btn')+'</button></td>';
+        h+='<td><button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')">&#128193; '+T('open_dosar_btn')+'</button> <button class="edit-btn eb-edit2" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'">&#9998;</button> <button class="edit-btn eb-repro" onclick="event.stopPropagation();openRepro(\''+j.id+'\')">'+T('repro_btn')+'</button> <button class="edit-btn eb-ratat" onclick="event.stopPropagation();markRatat(\''+j.id+'\')">'+T('ratat_btn')+'</button></td>';
       } else if(tab==='viitoare'){
         h+='<td>'+(canOpen
         ? '<button class="edit-btn '+editCls+'" onclick="event.stopPropagation();deschideLucrare(\''+j.id+'\')">'+T('deschide_lucrarea')+'</button>'
-        : '<button class="edit-btn eb-need" title="'+T('need_wa_tip')+'" onclick="event.stopPropagation();openCondModal(\''+j.id+'\')">&#128172; '+T('need_wa_btn')+'</button>')+' <button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')" title="'+T('dosar_dauna')+'">📁</button> <button class="edit-btn eb-repro" onclick="event.stopPropagation();openRepro(\''+j.id+'\')">'+T('repro_btn')+'</button> <button class="edit-btn eb-ratat" onclick="event.stopPropagation();markRatat(\''+j.id+'\')">'+T('ratat_btn')+'</button></td>';
+        : '<button class="edit-btn eb-need" title="'+T('need_wa_tip')+'" onclick="event.stopPropagation();openCondModal(\''+j.id+'\')">&#128172; '+T('need_wa_btn')+'</button>')+' <button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')" title="'+T('dosar_dauna')+'">📁</button> <button class="edit-btn eb-edit2" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'">&#9998;</button> <button class="edit-btn eb-repro" onclick="event.stopPropagation();openRepro(\''+j.id+'\')">'+T('repro_btn')+'</button> <button class="edit-btn eb-ratat" onclick="event.stopPropagation();markRatat(\''+j.id+'\')">'+T('ratat_btn')+'</button></td>';
       } else {
         h+='<td><button class="edit-btn eb-r" onclick="event.stopPropagation();oP(\''+j.id+'\','+(j.phase||1)+')">'+T('edit')+'</button> '+(tab==='ratate'?'<button class="edit-btn eb-react" onclick="event.stopPropagation();reactiveaza(\''+j.id+'\')">'+T('reactiveaza_btn')+'</button> ':'')+'<button class="edit-btn eb-del" onclick="event.stopPropagation();dJ(\''+j.id+'\')" title="'+T('sterge')+'">🗑</button></td>';
       }
@@ -1245,7 +1252,7 @@ window.setPanouTab=function(t){S.panouTab=t;render()};
 function newJobModalHtml(){
   if(!S.showNew) return '';
   var mode=S.njMode||'prog';
-  var TT={prog:['m_prog_t','m_prog_s'],dosar:['m_dosar_t','m_dosar_s'],lucrare:['m_lucrare_t','m_lucrare_s']}[mode];
+  var TT={prog:['m_prog_t','m_prog_s'],dosar:['m_dosar_t','m_dosar_s'],lucrare:['m_lucrare_t','m_lucrare_s'],edit:['m_edit_t','m_edit_s']}[mode];
   var h='';
   h+='<div class="prog-modal"><div class="prog-box nj-box">';
   h+='<div class="prog-t">'+T(TT[0])+'</div>';
@@ -1254,7 +1261,7 @@ function newJobModalHtml(){
   h+='<div class="prog-field"><label>'+T('phone_label')+' *</label><input id="iPhone" type="tel" value="'+escH(S.njPhone||'')+'" placeholder="'+T('phone_ph')+'" oninput="S.njPhone=this.value;njSync()"/></div>';
 
   // TIPUS — csak a "Lucrare noua"-nal kerdes. A dosar mindig asig.
-  if(mode==='lucrare'||mode==='prog'){
+  if(mode==='lucrare'||mode==='prog'||mode==='edit'){
     h+='<div class="prog-field"><label>'+T('m_tip')+' *</label><div class="nj-pick">';
     h+='<button class="nj-opt'+(S.njTip==='asig'?' on':'')+'" onclick="njSetTip(\'asig\')"><b>&#128737; '+T('m_tip_asig')+'</b><i>'+T('m_tip_asig_s')+'</i></button>';
     h+='<button class="nj-opt'+(S.njTip==='auto'?' on':'')+'" onclick="njSetTip(\'auto\')"><b>&#128176; '+T('m_tip_auto')+'</b><i>'+T('m_tip_auto_s')+'</i></button>';
@@ -1262,7 +1269,7 @@ function newJobModalHtml(){
   }
 
   // DOSSZIE-ALLAPOT — dosar modban mindig, lucrare modban csak asig eseten
-  var kellDosar = (mode==='dosar') || ((mode==='lucrare'||mode==='prog') && S.njTip==='asig');
+  var kellDosar = (mode==='dosar') || ((mode==='lucrare'||mode==='prog'||mode==='edit') && S.njTip==='asig');
   if(kellDosar){
     // "Deschide dosar dauna" = MI nyitjuk -> nincs ket varians, nem kerdes.
     // A "mar nyitva" eset a Lucrare noua (asig) again jon elo.
@@ -1284,7 +1291,7 @@ function newJobModalHtml(){
   }
 
   // DATUM — programare-nal es lucrare-nal (Ferenc dontese: a lucrare is kap datumot)
-  if(mode==='prog'||mode==='lucrare'){
+  if(mode==='prog'||mode==='lucrare'){   // edit modban NINCS datum — az a Reprogramare dolga
     h+='<div class="prog-field"><label>'+T('nj_date')+' *</label><div class="nj-chips">';
     h+='<button class="nj-chip'+(S.njDate===njDay(0)?' on':'')+'" onclick="njQuick(0)">'+T('nj_today')+'</button>';
     h+='<button class="nj-chip'+(S.njDate===njDay(1)?' on':'')+'" onclick="njQuick(1)">'+T('nj_tomorrow')+'</button>';
@@ -1298,7 +1305,7 @@ function newJobModalHtml(){
   h+='</details>';
   h+='<div id="njDup" class="nj-dup" style="display:none"></div>';
   h+='<div id="njWhy" class="nj-why"></div>';
-  h+='<div class="prog-actions"><button class="cancel" onclick="closeNewJob()">'+T('btn_cancel')+'</button><button id="njSave" class="submit" onclick="submitNewJob()">'+T('nj_open_'+mode)+'</button></div>';
+  h+='<div class="prog-actions"><button class="cancel" onclick="closeNewJob()">'+T('btn_cancel')+'</button><button id="njSave" class="submit" onclick="'+(mode==='edit'?'submitEditJob()':'submitNewJob()')+'">'+T('nj_open_'+mode)+'</button></div>';
   h+='</div></div>';
   return h;
 }
@@ -1450,6 +1457,7 @@ function njKey(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
 window.openNewJob=function(mode){
   S.showNew=1;
   S.njMode=(mode==='dosar'||mode==='lucrare')?mode:'prog';
+  S.njEditId=null;
   S.njPlate='';S.njPhone='';S.njClient='';S.njAuto='';S.njAsig='';S.njDosar='';
   S.njTip=(S.njMode==='dosar')?'asig':null;
   S.njPay=(S.njMode==='dosar')?'deschid':null;   // mi nyitjuk — nincs mit kerdezni
@@ -1464,6 +1472,40 @@ window.njQuick=function(off){S.njDate=njDay(off);render()};
 
 // legacy aliasok
 window.openNewJobRec=function(){openNewJob('lucrare')};
+
+// ── ADATJAVITAS — ugyanaz a urlap, csak meglevo munkat ment.
+// A DATUMOT szandekosan NEM engedi: arra a Reprogramare valo, ami szamolja
+// az atutemezeseket es vezeti az elozmenyt.
+window.openEditJob=function(id){
+  var j=JOBS.filter(function(x){return x.id===id})[0];
+  if(!j){toast('?',1);return}
+  S.showNew=1; S.njMode='edit'; S.njEditId=id;
+  S.njPlate=njPlate(j.plate||''); S.njPhone=j.phone||'';
+  S.njClient=j.client||''; S.njAuto=j.auto||'';
+  S.njTip=(j.damageType==='asig')?'asig':'auto';
+  S.njPay=j.dosarStatus||null;
+  S.njAsig=j.asigurator||''; S.njDosar=j.nrDosar||'';
+  S.njDate=''; S.njTime='08:00';
+  render();
+};
+window.submitEditJob=async function(){
+  var miss=njMissing();
+  if(miss.length){toast(T('nj_missing')+': '+miss.join(', '),1);return}
+  var id=S.njEditId;
+  var job=await freshJob(id);
+  if(!job){toast('?',1);return}
+  var asig=(S.njTip==='asig');
+  job.plate=S.njPlate; job.phone=S.njPhone;
+  job.client=(S.njClient||''); job.auto=(S.njAuto||'');
+  job.damageType=(asig?'asig':null);
+  job.dosarStatus=(asig?(S.njPay||null):null);
+  if(asig){ job.asigurator=(S.njAsig||''); job.nrDosar=(S.njDosar||''); }
+  migrateState(job);
+  await saveJob(job);
+  S.showNew=0; S.njEditId=null;
+  toast(T('edit_ok')+': '+job.plate);
+  render();
+};
 window.openProgModal=function(){openNewJob('prog')};
 window.closeProgModal=function(){closeNewJob()};
 window.startReceptie=function(){openNewJob('lucrare')};
@@ -1472,17 +1514,17 @@ function njMissing(){
   var m=[], mode=S.njMode||'prog';
   if(!njOkPlate(S.njPlate))m.push(T('nj_m_plate'));
   if(!njOkPhone(S.njPhone))m.push(T('nj_m_phone'));
-  if((mode==='lucrare'||mode==='prog')&&!S.njTip)m.push(T('m_m_tip'));
-  var kellDosar=(mode==='dosar')||((mode==='lucrare'||mode==='prog')&&S.njTip==='asig');
+  if((mode==='lucrare'||mode==='prog'||mode==='edit')&&!S.njTip)m.push(T('m_m_tip'));
+  var kellDosar=(mode==='dosar')||((mode==='lucrare'||mode==='prog'||mode==='edit')&&S.njTip==='asig');
   if(kellDosar&&mode!=='dosar'&&!S.njPay)m.push(T('nj_m_pay'));
   if(kellDosar&&S.njPay==='deschis'&&!String(S.njDosar||'').trim())m.push(T('nj_m_nrdosar'));
-  if((mode==='prog'||mode==='lucrare')&&!S.njDate)m.push(T('nj_m_date'));
+  if((mode==='prog'||mode==='lucrare')&&!S.njDate)m.push(T('nj_m_date'));   // edit: nincs datum
   return m;
 }
 function njDup(){
   var k=njKey(S.njPlate);if(!k)return null;
   for(var x=0;x<JOBS.length;x++){
-    var j=JOBS[x];if(njKey(j.plate)!==k)continue;
+    var j=JOBS[x];if(j.id===S.njEditId)continue;if(njKey(j.plate)!==k)continue;
     var c=categorizeJob(j);
     if(c==='arhivate'||c==='ratate')continue;
     return j;
