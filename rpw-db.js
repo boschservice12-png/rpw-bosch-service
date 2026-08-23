@@ -1,3 +1,4 @@
+/* BUILD: MULTITENANT-L1Z 2026-08-23 */
 /* ============================================================
    rpw-db.js — AUTH-TUDATOS ADATRÉTEG (egyetlen belépési pont a DB-hez)
    ------------------------------------------------------------
@@ -37,6 +38,19 @@
     return await sb.rpc(patchRpc(opts), {p_id:id, p_patch:partial, p_expected_version:(opts.expected!==undefined?opts.expected:null), p_actor:opts.actor||null, p_phase:opts.phase||null});
   }
 
+  // ── TÖBB-BÉRLŐS SZŰRÉS (2026-08-23) ────────────────────────────
+  // Az rpw_jobs mostantól shop_id-t hordoz. MINDEN olvasás a saját
+  // szervizre szűr — enélkül egy második cég belépésekor mindenki
+  // mindenkiét látná. A szerveroldali RPC-k (secure mód) a tokenből
+  // vezetik le a shop-ot, ott nem kell külön szűrni.
+  function shopId(){
+    try{ return (window.RPW_CFG&&window.RPW_CFG.SHOP_ID)||null }catch(e){ return null }
+  }
+  function scoped(q){
+    var sid=shopId();
+    return sid ? q.eq('shop_id', sid) : q;
+  }
+
   // ── OLVASÁS ──
   // Egy sor lekérése (a supabase .single() alakot adja vissza: {data:row, error})
   async function getRow(sb, id, cols){
@@ -46,7 +60,7 @@
       var row=(r && r.data && r.data.length)?r.data[0]:null;
       return {data:row, error:(row?null:{message:'not found'})};
     }
-    return await sb.from('rpw_jobs').select(cols||'id,data,updated_at,version').eq('id',id).single();
+    return await scoped(sb.from('rpw_jobs').select(cols||'id,data,updated_at,version').eq('id',id)).single();
   }
   // Aktív (nem archivált) lista
   async function listActive(sb, cols){
@@ -54,7 +68,7 @@
       var r=await sb.rpc('rpw_jobs_list', {p_token:tok()});
       return {data:(r&&r.data)||[], error:r?r.error:null};
     }
-    return await sb.from('rpw_jobs').select(cols||'id,data,updated_at,version').is('deleted_at',null).order('updated_at',{ascending:false});
+    return await scoped(sb.from('rpw_jobs').select(cols||'id,data,updated_at,version').is('deleted_at',null)).order('updated_at',{ascending:false});
   }
   // Archivált (Coș) lista
   async function listTrashed(sb, cols){
@@ -62,28 +76,28 @@
       var r=await sb.rpc('rpw_jobs_trashed', {p_token:tok()});
       return {data:(r&&r.data)||[], error:r?r.error:null};
     }
-    return await sb.from('rpw_jobs').select(cols||'id,data,deleted_at').not('deleted_at','is',null).order('deleted_at',{ascending:false});
+    return await scoped(sb.from('rpw_jobs').select(cols||'id,data,deleted_at').not('deleted_at','is',null)).order('deleted_at',{ascending:false});
   }
 
   // ── ÁLLAPOT-OSZLOP MŰVELETEK ──
   async function softDelete(sb, id){
     if(useSecure()) return await sb.rpc('rpw_soft_delete', {p_id:id, p_token:tok()});
-    return await sb.from('rpw_jobs').update({deleted_at:nowISO()}).eq('id',id);
+    return await scoped(sb.from('rpw_jobs').update({deleted_at:nowISO()}).eq('id',id));
   }
   async function restore(sb, id){
     if(useSecure()) return await sb.rpc('rpw_restore', {p_id:id, p_token:tok()});
-    return await sb.from('rpw_jobs').update({deleted_at:null}).eq('id',id);
+    return await scoped(sb.from('rpw_jobs').update({deleted_at:null}).eq('id',id));
   }
   async function purge(sb, id){
     if(useSecure()) return await sb.rpc('rpw_purge', {p_id:id, p_token:tok()});
-    return await sb.from('rpw_jobs').delete().eq('id',id);
+    return await scoped(sb.from('rpw_jobs').delete().eq('id',id));
   }
   async function purgeAllTrashed(sb){
     if(useSecure()) return await sb.rpc('rpw_purge_all_trashed', {p_token:tok()});
-    return await sb.from('rpw_jobs').delete().not('deleted_at','is',null);
+    return await scoped(sb.from('rpw_jobs').delete().not('deleted_at','is',null));
   }
 
-  var API={ useSecure:useSecure, patch:patch, patchV2:patchV2, getRow:getRow, listActive:listActive,
+  var API={ shopId:shopId, useSecure:useSecure, patch:patch, patchV2:patchV2, getRow:getRow, listActive:listActive,
             listTrashed:listTrashed, softDelete:softDelete, restore:restore, purge:purge, purgeAllTrashed:purgeAllTrashed };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWDb=API;
