@@ -17,6 +17,7 @@
 <script src="rpw-workflow.js"></script>
 <script src="rpw-auth.js"></script>
 <script src="rpw-db.js"></script>
+<script src="rpw-photos.js"></script><!-- P0.6: alairt URL-hez -->
 <script src="rpw-roles.js"></script>
 <script src="rpw-save.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -511,7 +512,8 @@ async function uploadDevizFile(file){
   var path=JOB.id+'/deviz_file.'+ext;
   var up=await sb.storage.from(RPW_CFG.BUCKET).upload(path,file,{contentType:file.type||'application/octet-stream',upsert:true});
   if(up.error)throw up.error;
-  var url=sb.storage.from(RPW_CFG.BUCKET).getPublicUrl(path).data.publicUrl;
+  // P0.6: a bucket PRIVÁT — a publikus URL halott. Aláírt URL kell.
+  var url=await RPWPhotos.signedUrl(sb,path,{bucket:RPW_CFG.BUCKET});
   if(!JOB.closing)JOB.closing={};
   JOB.closing.devizFileUrl=url;JOB.closing.devizFileName=file.name||('deviz.'+ext);
   await saveJ();toast('Deviz încărcat ✓');render();
@@ -579,7 +581,8 @@ async function getPhotoBlob(key){
   if(urls[key]){var b=await fetchBlob(urls[key]);if(b)return b}
   // Ha nincs URL de van storage key, szerezd meg a publikus URL-t
   if(keys[key] && window.sb){
-    try{var pub=sb.storage.from(RPW_CFG.BUCKET).getPublicUrl(keys[key]).data.publicUrl;var b2=await fetchBlob(pub);if(b2)return b2}catch(e){}
+    // P0.6: a bucket PRIVÁT — aláírt URL kell a ZIP-hez is.
+    try{var pub=await RPWPhotos.signedUrl(sb,keys[key],{bucket:RPW_CFG.BUCKET});if(pub){var b2=await fetchBlob(pub);if(b2)return b2}}catch(e){}
   }
   return null;
 }
