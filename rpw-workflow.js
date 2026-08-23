@@ -1,4 +1,4 @@
-/* BUILD: WORK-METRICS+DEVIZ-L1U 2026-08-23 */
+/* BUILD: WORK-METRICS-L1V 2026-08-23 */
 /* ============================================================
    rpw-workflow.js — RPW KÖZPONTI WORKFLOW-MODUL (EGYETLEN IGAZSÁGFORRÁS)
    ------------------------------------------------------------
@@ -51,7 +51,7 @@
     wf_control_nok:         {ro:'controlul are rezultat NOK', hu:'a kontroll NOK eredményű', en:'the control result is NOK'},
     wf_no_invoice:          {ro:'lipsește numărul facturii', hu:'nincs számlaszám', en:'invoice number missing'},
     wf_no_deviz:            {ro:'lipsește referința devizului', hu:'nincs deviz hivatkozás', en:'deviz reference missing'},
-    wf_no_deviz_file:       {ro:'devizul nu e încărcat (obligatoriu)', hu:'a devizfájl nincs feltöltve (kötelező)', en:'deviz file not uploaded (mandatory)'},
+    wf_no_deviz_file:       {ro:'devizul nu e încărcat și nici marcat ca nefiind necesar', hu:'a devizfájl nincs feltöltve és nincs „nem szükséges”-nek jelölve', en:'deviz file not uploaded nor marked not-required'},
     wf_photos_not_five:     {ro:'nu există 5 fotografii finale reale', hu:'nincs 5 valóban létező végső fotó', en:'there are not 5 real final photos'},
     wf_not_operational:     {ro:'vehiculul nu e marcat funcțional', hu:'a jármű nincs működőképesnek jelölve', en:'vehicle not marked operational'},
     wf_final_control:       {ro:'controlul final nu e confirmat', hu:'a végleges kontroll nincs megerősítve', en:'final control not confirmed'},
@@ -386,9 +386,10 @@
     var cl=job.closing||{};
     if(!nonEmpty(cl.factura)) m.push('wf_no_invoice');
     if(!nonEmpty(cl.devizRef)) m.push('wf_no_deviz');
-    // Ferenc szabalya (2026-08-23): a devizt MINDIG fel kell tolteni,
-    // mert enelkul nincs tiszta statisztika. A "nem szukseges" kiskapu megszunt.
-    if(!nonEmpty(cl.devizFileUrl)) m.push('wf_no_deviz_file');
+    // A devizFAJL feltoltese OPCIONALIS (Ferenc, 2026-08-23): nem minden
+    // munkanal van formalis deviz. A statisztikahoz az ORAK kellenek, nem a PDF —
+    // azokat a 24 oras ellenorzopont kerdi be, es kezzel is megadhatok.
+    if(!nonEmpty(cl.devizFileUrl) && cl.devizNotRequired!==true) m.push('wf_no_deviz_file');
     if(realPhotoCount(job.closingPhotos) < 5) m.push('wf_photos_not_five');
     if(cl.vehicleOperational!==true) m.push('wf_not_operational');
     if(cl.finalControlConfirmed!==true) m.push('wf_final_control');
