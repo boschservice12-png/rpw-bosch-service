@@ -86,8 +86,11 @@
     var shop=opts.shopId || cfg(opts).SHOP_ID;
     if(!shop) return {ok:false, error:'no_shop'};
     try{
-      // rpw_login(shop, pin) -> jsonb {ok, token, employee:{id,name,role,department,shop_id}}
-      var res=await sb.rpc('rpw_login',{p_shop_id:shop, p_pin:pPin});
+      // Nev + PIN (opts.employeeId) — igy nem lehet PIN-utkozes ket ember kozott.
+      // employeeId nelkul a regi, csak-PIN-es ut fut (visszafele kompatibilitas).
+      var res = opts.employeeId
+        ? await sb.rpc('rpw_login_named',{p_shop_id:shop, p_employee_id:opts.employeeId, p_pin:pPin})
+        : await sb.rpc('rpw_login',      {p_shop_id:shop, p_pin:pPin});
       if(res && res.error) return {ok:false, error:'server'};
       var out=res && res.data;
       if(typeof out==='string'){ try{out=JSON.parse(out)}catch(e){out=null} }
