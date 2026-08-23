@@ -621,7 +621,8 @@ window.uploadActa=async function(e,key,multi){
       var path=JOB.id+'/acte/'+kk+'.'+ext;
       var up=await sb.storage.from(BUCKET).upload(path,blob,{contentType:blob.type||f.type||'application/octet-stream',upsert:true});
       if(up.error)throw up.error;
-      var url=sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+      // P0.6: a bucket PRIVÁT — a publikus URL halott. Aláírt URL kell.
+      var url=await RPWPhotos.signedUrl(sb,path,{bucket:BUCKET});
       arr.push({url:url,path:path,name:f.name||(kk+'.'+ext),type:blob.type||f.type||'',ts:new Date().toISOString(),src:'service'});
     }catch(err){toast('Eroare la fișier: '+(err&&err.message||err),1)}
   }
