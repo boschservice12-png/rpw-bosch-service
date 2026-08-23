@@ -644,6 +644,9 @@ ec_pin:{ro:'PIN',en:'PIN',hu:'PIN'},
 ec_pin_set:{ro:'Setează PIN',en:'Set PIN',hu:'PIN beállítás'},
 ec_pin_t:{ro:'PIN nou pentru {n}',en:'New PIN for {n}',hu:'Új PIN — {n}'},
 ec_pin_s:{ro:'Minim 4 cifre. ATENȚIE: același PIN se folosește și în Red ERP.',en:'At least 4 digits. NOTE: the same PIN is used in Red ERP.',hu:'Legalább 4 számjegy. FIGYELEM: ugyanez a PIN a Red ERP-ben is.'},
+ec_pin_min:{ro:'Minim 4 cifre',en:'At least 4 digits',hu:'Legalább 4 számjegy'},
+ec_pin_again:{ro:'Repetă PIN-ul',en:'Repeat the PIN',hu:'Ismételd meg'},
+ec_pin_diff:{ro:'A doua oară nu e la fel',en:'The two do not match',hu:'A kettő nem egyezik'},
 ec_pin_ok:{ro:'PIN setat',en:'PIN set',hu:'PIN beállítva'},
 ec_haspin:{ro:'PIN OK',en:'PIN OK',hu:'PIN OK'},
 ec_pinat:{ro:'setat {d}',en:'set {d}',hu:'beállítva {d}'},
@@ -2574,24 +2577,51 @@ window.ecAddPost=async function(){
   }catch(e){ toast('?',1) }
 };
 window.ecPin=function(empId, nev){
-  if(!window.RPWWorkflow||!RPWWorkflow.ask){ return; }
-  var pin='';
-  RPWWorkflow.ask({
-    lang:gL(), tone:'warn',
-    title:T('ec_pin_t').replace('{n}',nev), subtitle:T('ec_pin'),
-    text:T('ec_pin_s'), items:[],
-    cancelText:T('ec_cancel'), confirmText:T('ec_save'),
-    onConfirm:function(){ ecPinSave(empId, (document.getElementById('ecPinIn')||{}).value||'') }
-  });
-  // beviteli mezot teszunk a parbeszedbe
-  setTimeout(function(){
-    var box=document.querySelector('.rpw-bm-bd'); if(!box)return;
-    var d=document.createElement('div'); d.style.margin='10px 0 4px';
-    d.innerHTML='<input id="ecPinIn" type="password" inputmode="numeric" autocomplete="new-password" '+
-      'style="width:100%;border:1.5px solid #E3E6EA;border-radius:9px;padding:12px;font:800 16px ui-monospace,Menlo,monospace;text-align:center" placeholder="••••••">';
-    box.appendChild(d);
-    try{document.getElementById('ecPinIn').focus()}catch(e){}
-  },60);
+  // ── P0/PIN JAVÍTÁS (2026-08-23) ──────────────────────────────────
+  // KORÁBBAN: a kabalás párbeszédbe setTimeout-tal injektáltam egy input
+  // mezőt, és a megerősítéskor onnan olvastam ki az értéket. A modál
+  // viszont a gomb lenyomásakor ELŐBB törli magát, csak UTÁNA hívja az
+  // onConfirm-ot — így a mező már nem létezett, és mindig üres PIN ment
+  // tovább. Emiatt a felületről EGYETLEN PIN sem került be.
+  // MOSTANTÓL: saját ablak, és az érték a gépeléskor rögzül (nem a DOM-ból
+  // olvassuk a végén). Kétszeri beírás, mert elgépelt PIN = kizárt ember.
+  EC.pinFor=empId; EC.pinNev=nev||''; EC.pin1=''; EC.pin2=''; EC.pinErr='';
+  ecPinRender();
+};
+function ecPinRender(){
+  var el=document.getElementById('ecPinOv');
+  if(!el){ el=document.createElement('div'); el.id='ecPinOv'; el.className='az-ov';
+           el.style.zIndex=2300; document.body.appendChild(el); }
+  el.style.display='flex';
+  var h='<div class="az-box" style="max-width:460px">';
+  h+='<div class="az-hd" style="background:linear-gradient(135deg,#3a2a08 0%,#5c4210 100%)">';
+  h+='<div class="az-av" style="width:60px;height:60px;flex:0 0 60px;background-image:url(rpw-mascot.png);box-shadow:0 4px 14px rgba(0,0,0,.35),0 0 0 2px #E9A700"></div><div>';
+  h+='<div class="az-hi">'+escH(EC.pinNev)+'</div>';
+  h+='<div class="az-q" style="font-size:19px">'+escH(T('ec_pin_t').replace('{n}',''))+'</div>';
+  h+='<div class="az-dt">'+escH(T('ec_pin_min'))+'</div></div>';
+  h+='<button class="az-x" onclick="ecPinClose()">&times;</button></div>';
+  h+='<div style="padding:16px 20px 4px">';
+  h+='<input id="ecPin1" class="ck-in" style="width:100%;margin-bottom:8px" type="password" inputmode="numeric" autocomplete="new-password" placeholder="PIN" value="'+escA(EC.pin1)+'" oninput="EC.pin1=this.value;ecPinErrClear()">';
+  h+='<input id="ecPin2" class="ck-in" style="width:100%" type="password" inputmode="numeric" autocomplete="new-password" placeholder="'+escA(T('ec_pin_again'))+'" value="'+escA(EC.pin2)+'" oninput="EC.pin2=this.value;ecPinErrClear()">';
+  if(EC.pinErr)h+='<div style="margin-top:9px;font:700 12px inherit;color:#B91C1C;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:9px 11px">'+escH(EC.pinErr)+'</div>';
+  h+='<div class="ec-warn" style="margin-top:10px">'+escH(T('ec_pin_s'))+'</div></div>';
+  h+='<div class="az-ft"><button class="az-fb az-f1" onclick="ecPinClose()">'+T('ec_cancel')+'</button>';
+  h+='<button class="az-fb az-f2" onclick="ecPinConfirm()">'+T('ec_save')+'</button></div></div>';
+  el.innerHTML=h;
+  try{ document.getElementById('ecPin1').focus(); }catch(e){}
+}
+window.ecPinErrClear=function(){ if(EC.pinErr){ EC.pinErr=''; } };
+window.ecPinClose=function(){
+  var el=document.getElementById('ecPinOv'); if(el)el.style.display='none';
+  EC.pinFor=null; EC.pin1=''; EC.pin2=''; EC.pinErr='';
+};
+window.ecPinConfirm=function(){
+  var a=String(EC.pin1||'').trim(), b=String(EC.pin2||'').trim();
+  if(a.length<4){ EC.pinErr=T('ec_pin_min'); ecPinRender(); return; }
+  if(a!==b){     EC.pinErr=T('ec_pin_diff'); ecPinRender(); return; }
+  var who=EC.pinFor;
+  ecPinClose();
+  ecPinSave(who, a);
 };
 window.ecPinSave=async function(empId, pin){
   var tok=ecTok(); if(!tok)return;
@@ -2599,8 +2629,12 @@ window.ecPinSave=async function(empId, pin){
   try{
     var r=await sb.rpc('rpw_pin_set_for',{p_token:tok, p_employee_id:empId, p_new_pin:String(pin).trim()});
     var o=r&&r.data; if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){o=null}}
-    if(!o||!o.ok){ toast((o&&o.error)||'?',1); return; }
-    toast(T('ec_pin_ok'));
+    if(!o||!o.ok){
+      var e2=(o&&o.error)||'?';
+      toast(e2==='not_manager'?T('ec_notmgr'):(e2==='pin_too_short'?T('ec_pin_min'):e2),1);
+      return;
+    }
+    toast(T('ec_pin_ok')+': '+(EC.pinNev||''));
     await ecLoad(true);            // hogy AZONNAL latszodjon a valtozas
   }catch(e){ toast('?',1) }
 };
