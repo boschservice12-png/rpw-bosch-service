@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: ECHIPA-PINSTATE-L2D 2026-08-23 -->
+<!-- BUILD: P0.1-GUARD-ORDER 2026-08-23 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -23,12 +23,15 @@
 <script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
 <script src="rpw-auth.js"></script>
 <script src="rpw-db.js"></script>
-<script>/* Opt-in PIN-őr: CSAK ha RPW_CFG.AUTH_REQUIRED===true; egyébként nincs hatása */
-try{ if(window.RPWAuth) RPWAuth.guard(); }catch(e){}
-/* PWA: service worker regisztráció (csak élő https oldalon) */
+<script>/* PWA: service worker regisztráció (csak élő https oldalon) */
 if('serviceWorker' in navigator && location.protocol==='https:'){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})});}</script>
 <script src="rpw-config.js"></script>
 <script src="rpw-guard.js"></script>
+<script>/* ── P0.1 (2026-08-23) ────────────────────────────────────────────
+   PIN-őr. A hívás CSAK a rpw-config.js UTÁN futhat, különben a guard()
+   az AUTH_REQUIRED-et undefined-nak látja, és AUTH_REQUIRED=true mellett
+   is átengedne mindenkit. Korábban a config ELŐTT futott — néma rés volt. */
+try{ if(window.RPWAuth) RPWAuth.guard(); }catch(e){}</script>
 <script src="rpw-workflow.js"></script>
 <script src="rpw-save.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
