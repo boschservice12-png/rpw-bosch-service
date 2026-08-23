@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#dc2626">
-<!-- BUILD: DOSAR-LIFECYCLE-L1Q 2026-08-23 -->
+<!-- BUILD: FRIENDLY-DIALOGS-L1R 2026-08-23 -->
 <title>RedAssistance — Dosar Auto</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -188,6 +188,20 @@ dd_flux:{ro:'Dosar de daună — fără reparație',en:'Claim file — no repair
 dd_s1:{ro:'Colectare acte',en:'Collecting documents',hu:'Iratgyűjtés'},
 dd_s2:{ro:'Predat la asigurător',en:'Handed to insurer',hu:'Átadva a biztosítónak'},
 dd_s3:{ro:'Închis',en:'Closed',hu:'Lezárva'},
+dlg_da:{ro:'Da',en:'Yes',hu:'Igen'},
+dlg_nu:{ro:'Nu',en:'No',hu:'Nem'},
+dlg_ok:{ro:'Am înțeles',en:'Got it',hu:'Értem'},
+dlg_sterge:{ro:'Șterge',en:'Delete',hu:'Törlés'},
+dlg_pastreaza:{ro:'Păstrează',en:'Keep',hu:'Marad'},
+dlg_del_t:{ro:'Ștergi documentul?',en:'Delete the document?',hu:'Törlöd a dokumentumot?'},
+dlg_del_s:{ro:'Se șterge din dosar. Îl poți încărca din nou oricând.',en:'It is removed from the file. You can upload it again anytime.',hu:'Kikerül a dossziéból. Bármikor újra feltöltheted.'},
+dlg_zip_t:{ro:'Arhivarea nu e disponibilă',en:'Archiving unavailable',hu:'A csomagolás nem elérhető'},
+dlg_zip_s:{ro:'Componenta de arhivare nu s-a încărcat. Reîncarcă pagina cu internet activ.',en:'The archiver did not load. Reload the page with internet on.',hu:'A csomagoló nem töltődött be. Tölts újra a lapot élő internettel.'},
+dlg_tel_t:{ro:'Nu există număr de telefon',en:'No phone number',hu:'Nincs telefonszám'},
+dlg_tel_s:{ro:'Linkul a fost copiat — îl poți trimite manual.',en:'The link was copied — send it manually.',hu:'A linket kimásoltam — küldd el kézzel.'},
+dlg_ov_t:{ro:'Fază deblocată',en:'Phase unlocked',hu:'A fázis feloldva'},
+dlg_ovErr_t:{ro:'Deblocarea nu a reușit',en:'Unlock failed',hu:'A feloldás nem sikerült'},
+dlg_sync_t:{ro:'Salvat local, nu pe server',en:'Saved locally, not on server',hu:'Helyileg mentve, szerverre nem'},
 dd_predat:{ro:'Predat la asigurător',en:'Handed to insurer',hu:'Átadva a biztosítónak'},
 dd_predatQ:{ro:'Ai predat dosarul asigurătorului azi? De aici pornesc termenele legale.',en:'Handed the file to the insurer today? Legal deadlines start now.',hu:'Ma adtad át a dossziét a biztosítónak? Innentől futnak a törvényes határidők.'},
 dd_inchide:{ro:'Închide dosarul',en:'Close the file',hu:'Dosszié lezárása'},
@@ -414,7 +428,7 @@ window.rpwPhaseBlocked=function(p){
   if(!JOB||!window.RPWWorkflow)return;
   var reasons=RPWWorkflow.getBlockingReasons(JOB,p);
   if(RPWWorkflow.showBlockModal)RPWWorkflow.showBlockModal({job:JOB,targetPhase:p,reasons:reasons,lang:gL()});
-  else alert(RPWWorkflow.reasonsText(reasons, gL()));
+  else dlgSay({tone:'warn',title:T('dlg_ovErr_t'),items:reasons.map(function(r){return RPWWorkflow.t(r,gL())}),okText:T('dlg_ok')});
 };
 // Dokumentált vezetői felülbírálás (admin) — tartós grant + audit, canEnterPhase felismeri
 window.rpwOverride=async function(){
@@ -427,11 +441,11 @@ window.rpwOverride=async function(){
     return RPWWorkflow.managerOverride(JOB,{fromPhase:from,toPhase:to,actor:actor,reason:reason});
   }, {save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
   if(!res.ok){
-    if(res.notSynced){ alert(RPWWorkflow.t('wf_saved_not_synced',_ln)); return; }
+    if(res.notSynced){ dlgSay({tone:'warn',title:T('dlg_sync_t'),text:RPWWorkflow.t('wf_saved_not_synced',_ln),okText:T('dlg_ok')}); return; }
     var errs=(res.result&&res.result.errors)||[];
-    alert(errs.map(function(r){return RPWWorkflow.t(r,_ln);}).join('\n')||'?'); return;
+    dlgSay({tone:'danger',title:T('dlg_ovErr_t'),items:errs.map(function(r){return RPWWorkflow.t(r,_ln)}),okText:T('dlg_ok')}); return;
   }
-  alert(T('ovDone'));render();
+  dlgSay({tone:'ok',title:T('dlg_ov_t'),text:T('ovDone'),okText:T('dlg_ok'),onClose:render});
 };
 window.tS=function(s){S.sec[s]=S.sec[s]?0:1;render()};
 window.openLB=function(src){var lb=document.createElement('div');lb.className='lightbox';lb.onclick=function(){lb.remove()};lb.innerHTML='<img src="'+src+'"/>';document.body.appendChild(lb)};
@@ -442,7 +456,7 @@ window.trimiteLinkUpload=function(){
   var ph=(JOB.phone||'').replace(/[^0-9]/g,'');
   if(ph.indexOf('0')===0)ph='40'+ph.slice(1);
   if(ph){window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(msg),'_blank');}
-  else{try{navigator.clipboard.writeText(link)}catch(e){} alert('Nu exista numar de telefon salvat.\nLink copiat:\n'+link);}
+  else{try{navigator.clipboard.writeText(link)}catch(e){} dlgSay({tone:'warn',title:T('dlg_tel_t'),text:T('dlg_tel_s'),items:[link],okText:T('dlg_ok')});}
 };
 
 // ── Acte dosar daună: feltöltés / törlés ──
@@ -471,7 +485,10 @@ async function _saveActe(){
 //    mert a hataridok abbol szamolodnak.
 window.dosarPredat=async function(){
   if(!JOB)return;
-  if(!confirm(T('dd_predatQ')))return;
+  dlgAsk({tone:'info',title:T('dd_predat'),subtitle:(JOB.plate||JOB.number||''),text:T('dd_predatQ'),
+    cancelText:T('dlg_nu'),confirmText:T('dlg_da'),onConfirm:function(){ _dosarPredatGo(); }});
+};
+window._dosarPredatGo=async function(){
   JOB.dosarPredat=ddDay(0); JOB.inchis=false;
   try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
   try{await RPWDb.patchV2(sb,JOB.id,{dosarPredat:JOB.dosarPredat},{actor:'service'})}catch(err){}
@@ -480,7 +497,10 @@ window.dosarPredat=async function(){
 };
 window.dosarInchide=async function(){
   if(!JOB)return;
-  if(!confirm(T('dd_inchideQ')))return;
+  dlgAsk({tone:'ok',title:T('dd_inchide'),subtitle:(JOB.plate||JOB.number||''),text:T('dd_inchideQ'),
+    cancelText:T('dlg_nu'),confirmText:T('dlg_da'),onConfirm:function(){ _dosarInchideGo(); }});
+};
+window._dosarInchideGo=async function(){
   JOB.inchis=true; JOB.dosarInchisLa=ddDay(0);
   try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
   try{await RPWDb.patchV2(sb,JOB.id,{inchis:true,dosarInchisLa:JOB.dosarInchisLa},{actor:'service'})}catch(err){}
@@ -499,7 +519,10 @@ window.dosarInapoi=async function(){        // egy lepes vissza — tevedes eset
 };
 window.dosarToReparatie=async function(){
   if(!JOB)return;
-  if(!confirm(T('dd_toRepQ')))return;
+  dlgAsk({tone:'warn',title:T('dd_toRep'),subtitle:(JOB.plate||JOB.number||''),text:T('dd_toRepQ'),
+    cancelText:T('dlg_nu'),confirmText:T('dlg_da'),onConfirm:function(){ _dosarToRepGo(); }});
+};
+window._dosarToRepGo=async function(){
   JOB.flux='reparatie'; JOB.doarDosar=false;
   if(typeof JOB.phase!=='number'||JOB.phase<1)JOB.phase=1;
   try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
@@ -512,6 +535,11 @@ window.dosarToReparatie=async function(){
 //    3 MUNKANAP a karfelmeresre · 30 NAP a karteritesi ajanlatra.
 //    A 10 napos fizetesi hatarido az ajanlat elfogadasatol fut — azt a
 //    rendszer nem ismeri, ezert nem talalunk ki hozza datumot.
+// Minden visszajelzes a kabalan keresztul megy — nincs nyers bongeszo-ablak.
+function dlgAsk(o){ o.lang=gL(); if(window.RPWWorkflow&&RPWWorkflow.ask)return RPWWorkflow.ask(o);
+  if(confirm((o.title||'')+'\n'+(o.text||'')))o.onConfirm&&o.onConfirm(); }
+function dlgSay(o){ o.lang=gL(); if(window.RPWWorkflow&&RPWWorkflow.say)return RPWWorkflow.say(o);
+  alert((o.title||'')+'\n'+(o.text||'')); }
 window.ddDay=function(off){var d=new Date();d.setDate(d.getDate()+(off||0));
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 window.ddDiff=function(a,b){
@@ -597,7 +625,12 @@ window.uploadActa=async function(e,key,multi){
   render();
 };
 window.delActa=async function(key,ix){
-  if(!JOB||!confirm('Ștergeți acest fișier din dosar?'))return;
+  if(!JOB)return;
+  dlgAsk({tone:'danger',title:T('dlg_del_t'),text:T('dlg_del_s'),
+    cancelText:T('dlg_pastreaza'),confirmText:T('dlg_sterge'),
+    onConfirm:function(){ _stergeActaGo(key,idx); }});
+};
+window._stergeActaGo=async function(key,idx){
   if(!JOB.dosarActe)JOB.dosarActe={};
   var cur=JOB.dosarActe[key];var arr=(cur?(Array.isArray(cur)?cur.slice():[cur]):[]);
   arr.splice(ix,1);
@@ -609,7 +642,7 @@ window.delActa=async function(key,ix){
 // ── Export dosar → ZIP a számítógépre (biztosító oldali továbbküldéshez) ──
 window.exportDosar=async function(){
   if(!JOB)return;
-  if(typeof JSZip==='undefined'){alert('Componenta de arhivare nu s-a încărcat.\nReîncărcați pagina (Ctrl+F5) și încercați din nou.');return;}
+  if(typeof JSZip==='undefined'){dlgSay({tone:'warn',title:T('dlg_zip_t'),text:T('dlg_zip_s'),okText:T('dlg_ok')});return;}
   var DA=window.RPW_DAUNA_DOCS||[], acte=JOB.dosarActe||{};
   var slotFiles=function(k){var a=acte[k];return a?(Array.isArray(a)?a:[a]):[]};
   var missing=[];
@@ -630,7 +663,10 @@ window.exportDosar=async function(){
       });
       return;
     }
-    if(!confirm(T('zip_missing').replace('{n}',missing.length)))return;
+    dlgAsk({tone:'warn',title:T('zip_missing').replace('{n}',missing.length),text:T('zip_lead'),
+      items:missing,cancelText:T('zip_cancel'),confirmText:T('zip_go'),
+      onConfirm:function(){ exportDosarZip(missing); }});
+    return;
   }
   return exportDosarZip(missing);
 };
