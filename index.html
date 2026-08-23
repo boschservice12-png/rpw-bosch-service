@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: ONE-LIST+ONEWAY-L1N 2026-08-23 -->
+<!-- BUILD: PROG-TYPE-L1O 2026-08-23 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -1254,7 +1254,7 @@ function newJobModalHtml(){
   h+='<div class="prog-field"><label>'+T('phone_label')+' *</label><input id="iPhone" type="tel" value="'+escH(S.njPhone||'')+'" placeholder="'+T('phone_ph')+'" oninput="S.njPhone=this.value;njSync()"/></div>';
 
   // TIPUS — csak a "Lucrare noua"-nal kerdes. A dosar mindig asig.
-  if(mode==='lucrare'){
+  if(mode==='lucrare'||mode==='prog'){
     h+='<div class="prog-field"><label>'+T('m_tip')+' *</label><div class="nj-pick">';
     h+='<button class="nj-opt'+(S.njTip==='asig'?' on':'')+'" onclick="njSetTip(\'asig\')"><b>&#128737; '+T('m_tip_asig')+'</b><i>'+T('m_tip_asig_s')+'</i></button>';
     h+='<button class="nj-opt'+(S.njTip==='auto'?' on':'')+'" onclick="njSetTip(\'auto\')"><b>&#128176; '+T('m_tip_auto')+'</b><i>'+T('m_tip_auto_s')+'</i></button>';
@@ -1262,7 +1262,7 @@ function newJobModalHtml(){
   }
 
   // DOSSZIE-ALLAPOT — dosar modban mindig, lucrare modban csak asig eseten
-  var kellDosar = (mode==='dosar') || (mode==='lucrare' && S.njTip==='asig');
+  var kellDosar = (mode==='dosar') || ((mode==='lucrare'||mode==='prog') && S.njTip==='asig');
   if(kellDosar){
     // "Deschide dosar dauna" = MI nyitjuk -> nincs ket varians, nem kerdes.
     // A "mar nyitva" eset a Lucrare noua (asig) again jon elo.
@@ -1472,8 +1472,8 @@ function njMissing(){
   var m=[], mode=S.njMode||'prog';
   if(!njOkPlate(S.njPlate))m.push(T('nj_m_plate'));
   if(!njOkPhone(S.njPhone))m.push(T('nj_m_phone'));
-  if(mode==='lucrare'&&!S.njTip)m.push(T('m_m_tip'));
-  var kellDosar=(mode==='dosar')||(mode==='lucrare'&&S.njTip==='asig');
+  if((mode==='lucrare'||mode==='prog')&&!S.njTip)m.push(T('m_m_tip'));
+  var kellDosar=(mode==='dosar')||((mode==='lucrare'||mode==='prog')&&S.njTip==='asig');
   if(kellDosar&&mode!=='dosar'&&!S.njPay)m.push(T('nj_m_pay'));
   if(kellDosar&&S.njPay==='deschis'&&!String(S.njDosar||'').trim())m.push(T('nj_m_nrdosar'));
   if((mode==='prog'||mode==='lucrare')&&!S.njDate)m.push(T('nj_m_date'));
