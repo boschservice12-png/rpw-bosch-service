@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: TYPO-UNIFY-L1X 2026-08-23 -->
+<!-- BUILD: ECHIPA-L2C 2026-08-23 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -353,6 +353,34 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
  font:800 11px ui-monospace,Menlo,monospace;cursor:pointer;margin-left:6px}
 .az-gapb:hover{background:#fee2e2}
 @media(max-width:620px){.gp-grid{grid-template-columns:1fr}.az-mt{display:none}.az-q{font-size:20px}.az-av{width:64px;height:64px;flex:0 0 64px}}
+.ec-wrap{padding:14px 24px 24px}
+.ec-tabs{display:flex;gap:6px;background:#EDEFF2;padding:4px;border-radius:10px;width:fit-content;margin-bottom:14px}
+.ec-tabs button{border:0;background:none;padding:9px 20px;border-radius:7px;font:800 13px inherit;color:var(--t3);cursor:pointer}
+.ec-tabs button[aria-pressed="true"]{background:var(--w);color:var(--t);box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.ec-card{background:var(--w);border:1px solid var(--b);border-radius:10px;margin-bottom:8px;padding:14px 16px;
+ display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ec-code{font:800 10px ui-monospace,Menlo,monospace;letter-spacing:.06em;background:#F1F5F9;color:#475569;
+ border:1px solid rgba(0,0,0,.08);border-radius:5px;padding:5px 9px;min-width:104px;text-align:center}
+.ec-lab{font-weight:800;font-size:14px}
+.ec-note{font-size:11px;color:var(--t3);font-weight:600;margin-top:1px}
+.ec-sel{margin-left:auto;min-width:230px;border:1.5px solid var(--b);border-radius:9px;padding:9px 11px;
+ font:700 13px inherit;background:var(--w);color:var(--t)}
+.ec-sel:disabled{opacity:.6;cursor:not-allowed}
+.ec-row{background:var(--w);border:1px solid var(--b);border-radius:10px;margin-bottom:6px;padding:11px 16px;
+ display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ec-nm{font-weight:700;font-size:13px;min-width:180px}
+.ec-rl{font:700 10px ui-monospace,Menlo,monospace;letter-spacing:.05em;text-transform:uppercase;color:var(--t3)}
+.ec-dp{font:600 10px ui-monospace,Menlo,monospace;color:var(--t3)}
+.ec-pin{margin-left:auto;display:flex;align-items:center;gap:8px}
+.ec-tag{font:800 9px ui-monospace,Menlo,monospace;border-radius:10px;padding:3px 8px}
+.ec-ok{background:#DCFCE7;color:#15803D}.ec-no{background:#FEE2E2;color:#B91C1C}
+.ec-btn{border:1px solid var(--b);background:var(--w);border-radius:8px;padding:6px 12px;font:800 11px inherit;cursor:pointer;color:var(--t)}
+.ec-btn:hover{background:#FAFBFC}
+.ec-bar{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:12px;color:var(--t3);font-weight:600}
+.ec-warn{font:600 11px ui-monospace,Menlo,monospace;color:#92400E;background:#FFFBEB;border:1px solid #FDE68A;
+ border-radius:8px;padding:9px 12px;margin-bottom:12px}
+.ec-new{background:var(--w);border:1.5px dashed var(--b);border-radius:10px;padding:14px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ec-in{border:1.5px solid var(--b);border-radius:9px;padding:9px 11px;font:600 13px inherit}
 </style>
 </head>
 <body>
@@ -596,6 +624,31 @@ m_edit_t:{ro:'Editează datele',en:'Edit details',hu:'Adatok javitasa'},
 m_edit_s:{ro:'Data se schimbă doar prin Reprogramare',en:'Date changes only via Reschedule',hu:'A datum csak Atutemezessel valtozik'},
 edit_btn:{ro:'Editează',en:'Edit',hu:'Javitas'},
 edit_ok:{ro:'Date salvate',en:'Details saved',hu:'Adatok mentve'},
+echipa:{ro:'Echipă',en:'Team',hu:'Csapat'},
+ec_label:{ro:'ORGANIZARE',en:'ORGANISATION',hu:'SZERVEZET'},
+ec_title:{ro:'Posturi și personal',en:'Posts and staff',hu:'Posztok és személyzet'},
+ec_tab_p:{ro:'Posturi',en:'Posts',hu:'Posztok'},
+ec_tab_s:{ro:'Personal',en:'Staff',hu:'Személyzet'},
+ec_none:{ro:'— nimeni —',en:'— nobody —',hu:'— senki —'},
+ec_add:{ro:'+ Adaugă post',en:'+ Add post',hu:'+ Új poszt'},
+ec_code:{ro:'Cod (ex. DISPECER)',en:'Code (e.g. DISPATCH)',hu:'Kód (pl. DISZPECSER)'},
+ec_lab:{ro:'Denumire',en:'Label',hu:'Megnevezés'},
+ec_note:{ro:'Ce face (optional)',en:'What it does (optional)',hu:'Mit csinál (nem kötelező)'},
+ec_save:{ro:'Salvează',en:'Save',hu:'Mentés'},
+ec_cancel:{ro:'Renunță',en:'Cancel',hu:'Mégse'},
+ec_saved:{ro:'Salvat',en:'Saved',hu:'Mentve'},
+ec_pin:{ro:'PIN',en:'PIN',hu:'PIN'},
+ec_pin_set:{ro:'Setează PIN',en:'Set PIN',hu:'PIN beállítás'},
+ec_pin_t:{ro:'PIN nou pentru {n}',en:'New PIN for {n}',hu:'Új PIN — {n}'},
+ec_pin_s:{ro:'Minim 4 cifre. ATENȚIE: același PIN se folosește și în Red ERP.',en:'At least 4 digits. NOTE: the same PIN is used in Red ERP.',hu:'Legalább 4 számjegy. FIGYELEM: ugyanez a PIN a Red ERP-ben is.'},
+ec_pin_ok:{ro:'PIN setat',en:'PIN set',hu:'PIN beállítva'},
+ec_haspin:{ro:'are PIN',en:'has PIN',hu:'van PIN'},
+ec_nopin:{ro:'FĂRĂ PIN',en:'NO PIN',hu:'NINCS PIN'},
+ec_login:{ro:'Autentifică-te ca să vezi echipa',en:'Sign in to see the team',hu:'Jelentkezz be a csapat megtekintéséhez'},
+ec_gologin:{ro:'Autentificare',en:'Sign in',hu:'Belépés'},
+ec_notmgr:{ro:'Doar Műszakvezető / Irodavezető poate modifica.',en:'Only shop or office manager can change this.',hu:'Csak műszakvezető / irodavezető módosíthat.'},
+ec_who:{ro:'Autentificat: {n}',en:'Signed in: {n}',hu:'Belépve: {n}'},
+ec_logout:{ro:'Ieșire',en:'Sign out',hu:'Kilépés'},
 az_hi:{ro:'Bună, Ferenc!',en:'Hello, Ferenc!',hu:'Szia, Ferenc!'},
 az_q:{ro:'Ce facem azi?',en:'What are we doing today?',hu:'Mit csinálunk ma?'},
 az_h1:{ro:'Azi',en:'Today',hu:'Ma'},
@@ -879,6 +932,7 @@ function sbNav(active){
   return '<div class="sidebar"><div class="sb-logo"><div class="sb-logo-c"><div class="sb-logo-ring"></div><div class="sb-logo-d"></div></div><div class="sb-logo-tx"><div class="sb-logo-t"><span>Red</span>Assistance</div><div class="sb-logo-sub">DIGITAL ECOSYSTEM</div></div></div><div class="sb-nav">'+
     it('panou',IC.prog,T('panou'),'panou')+
     it('lucrari',IC.jobs,T('lucrari'),'lucrari')+
+    it('echipa','<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>',T('echipa'),'echipa')+
     it('statistici',IC.stats,T('statistici'),'statistici')+
     it('parametri',IC.params,T('parametri'),'parametri')+
     (isAdmin()?'<div class="sb-item" onclick="location.assign(\'rpw-cleanup.html\')"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg><span>Curatare</span></div>':'')+
@@ -890,6 +944,7 @@ function render(){
   if(S.screen==='statistici'){renderStatistici();return}
   if(S.screen==='panou'){renderPanou();return}
   if(S.screen==='parametri'){renderParametri();return}
+  if(S.screen==='echipa'){renderEchipa();return}
   var ln=gL(),allJobs=JOBS;
   var jobs=allJobs.filter(function(j){return categorizeJob(j)==='lucrari'});
   var act=jobs.filter(function(j){return j.phase<7}).length;
@@ -2357,6 +2412,156 @@ window.gapSave=async function(){
   gapClose(); toast(T('gap_saved')); render();
   var ov=document.getElementById('azOv');
   if(ov&&ov.style.display!=='none')azRender();
+};
+
+
+// ====================================================================
+//  ECHIPĂ — posztok és személyzet
+//  --------------------------------------------------------------
+//  A POSZT a szerkezet, az EMBER a betöltője. Cégenként szabadon
+//  bővíthető: más szerviznél más a felállás (nálunk nincs dispecer,
+//  máshol van; nálunk a piese külön poszt, máshol a recepciós rendeli).
+//  Az employees tábla a Red ERP-é — innen CSAK OLVASUNK. Az egyetlen
+//  kivétel a PIN, mert az a belépéshez kell.
+// ====================================================================
+var EC={tab:'posturi', posts:[], team:[], manager:false, loaded:false, adding:false,
+        nCode:'', nLab:'', nNote:''};
+
+function ecTok(){ try{ return window.RPWAuth?RPWAuth.token():null }catch(e){ return null } }
+
+window.ecLoad=async function(force){
+  if(EC.loaded && !force) return;
+  var tok=ecTok(); if(!tok){ EC.loaded=true; render(); return; }
+  try{
+    var a=await sb.rpc('rpw_posts_get',{p_token:tok});
+    var pg=a&&a.data; if(typeof pg==='string'){try{pg=JSON.parse(pg)}catch(e){pg=null}}
+    if(pg&&pg.ok){ EC.posts=pg.posts||[]; EC.manager=(pg.manager===true); }
+    var t=await RPWAuth.team(sb);
+    if(t&&t.ok) EC.team=t.team||[];
+  }catch(e){}
+  EC.loaded=true; render();
+};
+
+function renderEchipa(){
+  var h=sbNav('echipa');
+  h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
+  h+='<div class="page-hdr"><div><div class="ph-label">'+T('ec_label')+'</div><div class="ph-title">'+T('ec_title')+'</div></div></div>';
+  h+='<div class="ec-wrap">';
+
+  var tok=ecTok();
+  if(!tok){
+    h+='<div class="ec-warn">'+escH(T('ec_login'))+'</div>';
+    h+='<button class="btn btn-r" onclick="location.assign(\'rpw-login.html?next=index.html\')">'+T('ec_gologin')+'</button>';
+    h+='</div></div>'; document.getElementById('app').innerHTML=h; return;
+  }
+  if(!EC.loaded){ ecLoad(); }
+
+  var me=''; try{ me=RPWAuth.name()||'' }catch(e){}
+  h+='<div class="ec-bar"><span>'+escH(T('ec_who').replace('{n}',me))+'</span>';
+  h+='<button class="ec-btn" onclick="ecLogout()">'+T('ec_logout')+'</button></div>';
+  if(!EC.manager)h+='<div class="ec-warn">'+escH(T('ec_notmgr'))+'</div>';
+
+  h+='<div class="ec-tabs">';
+  h+='<button aria-pressed="'+(EC.tab==='posturi')+'" onclick="ecTab(\'posturi\')">'+T('ec_tab_p')+'</button>';
+  h+='<button aria-pressed="'+(EC.tab==='personal')+'" onclick="ecTab(\'personal\')">'+T('ec_tab_s')+'</button>';
+  h+='</div>';
+
+  if(EC.tab==='posturi'){
+    EC.posts.forEach(function(p){
+      h+='<div class="ec-card"><span class="ec-code">'+escH(p.code)+'</span><div>';
+      h+='<div class="ec-lab">'+escH(p.label)+'</div>';
+      if(p.note)h+='<div class="ec-note">'+escH(p.note)+'</div>';
+      h+='</div><select class="ec-sel"'+(EC.manager?'':' disabled')+' onchange="ecAssign(\''+p.code+'\',this.value)">';
+      h+='<option value="">'+escH(T('ec_none'))+'</option>';
+      EC.team.forEach(function(e){
+        h+='<option value="'+escA(e.id)+'"'+(e.id===p.employee_id?' selected':'')+'>'+escH(e.name)+' · '+escH(e.role||'')+'</option>';
+      });
+      h+='</select></div>';
+    });
+    if(EC.manager){
+      if(!EC.adding){
+        h+='<button class="ec-btn" style="margin-top:8px" onclick="EC.adding=true;render()">'+T('ec_add')+'</button>';
+      } else {
+        h+='<div class="ec-new">';
+        h+='<input class="ec-in" style="width:170px" placeholder="'+escA(T('ec_code'))+'" value="'+escA(EC.nCode)+'" oninput="EC.nCode=this.value">';
+        h+='<input class="ec-in" style="width:200px" placeholder="'+escA(T('ec_lab'))+'" value="'+escA(EC.nLab)+'" oninput="EC.nLab=this.value">';
+        h+='<input class="ec-in" style="flex:1;min-width:180px" placeholder="'+escA(T('ec_note'))+'" value="'+escA(EC.nNote)+'" oninput="EC.nNote=this.value">';
+        h+='<button class="btn btn-r" onclick="ecAddPost()">'+T('ec_save')+'</button>';
+        h+='<button class="ec-btn" onclick="EC.adding=false;render()">'+T('ec_cancel')+'</button></div>';
+      }
+    }
+  } else {
+    EC.team.forEach(function(e){
+      h+='<div class="ec-row"><span class="ec-nm">'+escH(e.name)+'</span>';
+      h+='<span class="ec-rl">'+escH(e.role||'')+'</span>';
+      h+='<span class="ec-dp">'+escH(e.department||'')+'</span>';
+      h+='<span class="ec-pin">';
+      var posts=EC.posts.filter(function(p){return p.employee_id===e.id})
+                        .map(function(p){return p.code});
+      if(posts.length)h+='<span class="ec-tag" style="background:#DBEAFE;color:#1D4ED8">'+escH(posts.join(' '))+'</span>';
+      if(EC.manager)h+='<button class="ec-btn" onclick="ecPin(\''+e.id+'\',\''+escA(e.name).replace(/'/g,"")+'\')">'+T('ec_pin_set')+'</button>';
+      h+='</span></div>';
+    });
+    h+='<div class="ec-warn" style="margin-top:12px">'+escH(T('ec_pin_s'))+'</div>';
+  }
+  h+='</div></div>';
+  document.getElementById('app').innerHTML=h;
+}
+window.ecTab=function(t){EC.tab=t;render()};
+window.ecLogout=async function(){
+  try{ await RPWAuth.logoutServer(sb) }catch(e){}
+  EC.loaded=false; EC.posts=[]; EC.team=[]; EC.manager=false; render();
+};
+window.ecAssign=async function(code, empId){
+  var tok=ecTok(); if(!tok)return;
+  try{
+    var r=await sb.rpc('rpw_post_assign',{p_token:tok, p_code:code, p_employee_id:(empId||null)});
+    var o=r&&r.data; if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){o=null}}
+    if(!o||!o.ok){ toast((o&&o.error)||'?',1); return; }
+    toast(T('ec_saved')); await ecLoad(true);
+  }catch(e){ toast('?',1) }
+};
+window.ecAddPost=async function(){
+  var tok=ecTok(); if(!tok)return;
+  if(!String(EC.nCode||'').trim()||!String(EC.nLab||'').trim()){ toast(T('nj_missing'),1); return; }
+  try{
+    var r=await sb.rpc('rpw_post_upsert',{p_token:tok, p_code:EC.nCode, p_label:EC.nLab,
+                                          p_note:EC.nNote||null, p_sort:100, p_active:true});
+    var o=r&&r.data; if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){o=null}}
+    if(!o||!o.ok){ toast((o&&o.error)||'?',1); return; }
+    EC.adding=false; EC.nCode=''; EC.nLab=''; EC.nNote='';
+    toast(T('ec_saved')); await ecLoad(true);
+  }catch(e){ toast('?',1) }
+};
+window.ecPin=function(empId, nev){
+  if(!window.RPWWorkflow||!RPWWorkflow.ask){ return; }
+  var pin='';
+  RPWWorkflow.ask({
+    lang:gL(), tone:'warn',
+    title:T('ec_pin_t').replace('{n}',nev), subtitle:T('ec_pin'),
+    text:T('ec_pin_s'), items:[],
+    cancelText:T('ec_cancel'), confirmText:T('ec_save'),
+    onConfirm:function(){ ecPinSave(empId, (document.getElementById('ecPinIn')||{}).value||'') }
+  });
+  // beviteli mezot teszunk a parbeszedbe
+  setTimeout(function(){
+    var box=document.querySelector('.rpw-bm-bd'); if(!box)return;
+    var d=document.createElement('div'); d.style.margin='10px 0 4px';
+    d.innerHTML='<input id="ecPinIn" type="password" inputmode="numeric" autocomplete="new-password" '+
+      'style="width:100%;border:1.5px solid #E3E6EA;border-radius:9px;padding:12px;font:800 16px ui-monospace,Menlo,monospace;text-align:center" placeholder="••••••">';
+    box.appendChild(d);
+    try{document.getElementById('ecPinIn').focus()}catch(e){}
+  },60);
+};
+window.ecPinSave=async function(empId, pin){
+  var tok=ecTok(); if(!tok)return;
+  if(!pin||String(pin).trim().length<4){ toast(T('ec_pin_s'),1); return; }
+  try{
+    var r=await sb.rpc('rpw_pin_set_for',{p_token:tok, p_employee_id:empId, p_new_pin:String(pin).trim()});
+    var o=r&&r.data; if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){o=null}}
+    if(!o||!o.ok){ toast((o&&o.error)||'?',1); return; }
+    toast(T('ec_pin_ok'));
+  }catch(e){ toast('?',1) }
 };
 
 // Auto-refresh every 10 seconds
