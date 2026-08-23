@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: FRIENDLY-DIALOGS-L1R 2026-08-23 -->
+<!-- BUILD: CASE-IDENTITY-L1S 2026-08-23 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -265,6 +265,10 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .fx-d{background:#e0e7ff}
 .edit-btn.eb-edit2{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;font-size:14px;line-height:1}
 .edit-btn.eb-edit2:hover{background:#e2e8f0}
+.nj-dup-info{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}
+.nj-dup-bad{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+.nj-case{margin-top:4px;padding:3px 0 0;font-size:12px}
+.nj-warn-soft{font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 9px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -490,6 +494,14 @@ nj_m_do:{ro:'ce facem (min. 1)',en:'what we do (min. 1)',hu:'mit csinalunk (min.
 nj_m_pay:{ro:'plata / dosar',en:'payment / file',hu:'fizetes / dosszie'},
 nj_m_date:{ro:'data reparatiei',en:'repair date',hu:'javitas datuma'},
 nj_m_nrdosar:{ro:'nr. dosar (dosarul e deja deschis)',en:'claim no. (file already open)',hu:'karszam (a dosszie mar nyitva)'},
+nj_cases:{ro:'Cazuri deschise pe acest număr',en:'Open cases for this plate',hu:'Nyitott esetek erre a rendszámra'},
+nj_case_ok:{ro:'Poți deschide un caz nou — verifică doar să nu fie același.',en:'You can open a new case — just check it is not the same one.',hu:'Nyithatsz újat — csak nézd meg, hogy nem ugyanaz-e.'},
+nj_dup_real:{ro:'Acest caz există deja',en:'This case already exists',hu:'Ez az eset már létezik'},
+nj_dup_real_s:{ro:'Același asigurător și același nr. dosar. Deschide dosarul existent.',en:'Same insurer and same claim number. Open the existing file.',hu:'Ugyanaz a biztosító és ugyanaz a kárszám. Nyisd meg a meglévőt.'},
+nj_dup_auto:{ro:'Există deja o reparație pe cont propriu',en:'A self-paid repair already exists',hu:'Már fut egy saját zsebes javítás'},
+nj_case_auto:{ro:'cont propriu',en:'self-paid',hu:'saját zseb'},
+nj_m_client:{ro:'numele clientului',en:'client name',hu:'az ügyfél neve'},
+nj_date_past:{ro:'Data aleasă e în trecut',en:'The chosen date is in the past',hu:'A választott dátum a múltban van'},
 nj_dup:{ro:'Exista deja o lucrare activa pe acest numar',en:'An active job already exists for this plate',hu:'Erre a rendszamra mar van elo munka'},
 nj_open:{ro:'Salveaza',en:'Save',hu:'Mentes'},
 nj_open_prog:{ro:'Programeaza',en:'Schedule',hu:'Elojegyzes'},
@@ -942,7 +954,7 @@ function renderPanou(){
           var acCls=(ac.done>=ac.total)?'ac-ok':(ac.done?'ac-part':'ac-none');
           var acTxt=j.inchis?T('st_inchis'):(j.dosarPredat?T('st_predat'):(ac.done+'/'+ac.total+' '+T('st_acte')));
           h+='<td><span class="ac-b '+(j.inchis?'ac-ok':acCls)+'">'+escH(acTxt)+'</span>'
-            +(j.asigurator?'<div style="font-size:10px;color:var(--t3);font-weight:600;margin-top:3px">'+escH(j.asigurator)+'</div>':'')+'</td>';
+            +'<div style="font-size:10px;color:var(--t3);font-weight:600;margin-top:3px">'+escH(njCaseLabel(j))+'</div></td>';
         } else {
           h+='<td><span class="panou-pill '+pillCls+'" title="'+tt+'">'+(canOpen?T('pill_ready'):T('st_astept'))+'</span></td>';
         }
@@ -952,7 +964,7 @@ function renderPanou(){
       }
       h+='<td>'+(phoneClean?'<button class="wa-btn '+waCls+'" '+waOnclick+' title="'+waTitle+'">💬</button>':'<button class="wa-btn dis" title="'+T('wa_no_phone')+'" disabled>💬</button>')+'</td>';
       if(tab==='viitoare' && _dd){
-        h+='<td><button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')">&#128193; '+T('open_dosar_btn')+'</button> <button class="edit-btn eb-edit2" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'">&#9998;</button> <button class="edit-btn eb-repro" onclick="event.stopPropagation();openRepro(\''+j.id+'\')">'+T('repro_btn')+'</button> <button class="edit-btn eb-ratat" onclick="event.stopPropagation();markRatat(\''+j.id+'\')">'+T('ratat_btn')+'</button></td>';
+        h+='<td><button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')">&#128193; '+T('open_dosar_btn')+'</button> <button class="edit-btn eb-edit2" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'">&#9998;</button> <button class="edit-btn eb-repro" onclick="event.stopPropagation();openRepro(\''+j.id+'\')">'+T('repro_btn')+'</button></td>';
       } else if(tab==='viitoare'){
         h+='<td>'+(canOpen
         ? '<button class="edit-btn '+editCls+'" onclick="event.stopPropagation();deschideLucrare(\''+j.id+'\')">'+T('deschide_lucrarea')+'</button>'
@@ -1300,7 +1312,9 @@ function newJobModalHtml(){
     h+='<button class="nj-chip'+(S.njDate===njDay(0)?' on':'')+'" onclick="njQuick(0)">'+T('nj_today')+'</button>';
     h+='<button class="nj-chip'+(S.njDate===njDay(1)?' on':'')+'" onclick="njQuick(1)">'+T('nj_tomorrow')+'</button>';
     h+='<button class="nj-chip'+(S.njDate===njDay(2)?' on':'')+'" onclick="njQuick(2)">'+T('nj_after')+'</button>';
-    h+='</div><div class="nj-two"><input class="nj-in" type="date" value="'+escH(S.njDate||'')+'" onchange="S.njDate=this.value;njSet()"/><input class="nj-in" type="time" value="'+escH(S.njTime||'08:00')+'" onchange="S.njTime=this.value;njSync()"/></div></div>';
+    h+='</div><div class="nj-two"><input class="nj-in" type="date" value="'+escH(S.njDate||'')+'" onchange="S.njDate=this.value;njSet()"/><input class="nj-in" type="time" value="'+escH(S.njTime||'08:00')+'" onchange="S.njTime=this.value;njSync()"/></div>';
+    if(S.njDate && S.njDate < njDay(0))h+='<div class="nj-warn-soft">&#9888; '+T('nj_date_past')+'</div>';
+    h+='</div>';
   }
 
   h+='<details class="nj-more"><summary>'+T('nj_more')+'</summary>';
@@ -1522,16 +1536,51 @@ function njMissing(){
   var kellDosar=(mode==='dosar')||((mode==='lucrare'||mode==='prog'||mode==='edit')&&S.njTip==='asig');
   if(kellDosar&&mode!=='dosar'&&!S.njPay)m.push(T('nj_m_pay'));
   if(kellDosar&&S.njPay==='deschis'&&!String(S.njDosar||'').trim())m.push(T('nj_m_nrdosar'));
+  // A karosult neve a biztositonal KOTELEZO mezo — ne a pultnal derüljon ki.
+  if(kellDosar&&!String(S.njClient||'').trim())m.push(T('nj_m_client'));
+  // Ugyanaz az eset ketszer: ez valodi hiba, nem engedjuk.
+  if(njDup())m.push(T('nj_dup_real'));
   if((mode==='prog'||mode==='lucrare')&&!S.njDate)m.push(T('nj_m_date'));   // edit: nincs datum
   return m;
 }
-function njDup(){
-  var k=njKey(S.njPlate);if(!k)return null;
+// ── ESET-azonossag, NEM rendszam-azonossag.
+// Egy autonak lehet egyszerre Groupama-kara, Allianz-kara es sajat javitasa:
+// harom parhuzamos eset, harom dosszie — teljesen szabalyos.
+// Csak akkor duplikatum, ha UGYANAZ az eset ketszer szerepel.
+function njCaseKey(asig, nrDosar, tip){
+  if(tip!=='asig') return 'auto';                       // sajat zseb: egyszerre egy
+  var a=String(asig||'').trim().toUpperCase();
+  var d=String(nrDosar||'').trim().toUpperCase();
+  if(!a && !d) return null;                             // nincs mibol azonositani
+  return 'ASIG|'+a+'|'+d;
+}
+function njJobCaseKey(j){
+  return njCaseKey(j.asigurator, j.nrDosar, (j.damageType==='asig'?'asig':'auto'));
+}
+// Az OSSZES nyitott eset erre a rendszamra — tajekoztatasra.
+function njOpenCases(){
+  var k=njKey(S.njPlate), out=[];
+  if(!k)return out;
   for(var x=0;x<JOBS.length;x++){
-    var j=JOBS[x];if(j.id===S.njEditId)continue;if(njKey(j.plate)!==k)continue;
+    var j=JOBS[x];
+    if(j.id===S.njEditId)continue;
+    if(njKey(j.plate)!==k)continue;
     var c=categorizeJob(j);
-    if(c==='arhivate'||c==='ratate')continue;
-    return j;
+    if(c==='arhivate')continue;                         // lezart eset nem szamit
+    out.push(j);
+  }
+  return out;
+}
+// VALODI duplikatum: ugyanaz az eset. Ez blokkol.
+function njDup(){
+  var mode=S.njMode||'prog';
+  var tip=(mode==='dosar')?'asig':(S.njTip||null);
+  if(!tip)return null;
+  var mine=njCaseKey(S.njAsig, S.njDosar, tip);
+  if(!mine)return null;
+  var list=njOpenCases();
+  for(var x=0;x<list.length;x++){
+    if(njJobCaseKey(list[x])===mine)return list[x];
   }
   return null;
 }
@@ -1543,12 +1592,29 @@ window.njSync=function(){
   if(b){b.disabled=miss.length>0;b.style.opacity=miss.length?'.45':'1';b.style.cursor=miss.length?'not-allowed':'pointer'}
   var d=document.getElementById('njDup');
   if(d){
-    var dup=njDup();
-    if(dup){d.style.display='block';
-      d.innerHTML='&#9888; '+T('nj_dup')+'<br><b>'+escH(dup.number||dup.id)+'</b> &middot; '+escH(dup.client||'—');}
-    else d.style.display='none';
+    var dup=njDup(), cases=njOpenCases();
+    if(dup){
+      // ugyanaz az eset -> ez hiba
+      d.className='nj-dup nj-dup-bad'; d.style.display='block';
+      d.innerHTML='&#9888; <b>'+escH(T('nj_dup_real'))+'</b><br>'+escH(T('nj_dup_real_s'))
+        +'<br><b>'+escH(dup.number||dup.id)+'</b> &middot; '+escH(njCaseLabel(dup));
+    } else if(cases.length){
+      // mas eset ugyanarra az autora -> csak tajekoztatas
+      d.className='nj-dup nj-dup-info'; d.style.display='block';
+      var li=cases.map(function(j){
+        return '<div class="nj-case"><b>'+escH(j.number||j.id)+'</b> '+escH(njCaseLabel(j))+'</div>';
+      }).join('');
+      d.innerHTML='&#128712; <b>'+escH(T('nj_cases'))+' ('+cases.length+')</b>'+li
+        +'<div style="margin-top:5px;opacity:.85">'+escH(T('nj_case_ok'))+'</div>';
+    } else d.style.display='none';
   }
 };
+// Mi kulonbozteti meg ezt az esetet: biztosito + karszam, vagy sajat zseb.
+function njCaseLabel(j){
+  if(j.damageType!=='asig')return T('nj_case_auto');
+  var a=String(j.asigurator||'').trim(), n=String(j.nrDosar||'').trim();
+  return (a||'?')+(n?(' · '+n):'');
+}
 window.njAfterRender=function(){
   if(!S.showNew)return;
   var ip=document.getElementById('iPlate');
