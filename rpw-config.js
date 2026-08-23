@@ -19,7 +19,9 @@ window.RPW_CFG = {
   // szükség esetén publikus URL-re esik vissza (a bucket ma publikus).
   // true-ra állítás CSAK a 0009_storage_private_signed.FILE_ONLY.sql alkalmazása UTÁN:
   // ekkor NINCS publikus-URL fallback, csak időkorlátos aláírt URL.
-  STORAGE_PRIVATE: false,
+  // P0.6 (2026-08-23): a bucket PRIVÁT. Minden fájlelérés időkorlátos
+  // aláírt URL-lel megy; publikus fallback NINCS.
+  STORAGE_PRIVATE: true,
   // A slice-patch RPC neve (Sprint 1). ALAP: rpw_patch_v2 (0006, alkalmazott).
   // A valódi verzió-zárhoz: 0013 (rpw_patch_v3) alkalmazása UTÁN → 'rpw_patch_v3'.
   PATCH_RPC: 'rpw_patch_v2',
