@@ -1,4 +1,4 @@
-/* BUILD: AUTH-LIVE-L2A 2026-08-23 */
+/* BUILD: P0.1-SESSION-HARDENED 2026-08-23 */
 /* ============================================================
    rpw-auth.js — PIN + szerep alapú kliens-hitelesítés (opt-in)
    ------------------------------------------------------------
@@ -26,12 +26,22 @@
 
   function required(opts){ return cfg(opts).AUTH_REQUIRED===true; }
 
+  // ── P0.1 (2026-08-23) — SZIGORÍTOTT munkamenet-ellenőrzés ────────
+  // Korábban két rés volt:
+  //   1) `if(o.exp && ...)` — LEJÁRAT NÉLKÜLI rekord soha nem járt le
+  //   2) `if(!o.token)`     — egyetlen karakternyi token is átment
+  // Így a localStorage-ba kézzel írt {token:"x"} örökre megnyitotta
+  // a védett oldalakat. A szerver elutasította volna a hívásokat, de
+  // az oldal (és az adminfelület) látszott.
+  var TOKEN_MIN=32;                     // a szerver 64 hex karaktert ad
   function session(opts){
     var store=(opts&&opts.store)||defStore();
     var raw=store.get(KEY); if(!raw) return null;
     var o; try{ o=JSON.parse(raw); }catch(e){ return null; }
-    if(!o || !o.token) return null;
-    if(o.exp && nowMs(opts)>o.exp){ return null; }   // lejárt
+    if(!o || typeof o!=='object') return null;
+    if(typeof o.token!=='string' || o.token.length<TOKEN_MIN) return null;
+    if(typeof o.exp!=='number' || !isFinite(o.exp)) return null;   // lejárat KÖTELEZŐ
+    if(nowMs(opts) > o.exp) return null;                            // lejárt
     return o;
   }
   function role(opts){ var s=session(opts); return s?s.role:null; }       // KANONIKUS RPW szerep (leképzett)
