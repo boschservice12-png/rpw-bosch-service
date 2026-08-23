@@ -48,7 +48,16 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;backgr
   var app=document.getElementById('app');
   var CFG=window.RPW_CFG;
   function toast(m,e){var t=document.createElement('div');t.className='toast'+(e?' err':'');t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove()},3000);}
-  function isAdmin(){try{return localStorage.getItem('rpw_admin')==='1'}catch(e){return false}}
+  // P0.5 (2026-08-23): a jog a szervermunkamenetbol jon, nem a localStorage-bol.
+  // Errol az oldalrol visszaallithato es VEGLEG torolheto munka.
+  var ADMIN_ROLES=['Műszakvezető','Irodavezető'];
+  function isAdmin(){
+    try{
+      var A=window.RPWAuth; if(!A) return false;
+      var s=A.session(); if(!s) return false;
+      return ADMIN_ROLES.indexOf(String(s.rawRole||'').trim())>=0;
+    }catch(e){ return false }
+  }
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
   if(!CFG||!CFG.SB_URL){app.innerHTML='<div class="gate">Eroare de configurare.</div>';return;}
   if(!isAdmin()){app.innerHTML='<div class="hdr"><button class="back" onclick="location.assign(\'index.html\')">← Înapoi</button><div><div class="t">Coș — dosare șterse</div></div></div><div class="gate">🔒 Doar administrator.<br><br>Activați modul ADMIN în meniul principal, apoi reveniți.</div>';return;}
