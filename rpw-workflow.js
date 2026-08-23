@@ -1,4 +1,4 @@
-/* BUILD: FRIENDLY-DIALOGS-L1R 2026-08-23 */
+/* BUILD: WORK-METRICS-L1T 2026-08-23 */
 /* ============================================================
    rpw-workflow.js — RPW KÖZPONTI WORKFLOW-MODUL (EGYETLEN IGAZSÁGFORRÁS)
    ------------------------------------------------------------
@@ -871,6 +871,107 @@
     document.addEventListener('keydown',function esc(e){ if(e.key==='Escape'){close();document.removeEventListener('keydown',esc)} });
   }
 
+
+  // ====================================================================
+  //  MUNKAIDŐ-MÉRÉS  (Ferenc szabálya, 2026-08-23)
+  //  --------------------------------------------------------------
+  //  A NAPTÁR nem mérőszám: alkatrészre várunk, esik, foglalt a kabin,
+  //  garanciás visszajavítás jött be — az autó áll, a műhely dolgozik.
+  //  Ezért NEM az autó szervizben töltött idejét mérjük, hanem a MUNKÁÉT.
+  //
+  //    T0 = a Tinichigerie fázis indulása
+  //    T1 = a Control fázis lezárása
+  //    munkanap = hétfő–péntek (szombaton nincs munka)
+  //
+  //  Viszonyítás — csak ha van deviz:
+  //    várható nap = (tinichigerie óra + fényezés óra) / 4      [4 h/nap]
+  //
+  //  A GAP nem vád, hanem KÉRDÉS: hol akadt el? Az okot akkor
+  //  rögzítjük, amikor még friss — egy hónap múlva már senki nem tudja.
+  // ====================================================================
+  var WM_PH_START = 4;   // Tinichigerie
+  var WM_PH_END   = 6;   // Control
+  var WM_H_PER_DAY = 4;  // műhelyóra / nap
+  var GAP_REASONS = ['piese','asigurator','capacitate','vreme','garantie','fara_motiv'];
+
+  function wmDateOnly(v){
+    if(!v)return null;
+    var s=String(v);
+    var m=s.match(/^(\d{4}-\d{2}-\d{2})/);
+    return m?m[1]:null;
+  }
+  // Munkanapok két dátum közt, a kezdőnapot beleszámítva (hétvége nélkül).
+  function workdaysBetween(fromISO, toISO){
+    var a=wmDateOnly(fromISO), b=wmDateOnly(toISO);
+    if(!a||!b)return null;
+    var d=new Date(a+'T00:00:00'), e=new Date(b+'T00:00:00');
+    if(e<d)return 0;
+    var n=0;
+    while(d<=e){ var w=d.getDay(); if(w!==0&&w!==6)n++; d.setDate(d.getDate()+1); }
+    return n;
+  }
+  function addWorkdays(fromISO, n){
+    var a=wmDateOnly(fromISO); if(!a)return null;
+    var d=new Date(a+'T00:00:00'), left=Math.max(0,n-1);
+    while(left>0){ d.setDate(d.getDate()+1); var w=d.getDay(); if(w!==0&&w!==6)left--; }
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function wmToday(){
+    try{ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+    catch(e){ return null; }
+  }
+  // A deviz órái. Forrás: Audatex-import VAGY saját deviz — mindegy, melyik.
+  function devizHours(job){
+    var d=(job&&job.deviz)||{};
+    var t=parseFloat(d.oreTinichigerie), v=parseFloat(d.oreVopsitorie);
+    var ok=false, sum=0;
+    if(isFinite(t)){sum+=t;ok=true}
+    if(isFinite(v)){sum+=v;ok=true}
+    if(!ok)return null;
+    return Math.round(sum*10)/10;
+  }
+  function expectedDays(hours){
+    if(hours==null)return null;
+    return Math.max(1, Math.ceil(hours/WM_H_PER_DAY));
+  }
+  // A munka mérése. Mindig ad választ — akkor is, ha még nincs deviz.
+  function workMetrics(job){
+    migrateJob(job);
+    var t0=wmDateOnly(ph(job,WM_PH_START).started);
+    var endPh=ph(job,WM_PH_END);
+    var t1=(endPh.status==='done')?wmDateOnly(endPh.finished):null;
+    var running=(t0!=null && t1==null);
+    var azi=wmToday();
+    var elapsed=(t0!=null)?workdaysBetween(t0, t1||azi):null;
+    var hours=devizHours(job);
+    var exp=expectedDays(hours);
+    var gap=(elapsed!=null && exp!=null)?(elapsed-exp):null;
+    return {
+      t0:t0, t1:t1, running:running, started:(t0!=null),
+      elapsed:elapsed,               // munkanap, a kezdőnapot beleértve
+      hours:hours,                   // deviz óra (tinichigerie+fényezés)
+      expected:exp,                  // várható munkanap
+      deadline:(t0!=null&&exp!=null)?addWorkdays(t0,exp):null,
+      gap:gap,                       // + = túllépés, - = gyorsabb
+      over:(gap!=null && gap>0),
+      needsReason:(gap!=null && gap>0 && !((job.gapLog||[]).length)),
+      reason:(job.gapReason||null),
+      state: (t0==null) ? 'neinceput'
+           : (exp==null) ? 'fara_deviz'
+           : (gap>0 ? 'depasit' : (t1?'gata':'in_grafic'))
+    };
+  }
+  // A GAP okának rögzítése. NEM felülír: naplóz, mert egy munkán több ok is lehet.
+  function setGapReason(job, reason, note){
+    if(GAP_REASONS.indexOf(reason)<0) return {ok:false, error:'unknown_reason'};
+    migrateJob(job);
+    var m=workMetrics(job);
+    if(!job.gapLog)job.gapLog=[];
+    job.gapLog.push({reason:reason, note:note||'', gap:m.gap, at:nowISO(job), phase:job.phase||null});
+    job.gapReason=reason;
+    return {ok:true, job:job, metrics:m};
+  }
+
   // ---- Böngésző: fázisoldal-őr + állapotsáv ---------------------------
   function pathnamePhase(pathname){
     var map={recepcio:1,evaluare:2,reconstatare:3,tinichigerie:4,vopsitorie:5,control:6,inchidere:7};
@@ -1030,6 +1131,14 @@
     completionPercent: completionPercent,
     phaseStatus: function(job,phase){ return ph(job,phase).status; },
     reasonsText: reasonsText,
+    workMetrics: workMetrics,
+    setGapReason: setGapReason,
+    devizHours: devizHours,
+    expectedDays: expectedDays,
+    workdaysBetween: workdaysBetween,
+    addWorkdays: addWorkdays,
+    GAP_REASONS: GAP_REASONS,
+    WM: {startPhase:WM_PH_START, endPhase:WM_PH_END, hoursPerDay:WM_H_PER_DAY},
     barColor: barColor,
     showBlockModal: showBlockModal,
     ask: ask,
