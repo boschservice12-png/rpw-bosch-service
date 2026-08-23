@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#dc2626">
-<!-- BUILD: DOSAR-ONEWAY-L1N 2026-08-23 -->
+<!-- BUILD: DOSAR-LIFECYCLE-L1Q 2026-08-23 -->
 <title>RedAssistance — Dosar Auto</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -125,6 +125,18 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .dd-conv:hover{background:#f0fdf4}
 .dd-bar{position:sticky;top:0;z-index:70;height:5px;background:#EEF1F4;overflow:hidden}
 .dd-bar>div{height:100%;transition:width .5s ease,background .3s ease}
+.dd-term{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:0 16px 10px;font-size:11px}
+.dd-tm{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:4px 11px;font-weight:700;border:1px solid transparent}
+.dd-tm b{font-weight:800}
+.dd-ok{background:#f0fdf4;color:#15803d;border-color:#bbf7d0}
+.dd-warn{background:#fffbeb;color:#92400e;border-color:#fde68a}
+.dd-late{background:#fef2f2;color:#b91c1c;border-color:#fecaca}
+.dd-info{background:#f1f5f9;color:#475569;border-color:#e2e8f0}
+.dd-act{border:none;border-radius:20px;padding:6px 13px;font:800 12px inherit;cursor:pointer;color:#fff}
+.dd-a2{background:#2563eb}
+.dd-a3{background:#16a34a}
+.dd-a2:hover,.dd-a3:hover{filter:brightness(.93)}
+.dd-undo{background:transparent;border:1px solid var(--b);color:var(--t3);border-radius:20px;padding:5px 11px;font:700 11px inherit;cursor:pointer}
 </style>
 </head>
 <body>
@@ -176,6 +188,23 @@ dd_flux:{ro:'Dosar de daună — fără reparație',en:'Claim file — no repair
 dd_s1:{ro:'Colectare acte',en:'Collecting documents',hu:'Iratgyűjtés'},
 dd_s2:{ro:'Predat la asigurător',en:'Handed to insurer',hu:'Átadva a biztosítónak'},
 dd_s3:{ro:'Închis',en:'Closed',hu:'Lezárva'},
+dd_predat:{ro:'Predat la asigurător',en:'Handed to insurer',hu:'Átadva a biztosítónak'},
+dd_predatQ:{ro:'Ai predat dosarul asigurătorului azi? De aici pornesc termenele legale.',en:'Handed the file to the insurer today? Legal deadlines start now.',hu:'Ma adtad át a dossziét a biztosítónak? Innentől futnak a törvényes határidők.'},
+dd_inchide:{ro:'Închide dosarul',en:'Close the file',hu:'Dosszié lezárása'},
+dd_inchideQ:{ro:'Închizi dosarul? (despăgubirea a fost rezolvată)',en:'Close the file? (compensation settled)',hu:'Lezárod a dossziét? (a kártérítés rendeződött)'},
+dd_redeschide:{ro:'Redeschide',en:'Reopen',hu:'Újranyitás'},
+dd_predat_la:{ro:'Predat',en:'Handed over',hu:'Átadva'},
+dd_zile:{ro:'zile',en:'days',hu:'napja'},
+dd_azi:{ro:'azi',en:'today',hu:'ma'},
+dd_term_constatare:{ro:'Constatare',en:'Assessment',hu:'Kárfelmérés'},
+dd_term_oferta:{ro:'Ofertă despăgubire',en:'Compensation offer',hu:'Kártérítési ajánlat'},
+dd_ramas:{ro:'mai sunt {n} zile',en:'{n} days left',hu:'még {n} nap'},
+dd_expirat:{ro:'DEPĂȘIT cu {n} zile',en:'OVERDUE by {n} days',hu:'LEJÁRT {n} napja'},
+dd_azi_expira:{ro:'expiră azi',en:'expires today',hu:'ma jár le'},
+zip_predat_t:{ro:'Arhivă descărcată',en:'Archive downloaded',hu:'Csomag letöltve'},
+zip_predat_q:{ro:'Marchezi dosarul ca predat asigurătorului? De aici pornesc termenele.',en:'Mark the file as handed to the insurer? Deadlines start now.',hu:'Megjelölöd átadottként? Innentől futnak a határidők.'},
+zip_predat_no:{ro:'Încă nu',en:'Not yet',hu:'Még nem'},
+zip_predat_yes:{ro:'Da, am predat',en:'Yes, handed over',hu:'Igen, átadtam'},
 dd_toRep:{ro:'Adaugă reparație',en:'Add repair',hu:'Javítás hozzáadása'},
 zip_missing:{ro:'Lipsesc {n} documente',en:'{n} documents missing',hu:'{n} dokumentum hiányzik'},
 zip_lead:{ro:'Poți descărca și așa, dar asigurătorul le va cere.',en:'You can download anyway, but the insurer will ask for them.',hu:'Letöltheted így is, de a biztosító kérni fogja őket.'},
@@ -217,8 +246,24 @@ function render(){
       var cls = (_st>x[1]) ? 'ok' : (_st===x[1] ? 'on' : '');
       h+='<span class="dd-st '+cls+'"><b>'+(_st>x[1]?'✓':x[1])+'</b>'+T(x[0])+'</span>';
     });
+    if(_st===1)h+='<button class="dd-act dd-a2" onclick="dosarPredat()">&#128228; '+T('dd_predat')+'</button>';
+    if(_st===2)h+='<button class="dd-act dd-a3" onclick="dosarInchide()">&#10003; '+T('dd_inchide')+'</button>';
+    if(_st>=2)h+='<button class="dd-undo" onclick="dosarInapoi()">'+T('dd_redeschide')+'</button>';
     h+='<button class="dd-conv" onclick="dosarToReparatie()">🔧 '+T('dd_toRep')+'</button>';
     h+='</div>';
+    // ── Hataridok: csak akkor, ha mar atadtuk es meg nincs lezarva
+    var _tm=(_st===2)?ddTermene(job):null;
+    if(_tm){
+      h+='<div class="dd-term"><span class="dd-tm dd-info">'+T('dd_predat_la')+' <b>'+escA(_tm.predat)+'</b> &middot; '
+        +(_tm.tel===0?T('dd_azi'):(_tm.tel+' '+T('dd_zile')))+'</span>';
+      _tm.items.forEach(function(t0){
+        var txt = t0.left===0 ? T('dd_azi_expira')
+                : (t0.left<0 ? T('dd_expirat').replace('{n}',Math.abs(t0.left))
+                             : T('dd_ramas').replace('{n}',t0.left));
+        h+='<span class="dd-tm '+t0.cls+'">'+T(t0.key)+': <b>'+txt+'</b></span>';
+      });
+      h+='</div>';
+    }
   } else {
   h+='<div class="phase-nav">';
   for(var p=1;p<=7;p++){
@@ -422,6 +467,36 @@ async function _saveActe(){
 }
 // "Megis nalunk javittat" — a dosszie atkerul a javitasi folyamatba.
 // NEM uj munkat nyit: ugyanaz a dosszie valt fluxot, hogy egy autohoz egy akta maradjon.
+// ── A dosszie eletciklusanak lepesei. Minden lepes DATUMOT is rogzit,
+//    mert a hataridok abbol szamolodnak.
+window.dosarPredat=async function(){
+  if(!JOB)return;
+  if(!confirm(T('dd_predatQ')))return;
+  JOB.dosarPredat=ddDay(0); JOB.inchis=false;
+  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
+  try{await RPWDb.patchV2(sb,JOB.id,{dosarPredat:JOB.dosarPredat},{actor:'service'})}catch(err){}
+  toast('&#128228; '+T('dd_predat')+': '+JOB.dosarPredat);
+  render();
+};
+window.dosarInchide=async function(){
+  if(!JOB)return;
+  if(!confirm(T('dd_inchideQ')))return;
+  JOB.inchis=true; JOB.dosarInchisLa=ddDay(0);
+  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
+  try{await RPWDb.patchV2(sb,JOB.id,{inchis:true,dosarInchisLa:JOB.dosarInchisLa},{actor:'service'})}catch(err){}
+  toast('&#10003; '+T('dd_inchide'));
+  render();
+};
+window.dosarInapoi=async function(){        // egy lepes vissza — tevedes eseten
+  if(!JOB)return;
+  var patch={};
+  if(JOB.inchis){ JOB.inchis=false; JOB.dosarInchisLa=null; patch={inchis:false,dosarInchisLa:null}; }
+  else if(JOB.dosarPredat){ JOB.dosarPredat=null; patch={dosarPredat:null}; }
+  else return;
+  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
+  try{await RPWDb.patchV2(sb,JOB.id,patch,{actor:'service'})}catch(err){}
+  render();
+};
 window.dosarToReparatie=async function(){
   if(!JOB)return;
   if(!confirm(T('dd_toRepQ')))return;
@@ -433,6 +508,37 @@ window.dosarToReparatie=async function(){
 };
 // Iratszamlalo — EGYETLEN forras. A csik es a szekcio ugyanezt hasznalja.
 // "Deschide dosar dauna" = MI nyitjuk -> mindig a teljes csomag.
+// ── HATARIDOK — a biztositoi atadastol futnak (Legea 132/2017 gyakorlata):
+//    3 MUNKANAP a karfelmeresre · 30 NAP a karteritesi ajanlatra.
+//    A 10 napos fizetesi hatarido az ajanlat elfogadasatol fut — azt a
+//    rendszer nem ismeri, ezert nem talalunk ki hozza datumot.
+window.ddDay=function(off){var d=new Date();d.setDate(d.getDate()+(off||0));
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+window.ddDiff=function(a,b){
+  var x=new Date(a+'T00:00:00'), y=new Date(b+'T00:00:00');
+  return Math.round((y-x)/86400000);
+};
+window.ddAddWork=function(iso,n){            // n munkanap hozzaadasa
+  var d=new Date(iso+'T00:00:00'), left=n;
+  while(left>0){ d.setDate(d.getDate()+1); var w=d.getDay(); if(w!==0&&w!==6)left--; }
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+};
+window.ddAddDays=function(iso,n){
+  var d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+};
+window.ddTermene=function(job){
+  var p=job&&job.dosarPredat;
+  if(!p||!/^\d{4}-\d{2}-\d{2}$/.test(p))return null;
+  var azi=ddDay(0);
+  var mk=function(key,due){
+    var d=ddDiff(azi,due);
+    return {key:key,due:due,left:d,cls:(d<0?'dd-late':(d<=3?'dd-warn':'dd-ok'))};
+  };
+  return {predat:p, tel:ddDiff(p,azi),
+          items:[ mk('dd_term_constatare', ddAddWork(p,3)),
+                  mk('dd_term_oferta',     ddAddDays(p,30)) ]};
+};
 window.acteCountFor=function(job){
   var DA=window.RPW_DAUNA_DOCS||[], acte=(job&&job.dosarActe)||{};
   var dd=(job&&(job.flux==='doar_dosar'||(job.flux==null&&job.doarDosar===true)));
@@ -571,6 +677,18 @@ window.exportDosarZip=async function(missing){
     document.body.appendChild(a);a.click();
     setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500);
     toast('✓ Arhivă descărcată'+(errs?(' ('+errs+' erori)'):''));
+    // Az atadas pillanata ez — ne kelljen kulon megjelolni.
+    var _dd=(JOB.flux==='doar_dosar')||(JOB.flux==null&&JOB.doarDosar===true);
+    if(_dd && !JOB.dosarPredat && !JOB.inchis && window.RPWWorkflow && RPWWorkflow.showBlockModal){
+      setTimeout(function(){
+        RPWWorkflow.showBlockModal({
+          lang:gL(), title:T('zip_predat_t'), subtitle:(JOB.plate||JOB.number||''),
+          lead:T('zip_predat_q'), items:[fn],
+          cancelText:T('zip_predat_no'), confirmText:T('zip_predat_yes'),
+          onConfirm:function(){ dosarPredat(); }
+        });
+      },900);
+    }
   }catch(e){toast('Eroare la arhivare: '+(e&&e.message||e),1);}
 };
 loadJob();
