@@ -573,7 +573,7 @@ function dataUrlToBase64(dataUrl){
 async function callOCR(base64Raw,type){
   var resp=await fetch('/.netlify/functions/ocr',{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    headers:(window.RPWAuth?RPWAuth.fnHeaders():{'Content-Type':'application/json'}),
     body:JSON.stringify({image:base64Raw,type:type})
   });
   var data=await resp.json();
