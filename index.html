@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: EDIT-JOB-L1P 2026-08-23 -->
+<!-- BUILD: FRIENDLY-DIALOGS-L1R 2026-08-23 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -500,6 +500,10 @@ m_edit_t:{ro:'Editează datele',en:'Edit details',hu:'Adatok javitasa'},
 m_edit_s:{ro:'Data se schimbă doar prin Reprogramare',en:'Date changes only via Reschedule',hu:'A datum csak Atutemezessel valtozik'},
 edit_btn:{ro:'Editează',en:'Edit',hu:'Javitas'},
 edit_ok:{ro:'Date salvate',en:'Details saved',hu:'Adatok mentve'},
+dlg_del_t:{ro:'Ștergi lucrarea?',en:'Delete the job?',hu:'Törlöd a munkát?'},
+dlg_del_s:{ro:'Trece în Coș — o poți recupera de acolo.',en:'It goes to the Bin — recoverable from there.',hu:'A Kosárba kerül — onnan visszahozható.'},
+dlg_sterge:{ro:'Șterge',en:'Delete',hu:'Törlés'},
+dlg_pastreaza:{ro:'Păstrează',en:'Keep',hu:'Marad'},
 nj_ok_prog:{ro:'Programare creata',en:'Schedule created',hu:'Programalas letrejott'},
 nj_ok_dosar:{ro:'Dosar creat (fara reparatie)',en:'File created (no repair)',hu:'Dosszie letrejott (javitas nelkul)'},
 col_data:{ro:'Data',en:'Date',hu:'Datum'},
@@ -1798,7 +1802,18 @@ window.dJ=async function(id){
   // Programált (viitoare) munka NEM törölhető — csak "Ratat"-ra állítható
   var _j=JOBS.find(function(x){return x.id===id});
   if(_j && categorizeJob(_j)==='viitoare'){toast(T('nu_sterg_programat'),1);return}
-  if(!confirm('Stergi lucrarea? / Delete job? / Törlöd?'))return;
+  var _j=JOBS.filter(function(x){return x.id===id})[0]||{};
+  if(window.RPWWorkflow&&RPWWorkflow.ask){
+    RPWWorkflow.ask({lang:L(),tone:'danger',title:T('dlg_del_t'),
+      subtitle:(_j.plate||_j.number||''),text:T('dlg_del_s'),
+      cancelText:T('dlg_pastreaza'),confirmText:T('dlg_sterge'),
+      onConfirm:function(){ _dJgo(id); }});
+    return;
+  }
+  if(!confirm(T('dlg_del_t')))return;
+  return _dJgo(id);
+};
+window._dJgo=async function(id){
   await deleteJob(id);
   toast(T('deleted'));
 };
