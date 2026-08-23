@@ -157,7 +157,8 @@ h2{font-size:15px;font-weight:800;margin-bottom:4px;display:flex;align-items:cen
     var path=JOB.id+'/'+key+'.'+ext;
     var up=await sb.storage.from(BUCKET).upload(path,blob,{contentType:blob.type||file.type||'application/octet-stream',upsert:true});
     if(up.error)throw up.error;
-    var url=sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+    // P0.6: a bucket PRIVÁT — a publikus URL halott. Aláírt URL kell.
+    var url=await RPWPhotos.signedUrl(sb,path,{bucket:BUCKET});
     return {key:key,path:path,url:url,name:file.name||(key+'.'+ext),type:blob.type||file.type||'',ts:new Date().toISOString(),src:'whatsapp'};
   }
 
