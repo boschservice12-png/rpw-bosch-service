@@ -250,6 +250,8 @@
       var P=_photos();
       if(P && typeof P.signedUrl==='function') return await P.signedUrl(sb, path, urlOpts);
       // fallback: publikus URL
+      // P0.6: privát bucketnél NINCS publikus fallback — inkább üres, mint halott link.
+      if(_cfg().STORAGE_PRIVATE===true) return '';
       try{ return sb.storage.from((urlOpts&&urlOpts.bucket)||_cfg().BUCKET||'rpw-photos').getPublicUrl(path).data.publicUrl; }
       catch(e){ return ''; }
     }
