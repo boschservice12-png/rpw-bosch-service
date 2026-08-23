@@ -1891,14 +1891,36 @@ window.submitNewJob=async function(){
 };
 // === /BELEPESI PONTOK ======================================================
 
-function isAdmin(){try{return localStorage.getItem('rpw_admin')==='1'}catch(e){return false}}
+// ── P0.5 (2026-08-23) — AZ ADMINJOG A SZERVERMUNKAMENETBŐL JÖN ──────
+// KORÁBBAN: localStorage.getItem('rpw_admin')==='1'
+// Egyetlen konzolsor adminjogot adott: törlés, visszaállítás, felülbírálás.
+// MOSTANTÓL: a bejelentkezett dolgozó szerepköre dönt (Műszakvezető /
+// Irodavezető), amit a szerver ad vissza a munkamenettel.
+// A localStorage csak UX-emlék: jogot NEM ad, csak elrejti a felületet.
+// A tényleges tiltás a szerveren van (rpw_is_manager) — a gombelrejtés
+// önmagában sosem védelem.
+var ADMIN_ROLES=['Műszakvezető','Irodavezető'];
+function isAdmin(){
+  try{
+    var A=window.RPWAuth; if(!A) return false;
+    var s=A.session(); if(!s) return false;                // nincs munkamenet → nincs jog
+    var r=String(s.rawRole||'').trim();
+    if(ADMIN_ROLES.indexOf(r)<0) return false;             // nem vezető → nincs jog
+    // a helyi kapcsoló csak KIkapcsolni tud (véletlen kattintás ellen)
+    try{ if(localStorage.getItem('rpw_admin')==='0') return false; }catch(e){}
+    return true;
+  }catch(e){ return false }
+}
 window.toggleAdmin=function(){
   try{
-    var pin=localStorage.getItem('rpw_admin_pin')||'';
-    if(isAdmin()){localStorage.setItem('rpw_admin','0');toast(T('admin_off'));render();return}
-    if(!pin){var np=prompt(T('admin_set_pin'),'');if(!np)return;localStorage.setItem('rpw_admin_pin',np);localStorage.setItem('rpw_admin','1');toast(T('admin_on'));render();return}
-    var p=prompt(T('admin_enter_pin'),'');if(p===null)return;
-    if(p===pin){localStorage.setItem('rpw_admin','1');toast(T('admin_on'))}else{toast(T('admin_wrong'),1)}
+    // P0.5: nincs tobbe helyi PIN. Aki nincs bejelentkezve -> a login oldalra.
+    var s=(window.RPWAuth&&RPWAuth.session())||null;
+    if(!s){ location.assign('rpw-login.html?next='+encodeURIComponent(location.pathname+location.search)); return; }
+    var r=String(s.rawRole||'').trim();
+    if(ADMIN_ROLES.indexOf(r)<0){ toast(T('admin_wrong'),1); return; }   // nem vezeto
+    var off=false; try{ off=localStorage.getItem('rpw_admin')==='0' }catch(e){}
+    try{ localStorage.setItem('rpw_admin', off?'1':'0') }catch(e){}
+    toast(off?T('admin_on'):T('admin_off'));
     render();
   }catch(e){}
 };
