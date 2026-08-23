@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: CE-FACEM-AZI-L1U 2026-08-23 -->
+<!-- BUILD: GAP-ASK-L1W 2026-08-23 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -337,7 +337,22 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .ck-in{flex:1;border:1.5px solid var(--b);border-radius:9px;padding:11px;font:800 15px ui-monospace,Menlo,monospace;text-align:center}
 .ck-in:focus{outline:0;border-color:var(--r)}
 .ck-hint{font:600 11px ui-monospace,Menlo,monospace;color:#1D4ED8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 11px;margin-top:8px}
-@media(max-width:620px){.az-mt{display:none}.az-q{font-size:20px}.az-av{width:64px;height:64px;flex:0 0 64px}}
+.gp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px}
+.gp-b{border:1.5px solid var(--b);background:#fff;border-radius:11px;padding:11px 12px;cursor:pointer;text-align:left}
+.gp-b:hover{border-color:#9AA3AE;background:#FAFBFC}
+.gp-b.on{border-color:#E11D2E;background:#fef2f2}
+.gp-b b{display:block;font:800 13px inherit;color:var(--t1)}
+.gp-b i{display:block;font:600 11px inherit;color:var(--t3);font-style:normal;margin-top:2px}
+.gp-b.own{border-style:dashed}
+.gp-b.own.on{border-style:solid;border-color:#B91C1C;background:#fee2e2}
+.gp-note{margin:0 14px 12px}
+.gp-note input{width:100%;border:1.5px solid var(--b);border-radius:9px;padding:11px;font:600 13px inherit}
+.gp-note input:focus{outline:0;border-color:var(--r)}
+.gp-why{font:600 11px ui-monospace,Menlo,monospace;color:var(--t3);padding:0 14px 12px;line-height:1.5}
+.az-gapb{border:1px solid #fecaca;background:#fef2f2;color:#B91C1C;border-radius:8px;padding:6px 10px;
+ font:800 11px ui-monospace,Menlo,monospace;cursor:pointer;margin-left:6px}
+.az-gapb:hover{background:#fee2e2}
+@media(max-width:620px){.gp-grid{grid-template-columns:1fr}.az-mt{display:none}.az-q{font-size:20px}.az-av{width:64px;height:64px;flex:0 0 64px}}
 </style>
 </head>
 <body>
@@ -630,6 +645,26 @@ ck_skip:{ro:'Mai târziu',en:'Later',hu:'Később'},
 ck_da:{ro:'Da',en:'Yes',hu:'Igen'},
 ck_nu:{ro:'Nu încă',en:'Not yet',hu:'Még nem'},
 ck_expl:{ro:'Din ore rezultă durata așteptată: {n} zile lucrătoare (4 h/zi).',en:'The hours give the expected duration: {n} working days (4 h/day).',hu:'Az órákból jön a várható átfutás: {n} munkanap (4 ó/nap).'},
+gap_t:{ro:'Unde e problema?',en:'Where is the problem?',hu:'Hol a baj?'},
+gap_s:{ro:'{n} zile peste durata asteptata ({a} h → {e} zile). Ce a blocat?',en:'{n} days over the expected duration ({a} h → {e} days). What blocked it?',hu:'{n} nappal a várható átfutás fölött ({a} ó → {e} nap). Mi akadályozta?'},
+gap_why:{ro:'Raspunsul se noteaza acum, cat e proaspat — peste o luna nu-si mai aminteste nimeni.',en:'The answer is recorded now, while fresh — in a month nobody remembers.',hu:'A válasz most rögzül, amíg friss — egy hónap múlva senki nem emlékszik.'},
+gap_note:{ro:'Detaliu (optional)',en:'Detail (optional)',hu:'Részlet (nem kötelező)'},
+gap_r_piese:{ro:'Piese',en:'Parts',hu:'Alkatrész'},
+gap_r_piese_s:{ro:'am asteptat livrarea',en:'waited for delivery',hu:'szállításra vártunk'},
+gap_r_asigurator:{ro:'Asigurator',en:'Insurer',hu:'Biztosító'},
+gap_r_asigurator_s:{ro:'am asteptat raspunsul',en:'waited for their answer',hu:'a válaszukra vártunk'},
+gap_r_capacitate:{ro:'Capacitate',en:'Capacity',hu:'Kapacitás'},
+gap_r_capacitate_s:{ro:'om sau post ocupat',en:'staff or bay busy',hu:'ember vagy hely foglalt'},
+gap_r_vreme:{ro:'Vreme',en:'Weather',hu:'Időjárás'},
+gap_r_vreme_s:{ro:'conditii de vopsire',en:'painting conditions',hu:'fényezési feltételek'},
+gap_r_garantie:{ro:'Garantie',en:'Warranty',hu:'Garancia'},
+gap_r_garantie_s:{ro:'reparatie repetata',en:'repeat repair',hu:'ismételt javítás'},
+gap_r_fara_motiv:{ro:'Fara motiv',en:'No reason',hu:'Nincs indok'},
+gap_r_fara_motiv_s:{ro:'aici e problema noastra',en:'this one is on us',hu:'ez a mi hibánk'},
+gap_saved:{ro:'Motiv notat',en:'Reason recorded',hu:'Ok rögzítve'},
+gap_pick:{ro:'Alege un motiv',en:'Pick a reason',hu:'Válassz okot'},
+gap_btn:{ro:'De ce?',en:'Why?',hu:'Miért?'},
+gap_logged:{ro:'notat: {r}',en:'recorded: {r}',hu:'rögzítve: {r}'},
 ck_ok:{ro:'Salvat',en:'Saved',hu:'Mentve'},
 dlg_del_t:{ro:'Ștergi lucrarea?',en:'Delete the job?',hu:'Törlöd a munkát?'},
 dlg_del_s:{ro:'Trece în Coș — o poți recupera de acolo.',en:'It goes to the Bin — recoverable from there.',hu:'A Kosárba kerül — onnan visszahozható.'},
@@ -2110,7 +2145,9 @@ function azBuild(){
     rows:itt.map(function(j){var m=azWM(j);
       return{id:j.id,pl:j.plate,nr:j.number,
         tg:{t:String(T('ph'+(j.phase||1))||'').toUpperCase(),c:(m&&m.over?'azc-red':'azc-gry')},
-        mt:(m&&m.over?('GAP +'+m.gap+'z'):''),ab:{t:T('az_open'),c:'',f:'oP'},ph:j}}),
+        mt:(m&&m.over?('GAP +'+m.gap+'z'):''),ab:{t:T('az_open'),c:'',f:'oP'},ph:j,
+        gap:(m&&m.needsReason)?m:null,
+        gapdone:(m&&m.over&&!m.needsReason&&j.gapReason)?j.gapReason:null}}),
     em:T('az_none')});
 
   var surgos=0;
@@ -2175,6 +2212,8 @@ window.azRender=function(){
       if(r.tg&&r.tg.t)h+='<span class="az-tg '+r.tg.c+'">'+escH(r.tg.t)+'</span>';
       h+='<span class="az-mt">'+(r.mt||'')+'</span>';
       h+='<button class="az-ab '+(r.ab.c||'')+'" onclick="azGo(\''+r.ab.f+'\',\''+r.id+'\')">'+escH(r.ab.t)+'</button>';
+      if(r.gap)h+='<button class="az-gapb" onclick="event.stopPropagation();gapOpen(\''+r.id+'\')">'+escH(T('gap_btn'))+'</button>';
+      if(r.gapdone)h+='<span class="az-tg azc-gry" style="margin-left:6px">'+escH(T('gap_logged').replace('{r}',T('gap_r_'+r.gapdone)||r.gapdone))+'</span>';
       if(r.ph)h+=azPhases(r.ph);
       h+='</div>';
     });
@@ -2268,6 +2307,56 @@ window.azCkSave=async function(){
   await saveJob(job);
   azCkClose(); toast(T('ck_ok')); render();
   if(document.getElementById('azOv')&&document.getElementById('azOv').style.display!=='none')azRender();
+};
+
+
+// ── GAP-KERDES: a rendszer nem vadol, hanem KERDEZ.
+//    Az okot akkor rogzitjuk, amikor meg friss.
+window.gapId=null; window.gapPick=null; window.gapNote='';
+window.gapOpen=function(id){
+  var j=JOBS.filter(function(x){return x.id===id})[0]; if(!j)return;
+  gapId=id; gapPick=null; gapNote='';
+  gapRender();
+};
+function gapRender(){
+  var j=JOBS.filter(function(x){return x.id===gapId})[0]; if(!j)return;
+  var m=(window.RPWWorkflow&&RPWWorkflow.workMetrics)?RPWWorkflow.workMetrics(j):null;
+  if(!m)return;
+  var el=document.getElementById('gapOv');
+  if(!el){el=document.createElement('div');el.id='gapOv';el.className='az-ov';el.style.zIndex=2200;document.body.appendChild(el)}
+  el.style.display='flex';
+  var R=(window.RPWWorkflow&&RPWWorkflow.GAP_REASONS)||['piese','asigurator','capacitate','vreme','garantie','fara_motiv'];
+  var h='<div class="az-box" style="max-width:540px">';
+  h+='<div class="az-hd" style="background:linear-gradient(135deg,#3a0e12 0%,#6b171f 100%)">';
+  h+='<div class="az-av" style="width:64px;height:64px;flex:0 0 64px;background-image:url(rpw-mascot.png);box-shadow:0 4px 14px rgba(0,0,0,.35),0 0 0 2px #E11D2E"></div><div>';
+  h+='<div class="az-hi">'+escH((j.plate||'')+' · '+(j.number||''))+'</div>';
+  h+='<div class="az-q" style="font-size:20px">'+escH(T('gap_t'))+'</div>';
+  h+='<div class="az-dt">'+escH(T('gap_s').replace('{n}',m.gap).replace('{a}',m.hours).replace('{e}',m.expected))+'</div>';
+  h+='</div><button class="az-x" onclick="gapClose()">&times;</button></div>';
+  h+='<div class="gp-grid">';
+  R.forEach(function(r){
+    var own=(r==='fara_motiv');
+    h+='<button class="gp-b'+(own?' own':'')+(gapPick===r?' on':'')+'" onclick="gapSet(\''+r+'\')">';
+    h+='<b>'+escH(T('gap_r_'+r)||r)+'</b><i>'+escH(T('gap_r_'+r+'_s')||'')+'</i></button>';
+  });
+  h+='</div>';
+  h+='<div class="gp-note"><input id="gapNoteIn" placeholder="'+escA(T('gap_note'))+'" value="'+escA(gapNote)+'" oninput="gapNote=this.value"/></div>';
+  h+='<div class="gp-why">'+escH(T('gap_why'))+'</div>';
+  h+='<div class="az-ft"><button class="az-fb az-f1" onclick="gapClose()">'+T('ck_skip')+'</button>';
+  h+='<button class="az-fb az-f2" onclick="gapSave()">'+T('ck_save')+'</button></div></div>';
+  el.innerHTML=h;
+}
+window.gapSet=function(r){gapPick=r;gapRender()};
+window.gapClose=function(){var el=document.getElementById('gapOv');if(el)el.style.display='none';gapId=null};
+window.gapSave=async function(){
+  if(!gapPick){toast(T('gap_pick'),1);return}
+  var job=await freshJob(gapId); if(!job){gapClose();return}
+  var res=(window.RPWWorkflow&&RPWWorkflow.setGapReason)?RPWWorkflow.setGapReason(job,gapPick,gapNote):null;
+  if(!res||!res.ok){toast('?',1);return}
+  await saveJob(job);
+  gapClose(); toast(T('gap_saved')); render();
+  var ov=document.getElementById('azOv');
+  if(ov&&ov.style.display!=='none')azRender();
 };
 
 // Auto-refresh every 10 seconds
