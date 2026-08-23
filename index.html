@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: GAP-ASK-L1W 2026-08-23 -->
+<!-- BUILD: TYPO-UNIFY-L1X 2026-08-23 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -193,11 +193,11 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .stat-cell-val{font-size:22px;font-weight:800;margin-top:2px}
 .tbl-wrap{margin:16px 24px;background:var(--w);border:1px solid var(--b);border-radius:var(--rd);overflow-x:auto}
 .tbl{width:100%;border-collapse:collapse;min-width:600px}
-.tbl thead th{padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--r);border-bottom:1px solid var(--b)}
+.tbl thead th{padding:12px 16px;text-align:left;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--b)}
 .tbl thead th.c{text-align:center}
 .tbl tbody tr{border-bottom:1px solid var(--bg)}.tbl tbody tr:last-child{border-bottom:none}
 .tbl tbody tr:hover{background:var(--r50)}
-.tbl td{padding:10px 16px;font-size:13px;vertical-align:middle}.tbl td.c{text-align:center}
+.tbl td{padding:12px 16px;font-size:13px;vertical-align:middle}.tbl td.c{text-align:center}
 .badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:10px;font-weight:700}
 .badge-r{background:var(--r100);color:var(--r700)}.badge-g{background:var(--gl);color:var(--g)}.badge-y{background:var(--yl);color:var(--y)}.badge-bl{background:var(--bll);color:var(--bl)}.badge-p{background:var(--pl);color:var(--p)}.badge-or{background:var(--orl);color:var(--or)}.badge-tl{background:var(--tll);color:var(--tl)}
 .prog{height:4px;background:var(--bg);border-radius:2px;display:flex;gap:1px;overflow:hidden;width:100px}
@@ -911,7 +911,7 @@ function render(){
       var ed=(S.editJobId===j.id);
       function inp(f,v,ph){return '<input class="cell-inp" value="'+escA(v||'')+'" placeholder="'+ph+'" onchange="updJobField(\''+j.id+'\',\''+f+'\',this.value)"/>'}
       h+='<tr><td class="mono" style="font-weight:800">'+(ed?inp('number',j.number,'Nr'):escH(j.number||j.id))+'</td>';
-      h+='<td>'+(ed?inp('auto',j.auto,'Auto')+inp('plate',j.plate,'Nr. inmatr.')+inp('vin',j.vin,'VIN'):(escH(j.auto||'—')+'<br><span style="font-size:10px;color:var(--t3)">'+escH(j.plate||'')+' '+(j.vin?'· '+escH(j.vin.slice(-6)):'')+'</span>'))+'</td>';
+      h+='<td>'+(ed?inp('auto',j.auto,'Auto')+inp('plate',j.plate,'Nr. inmatr.')+inp('vin',j.vin,'VIN'):(escH(j.auto||'—')+'<br><span class="mono" style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.4px">'+escH(j.plate||'')+'</span>'+(j.vin?'<span class="mono" style="font-size:10px;color:var(--t3)"> · '+escH(j.vin.slice(-6))+'</span>':'')))+'</td>';
       h+='<td>'+(ed?inp('client',j.client,'Client')+inp('phone',j.phone,'Telefon'):(escH(j.client||'—')+'<br><span style="font-size:10px;color:var(--t3)">'+escH(j.phone||'')+'</span>'))+'</td>';
       h+='<td><span class="badge '+phBadge(j.phase)+'">'+T(PK[j.phase-1])+'</span></td>';
       h+='<td><div class="prog">';for(var p=1;p<=7;p++){var pc2=p<j.phase?'psg':p===j.phase?(p===3?'psy':'psr'):'pse';h+='<div class="prog-s '+pc2+'"></div>'}h+='</div></td>';
@@ -1097,7 +1097,7 @@ function renderPanou(){
       h+='<tr class="panou-row '+rowCls+'" ondblclick="openCondModal(\''+j.id+'\')">';
       h+='<td><div style="font-weight:700">'+escH(j.client||j.proprietar||'—')+'</div><div style="font-size:10px;color:var(--t3)">'+escH(j.number||j.id||'')+'</div></td>';
       var _dd=(j.flux==='doar_dosar')||(j.flux==null&&j.doarDosar===true);
-      h+='<td class="mono" style="font-weight:700">'+escH(j.plate||'—')
+      h+='<td class="mono" style="font-weight:700;letter-spacing:.4px">'+escH(j.plate||'—')
         +(_dd?' <span class="fx-b fx-d" title="'+T('badge_dosar')+'">&#128193;</span>'
              :' <span class="fx-b fx-p" title="'+T('badge_prog')+'">&#128197;</span>')+'</td>';
       h+='<td class="pg-cell">'+progCell(j)+'</td>';
