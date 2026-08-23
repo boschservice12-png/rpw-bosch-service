@@ -1,3 +1,4 @@
+/* BUILD: P0.7-FN-AUTH-MANDATORY 2026-08-23 */
 // RPW Netlify functions — közös keményítő helper (PHASE 2)
 // CORS-allowlist, méret/typus-validáció, biztonságos hiba, e-mail/melléklet ellenőrzés,
 // magic-byte média-detektálás, best-effort rate-limit, opcionális JWT-auth hook.
@@ -88,21 +89,57 @@ function rateLimited(event, opts){
   b.n++; return b.n > max;
 }
 
-// Opcionális JWT-auth (PHASE 3 kapcsolja be a REQUIRE_FN_AUTH env-vel).
-// Alapból KI van kapcsolva, hogy a jelenlegi kliens ne törjön. Ha be van kapcsolva,
-// a Supabase auth tokent várja Authorization: Bearer fejlécben.
+// ── P0.7 (2026-08-23) — KÖTELEZŐ HITELESÍTÉS ─────────────────────
+// KÉT hiba volt itt:
+//   1) `if(!process.env.REQUIRE_FN_AUTH) return {ok:true}` — a hitelesítés
+//      egy be nem állított környezeti változótól függött, tehát MINDEN
+//      hívás átment. Token nélkül futott az OCR és a levélküldés.
+//   2) Supabase Auth JWT-t ellenőrzött (`/auth/v1/user`), mi viszont SAJÁT
+//      munkamenet-tokent használunk (rpw_login → app_session). A kettő nem
+//      ugyanaz: a mi tokenünket ez SOHA nem fogadta volna el.
+// MOSTANTÓL: a saját rpw_session RPC dönt, és a hitelesítés KÖTELEZŐ.
+// A CORS nem jogosultság — az csak azt mondja meg, melyik oldal HÍVHAT.
 async function requireAuth(event){
-  if(!process.env.REQUIRE_FN_AUTH) return { ok:true, skipped:true };
   var h = (event.headers && (event.headers.authorization||event.headers.Authorization)) || '';
   var token = h.replace(/^Bearer\s+/i,'').trim();
-  if(!token) return { ok:false, code:401, error:'Autentificare necesară' };
+  if(!token || token.length < 32) return { ok:false, code:401, error:'Autentificare necesară' };
+  var url = process.env.SUPABASE_URL, key = process.env.SUPABASE_ANON_KEY;
+  if(!url || !key){
+    // Hiányzó szerverkonfig: NEM engedünk át. Inkább áll a funkció,
+    // mint hogy csendben hitelesítés nélkül fusson.
+    return { ok:false, code:500, error:'Configurare server incompletă' };
+  }
   try{
-    var url = process.env.SUPABASE_URL, key = process.env.SUPABASE_ANON_KEY;
-    var r = await fetch(url + '/auth/v1/user', { headers:{ 'apikey':key, 'Authorization':'Bearer '+token } });
+    var r = await fetch(url + '/rest/v1/rpc/rpw_session', {
+      method:'POST',
+      headers:{ 'apikey':key, 'Authorization':'Bearer '+key, 'Content-Type':'application/json' },
+      body: JSON.stringify({ p_token: token })
+    });
     if(!r.ok) return { ok:false, code:401, error:'Token invalid' };
-    var u = await r.json();
-    return { ok:true, user:u };
+    var out = await r.json();
+    if(typeof out === 'string'){ try{ out = JSON.parse(out); }catch(e){ out = null; } }
+    if(!out || out.ok !== true) return { ok:false, code:401, error:'Sesiune expirată' };
+    var emp = out.employee || {};
+    return { ok:true, user:emp, shopId:emp.shop_id, name:emp.name, role:emp.role };
   }catch(e){ return { ok:false, code:401, error:'Auth eșuat' }; }
 }
 
-module.exports = { corsHeaders, resp, tooLarge, validEmail, safeAttachment, detectMedia, validateClassify, flagUncertain, rateLimited, requireAuth, allowedOrigins, ALLOWED_EXT, CLASSIFY_TYPES };
+// A hívott munka a hívó szervizéhez tartozik-e? (OCR/classify csak saját munkán)
+async function ownsJob(auth, jobId){
+  if(!jobId) return true;                      // munkához nem kötött hívás
+  var url = process.env.SUPABASE_URL, key = process.env.SUPABASE_ANON_KEY;
+  if(!url || !key) return false;
+  try{
+    var r = await fetch(url + '/rest/v1/rpc/rpw_job_get', {
+      method:'POST',
+      headers:{ 'apikey':key, 'Authorization':'Bearer '+key, 'Content-Type':'application/json' },
+      body: JSON.stringify({ p_token: auth.__token, p_id: jobId })
+    });
+    if(!r.ok) return false;
+    var out = await r.json();
+    if(typeof out === 'string'){ try{ out = JSON.parse(out); }catch(e){ out = null; } }
+    return !!(out && out.ok === true);
+  }catch(e){ return false; }
+}
+
+module.exports = { corsHeaders, resp, tooLarge, validEmail, safeAttachment, detectMedia, validateClassify, flagUncertain, rateLimited, requireAuth, ownsJob, allowedOrigins, ALLOWED_EXT, CLASSIFY_TYPES };
