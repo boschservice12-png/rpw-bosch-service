@@ -133,9 +133,20 @@
   // 'service' — hogy a regi viselkedes ne torjon el.
   function actor(opts){ var n=name(opts); return (n&&String(n).trim())||'service'; }
 
+  // ── P0.7 (2026-08-23) — a Netlify funkciok hitelesito fejlece ────
+  // Az OCR / classify / sendmail mostantol KOTELEZOEN tokent var.
+  // Egy helyen keszitjuk, hogy ne maradjon ki sehol.
+  function fnHeaders(extra, opts){
+    var h = extra || {};
+    if(!h['Content-Type']) h['Content-Type']='application/json';
+    var t = token(opts);
+    if(t) h['Authorization'] = 'Bearer ' + t;
+    return h;
+  }
+
   var API={ required:required, session:session, role:role, rawRole:rawRole, name:name, token:token,
             employeeId:employeeId, shopId:shopId, login:login, logout:logout, guard:guard,
-            logoutServer:logoutServer, verify:verify, team:team, actor:actor, KEY:KEY };
+            logoutServer:logoutServer, verify:verify, team:team, actor:actor, fnHeaders:fnHeaders, KEY:KEY };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWAuth=API;
 })(typeof self!=='undefined'?self:(typeof window!=='undefined'?window:globalThis));
