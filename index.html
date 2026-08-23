@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: ECHIPA-L2C 2026-08-23 -->
+<!-- BUILD: ECHIPA-PINSTATE-L2D 2026-08-23 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -642,7 +642,12 @@ ec_pin_set:{ro:'Setează PIN',en:'Set PIN',hu:'PIN beállítás'},
 ec_pin_t:{ro:'PIN nou pentru {n}',en:'New PIN for {n}',hu:'Új PIN — {n}'},
 ec_pin_s:{ro:'Minim 4 cifre. ATENȚIE: același PIN se folosește și în Red ERP.',en:'At least 4 digits. NOTE: the same PIN is used in Red ERP.',hu:'Legalább 4 számjegy. FIGYELEM: ugyanez a PIN a Red ERP-ben is.'},
 ec_pin_ok:{ro:'PIN setat',en:'PIN set',hu:'PIN beállítva'},
-ec_haspin:{ro:'are PIN',en:'has PIN',hu:'van PIN'},
+ec_haspin:{ro:'PIN OK',en:'PIN OK',hu:'PIN OK'},
+ec_pinat:{ro:'setat {d}',en:'set {d}',hu:'beállítva {d}'},
+ec_pinself:{ro:'schimbat de el',en:'self-changed',hu:'ő módosította'},
+ec_lastin:{ro:'ultima intrare {d}',en:'last login {d}',hu:'utolsó belépés {d}'},
+ec_never:{ro:'nu s-a autentificat niciodată',en:'never signed in',hu:'még nem lépett be'},
+ec_summary:{ro:'{a} din {b} au PIN · {c} s-au autentificat',en:'{a} of {b} have a PIN · {c} signed in',hu:'{a}/{b} embernek van PIN-je · {c} lépett már be'},
 ec_nopin:{ro:'FĂRĂ PIN',en:'NO PIN',hu:'NINCS PIN'},
 ec_login:{ro:'Autentifică-te ca să vezi echipa',en:'Sign in to see the team',hu:'Jelentkezz be a csapat megtekintéséhez'},
 ec_gologin:{ro:'Autentificare',en:'Sign in',hu:'Belépés'},
@@ -2491,6 +2496,10 @@ function renderEchipa(){
       }
     }
   } else {
+    var nPin=EC.team.filter(function(e){return e.has_pin}).length;
+    var nIn =EC.team.filter(function(e){return e.last_login}).length;
+    h+='<div class="ec-bar" style="margin-bottom:10px"><span class="ec-tag '+(nPin>=EC.team.length?'ec-ok':'ec-no')+'">'
+      +escH(T('ec_summary').replace('{a}',nPin).replace('{b}',EC.team.length).replace('{c}',nIn))+'</span></div>';
     EC.team.forEach(function(e){
       h+='<div class="ec-row"><span class="ec-nm">'+escH(e.name)+'</span>';
       h+='<span class="ec-rl">'+escH(e.role||'')+'</span>';
@@ -2499,6 +2508,12 @@ function renderEchipa(){
       var posts=EC.posts.filter(function(p){return p.employee_id===e.id})
                         .map(function(p){return p.code});
       if(posts.length)h+='<span class="ec-tag" style="background:#DBEAFE;color:#1D4ED8">'+escH(posts.join(' '))+'</span>';
+      // PIN-allapot — enelkul nem latszik, tortent-e valami
+      h+='<span class="ec-tag '+(e.has_pin?'ec-ok':'ec-no')+'">'+escH(e.has_pin?T('ec_haspin'):T('ec_nopin'))+'</span>';
+      var inf=[];
+      if(e.pin_set_at)inf.push(T('ec_pinat').replace('{d}',e.pin_set_at)+(e.pin_self?(' · '+T('ec_pinself')):''));
+      inf.push(e.last_login?T('ec_lastin').replace('{d}',e.last_login):T('ec_never'));
+      h+='<span class="ec-dp" style="min-width:210px;text-align:right">'+escH(inf.join(' · '))+'</span>';
       if(EC.manager)h+='<button class="ec-btn" onclick="ecPin(\''+e.id+'\',\''+escA(e.name).replace(/'/g,"")+'\')">'+T('ec_pin_set')+'</button>';
       h+='</span></div>';
     });
@@ -2561,6 +2576,7 @@ window.ecPinSave=async function(empId, pin){
     var o=r&&r.data; if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){o=null}}
     if(!o||!o.ok){ toast((o&&o.error)||'?',1); return; }
     toast(T('ec_pin_ok'));
+    await ecLoad(true);            // hogy AZONNAL latszodjon a valtozas
   }catch(e){ toast('?',1) }
 };
 
