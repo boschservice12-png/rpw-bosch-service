@@ -558,7 +558,7 @@ window.emailReconst=async function(){
       var nmF=String(rws[ri].name||('element_'+(ri+1))).replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,30)||('element_'+(ri+1));
       for(var pi=0;pi<rp.length;pi++){if(rp[pi]&&rp[pi].indexOf(',')>0)atts.push({filename:(ri+1)+'_'+nmF+'_'+(pi+1)+'.jpg',content:rp[pi].split(',')[1]})}
     }
-    var res=await fetch('/.netlify/functions/sendmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:to,from_name:fromName,reply_to:replyTo,subject:subj,text:body,attachments:atts})});
+    var res=await fetch('/.netlify/functions/sendmail',{method:'POST',headers:(window.RPWAuth?RPWAuth.fnHeaders():{'Content-Type':'application/json'}),body:JSON.stringify({to:to,from_name:fromName,reply_to:replyTo,subject:subj,text:body,attachments:atts})});
     var data=await res.json().catch(function(){return{}});
     if(!res.ok||!data.ok){toast('Eroare email: '+(data.error||res.status),1);return}
     toast('Email trimis ✓ ('+atts.length+' atasamente)');
