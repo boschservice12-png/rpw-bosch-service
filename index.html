@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: PIN-SECURITY 2026-08-24 -->
+<!-- BUILD: DOSAR-FIX 2026-08-24 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -559,6 +559,7 @@ prog_dauna:{ro:'Dosar daună (asigurare) — deschide dosarul',en:'Damage file (
 receptie_auto:{ro:'Receptie auto',en:'Car reception',hu:'Auto atvetel'},
 dosar_dauna:{ro:'Dosar dauna',en:'Damage file',hu:'Kardosszie'},
 dosar_q:{ro:'Autovehiculul este in service?',en:'Is the car at the shop?',hu:'Az auto itt van a szervizben?'},
+dosar_tarziu:{ro:'Auto vine mai tarziu — doar dosarul',en:'Car comes later — file only',hu:'Az auto kesobb jon — csak a dosszie'},
 dosar_aici:{ro:'Auto este aici — receptie acum',en:'Car is here — reception now',hu:'Itt van — atvetel most'},
 dosar_fisier:{ro:'Preluare date din fisier (constatare / PV)',en:'Import data from file',hu:'Adatok atvetele fajlbol'},
 dosar_citire:{ro:'Se citeste documentul...',en:'Reading document...',hu:'Dokumentum beolvasasa...'},
@@ -1238,6 +1239,11 @@ function renderPanou(){
     h+='<div class="prog-t">'+T('dosar_dauna')+'</div>';
     h+='<div class="prog-s">'+T('dosar_q')+'</div>';
     h+='<button class="btn-prog-new" style="width:100%;margin-bottom:8px;justify-content:center" onclick="dosarAici()">'+T('dosar_aici')+'</button>';
+    // ── HIÁNYZÓ HARMADIK ÚT (2026-08-24) ────────────────────────
+    // A `dosarTarziu()` a kódban MEGVOLT, de gomb NEM hívta —
+    // halott kód. Ez az az eset, amikor a kárbejelentés megvan,
+    // de az autót csak később hozzák be.
+    h+='<button class="btn-prog-new" style="width:100%;margin-bottom:8px;justify-content:center;background:#F3F4F6;color:#374151" onclick="dosarTarziu()">'+T('dosar_tarziu')+'</button>';
     h+='<label class="btn-prog-new" style="width:100%;background:var(--bl,#2563eb);justify-content:center;position:relative;display:flex;cursor:pointer;box-sizing:border-box">'+T('dosar_fisier')+'<input type="file" accept="image/*,.pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0" onchange="dosarFisier(event)"/></label>';
     h+='</div></div>';
   }
@@ -1991,12 +1997,22 @@ window.dosarFisier=function(e){
         id:(window.RPWUtil?RPWUtil.jobId():('RPW-'+String(Date.now()).slice(-6))),number:num,
         auto:'',vin:'',plate:v(p.plate).toUpperCase(),
         client:v(p.proprietar),phone:'',
-        note:'',szinkod:'',damageType:'asig',created:now,phase:0,
+        note:'',szinkod:'',damageType:'asig',created:now,
+        // ── JAVÍTÁS (2026-08-24) ──────────────────────────────
+        // Enélkül a panel ELŐJEGYZÉSNEK látta (📅), nem dossziénak
+        // (📁), mert az `_dd` a `flux`/`doarDosar` mezőt vizsgálja
+        // (1197. sor). Így nem is lehetett tovább vinni a dossziét.
+        flux:'doar_dosar',        // csak dosszié — az autó még nincs itt
+        doarDosar:true,           // a régi mező is, a visszafelé olvasáshoz
+        dosarStatus:'deschid',    // most nyitjuk a biztosító felé
+        sosire:'viitor',          // még nem érkezett meg
+        inchis:false,
+        phase:1,                  // a `phase` érvényes tartománya 1..7 (volt: 0)
         nrDosar:v(p.nrDosar),proprietarDosar:v(p.proprietar),asigurator:v(p.asigurator),
         photos:[],docs:[{type:'constatare',data:dataUrl,ts:now}],panels:{},elements:{},materials:[],
         programare:{date:null,time:null,confirmed:false,status:'viitor'},
         conditions:{programare:true,loc:false,om:false,piese:false,whatsapp:false},
-        phases:{1:{status:'pending'},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}}
+        phases:{1:{status:'active',started:now},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}}
       };
       if(p.daune)j.listaDauneRaw=JSON.stringify(p.daune,null,2);
       JOBS.push(j);
@@ -2004,6 +2020,13 @@ window.dosarFisier=function(e){
       S.panouTab='viitoare';
       toast('Dosar creat: '+(j.nrDosar||'?')+' · '+(j.asigurator||'?')+' · '+(j.proprietarDosar||'?'));
       render();
+      // ── JAVÍTÁS: VIGYEN a dosszié lapra ────────────────────
+      // Korábban csak visszatért a panelra: az OCR lefutott, a
+      // dosszié létrejött, de a felhasználó nem jutott sehova —
+      // és meg kellett keresnie a listában.
+      setTimeout(function(){
+        location.assign('rpw-dosar.html?job='+encodeURIComponent(j.id));
+      }, 700);
     }catch(err){toast('OCR eroare: '+err.message)}
   };
   r.readAsDataURL(f);
