@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: P0.1-GUARD-ORDER 2026-08-23 -->
+<!-- BUILD: OWN-STAFF-L3A 2026-08-23 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -644,6 +644,29 @@ ec_pin:{ro:'PIN',en:'PIN',hu:'PIN'},
 ec_pin_set:{ro:'Setează PIN',en:'Set PIN',hu:'PIN beállítás'},
 ec_pin_t:{ro:'PIN nou pentru {n}',en:'New PIN for {n}',hu:'Új PIN — {n}'},
 ec_pin_s:{ro:'Minim 4 cifre. ATENȚIE: același PIN se folosește și în Red ERP.',en:'At least 4 digits. NOTE: the same PIN is used in Red ERP.',hu:'Legalább 4 számjegy. FIGYELEM: ugyanez a PIN a Red ERP-ben is.'},
+ec_add_emp:{ro:'+ Adaugă coleg',en:'+ Add colleague',hu:'+ Új munkatárs'},
+ec_add_role:{ro:'+ Adaugă rol',en:'+ Add role',hu:'+ Új szerepkör'},
+ec_tab_r:{ro:'Roluri',en:'Roles',hu:'Szerepkörök'},
+ec_name:{ro:'Nume',en:'Name',hu:'Név'},
+ec_role:{ro:'Rol',en:'Role',hu:'Szerepkör'},
+ec_phone:{ro:'Telefon',en:'Phone',hu:'Telefon'},
+ec_left:{ro:'A plecat',en:'Left',hu:'Kilépett'},
+ec_show_left:{ro:'Arată foștii',en:'Show former',hu:'Kilépettek is'},
+ec_reactivate:{ro:'Reactivează',en:'Reactivate',hu:'Visszavesz'},
+ec_leave:{ro:'Scoate din echipă',en:'Remove from team',hu:'Kiléptetés'},
+ec_leave_q:{ro:'Scoți pe {n} din echipă? PIN-ul se șterge și sesiunile se închid.',en:'Remove {n}? The PIN is deleted and sessions closed.',hu:'Kilépteted {n}-t? A PIN törlődik és a munkamenetek lezárulnak.'},
+ec_perm_team:{ro:'Echipă și PIN',en:'Team and PIN',hu:'Csapat és PIN'},
+ec_perm_posts:{ro:'Posturi',en:'Posts',hu:'Posztok'},
+ec_perm_open:{ro:'Deschide lucrare',en:'Open job',hu:'Munkanyitás'},
+ec_perm_reception:{ro:'Recepție auto',en:'Car reception',hu:'Autó átvétel'},
+ec_perm_work:{ro:'Lucru pe faze',en:'Phase work',hu:'Fázismunka'},
+ec_perm_close:{ro:'Închidere',en:'Closing',hu:'Lezárás'},
+ec_perm_override:{ro:'Deblocare fază',en:'Phase override',hu:'Felülbírálás'},
+ec_perm_delete:{ro:'Ștergere definitivă',en:'Permanent delete',hu:'Végleges törlés'},
+ec_role_used:{ro:'{n} colegi',en:'{n} people',hu:'{n} fő'},
+ec_saved2:{ro:'Salvat',en:'Saved',hu:'Mentve'},
+ec_noperm:{ro:'Nu ai dreptul la asta.',en:'You are not allowed to do this.',hu:'Ehhez nincs jogod.'},
+ec_lastmgr:{ro:'Trebuie să rămână cineva cu drept de echipă.',en:'Someone must keep team rights.',hu:'Valakinél maradnia kell a csapat-jognak.'},
 ec_pin_min:{ro:'Minim 4 cifre',en:'At least 4 digits',hu:'Legalább 4 számjegy'},
 ec_pin_again:{ro:'Repetă PIN-ul',en:'Repeat the PIN',hu:'Ismételd meg'},
 ec_pin_diff:{ro:'A doua oară nu e la fel',en:'The two do not match',hu:'A kettő nem egyezik'},
@@ -1902,25 +1925,31 @@ window.submitNewJob=async function(){
 // A localStorage csak UX-emlék: jogot NEM ad, csak elrejti a felületet.
 // A tényleges tiltás a szerveren van (rpw_is_manager) — a gombelrejtés
 // önmagában sosem védelem.
-var ADMIN_ROLES=['Műszakvezető','Irodavezető'];
-function isAdmin(){
+// ── ÖNÁLLÓ SZEMÉLYZET (2026-08-23) ───────────────────────────────
+// A jog KAPCSOLÓKBÓL jön, nem a szerepkör NEVÉBŐL. Egy berlini szerviz
+// "Werkstattleiter"-nek hívja a vezetőt — a rendszer akkor is tudja,
+// mit tehet. A régi névlista tartalékként megmarad a régi munkamenetekhez.
+var ADMIN_ROLES=['Műszakvezető','Irodavezető'];   // régi ERP-nevek, tartalék
+function rpwCan(perm){
   try{
     var A=window.RPWAuth; if(!A) return false;
-    var s=A.session(); if(!s) return false;                // nincs munkamenet → nincs jog
-    var r=String(s.rawRole||'').trim();
-    if(ADMIN_ROLES.indexOf(r)<0) return false;             // nem vezető → nincs jog
-    // a helyi kapcsoló csak KIkapcsolni tud (véletlen kattintás ellen)
-    try{ if(localStorage.getItem('rpw_admin')==='0') return false; }catch(e){}
-    return true;
+    if(typeof A.can==='function' && A.perms && A.perms()) return A.can(perm);
+    // tartalék: régi munkamenet, kapcsolók nélkül
+    var s=A.session(); if(!s) return false;
+    return ADMIN_ROLES.indexOf(String(s.rawRole||'').trim())>=0;
   }catch(e){ return false }
+}
+function isAdmin(){
+  if(!rpwCan('team')) return false;
+  try{ if(localStorage.getItem('rpw_admin')==='0') return false; }catch(e){}
+  return true;
 }
 window.toggleAdmin=function(){
   try{
     // P0.5: nincs tobbe helyi PIN. Aki nincs bejelentkezve -> a login oldalra.
     var s=(window.RPWAuth&&RPWAuth.session())||null;
     if(!s){ location.assign('rpw-login.html?next='+encodeURIComponent(location.pathname+location.search)); return; }
-    var r=String(s.rawRole||'').trim();
-    if(ADMIN_ROLES.indexOf(r)<0){ toast(T('admin_wrong'),1); return; }   // nem vezeto
+    if(!rpwCan('team')){ toast(T('admin_wrong'),1); return; }   // nincs csapat-joga
     var off=false; try{ off=localStorage.getItem('rpw_admin')==='0' }catch(e){}
     try{ localStorage.setItem('rpw_admin', off?'1':'0') }catch(e){}
     toast(off?T('admin_on'):T('admin_off'));
@@ -2457,8 +2486,11 @@ window.gapSave=async function(){
 //  Az employees tábla a Red ERP-é — innen CSAK OLVASUNK. Az egyetlen
 //  kivétel a PIN, mert az a belépéshez kell.
 // ====================================================================
-var EC={tab:'posturi', posts:[], team:[], manager:false, loaded:false, adding:false,
-        nCode:'', nLab:'', nNote:''};
+var EC={tab:'posturi', posts:[], team:[], roles:[], me:null, manager:false, loaded:false,
+        adding:false, showLeft:false, nCode:'', nLab:'', nNote:'',
+        empId:null, eName:'', eRole:'', ePhone:'', eActive:true, eErr:'',
+        rCode:'', rLabel:'', rCan:{}, rErr:'',
+        pinFor:null, pinNev:'', pin1:'', pin2:'', pinErr:''};
 
 function ecTok(){ try{ return window.RPWAuth?RPWAuth.token():null }catch(e){ return null } }
 
@@ -2466,14 +2498,17 @@ window.ecLoad=async function(force){
   if(EC.loaded && !force) return;
   var tok=ecTok(); if(!tok){ EC.loaded=true; render(); return; }
   try{
+    var t=await sb.rpc('rpw2_team',{p_token:tok, p_include_left:!!EC.showLeft});
+    var d=t&&t.data; if(typeof d==='string'){try{d=JSON.parse(d)}catch(e){d=null}}
+    if(d&&d.ok){ EC.team=d.team||[]; EC.roles=d.roles||[]; EC.manager=(d.can_team===true); EC.me=d.me||null; }
     var a=await sb.rpc('rpw_posts_get',{p_token:tok});
     var pg=a&&a.data; if(typeof pg==='string'){try{pg=JSON.parse(pg)}catch(e){pg=null}}
-    if(pg&&pg.ok){ EC.posts=pg.posts||[]; EC.manager=(pg.manager===true); }
-    var t=await RPWAuth.team(sb);
-    if(t&&t.ok) EC.team=t.team||[];
+    if(pg&&pg.ok) EC.posts=pg.posts||[];
   }catch(e){}
   EC.loaded=true; render();
 };
+
+var EC_PERMS=['team','posts','open','reception','work','close','override','delete'];
 
 function renderEchipa(){
   var h=sbNav('echipa');
@@ -2495,10 +2530,12 @@ function renderEchipa(){
   if(!EC.manager)h+='<div class="ec-warn">'+escH(T('ec_notmgr'))+'</div>';
 
   h+='<div class="ec-tabs">';
-  h+='<button aria-pressed="'+(EC.tab==='posturi')+'" onclick="ecTab(\'posturi\')">'+T('ec_tab_p')+'</button>';
-  h+='<button aria-pressed="'+(EC.tab==='personal')+'" onclick="ecTab(\'personal\')">'+T('ec_tab_s')+'</button>';
+  [['posturi','ec_tab_p'],['personal','ec_tab_s'],['roluri','ec_tab_r']].forEach(function(x){
+    h+='<button aria-pressed="'+(EC.tab===x[0])+'" onclick="ecTab(\''+x[0]+'\')">'+T(x[1])+'</button>';
+  });
   h+='</div>';
 
+  // ══ POSZTOK ══════════════════════════════════════════════════
   if(EC.tab==='posturi'){
     EC.posts.forEach(function(p){
       h+='<div class="ec-card"><span class="ec-code">'+escH(p.code)+'</span><div>';
@@ -2506,8 +2543,8 @@ function renderEchipa(){
       if(p.note)h+='<div class="ec-note">'+escH(p.note)+'</div>';
       h+='</div><select class="ec-sel"'+(EC.manager?'':' disabled')+' onchange="ecAssign(\''+p.code+'\',this.value)">';
       h+='<option value="">'+escH(T('ec_none'))+'</option>';
-      EC.team.forEach(function(e){
-        h+='<option value="'+escA(e.id)+'"'+(e.id===p.employee_id?' selected':'')+'>'+escH(e.name)+' · '+escH(e.role||'')+'</option>';
+      EC.team.filter(function(e){return e.active}).forEach(function(e){
+        h+='<option value="'+escA(e.id)+'"'+(e.id===p.rpw_employee_id?' selected':'')+'>'+escH(e.name)+' · '+escH(e.role||'')+'</option>';
       });
       h+='</select></div>';
     });
@@ -2523,44 +2560,74 @@ function renderEchipa(){
         h+='<button class="ec-btn" onclick="EC.adding=false;render()">'+T('ec_cancel')+'</button></div>';
       }
     }
-  } else {
-    var nPin=EC.team.filter(function(e){return e.has_pin}).length;
-    var nIn =EC.team.filter(function(e){return e.last_login}).length;
-    h+='<div class="ec-bar" style="margin-bottom:10px"><span class="ec-tag '+(nPin>=EC.team.length?'ec-ok':'ec-no')+'">'
-      +escH(T('ec_summary').replace('{a}',nPin).replace('{b}',EC.team.length).replace('{c}',nIn))+'</span></div>';
+
+  // ══ SZEMÉLYZET ═══════════════════════════════════════════════
+  } else if(EC.tab==='personal'){
+    var akt=EC.team.filter(function(e){return e.active});
+    var nPin=akt.filter(function(e){return e.has_pin}).length;
+    var nIn =akt.filter(function(e){return e.last_login}).length;
+    h+='<div class="ec-bar" style="margin-bottom:10px"><span class="ec-tag '+(nPin>=akt.length?'ec-ok':'ec-no')+'">'
+      +escH(T('ec_summary').replace('{a}',nPin).replace('{b}',akt.length).replace('{c}',nIn))+'</span>';
+    h+='<label style="font-size:12px;font-weight:700;color:var(--t3);display:flex;align-items:center;gap:6px;cursor:pointer">'
+      +'<input type="checkbox"'+(EC.showLeft?' checked':'')+' onchange="EC.showLeft=this.checked;ecLoad(true)"> '+escH(T('ec_show_left'))+'</label>';
+    if(EC.manager)h+='<button class="ec-btn" style="margin-left:auto" onclick="ecEmp(null)">'+T('ec_add_emp')+'</button>';
+    h+='</div>';
+
     EC.team.forEach(function(e){
-      h+='<div class="ec-row"><span class="ec-nm">'+escH(e.name)+'</span>';
+      h+='<div class="ec-row"'+(e.active?'':' style="opacity:.55"')+'><span class="ec-nm">'+escH(e.name)+'</span>';
       h+='<span class="ec-rl">'+escH(e.role||'')+'</span>';
-      h+='<span class="ec-dp">'+escH(e.department||'')+'</span>';
+      if(e.phone)h+='<span class="ec-dp">'+escH(e.phone)+'</span>';
       h+='<span class="ec-pin">';
-      var posts=EC.posts.filter(function(p){return p.employee_id===e.id})
-                        .map(function(p){return p.code});
-      if(posts.length)h+='<span class="ec-tag" style="background:#DBEAFE;color:#1D4ED8">'+escH(posts.join(' '))+'</span>';
-      // PIN-allapot — enelkul nem latszik, tortent-e valami
-      h+='<span class="ec-tag '+(e.has_pin?'ec-ok':'ec-no')+'">'+escH(e.has_pin?T('ec_haspin'):T('ec_nopin'))+'</span>';
-      var inf=[];
-      if(e.pin_set_at)inf.push(T('ec_pinat').replace('{d}',e.pin_set_at)+(e.pin_self?(' · '+T('ec_pinself')):''));
-      inf.push(e.last_login?T('ec_lastin').replace('{d}',e.last_login):T('ec_never'));
-      h+='<span class="ec-dp" style="min-width:210px;text-align:right">'+escH(inf.join(' · '))+'</span>';
-      if(EC.manager)h+='<button class="ec-btn" onclick="ecPin(\''+e.id+'\',\''+escA(e.name).replace(/'/g,"")+'\')">'+T('ec_pin_set')+'</button>';
+      if(!e.active){
+        h+='<span class="ec-tag ec-no">'+escH(T('ec_left'))+'</span>';
+      } else {
+        if(e.posts&&e.posts.length)h+='<span class="ec-tag" style="background:#DBEAFE;color:#1D4ED8">'+escH(e.posts.join(' '))+'</span>';
+        h+='<span class="ec-tag '+(e.has_pin?'ec-ok':'ec-no')+'">'+escH(e.has_pin?T('ec_haspin'):T('ec_nopin'))+'</span>';
+        var inf=[];
+        if(e.pin_set_at)inf.push(T('ec_pinat').replace('{d}',e.pin_set_at));
+        inf.push(e.last_login?T('ec_lastin').replace('{d}',e.last_login):T('ec_never'));
+        h+='<span class="ec-dp" style="min-width:200px;text-align:right">'+escH(inf.join(' · '))+'</span>';
+      }
+      if(EC.manager){
+        h+='<button class="ec-btn" onclick="ecEmp(\''+e.id+'\')">'+T('edit_btn')+'</button>';
+        if(e.active)h+='<button class="ec-btn" onclick="ecPin(\''+e.id+'\',\''+escA(e.name).replace(/'/g,"")+'\')">'+T('ec_pin_set')+'</button>';
+      }
       h+='</span></div>';
     });
     h+='<div class="ec-warn" style="margin-top:12px">'+escH(T('ec_pin_s'))+'</div>';
+
+  // ══ SZEREPKÖRÖK ══════════════════════════════════════════════
+  } else {
+    EC.roles.forEach(function(r){
+      h+='<div class="ec-card" style="align-items:flex-start"><span class="ec-code">'+escH(r.code)+'</span><div style="flex:1">';
+      h+='<div class="ec-lab">'+escH(r.label)+'</div>';
+      h+='<div class="ec-note">'+escH(T('ec_role_used').replace('{n}',r.used||0))+'</div>';
+      h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">';
+      EC_PERMS.forEach(function(k){
+        var on=r.can&&r.can[k]===true;
+        h+='<span class="ec-tag '+(on?'ec-ok':'')+'" style="'+(on?'':'background:#F1F5F9;color:#94A3B8')+'">'+escH(T('ec_perm_'+k))+'</span>';
+      });
+      h+='</div></div>';
+      if(EC.manager)h+='<button class="ec-btn" onclick="ecRole(\''+r.code+'\')">'+T('edit_btn')+'</button>';
+      h+='</div>';
+    });
+    if(EC.manager)h+='<button class="ec-btn" style="margin-top:8px" onclick="ecRole(null)">'+T('ec_add_role')+'</button>';
   }
+
   h+='</div></div>';
   document.getElementById('app').innerHTML=h;
 }
 window.ecTab=function(t){EC.tab=t;render()};
 window.ecLogout=async function(){
   try{ await RPWAuth.logoutServer(sb) }catch(e){}
-  EC.loaded=false; EC.posts=[]; EC.team=[]; EC.manager=false; render();
+  EC.loaded=false; EC.posts=[]; EC.team=[]; EC.roles=[]; EC.manager=false; render();
 };
 window.ecAssign=async function(code, empId){
   var tok=ecTok(); if(!tok)return;
   try{
     var r=await sb.rpc('rpw_post_assign',{p_token:tok, p_code:code, p_employee_id:(empId||null)});
     var o=r&&r.data; if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){o=null}}
-    if(!o||!o.ok){ toast((o&&o.error)||'?',1); return; }
+    if(!o||!o.ok){ toast(ecErr(o&&o.error),1); return; }
     toast(T('ec_saved')); await ecLoad(true);
   }catch(e){ toast('?',1) }
 };
@@ -2571,27 +2638,137 @@ window.ecAddPost=async function(){
     var r=await sb.rpc('rpw_post_upsert',{p_token:tok, p_code:EC.nCode, p_label:EC.nLab,
                                           p_note:EC.nNote||null, p_sort:100, p_active:true});
     var o=r&&r.data; if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){o=null}}
-    if(!o||!o.ok){ toast((o&&o.error)||'?',1); return; }
+    if(!o||!o.ok){ toast(ecErr(o&&o.error),1); return; }
     EC.adding=false; EC.nCode=''; EC.nLab=''; EC.nNote='';
     toast(T('ec_saved')); await ecLoad(true);
   }catch(e){ toast('?',1) }
 };
+function ecErr(code){
+  if(code==='not_allowed'||code==='not_manager') return T('ec_noperm');
+  if(code==='pin_too_short') return T('ec_pin_min');
+  if(code==='name_required') return T('ec_name');
+  if(String(code||'').indexOf('last_manager_lock')>=0) return T('ec_lastmgr');
+  return code||'?';
+}
+
+// ══ DOLGOZÓ felvétele / módosítása ═════════════════════════════
+window.ecEmp=function(id){
+  var e=EC.team.filter(function(x){return x.id===id})[0]||null;
+  EC.empId=id||null;
+  EC.eName=e?e.name:''; EC.eRole=e?(e.role_code||''):''; EC.ePhone=e?(e.phone||''):'';
+  EC.eActive=e?e.active!==false:true; EC.eErr='';
+  ecEmpRender();
+};
+function ecEmpRender(){
+  var el=document.getElementById('ecEmpOv');
+  if(!el){ el=document.createElement('div'); el.id='ecEmpOv'; el.className='az-ov'; el.style.zIndex=2300; document.body.appendChild(el); }
+  el.style.display='flex';
+  var h='<div class="az-box" style="max-width:480px">';
+  h+='<div class="az-hd"><div class="az-av" style="width:60px;height:60px;flex:0 0 60px;background-image:url(rpw-mascot.png)"></div><div>';
+  h+='<div class="az-hi">'+escH(T('ec_tab_s'))+'</div>';
+  h+='<div class="az-q" style="font-size:19px">'+escH(EC.empId?T('edit_btn'):T('ec_add_emp'))+'</div></div>';
+  h+='<button class="az-x" onclick="ecEmpClose()">&times;</button></div>';
+  h+='<div style="padding:16px 20px 4px">';
+  h+='<div class="ck-lb">'+T('ec_name')+'</div>';
+  h+='<input class="ec-in" style="width:100%;margin-bottom:10px" value="'+escA(EC.eName)+'" oninput="EC.eName=this.value">';
+  h+='<div class="ck-lb">'+T('ec_role')+'</div>';
+  h+='<select class="ec-in" style="width:100%;margin-bottom:10px" onchange="EC.eRole=this.value">';
+  h+='<option value="">'+escH(T('ec_none'))+'</option>';
+  EC.roles.forEach(function(r){ h+='<option value="'+escA(r.code)+'"'+(r.code===EC.eRole?' selected':'')+'>'+escH(r.label)+'</option>'; });
+  h+='</select>';
+  h+='<div class="ck-lb">'+T('ec_phone')+'</div>';
+  h+='<input class="ec-in" style="width:100%" value="'+escA(EC.ePhone)+'" oninput="EC.ePhone=this.value">';
+  if(EC.eErr)h+='<div style="margin-top:9px;font:700 12px inherit;color:#B91C1C;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:9px 11px">'+escH(EC.eErr)+'</div>';
+  if(EC.empId){
+    h+='<div style="margin-top:12px">';
+    if(EC.eActive)h+='<button class="ec-btn" style="border-color:#fecaca;color:#B91C1C" onclick="ecEmpLeave()">'+T('ec_leave')+'</button>';
+    else h+='<button class="ec-btn" style="border-color:#bbf7d0;color:#15803D" onclick="ecEmpReactivate()">'+T('ec_reactivate')+'</button>';
+    h+='</div>';
+  }
+  h+='</div><div class="az-ft"><button class="az-fb az-f1" onclick="ecEmpClose()">'+T('ec_cancel')+'</button>';
+  h+='<button class="az-fb az-f2" onclick="ecEmpSave()">'+T('ec_save')+'</button></div></div>';
+  el.innerHTML=h;
+}
+window.ecEmpClose=function(){ var el=document.getElementById('ecEmpOv'); if(el)el.style.display='none'; EC.empId=null; };
+window.ecEmpSave=async function(){
+  if(!String(EC.eName||'').trim()){ EC.eErr=T('ec_name'); ecEmpRender(); return; }
+  await ecEmpWrite(EC.empId, EC.eName, EC.eRole||null, EC.ePhone, EC.eActive);
+};
+window.ecEmpReactivate=async function(){ await ecEmpWrite(EC.empId, EC.eName, EC.eRole||null, EC.ePhone, true); };
+window.ecEmpLeave=function(){
+  var nev=EC.eName, id=EC.empId, rol=EC.eRole||null, tel=EC.ePhone;
+  if(!window.RPWWorkflow||!RPWWorkflow.ask){ ecEmpWrite(id,nev,rol,tel,false); return; }
+  RPWWorkflow.ask({ lang:gL(), tone:'danger', title:T('ec_leave'), subtitle:nev,
+    text:T('ec_leave_q').replace('{n}',nev),
+    cancelText:T('ec_cancel'), confirmText:T('ec_leave'),
+    onConfirm:function(){ ecEmpWrite(id,nev,rol,tel,false); } });
+};
+async function ecEmpWrite(id,nev,rol,tel,aktiv){
+  var tok=ecTok(); if(!tok)return;
+  try{
+    var r=await sb.rpc('rpw2_employee_save',{p_token:tok, p_id:id||null, p_name:nev,
+                                             p_role_code:rol, p_phone:tel||null, p_active:aktiv});
+    var o=r&&r.data; if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){o=null}}
+    if(!o||!o.ok){ EC.eErr=ecErr(o&&o.error); ecEmpRender(); return; }
+    ecEmpClose(); toast(T('ec_saved2')); await ecLoad(true);
+  }catch(e){ EC.eErr='?'; ecEmpRender(); }
+}
+
+// ══ SZEREPKÖR szerkesztő — a nyolc kapcsoló ════════════════════
+window.ecRole=function(code){
+  var r=EC.roles.filter(function(x){return x.code===code})[0]||null;
+  EC.rCode=code||''; EC.rLabel=r?r.label:''; EC.rErr='';
+  EC.rCan={}; EC_PERMS.forEach(function(k){ EC.rCan[k]=!!(r&&r.can&&r.can[k]); });
+  ecRoleRender();
+};
+function ecRoleRender(){
+  var el=document.getElementById('ecRoleOv');
+  if(!el){ el=document.createElement('div'); el.id='ecRoleOv'; el.className='az-ov'; el.style.zIndex=2300; document.body.appendChild(el); }
+  el.style.display='flex';
+  var h='<div class="az-box" style="max-width:500px">';
+  h+='<div class="az-hd"><div class="az-av" style="width:60px;height:60px;flex:0 0 60px;background-image:url(rpw-mascot.png)"></div><div>';
+  h+='<div class="az-hi">'+escH(T('ec_tab_r'))+'</div>';
+  h+='<div class="az-q" style="font-size:19px">'+escH(EC.rCode||T('ec_add_role'))+'</div></div>';
+  h+='<button class="az-x" onclick="ecRoleClose()">&times;</button></div>';
+  h+='<div style="padding:16px 20px 4px;max-height:52vh;overflow:auto">';
+  if(!EC.rCode){
+    h+='<div class="ck-lb">'+T('ec_code')+'</div>';
+    h+='<input class="ec-in" style="width:100%;margin-bottom:10px" placeholder="WERKSTATT" oninput="EC.rCode=this.value">';
+  }
+  h+='<div class="ck-lb">'+T('ec_lab')+'</div>';
+  h+='<input class="ec-in" style="width:100%;margin-bottom:14px" value="'+escA(EC.rLabel)+'" oninput="EC.rLabel=this.value">';
+  h+='<div class="ck-lb">'+escH(T('ec_perm_team'))+' · '+escH(T('ec_perm_work'))+' …</div>';
+  EC_PERMS.forEach(function(k){
+    h+='<label style="display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid #F1F3F5;font-size:13px;font-weight:600;cursor:pointer">';
+    h+='<input type="checkbox"'+(EC.rCan[k]?' checked':'')+' onchange="EC.rCan[\''+k+'\']=this.checked">';
+    h+='<span>'+escH(T('ec_perm_'+k))+'</span></label>';
+  });
+  if(EC.rErr)h+='<div style="margin-top:9px;font:700 12px inherit;color:#B91C1C;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:9px 11px">'+escH(EC.rErr)+'</div>';
+  h+='</div><div class="az-ft"><button class="az-fb az-f1" onclick="ecRoleClose()">'+T('ec_cancel')+'</button>';
+  h+='<button class="az-fb az-f2" onclick="ecRoleSave()">'+T('ec_save')+'</button></div></div>';
+  el.innerHTML=h;
+}
+window.ecRoleClose=function(){ var el=document.getElementById('ecRoleOv'); if(el)el.style.display='none'; };
+window.ecRoleSave=async function(){
+  var tok=ecTok(); if(!tok)return;
+  if(!String(EC.rCode||'').trim()||!String(EC.rLabel||'').trim()){ EC.rErr=T('nj_missing'); ecRoleRender(); return; }
+  try{
+    var r=await sb.rpc('rpw2_role_save',{p_token:tok, p_code:EC.rCode, p_label:EC.rLabel,
+                                         p_can:EC.rCan, p_sort:100, p_active:true});
+    var o=r&&r.data; if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){o=null}}
+    if(!o||!o.ok){ EC.rErr=ecErr(o&&o.error); ecRoleRender(); return; }
+    ecRoleClose(); toast(T('ec_saved2')); await ecLoad(true);
+  }catch(e){ EC.rErr=ecErr(String(e&&e.message||'')); ecRoleRender(); }
+};
+
+// ══ PIN — saját ablak (az érték gépeléskor rögzül) ═════════════
 window.ecPin=function(empId, nev){
-  // ── P0/PIN JAVÍTÁS (2026-08-23) ──────────────────────────────────
-  // KORÁBBAN: a kabalás párbeszédbe setTimeout-tal injektáltam egy input
-  // mezőt, és a megerősítéskor onnan olvastam ki az értéket. A modál
-  // viszont a gomb lenyomásakor ELŐBB törli magát, csak UTÁNA hívja az
-  // onConfirm-ot — így a mező már nem létezett, és mindig üres PIN ment
-  // tovább. Emiatt a felületről EGYETLEN PIN sem került be.
-  // MOSTANTÓL: saját ablak, és az érték a gépeléskor rögzül (nem a DOM-ból
-  // olvassuk a végén). Kétszeri beírás, mert elgépelt PIN = kizárt ember.
   EC.pinFor=empId; EC.pinNev=nev||''; EC.pin1=''; EC.pin2=''; EC.pinErr='';
   ecPinRender();
 };
 function ecPinRender(){
   var el=document.getElementById('ecPinOv');
-  if(!el){ el=document.createElement('div'); el.id='ecPinOv'; el.className='az-ov';
-           el.style.zIndex=2300; document.body.appendChild(el); }
+  if(!el){ el=document.createElement('div'); el.id='ecPinOv'; el.className='az-ov'; el.style.zIndex=2400; document.body.appendChild(el); }
   el.style.display='flex';
   var h='<div class="az-box" style="max-width:460px">';
   h+='<div class="az-hd" style="background:linear-gradient(135deg,#3a2a08 0%,#5c4210 100%)">';
@@ -2604,8 +2781,7 @@ function ecPinRender(){
   h+='<input id="ecPin1" class="ck-in" style="width:100%;margin-bottom:8px" type="password" inputmode="numeric" autocomplete="new-password" placeholder="PIN" value="'+escA(EC.pin1)+'" oninput="EC.pin1=this.value;ecPinErrClear()">';
   h+='<input id="ecPin2" class="ck-in" style="width:100%" type="password" inputmode="numeric" autocomplete="new-password" placeholder="'+escA(T('ec_pin_again'))+'" value="'+escA(EC.pin2)+'" oninput="EC.pin2=this.value;ecPinErrClear()">';
   if(EC.pinErr)h+='<div style="margin-top:9px;font:700 12px inherit;color:#B91C1C;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:9px 11px">'+escH(EC.pinErr)+'</div>';
-  h+='<div class="ec-warn" style="margin-top:10px">'+escH(T('ec_pin_s'))+'</div></div>';
-  h+='<div class="az-ft"><button class="az-fb az-f1" onclick="ecPinClose()">'+T('ec_cancel')+'</button>';
+  h+='</div><div class="az-ft"><button class="az-fb az-f1" onclick="ecPinClose()">'+T('ec_cancel')+'</button>';
   h+='<button class="az-fb az-f2" onclick="ecPinConfirm()">'+T('ec_save')+'</button></div></div>';
   el.innerHTML=h;
   try{ document.getElementById('ecPin1').focus(); }catch(e){}
@@ -2619,23 +2795,17 @@ window.ecPinConfirm=function(){
   var a=String(EC.pin1||'').trim(), b=String(EC.pin2||'').trim();
   if(a.length<4){ EC.pinErr=T('ec_pin_min'); ecPinRender(); return; }
   if(a!==b){     EC.pinErr=T('ec_pin_diff'); ecPinRender(); return; }
-  var who=EC.pinFor;
-  ecPinClose();
-  ecPinSave(who, a);
+  var who=EC.pinFor; ecPinClose(); ecPinSave(who, a);
 };
 window.ecPinSave=async function(empId, pin){
   var tok=ecTok(); if(!tok)return;
-  if(!pin||String(pin).trim().length<4){ toast(T('ec_pin_s'),1); return; }
+  if(!pin||String(pin).trim().length<4){ toast(T('ec_pin_min'),1); return; }
   try{
-    var r=await sb.rpc('rpw_pin_set_for',{p_token:tok, p_employee_id:empId, p_new_pin:String(pin).trim()});
+    var r=await sb.rpc('rpw2_pin_set',{p_token:tok, p_employee_id:empId, p_new_pin:String(pin).trim()});
     var o=r&&r.data; if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){o=null}}
-    if(!o||!o.ok){
-      var e2=(o&&o.error)||'?';
-      toast(e2==='not_manager'?T('ec_notmgr'):(e2==='pin_too_short'?T('ec_pin_min'):e2),1);
-      return;
-    }
+    if(!o||!o.ok){ toast(ecErr(o&&o.error),1); return; }
     toast(T('ec_pin_ok')+': '+(EC.pinNev||''));
-    await ecLoad(true);            // hogy AZONNAL latszodjon a valtozas
+    await ecLoad(true);
   }catch(e){ toast('?',1) }
 };
 
