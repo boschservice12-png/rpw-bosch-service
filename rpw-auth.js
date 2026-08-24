@@ -1,4 +1,4 @@
-/* BUILD: P0.1-SESSION-HARDENED 2026-08-23 */
+/* BUILD: OWN-STAFF-L3A 2026-08-23 */
 /* ============================================================
    rpw-auth.js — PIN + szerep alapú kliens-hitelesítés (opt-in)
    ------------------------------------------------------------
@@ -65,7 +65,7 @@
     var t=token(opts);
     if(!t)return {ok:false, error:'no_token'};
     try{
-      var r=await sb.rpc('rpw_session',{p_token:t});
+      var r=await sb.rpc('rpw2_session',{p_token:t});
       var out=r&&r.data;
       if(typeof out==='string'){ try{out=JSON.parse(out)}catch(e){out=null} }
       if(!out||out.ok!==true){ logout(opts); return {ok:false, error:(out&&out.error)||'invalid'}; }
@@ -96,11 +96,13 @@
     var shop=opts.shopId || cfg(opts).SHOP_ID;
     if(!shop) return {ok:false, error:'no_shop'};
     try{
-      // Nev + PIN (opts.employeeId) — igy nem lehet PIN-utkozes ket ember kozott.
-      // employeeId nelkul a regi, csak-PIN-es ut fut (visszafele kompatibilitas).
+      // ── ÖNÁLLÓ SZEMÉLYZET (2026-08-23) ─────────────────────────────
+      // Az RPW saját rpw_employees / rpw_roles tábláiból dolgozik: egy
+      // berlini szerviznek nincs Red ERP-je, neki magának kell felvinnie
+      // az embereit. A régi (ERP-alapú) út tartalékként megmarad.
       var res = opts.employeeId
-        ? await sb.rpc('rpw_login_named',{p_shop_id:shop, p_employee_id:opts.employeeId, p_pin:pPin})
-        : await sb.rpc('rpw_login',      {p_shop_id:shop, p_pin:pPin});
+        ? await sb.rpc('rpw2_login',{p_shop_id:shop, p_employee_id:opts.employeeId, p_pin:pPin})
+        : await sb.rpc('rpw_login', {p_shop_id:shop, p_pin:pPin});   // régi tartalék
       if(res && res.error) return {ok:false, error:'server'};
       var out=res && res.data;
       if(typeof out==='string'){ try{out=JSON.parse(out)}catch(e){out=null} }
@@ -109,9 +111,12 @@
       var emp=out.employee||{};
       var canon = root.RPWRoles ? RPWRoles.mapEmployeeRole(emp.role) : null;
       var ttlMs=(opts.ttlHours||12)*3600*1000;        // a szerver-session 12 óra
-      var nm=String(emp.name||'').trim();          // az ERP-ben szokozos nevek vannak
+      var nm=String(emp.name||'').trim();
+      // A JOGOSULTSÁG kapcsolókból jön, NEM a szerepkör nevéből: a szerviz
+      // "Werkstattleiter"-nek is hívhatja, a rendszer akkor is tudja, mit tehet.
       var rec={ token:out.token, role:canon, rawRole:emp.role, name:nm,
                 employeeId:emp.id, shopId:emp.shop_id, dept:emp.department,
+                roleCode:emp.role_code||null, can:(emp.can||null),
                 exp: nowMs(opts)+ttlMs };
       ((opts.store)||defStore()).set(KEY, JSON.stringify(rec));
       return {ok:true, role:canon, rawRole:emp.role, name:nm, hasRpwAccess:(canon!=null)};
@@ -133,6 +138,15 @@
   // 'service' — hogy a regi viselkedes ne torjon el.
   function actor(opts){ var n=name(opts); return (n&&String(n).trim())||'service'; }
 
+  // ── JOGOSULTSÁG-KAPCSOLÓK ────────────────────────────────────────
+  // team · posts · open · reception · work · close · override · delete
+  function can(perm, opts){
+    var s=session(opts); if(!s) return false;
+    var c=s.can; if(!c) return false;
+    return c[perm]===true;
+  }
+  function perms(opts){ var s=session(opts); return (s&&s.can)||null; }
+
   // ── P0.7 (2026-08-23) — a Netlify funkciok hitelesito fejlece ────
   // Az OCR / classify / sendmail mostantol KOTELEZOEN tokent var.
   // Egy helyen keszitjuk, hogy ne maradjon ki sehol.
@@ -146,7 +160,7 @@
 
   var API={ required:required, session:session, role:role, rawRole:rawRole, name:name, token:token,
             employeeId:employeeId, shopId:shopId, login:login, logout:logout, guard:guard,
-            logoutServer:logoutServer, verify:verify, team:team, actor:actor, fnHeaders:fnHeaders, KEY:KEY };
+            logoutServer:logoutServer, verify:verify, team:team, actor:actor, can:can, perms:perms, fnHeaders:fnHeaders, KEY:KEY };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWAuth=API;
 })(typeof self!=='undefined'?self:(typeof window!=='undefined'?window:globalThis));
