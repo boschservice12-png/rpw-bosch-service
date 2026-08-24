@@ -301,10 +301,13 @@ function render(){
   }
   // Vezetői felülbírálás — CSAK admin módban, és CSAK javítási munkán
   // P0.5 (2026-08-23): a felulbiralas joga a szervermunkamenetbol jon.
+  // A fázis-felülbírálás az `override` kapcsolóhoz kötött.
   var _adm=false;
   try{
-    var _s=(window.RPWAuth&&RPWAuth.session())||null;
-    _adm = !!_s && ['Műszakvezető','Irodavezető'].indexOf(String(_s.rawRole||'').trim())>=0;
+    var _A=window.RPWAuth;
+    if(_A && typeof _A.can==='function' && _A.perms && _A.perms()) _adm=_A.can('override');
+    else { var _s=(_A&&_A.session())||null;
+           _adm = !!_s && ['Műszakvezető','Irodavezető'].indexOf(String(_s.rawRole||'').trim())>=0; }
   }catch(e){}
   if(_adm && !_doarDosar){
     h+='<div style="padding:6px 16px 10px"><button onclick="rpwOverride()" style="width:100%;padding:8px;border:1px dashed var(--r);border-radius:8px;background:var(--r50);color:var(--r);font-weight:800;font-family:inherit;cursor:pointer;font-size:11px">🔑 '+T('ovBtn')+'</button><div style="font-size:9px;color:var(--t3);margin-top:4px;line-height:1.4">'+T('ovNote')+'</div></div>';
