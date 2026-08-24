@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: DOSAR-ALKALMI 2026-08-24 -->
+<!-- BUILD: DOSAR-NAV 2026-08-24 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -1934,10 +1934,17 @@ window.submitNewJob=async function(){
     S.showNew=0;
     if(mode==='lucrare'){
       location.assign('rpw-recepcio-red.html?job='+j.id);
-    }else{
+    } else if(mode==='dosar'){
+      // ── JAVÍTÁS (2026-08-24) ────────────────────────────────
+      // Alkalmi dossziénál a MUNKA a biztosítói iratokkal van, nem a
+      // panelon. Korábban csak visszatért a listára, és magadnak
+      // kellett megkeresned a dossziét.
+      toast(T('m_ok_dosar')+': '+plate);
+      location.assign('rpw-dosar.html?job='+encodeURIComponent(j.id));
+    } else {
       S.screen='panou';
-      S.panouTab=(mode==='dosar')?'dosare':'viitoare';
-      toast((mode==='dosar'?T('m_ok_dosar'):T('m_ok_prog'))+': '+plate);
+      S.panouTab='viitoare';
+      toast(T('m_ok_prog')+': '+plate);
       render();
     }
   }catch(e){toast('Error: '+e.message,1)}
@@ -1987,8 +1994,13 @@ window.toggleAdmin=function(){
 window.deschideDosar=function(id){location.assign('rpw-dosar.html?job='+id)};
 window.openDosarModal=function(){S.showDosar=1;render()};
 window.closeDosarModal=function(){S.showDosar=0;render()};
-window.dosarAici=function(){S.showDosar=0;openNewJob({rep:1,pay:'deschid'})};
-window.dosarTarziu=function(){S.showDosar=0;openNewJob({prog:1,rep:1,pay:'deschid'})};
+// ── JAVÍTÁS: az openNewJob SZÖVEGET vár ('prog'|'dosar'|'lucrare').
+// Ezek objektumot adtak át, ami egyik ágra sem illett → mindkettő
+// csendben 'prog' módba esett. A gomb felirata mást ígért.
+// „Az auto itt van — recepció most" = lucrare (→ recepció lap).
+window.dosarAici=function(){S.showDosar=0;openNewJob('lucrare')};
+// „Az auto később jön — csak a dosszié" = dosar (→ dosszié lap).
+window.dosarTarziu=function(){S.showDosar=0;openNewJob('dosar')};
 
 window.dosarFisier=function(e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
