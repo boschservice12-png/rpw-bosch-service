@@ -50,10 +50,13 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;backgr
   function toast(m,e){var t=document.createElement('div');t.className='toast'+(e?' err':'');t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove()},3000);}
   // P0.5 (2026-08-23): a jog a szervermunkamenetbol jon, nem a localStorage-bol.
   // Errol az oldalrol visszaallithato es VEGLEG torolheto munka.
-  var ADMIN_ROLES=['Műszakvezető','Irodavezető'];
+  // A kosár műveletei (visszaállítás, végleges törlés) a `delete` kapcsolóhoz
+  // kötöttek — nem a szerepkör nevéhez.
+  var ADMIN_ROLES=['Műszakvezető','Irodavezető'];   // régi ERP-nevek, tartalék
   function isAdmin(){
     try{
       var A=window.RPWAuth; if(!A) return false;
+      if(typeof A.can==='function' && A.perms && A.perms()) return A.can('delete');
       var s=A.session(); if(!s) return false;
       return ADMIN_ROLES.indexOf(String(s.rawRole||'').trim())>=0;
     }catch(e){ return false }
