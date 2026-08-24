@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: DOSAR-NAV 2026-08-24 -->
+<!-- BUILD: DOSAR-ASIG 2026-08-24 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -557,13 +557,12 @@ plate:{ro:'Nr. inmatr.',en:'Plate',hu:'Rendszam'},
 new_programare:{ro:'+ Programare noua',en:'+ New schedule',hu:'+ Uj programalas'},
 prog_dauna:{ro:'Dosar daună (asigurare) — deschide dosarul',en:'Damage file (insurance) — open dossier',hu:'Kárdosszié (biztosítás) — nyisd meg a dossziét'},
 receptie_auto:{ro:'Receptie auto',en:'Car reception',hu:'Auto atvetel'},
-dosar_dauna:{ro:'Dosar dauna',en:'Damage file',hu:'Kardosszie'},
+dosar_dauna:{ro:'Deschide dosar asigurare',en:'Open insurance file',hu:'Biztositasi dosszie nyitasa'},
 dosar_q:{ro:'Autovehiculul este in service?',en:'Is the car at the shop?',hu:'Az auto itt van a szervizben?'},
 dosar_tarziu:{ro:'Auto vine mai tarziu — doar dosarul',en:'Car comes later — file only',hu:'Az auto kesobb jon — csak a dosszie'},
 dosar_aici:{ro:'Auto este aici — receptie acum',en:'Car is here — reception now',hu:'Itt van — atvetel most'},
 dosar_fisier:{ro:'Preluare date din fisier (constatare / PV)',en:'Import data from file',hu:'Adatok atvetele fajlbol'},
 dosar_citire:{ro:'Se citeste documentul...',en:'Reading document...',hu:'Dokumentum beolvasasa...'},
-dosar_tarziu:{ro:'Auto vine mai tarziu — programare',en:'Comes later — schedule',hu:'Kesobb jon — programalas'},
 prog_modal_title:{ro:'Programare noua',en:'New schedule',hu:'Uj programalas'},
 prog_modal_sub:{ro:'Min. necesar pentru a deschide o lucrare',en:'Minimum to open a job',hu:'Minimum a munka megnyitasahoz'},
 plate_label:{ro:'Nr. inmatricolare',en:'Plate number',hu:'Rendszam'},
@@ -788,7 +787,7 @@ repro_ok:{ro:'Reprogramat',en:'Rescheduled',hu:'Atutemezve'},
 repro_need:{ro:'Alege o data',en:'Pick a date',hu:'Valassz datumot'},
 need_wa_btn:{ro:'Contacteaza clientul',en:'Contact the client',hu:'Ertesitsd az ugyfelet'},
 btn_prog_nou:{ro:'Programare noua',en:'New appointment',hu:'Uj elojegyzes'},
-btn_dosar_nou:{ro:'Deschide dosar dauna',en:'Open claim file',hu:'Kardosszie nyitasa'},
+btn_dosar_nou:{ro:'Deschide dosar asigurare',en:'Open insurance file',hu:'Biztositasi dosszie nyitasa'},
 btn_lucrare_noua:{ro:'Lucrare noua',en:'New job',hu:'Uj munka'},
 panou_dosare:{ro:'Dosare daună',en:'Claim files',hu:'Kárdossziék'},
 col_asig:{ro:'Asigurator',en:'Insurer',hu:'Biztosito'},
@@ -803,7 +802,7 @@ badge_dosar:{ro:'Dosar dauna',en:'Claim file',hu:'Kardosszie'},
 open_dosar_btn:{ro:'Deschide dosarul',en:'Open the file',hu:'Dosszie megnyitasa'},
 m_prog_t:{ro:'Programare noua',en:'New appointment',hu:'Uj elojegyzes'},
 m_prog_s:{ro:'Masina vine mai tarziu — rezervam ora',en:'Car comes later — we book the slot',hu:'Az auto kesobb jon — idopontot foglalunk'},
-m_dosar_t:{ro:'Deschide dosar dauna',en:'Open claim file',hu:'Kardosszie nyitasa'},
+m_dosar_t:{ro:'Deschide dosar asigurare',en:'Open insurance file',hu:'Biztositasi dosszie nyitasa'},
 m_dosar_s:{ro:'Colectare acte pentru asigurator — fara reparatie',en:'Document collection for the insurer — no repair',hu:'Iratgyujtes a biztositohoz — javitas nelkul'},
 m_lucrare_t:{ro:'Lucrare noua',en:'New job',hu:'Uj munka'},
 m_lucrare_s:{ro:'Masina e aici — incepe lucrarea',en:'Car is here — work starts',hu:'Az auto itt van — indul a munka'},
@@ -1142,7 +1141,7 @@ function renderPanou(){
   h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
 
   // Header + Programare noua gomb
-  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn" style="background:#15181C;color:#fff;border-color:#15181C" onclick="azOpen()">'+T('az_q')+'</button>'+'<button class="btn-prog-new" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="background:var(--bl,#2563eb)" onclick="openNewJob(\'dosar\')">&#128193; '+T('btn_dosar_nou')+'</button><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="openNewJob(\'lucrare\')">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
+  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn" style="background:#15181C;color:#fff;border-color:#15181C" onclick="azOpen()">'+T('az_q')+'</button>'+'<button class="btn-prog-new" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="background:var(--bl,#2563eb)" onclick="openDosarModal()">&#128193; '+T('btn_dosar_nou')+'</button><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="openNewJob(\'lucrare\')">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
 
   // Tabs
   h+='<div class="panou-tabs">';
