@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: OWN-STAFF-L3A 2026-08-23 -->
+<!-- BUILD: PIN-SECURITY 2026-08-24 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -643,7 +643,7 @@ ec_saved:{ro:'Salvat',en:'Saved',hu:'Mentve'},
 ec_pin:{ro:'PIN',en:'PIN',hu:'PIN'},
 ec_pin_set:{ro:'Setează PIN',en:'Set PIN',hu:'PIN beállítás'},
 ec_pin_t:{ro:'PIN nou pentru {n}',en:'New PIN for {n}',hu:'Új PIN — {n}'},
-ec_pin_s:{ro:'PIN-ul e doar pentru RPW. Minim 4 cifre. Colegul îl poate schimba după prima intrare.',en:'The PIN is for RPW only. At least 4 digits. Staff can change it after first login.',hu:'A PIN csak az RPW-hez tartozik. Legalább 4 számjegy. Az első belépés után cserélhető.'},
+ec_pin_s:{ro:'PIN-ul e doar pentru RPW. Minim 4 cifre, dar NU un an (1969, 2000), nu cifre identice sau consecutive. Fiecare coleg trebuie să aibă alt PIN.',en:'The PIN is for RPW only. At least 4 digits. Staff can change it after first login.',hu:'A PIN csak az RPW-hez tartozik. Legalább 4 számjegy. Az első belépés után cserélhető.'},
 ec_add_emp:{ro:'+ Adaugă coleg',en:'+ Add colleague',hu:'+ Új munkatárs'},
 ec_add_role:{ro:'+ Adaugă rol',en:'+ Add role',hu:'+ Új szerepkör'},
 ec_tab_r:{ro:'Roluri',en:'Roles',hu:'Szerepkörök'},
@@ -671,6 +671,15 @@ ec_pin_min:{ro:'Minim 4 cifre',en:'At least 4 digits',hu:'Legalább 4 számjegy'
 ec_pin_again:{ro:'Repetă PIN-ul',en:'Repeat the PIN',hu:'Ismételd meg'},
 ec_pin_diff:{ro:'A doua oară nu e la fel',en:'The two do not match',hu:'A kettő nem egyezik'},
 ec_pin_ok:{ro:'PIN setat',en:'PIN set',hu:'PIN beállítva'},
+ec_locked:{ro:'BLOCAT {m} min',en:'LOCKED {m} min',hu:'ZÁROLVA {m} perc'},
+ec_attempts:{ro:'{n} încercări greșite',en:'{n} failed attempts',hu:'{n} rossz próbálkozás'},
+ec_unlock:{ro:'Deblochează',en:'Unlock',hu:'Feloldás'},
+ec_unlock_q:{ro:'Deblochezi contul lui {n}?',en:'Unlock the account of {n}?',hu:'Feloldod {n} fiókját?'},
+ec_unlock_ok:{ro:'Contul a fost deblocat',en:'Account unlocked',hu:'A fiók feloldva'},
+ec_unlock_err:{ro:'Deblocarea a eșuat',en:'Unlock failed',hu:'A feloldás nem sikerült'},
+ec_pin_weak:{ro:'PIN prea simplu — alege alte cifre',en:'PIN too simple',hu:'Túl egyszerű PIN'},
+ec_pin_taken:{ro:'PIN-ul e deja folosit de un coleg',en:'PIN already used by a colleague',hu:'A PIN már foglalt'},
+ec_generic_err:{ro:'Operațiunea a fost respinsă',en:'The operation was rejected',hu:'A művelet elutasítva'},
 ec_haspin:{ro:'PIN OK',en:'PIN OK',hu:'PIN OK'},
 ec_pinat:{ro:'setat {d}',en:'set {d}',hu:'beállítva {d}'},
 ec_pinself:{ro:'schimbat de el',en:'self-changed',hu:'ő módosította'},
@@ -2508,6 +2517,21 @@ window.ecLoad=async function(force){
   EC.loaded=true; render();
 };
 
+// ── PIN-ZÁROLÁS FELOLDÁSA ─────────────────────────────────────
+// Csak csapatkezelői joggal. A szerver újra ellenőrzi (rpw2_pin_unlock):
+// a gomb elrejtése önmagában NEM védelem.
+window.ecUnlock=async function(id,nev){
+  var tok=ecTok(); if(!tok)return;
+  if(!confirm(T('ec_unlock_q').replace('{n}',nev||''))) return;
+  try{
+    var r=await sb.rpc('rpw2_pin_unlock',{p_token:tok, p_employee_id:id});
+    var d=r&&r.data; if(typeof d==='string'){try{d=JSON.parse(d)}catch(e){d=null}}
+    if(!d||d.ok!==true){ toast((d&&d.message)||T('ec_unlock_err'),1); return; }
+    toast(T('ec_unlock_ok'));
+    await ecLoad(true);
+  }catch(e){ toast(T('ec_unlock_err'),1); }
+};
+
 var EC_PERMS=['team','posts','open','reception','work','close','override','delete'];
 
 function renderEchipa(){
@@ -2583,6 +2607,15 @@ function renderEchipa(){
       } else {
         if(e.posts&&e.posts.length)h+='<span class="ec-tag" style="background:#DBEAFE;color:#1D4ED8">'+escH(e.posts.join(' '))+'</span>';
         h+='<span class="ec-tag '+(e.has_pin?'ec-ok':'ec-no')+'">'+escH(e.has_pin?T('ec_haspin'):T('ec_nopin'))+'</span>';
+        // ── ZÁROLÁS-JELZŐ ────────────────────────────────────
+        var ps=(EC.pinStatus&&EC.pinStatus[e.id])||null;
+        if(ps&&ps.locked){
+          h+='<span class="ec-tag" style="background:#FEE2E2;color:#B91C1C;font-weight:700">'
+            +escH(T('ec_locked').replace('{m}',ps.minutesLeft||0))+'</span>';
+        } else if(ps&&ps.attempts>0){
+          h+='<span class="ec-tag" style="background:#FEF3C7;color:#92400E">'
+            +escH(T('ec_attempts').replace('{n}',ps.attempts))+'</span>';
+        }
         var inf=[];
         if(e.pin_set_at)inf.push(T('ec_pinat').replace('{d}',e.pin_set_at));
         inf.push(e.last_login?T('ec_lastin').replace('{d}',e.last_login):T('ec_never'));
@@ -2591,6 +2624,13 @@ function renderEchipa(){
       if(EC.manager){
         h+='<button class="ec-btn" onclick="ecEmp(\''+e.id+'\')">'+T('edit_btn')+'</button>';
         if(e.active)h+='<button class="ec-btn" onclick="ecPin(\''+e.id+'\',\''+escA(e.name).replace(/'/g,"")+'\')">'+T('ec_pin_set')+'</button>';
+        // FELOLDÁS — csak ha van rossz próbálkozás vagy zárolás
+        var psb=(EC.pinStatus&&EC.pinStatus[e.id])||null;
+        if(e.active&&psb&&(psb.locked||psb.attempts>0)){
+          h+='<button class="ec-btn" style="background:#FEE2E2;color:#B91C1C;border-color:#FCA5A5" '
+            +'onclick="ecUnlock(\''+e.id+'\',\''+escA(e.name).replace(/\'/g,"")+'\')">'
+            +T('ec_unlock')+'</button>';
+        }
       }
       h+='</span></div>';
     });
@@ -2627,7 +2667,7 @@ window.ecAssign=async function(code, empId){
   try{
     var r=await sb.rpc('rpw_post_assign',{p_token:tok, p_code:code, p_employee_id:(empId||null)});
     var o=r&&r.data; if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){o=null}}
-    if(!o||!o.ok){ toast(ecErr(o&&o.error),1); return; }
+    if(!o||!o.ok){ toast(ecErr(o&&o.error, o&&o.message),1); return; }
     toast(T('ec_saved')); await ecLoad(true);
   }catch(e){ toast('?',1) }
 };
@@ -2638,17 +2678,23 @@ window.ecAddPost=async function(){
     var r=await sb.rpc('rpw_post_upsert',{p_token:tok, p_code:EC.nCode, p_label:EC.nLab,
                                           p_note:EC.nNote||null, p_sort:100, p_active:true});
     var o=r&&r.data; if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){o=null}}
-    if(!o||!o.ok){ toast(ecErr(o&&o.error),1); return; }
+    if(!o||!o.ok){ toast(ecErr(o&&o.error, o&&o.message),1); return; }
     EC.adding=false; EC.nCode=''; EC.nLab=''; EC.nNote='';
     toast(T('ec_saved')); await ecLoad(true);
   }catch(e){ toast('?',1) }
 };
-function ecErr(code){
+// A szerver ROMÁN üzenetet küld a `message` mezőben — azt mutatjuk.
+// A kódonkénti fordítás csak tartalék, ha nem jönne üzenet.
+// (Korábban ismeretlen kódnál a NYERS kód jelent meg a felületen.)
+function ecErr(code, message){
+  if(message && String(message).trim()) return String(message);
   if(code==='not_allowed'||code==='not_manager') return T('ec_noperm');
   if(code==='pin_too_short') return T('ec_pin_min');
+  if(code==='weak_pin')      return T('ec_pin_weak');
+  if(code==='pin_taken')     return T('ec_pin_taken');
   if(code==='name_required') return T('ec_name');
   if(String(code||'').indexOf('last_manager_lock')>=0) return T('ec_lastmgr');
-  return code||'?';
+  return T('ec_generic_err');
 }
 
 // ══ DOLGOZÓ felvétele / módosítása ═════════════════════════════
@@ -2803,7 +2849,7 @@ window.ecPinSave=async function(empId, pin){
   try{
     var r=await sb.rpc('rpw2_pin_set',{p_token:tok, p_employee_id:empId, p_new_pin:String(pin).trim()});
     var o=r&&r.data; if(typeof o==='string'){try{o=JSON.parse(o)}catch(e){o=null}}
-    if(!o||!o.ok){ toast(ecErr(o&&o.error),1); return; }
+    if(!o||!o.ok){ toast(ecErr(o&&o.error, o&&o.message),1); return; }
     toast(T('ec_pin_ok')+': '+(EC.pinNev||''));
     await ecLoad(true);
   }catch(e){ toast('?',1) }
