@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: DOSAR-FIX 2026-08-24 -->
+<!-- BUILD: DOSAR-ALKALMI 2026-08-24 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -605,6 +605,7 @@ nj_client:{ro:'Client',en:'Client',hu:'Ugyfel'},
 nj_auto:{ro:'Marca / model',en:'Make / model',hu:'Marka / modell'},
 nj_missing:{ro:'Lipseste',en:'Missing',hu:'Hianyzik'},
 nj_m_plate:{ro:'nr. inmatriculare',en:'plate',hu:'rendszam'},
+nj_optional:{ro:'optional',en:'optional',hu:'nem kötelező'},
 nj_m_phone:{ro:'telefon valid',en:'valid phone',hu:'ervenyes telefon'},
 nj_m_do:{ro:'ce facem (min. 1)',en:'what we do (min. 1)',hu:'mit csinalunk (min. 1)'},
 nj_m_pay:{ro:'plata / dosar',en:'payment / file',hu:'fizetes / dosszie'},
@@ -1532,7 +1533,8 @@ function newJobModalHtml(){
   h+='<div class="prog-t">'+T(TT[0])+'</div>';
   h+='<div class="nj-sub">'+T(TT[1])+'</div>';
   h+='<div class="prog-field"><label>'+T('plate_label')+' *</label><input id="iPlate" type="text" value="'+escH(S.njPlate||'')+'" placeholder="'+T('plate_ph')+'" oninput="S.njPlate=njPlate(this.value);this.value=S.njPlate;njSync()"/></div>';
-  h+='<div class="prog-field"><label>'+T('phone_label')+' *</label><input id="iPhone" type="tel" value="'+escH(S.njPhone||'')+'" placeholder="'+T('phone_ph')+'" oninput="S.njPhone=this.value;njSync()"/></div>';
+  // A csillag csak ott, ahol tényleg kötelező: alkalmi dossziénál nem az.
+  h+='<div class="prog-field"><label>'+T('phone_label')+((S.njMode==='dosar')?' <span style="font-weight:400;color:var(--t3)">('+T('nj_optional')+')</span>':' *')+'</label><input id="iPhone" type="tel" value="'+escH(S.njPhone||'')+'" placeholder="'+T('phone_ph')+'" oninput="S.njPhone=this.value;njSync()"/></div>';
 
   // TIPUS — csak a "Lucrare noua"-nal kerdes. A dosar mindig asig.
   if(mode==='lucrare'||mode==='prog'||mode==='edit'){
@@ -1789,7 +1791,17 @@ window.startReceptie=function(){openNewJob('lucrare')};
 function njMissing(){
   var m=[], mode=S.njMode||'prog';
   if(!njOkPlate(S.njPlate))m.push(T('nj_m_plate'));
-  if(!njOkPhone(S.njPhone))m.push(T('nj_m_phone'));
+  // ── ALKALMI DOSSZIÉ (2026-08-24) ────────────────────────────
+  // `dosar` módban nem programáljuk az autót — gyakran csak a
+  // biztosítói papír van meg, telefonszám nélkül. A telefon itt
+  // OPCIONÁLIS; ha megadják, akkor viszont érvényesnek kell lennie.
+  // A rendszám és a károsult neve marad kötelező: azok azonosítják
+  // az esetet a biztosító felé.
+  if(mode==='dosar'){
+    if(String(S.njPhone||'').trim() && !njOkPhone(S.njPhone)) m.push(T('nj_m_phone'));
+  } else {
+    if(!njOkPhone(S.njPhone))m.push(T('nj_m_phone'));
+  }
   if((mode==='lucrare'||mode==='prog'||mode==='edit')&&!S.njTip)m.push(T('m_m_tip'));
   var kellDosar=(mode==='dosar')||((mode==='lucrare'||mode==='prog'||mode==='edit')&&S.njTip==='asig');
   if(kellDosar&&mode!=='dosar'&&!S.njPay)m.push(T('nj_m_pay'));
@@ -2005,7 +2017,8 @@ window.dosarFisier=function(e){
         flux:'doar_dosar',        // csak dosszié — az autó még nincs itt
         doarDosar:true,           // a régi mező is, a visszafelé olvasáshoz
         dosarStatus:'deschid',    // most nyitjuk a biztosító felé
-        sosire:'viitor',          // még nem érkezett meg
+        sosire:'programat',       // a rendszer csak programat/ratat/sosit
+                                  // értéket ismer — a `viitor` nem létezett
         inchis:false,
         phase:1,                  // a `phase` érvényes tartománya 1..7 (volt: 0)
         nrDosar:v(p.nrDosar),proprietarDosar:v(p.proprietar),asigurator:v(p.asigurator),
