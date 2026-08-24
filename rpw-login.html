@@ -53,7 +53,7 @@ button:disabled{opacity:.5}
   // Nevsor betoltese — csak nev es szerep, PIN nelkul.
   (async function(){
     try{
-      var r=await sb.rpc('rpw_roster',{p_shop_id:CFG.SHOP_ID});
+      var r=await sb.rpc('rpw2_roster',{p_shop_id:CFG.SHOP_ID});   // saját személyzet
       var list=r&&r.data; if(typeof list==='string'){try{list=JSON.parse(list)}catch(e){list=[]}}
       var sel=document.getElementById('who'); if(!Array.isArray(list))return;
       var last=''; try{last=localStorage.getItem('rpw_last_who')||''}catch(e){}
