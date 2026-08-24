@@ -2513,6 +2513,17 @@ window.ecLoad=async function(force){
     var a=await sb.rpc('rpw_posts_get',{p_token:tok});
     var pg=a&&a.data; if(typeof pg==='string'){try{pg=JSON.parse(pg)}catch(e){pg=null}}
     if(pg&&pg.ok) EC.posts=pg.posts||[];
+
+    // PIN-zárolás állapota — ki hány rossz próbálkozásnál tart, ki zárolt.
+    // Csak csapatkezelőnek ad adatot; a szerver ellenőrzi a jogot.
+    EC.pinStatus={};
+    try{
+      var ps=await sb.rpc('rpw2_pin_status',{p_token:tok});
+      var pd=ps&&ps.data; if(typeof pd==='string'){try{pd=JSON.parse(pd)}catch(e){pd=null}}
+      if(pd&&pd.ok&&Array.isArray(pd.rows)){
+        pd.rows.forEach(function(r){ EC.pinStatus[r.id]=r; });
+      }
+    }catch(e){}
   }catch(e){}
   EC.loaded=true; render();
 };
