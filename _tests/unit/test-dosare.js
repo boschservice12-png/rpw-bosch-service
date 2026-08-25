@@ -37,42 +37,29 @@ console.log('\n3. Nem hasal el');
   try{acteCount(v);ok(true,'bemenet #'+i)}catch(e){ok(false,'#'+i+' KIVETEL: '+e.message)}
 });
 
-console.log('\n4. Az OSSZEVONT nezet (L1-M) — a kulon ful helyett');
-ok(html.indexOf("T('col_status')")>0,'egyetlen STATUS oszlop');
-ok(/var deAzi=viitoare\.concat\(dosare\)/.test(html),'a ket lista egy nezetben');
-ok(html.indexOf("setPanouTab(\\'dosare\\')")<0,'a kulon Dosare ful megszunt');
-ok(/tab==='viitoare' && _dd/.test(html),'a dosar SOR sajat agat kap');
-ok(/tab==='viitoare' && _dd[\s\S]{0,300}deschideDosar/.test(html),'  -> Deschide dosarul a fo muvelet');
-ok(/if\(_dd\)\{[\s\S]{0,400}acteCount/.test(html),'a dosar sor iratszamlalot mutat');
-// 2026-08-25: a rendszam melletti 📁/📅 jelveny KIKERULT — felesleges volt.
-// A ket sav megkulonboztetese enelkul is egyertelmu, es EZT kotjuk ki:
-ok(!/fx-b/.test(html),'a rendszam mellett nincs tobbe jelveny');
-ok(/_dd\?'row-dosar'|_dd/.test(html),'  a dosar sor sajat agat kap (kiemeles)');
-ok(/if\(_dd\)\{[\s\S]{0,400}acteCount/.test(html),'  iratszamlalot mutat');
-ok(/tab==='viitoare' && _dd[\s\S]{0,300}deschideDosar/.test(html),'  es Deschide dosarul a fo muvelete');
+console.log('\n4. Az Avizare dauna FUL (K-19) — az osszevonas visszafordult');
+ok(html.indexOf("T('col_status')")>0,'STATUS oszlop a viitoare es a dosare fulon');
+ok(!/var deAzi=viitoare\.concat\(dosare\)/.test(html),'nincs tobbe osszevont lista');
+ok(html.indexOf("setPanouTab(\\'dosare\\')")>=0,'a kulon Avizare dauna ful LETEZIK');
+ok(/tab==='dosare'\)\{[\s\S]{0,600}acteCount/.test(html),'a dosar sor iratszamlalot mutat');
+ok(/tab==='dosare'\)\{[\s\S]{0,300}deschideDosar/.test(html.slice(html.indexOf('displayed.forEach'))),'  -> Deschide dosarul a fo muvelet');
+ok(!/fx-b/.test(html),'a rendszam mellett tovabbra sincs jelveny');
 ok(/if\(job\.flux==='doar_dosar'\) *return 'dosare'/.test(html),'az ADATMODELL valtozatlan');
 
-console.log('\n5. Az Avizare dauna ablak KET utat kinal (2026-08-25)');
+console.log('\n5. Az Avizare dauna letrehozas KET utja — a FULON (K-19)');
 {
-  // A harmadik gomb („Auto este aici — receptie acum") kikerult: az a ZOLD
-  // „Lucrare noua" gomb dolga, nem az avizalase. Ami maradt:
-  //   • Deschide dosar dauna  -> mi nyitjuk (openNewJob('dosar'))
-  //   • Preluare dosar dauna  -> meglevo constatare/PV atvetele fajlbol
-  // FIGYELEM: a `h+=newJobModalHtml()` KETSZER szerepel a fajlban (a lista-
-  // nezetben is), ezert a zaro hatart a nyito hatartol KELL keresni.
-  const _mb = html.indexOf('if(S.showDosar)');
-  const modal = html.slice(_mb, html.indexOf('h+=newJobModalHtml()', _mb));
-  const gombok = (modal.match(/btn-prog-new/g)||[]).length;
-  ok(gombok === 2, 'pontosan ket ut van az ablakban (' + gombok + ')');
-  ok(/onclick="dosarTarziu\(\)"/.test(modal), '  Deschide dosar dauna -> dosarTarziu');
-  ok(/onchange="dosarFisier\(event\)"/.test(modal), '  Preluare dosar dauna -> fajlbol');
+  // A felugro kek ablak kivezetve: a ket ut a ful muvelet-savjaban el.
+  const _fb = html.indexOf("if(tab==='dosare'){");
+  const ful = html.slice(_fb, html.indexOf('// Restante figyelmezteto', _fb));
+  ok(/onclick="dosarTarziu\(\)"/.test(ful), '  Deschide dosar dauna -> dosarTarziu');
+  ok(/onchange="dosarFisier\(event\)"/.test(ful), '  Preluare dosar dauna -> fajlbol');
+  const gombok=(ful.match(/btn-prog-new/g)||[]).length;
+  ok(gombok===2,'pontosan ket ut van a fulon ('+gombok+')');
+  ok(!/showDosar|openDosarModal/.test(html),'a felugro ablak minden nyoma eltunt');
   ok(!/dosarAici/.test(html), 'a kivezetett harmadik ut sehol nem maradt (halott kod sem)');
   ok(!/dosar_aici/.test(html), '  a felirata sem');
   ok(/dosar_tarziu:\{ro:'Deschide dosar/.test(html), 'az elso gomb neve: Deschide dosar dauna');
   ok(/dosar_fisier:\{ro:'Preluare dosar/.test(html), 'a masodike: Preluare dosar dauna');
-  // a kerdes a KET megmarado uthoz szol, nem a kivezetetthez
-  ok(!/dosar_q:\{ro:'Autovehiculul este in service/.test(html),
-     'a kerdes nem a kivezetett gombra kerdez tobbe');
 }
 
 console.log('\n'+(fail?'x ':'OK ')+pass+' pass / '+fail+' fail');

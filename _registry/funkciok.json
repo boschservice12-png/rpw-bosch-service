@@ -515,11 +515,15 @@
   },
   {
    "id": "F-201",
-   "nev": "Avizare dauna ablak megnyitasa",
+   "nev": "Avizare dauna FUL a foablakon (K-19) — itt nyilnak a biztosito-dossziek",
    "fe": [
     [
      "index.html",
-     "window.openDosarModal"
+     "setPanouTab(\\'dosare\\')"
+    ],
+    [
+     "index.html",
+     "onclick=\"dosarTarziu()\""
     ]
    ],
    "be": [],

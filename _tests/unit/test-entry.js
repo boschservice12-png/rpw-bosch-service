@@ -71,11 +71,10 @@ console.log('\n4. A harom mentes eredmenye');
   // ── AZ AVIZARE DAUNA GOMBJA (2026-08-25) ──────────────────────
   // Nem urlapot nyit tobbe: letrehozza a dossziet es EGYBOL a dosszie
   // lapjara visz — ugyanazt teszi, mint a listaban a „Deschide dosarul".
-  JOBS.length=0;LAST={};S.showDosar=1;
+  JOBS.length=0;LAST={};
   await dosarTarziu();
   j=LAST.saved;
   ok(!!j,'[Avizare dauna] a gomb letrehozta a dossziet');
-  eq(S.showDosar,0,'  az ablak bezarult');
   eq(j.flux,'doar_dosar','  flux=doar_dosar'); eq(j.damageType,'asig','  asig');
   eq(j.dosarStatus,'deschid','  MI nyitjuk a biztosito fele');
   eq(j.phase,1,'  phase=1 (nem 0!)'); eq(j.phases[1].status,'pending','  a javitas NEM indul');

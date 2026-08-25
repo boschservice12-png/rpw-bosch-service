@@ -232,26 +232,28 @@ try{
   const _dsz=w.JOBS[w.JOBS.length-1];
   _dsz.plate='MS-82-BBB'; _dsz.phone='0740822222'; _dsz.asigurator='Groupama'; _dsz.client='B';
   await w.saveJob(_dsz);
+  // K-19 (2026-08-25): a kárdossziék SAJÁT fülre költöztek.
   w.S.screen='panou'; w.S.panouTab='viitoare'; w.render();
   let h=app();
-  ok(/MS-81-AAA/.test(h),'az előjegyzés a listán');
-  ok(/MS-82-BBB/.test(h),'a kárdosszié IS ugyanazon a listán');
-  // 2026-08-25: a rendszám melletti jelvény kikerült (felesleges volt).
-  // A két sáv megkülönböztetése a SORON látszik, nem egy ikonon:
+  ok(/MS-81-AAA/.test(h),'az előjegyzés a Viitoare listán');
+  ok(!/MS-82-BBB/.test(h),'a kárdosszié NINCS a Viitoare listán (saját fülön él)');
   ok(!/fx-b/.test(h),'nincs jelvény a rendszám mellett');
-  ok(/Deschide dosarul|deschideDosar/.test(h),'a dosszié-sor fő művelete a dosszié megnyitása');
-  ok(/Groupama/.test(h),'a dosszié soron látszik a biztosító (melyik eset)');
-  ok(/acte/.test(h),'iratszámláló a dosszié soron');
-  ok(/openEditJob/.test(h),'✎ gomb');
-  ok(/openRepro/.test(h),'Reprogramare gomb');
-  ok(!/setPanouTab\(.dosare.\)/.test(h),'nincs külön Dosare fül');
+  ok(/setPanouTab\(.dosare.\)/.test(h),'az Avizare daună fül gombja látszik');
+  const psor0=h.split('<tr').filter(s=>/MS-81-AAA/.test(s));
+  ok(psor0[0]&&/markRatat/.test(psor0[0]),'az előjegyzésen VAN Ratat gomb');
 
-  grp('14 · A DOSSZIÉ SORON NINCS "RATAT"');
+  grp('14 · AZ AVIZARE DAUNĂ FÜL (K-19)');
+  w.setPanouTab('dosare'); h=app();
+  ok(/MS-82-BBB/.test(h),'a kárdosszié a saját fülén van');
+  ok(/onclick="dosarTarziu\(\)"/.test(h),'a fülön ott a Deschide dosar daună gomb');
+  ok(/dosarFisier\(event\)/.test(h),'  és a Preluare (fájl) út');
+  ok(/Deschide dosarul|deschideDosar/.test(h),'a dosszié-sor fő művelete a dosszié megnyitása');
+  ok(/Groupama/.test(h),'a soron látszik a biztosító (melyik eset)');
+  ok(/acte/.test(h),'iratszámláló a soron');
   const sorok=h.split('<tr').filter(s=>/MS-82-BBB/.test(s));
   ok(sorok.length===1,'megvan a dosszié sora');
   ok(sorok[0]&&!/markRatat/.test(sorok[0]),'  nincs rajta Ratat gomb');
-  const psor=h.split('<tr').filter(s=>/MS-81-AAA/.test(s));
-  ok(psor[0]&&/markRatat/.test(psor[0]),'az előjegyzésen VAN Ratat gomb');
+  w.setPanouTab('viitoare'); h=app();
 
   grp('15 · MUNKASZÁM — nincs ütközés');
   const szamok=w.JOBS.map(x=>x.number);
