@@ -41,6 +41,7 @@ függvényre hivatkozik, amit egy korábbi már létrehozott — ezt a
 | 004 | `004_staff_posts_legacy.sql` | Személyzet, posztok, kivezetett utak | `004_rollback.sql` |
 | 005 | `005_rls_lockdown.sql` | **RLS-lezárás** | `005_rollback.sql` |
 | 006 | `006_workflow_enforcement.sql` | **Védett workflow-mezők**, patch-jogosultság, trash-jog, rework-szignatúra | `006_rollback.sql` |
+| 007 | `007_pin_lockout_admin.sql` | **PIN-zárolás állapota és feloldása**, gyenge/ütköző PIN elutasítása | `007_rollback.sql` |
 
 ⚠ **Az `001` éles rendszeren NEM futtatandó** — ott a séma már létezik.
 Minden lépése `if not exists`, tehát ártalmatlan, de a rollbackje
@@ -67,8 +68,18 @@ Futtasd le őket, és hasonlítsd össze.
    a V4 kliens kitelepítése után futtatható.
 
 8. kipróbálás: fázislezárás, dosszié-lezárás, rework, skip
-9. MANUAL-STAGING-CHECKLIST.md végigjárása
-10. rpw-config.js → a kilenc PRODUCTION-feltétel
+9. 007_pin_lockout_admin.sql                              (a PIN-zárolás kezelése)
+
+   A 007 a `Echipă → Personal` lapot teszi működővé: enélkül a
+   zárolás-jelző és a feloldó gomb SOHA nem jelenik meg, mert a
+   kliens nem létező RPC-t hív. Régi klienssel is ártalmatlan.
+
+   ⚠ A 007 UTÁN a gyenge PIN (évszám, 1234, csupa azonos) és a
+   kolléga PIN-jének átvétele elutasításra kerül. A MEGLÉVŐ PIN-ek
+   érintetlenek — csak az ÚJ beállítás szigorodik.
+
+10. MANUAL-STAGING-CHECKLIST.md végigjárása
+11. rpw-config.js → a kilenc PRODUCTION-feltétel
 ```
 
 ### Tiszta adatbázison — ellenőrzött
@@ -142,11 +153,12 @@ ha a séma-verzió vagy a támogatott RPC-k nem stimmelnek, megáll.
 cp rpw-config.js.bak rpw-config.js        # 1. kliens vissza v2-re
 ```
 ```sql
-\i _migrations/006_rollback.sql            -- 2. workflow-védelem vissza
-\i _migrations/005_rollback.sql            -- 3. RLS vissza
-\i _migrations/004_rollback.sql            -- 4. személyzet/posztok
-\i _migrations/003_rollback.sql            -- 5. szabályok, átmenetek
-\i _migrations/002_rollback.sql            -- 6. adat-RPC-k
+\i _migrations/007_rollback.sql            -- 2. PIN-zárolás kezelése vissza
+\i _migrations/006_rollback.sql            -- 3. workflow-védelem vissza
+\i _migrations/005_rollback.sql            -- 4. RLS vissza
+\i _migrations/004_rollback.sql            -- 5. személyzet/posztok
+\i _migrations/003_rollback.sql            -- 6. szabályok, átmenetek
+\i _migrations/002_rollback.sql            -- 7. adat-RPC-k
 -- ⚠ 001_rollback.sql: ADATVESZTÉS — éles rendszeren SOHA
 ```
 

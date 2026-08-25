@@ -1,6 +1,6 @@
 {
   "name": "rpw-bosch-service",
-  "version": "2026.08.24-v4",
+  "version": "2026.08.25-v4.1",
   "private": true,
   "description": "RPW — Red Paint Workflow. Karosszéria-műhely munkakövetés.",
   "scripts": {

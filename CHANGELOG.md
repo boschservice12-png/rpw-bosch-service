@@ -1,5 +1,59 @@
 # CHANGELOG.md
 
+## 2026-08-25 — A V4 és a dosszié/PIN ág összefésülése + `007`
+
+Két ág futott párhuzamosan ugyanarról a pontról (`OWN-STAFF-L3A`):
+
+| Ág | Mit hozott |
+|---|---|
+| **V4** | szerveroldali fázisátmenetek, `rpw-cache.js`, `rpw-conflict.js`, fail-closed `verifyServer`, migrációk, öt tesztkategória, dokumentáció |
+| **dosszié/PIN** | alkalmi dosszié útvonala, PIN-zárolás felülete, PIN-ütközés tiltása |
+
+Az összefésülés **git háromutas** módon történt a közös őstől — egyik ág
+munkája sem veszett el. A merge maga konfliktus nélkül ment; a törést a
+**tesztek** mutatták meg, négy helyen.
+
+### 🔴 A `007` — három ígéret, amit semmi nem tartott be
+
+A dosszié/PIN ág felülete olyan szerveroldalt feltételezett, ami **nem létezett**:
+
+| Mit ígért a felület | Mi volt a valóság | Javítás |
+|---|---|---|
+| Zárolás-jelző (piros/sárga) a `Personal` lapon | `rpw2_pin_status` **nincs** — a hívás `try/catch`-ben elnyelődött, a jelző SOHA nem jelent meg | `007`: az RPC megvan, csapatkezelői joggal, saját szervizre szűrve |
+| **Deblochează** gomb | `rpw2_pin_unlock` **nincs** — a gomb sem jelent meg, a zárolt kolléga 15 percet várt | `007`: jogot kér, auditba kerül |
+| „NU un an, nu cifre identice sau consecutive… Fiecare coleg trebuie să aibă alt PIN" | a `004` `rpw2_pin_set` **csak a hosszt** nézte | `007`: `weak_pin` + `pin_taken` a szerveren, `rpw__pin_weak()` |
+
+A zárolás maga működött (`002`, `rpw_pin_attempt`) — csak **se látni, se
+feloldani** nem lehetett. Ez a legrosszabb fajta hiba: a felület azt
+állította, hogy nincs zárolt kolléga.
+
+Ráadás: **új PIN-nél a rossz próbálkozások elévülnek.** Enélkül a dolgozó a
+friss PIN-jével is zárolva maradt volna.
+
+`007_rollback.sql` visszaállítja a `004`-es állapotot. Séma-verzió: `007`.
+
+### Tesztek — ami a törést megmutatta
+
+| Teszt | Mit mutatott | Mi lett belőle |
+|---|---|---|
+| `test-rpc-consistency` | a kliens **két nem létező RPC-t** hív | ez adta a `007`-et |
+| `test-entry`, `test-acceptance` | a dosszié mentése navigál | a teszt elvárása igazodott a **szándékos** 2026-08-25-i változáshoz |
+| `test-render` | a kék gomb `openDosarModal()`-t hív | ugyanaz |
+
+**Új: `test-int-tenant` PIN-szakasz** — valódi PostgreSQL: gyenge PIN,
+ütköző PIN, 10 rossz PIN → zárolás, jogosultság, bérlőizoláció, feloldás,
+audit, elévülés. A migrációs ciklus a `007`-tel együtt jár körbe
+(rollback fordítva, majd újra).
+
+### Őszinteség a tesztharnessen
+
+A `test-acceptance.js` NAV-jelzője minden navigációt
+`'rpw-recepcio-red.html'`-ként könyvelt el — a jsdom ugyanis **nem adja meg
+a cél URL-t**, és a `location.assign` sem cserélhető ki (belső wrapper,
+mérve). A jelző mostantól csak azt állítja, amit tud: *navigált*. A cél
+URL-t a `test-entry.js` méri, ahol a `location` sima Node-global.
+
+---
 ## 2026-08-24 — P0/P1 javítási kör
 
 **A régi csomagot nem írtuk felül.** Ez új verzió.

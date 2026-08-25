@@ -13,7 +13,7 @@ let pass = 0, fail = 0;
 const ok = (c, m) => { c ? pass++ : (fail++, console.log('  ✗ ' + m)); };
 const eq = (g, e, m) => ok(JSON.stringify(g) === JSON.stringify(e), m + '  got=' + JSON.stringify(g));
 
-let c, SHOP_A, SHOP_B, USER_A, USER_B, TOK_A, TOK_B, TOK_TECH;
+let c, SHOP_A, SHOP_B, USER_A, USER_B, USER_TECH, TOK_A, TOK_B, TOK_TECH;
 const JOB_A = 'JOB-A-1', JOB_B = 'JOB-B-1';
 
 const CAN_ALL  = { team:true, posts:true, open:true, reception:true,
@@ -56,7 +56,7 @@ async function setup(){
     + " values ($1,'Tech A','TECH', crypt('2222', gen_salt('bf'))) returning id", [SHOP_A]);
   const eb = await c.query("insert into rpw_employees(shop_id,name,role_code,pin_hash)"
     + " values ($1,'User B','MGR', crypt('3333', gen_salt('bf'))) returning id", [SHOP_B]);
-  USER_A = ea.rows[0].id; USER_B = eb.rows[0].id;
+  USER_A = ea.rows[0].id; USER_B = eb.rows[0].id; USER_TECH = et.rows[0].id;
 
   TOK_A    = (await rpc('rpw2_login', {p_shop_id:SHOP_A, p_employee_id:USER_A, p_pin:'1111'})).token;
   TOK_TECH = (await rpc('rpw2_login', {p_shop_id:SHOP_A, p_employee_id:et.rows[0].id, p_pin:'2222'})).token;
@@ -357,16 +357,123 @@ console.log('\n══ SZERVER-KÉPESSÉGEK ══');
 {
   const cap = await rpc('rpw_server_capabilities', {});
   eq(cap.ok, true, 'lekérdezhető');
-  eq(cap.schema_version, '006', '  séma-verzió 006 (v4)');
+  eq(cap.schema_version, '007', '  séma-verzió 007 (v4 + PIN-zárolás)');
   eq(cap.rls_locked, true, '  az RLS lezárva');
   eq(cap.business_gates_server_side, true, '  az üzleti kapuk szerveroldalon');
   ok(cap.rpcs.indexOf('rpw_transition') >= 0, '  a rpw_transition szerepel');
   ok(cap.rpcs.indexOf('rpw__ctx') < 0, '  a belső segédek NEM');
 }
 
+console.log('\n══ PIN-ZÁROLÁS ÉS PIN-MINŐSÉG (007) ══');
+{
+  // A MUNKAMENET szakasz visszavonta TOK_A-t — friss belépés kell.
+  const TOK = (await rpc('rpw2_login', {p_shop_id:SHOP_A, p_employee_id:USER_A, p_pin:'1111'})).token;
+
+  console.log('\n1. A gyenge PIN-t a SZERVER utasítja el, nem a felület');
+  for (const [pin, hiba, mit] of [['1234','weak_pin','növekvő futam'],
+                                  ['9876','weak_pin','csökkenő futam'],
+                                  ['7777','weak_pin','csupa azonos'],
+                                  ['1969','weak_pin','évszám'],
+                                  ['2026','weak_pin','évszám'],
+                                  ['12a4','weak_pin','nem csak számjegy'],
+                                  ['123', 'pin_too_short','rövid']]) {
+    const r = await rpc('rpw2_pin_set', {p_token:TOK, p_employee_id:USER_TECH, p_new_pin:pin});
+    eq(r.error, hiba, '  ' + pin + ' → ' + mit);
+  }
+
+  console.log('\n2. Az erős PIN átmegy, és MŰKÖDIK is');
+  {
+    const r = await rpc('rpw2_pin_set', {p_token:TOK, p_employee_id:USER_TECH, p_new_pin:'4917'});
+    eq(r.ok, true, 'elfogadva');
+    const l = await rpc('rpw2_login', {p_shop_id:SHOP_A, p_employee_id:USER_TECH, p_pin:'4917'});
+    eq(l.ok, true, '  az új PIN-nel be lehet lépni');
+    const o = await rpc('rpw2_login', {p_shop_id:SHOP_A, p_employee_id:USER_TECH, p_pin:'2222'});
+    eq(o.error, 'bad_pin', '  a régivel nem');
+  }
+
+  console.log('\n3. Ütköző PIN — a szervizben mindenkinek MÁS PIN-je van');
+  {
+    const r = await rpc('rpw2_pin_set', {p_token:TOK, p_employee_id:USER_A, p_new_pin:'4917'});
+    eq(r.error, 'pin_taken', 'a kolléga PIN-je nem vehető át');
+    const r2 = await rpc('rpw2_pin_set', {p_token:TOK, p_employee_id:USER_A, p_new_pin:'5382'});
+    eq(r2.ok, true, '  másik PIN viszont mehet');
+    // MÁSIK szervizben ugyanaz a PIN szabad — a szervizek nem látják egymást
+    const TB = (await rpc('rpw2_login', {p_shop_id:SHOP_B, p_employee_id:USER_B, p_pin:'3333'})).token;
+    const r3 = await rpc('rpw2_pin_set', {p_token:TB, p_employee_id:USER_B, p_new_pin:'4917'});
+    eq(r3.ok, true, '  a MÁSIK szervizben ugyanaz a PIN szabad');
+  }
+
+  console.log('\n4. A zárolás állapotát csak csapatkezelő látja, és csak a SAJÁT szervizéből');
+  {
+    const t = await rpc('rpw2_pin_status', {p_token:TOK_TECH});
+    eq(t.error, 'not_allowed', 'a technikus nem kérdezheti le');
+    const n = await rpc('rpw2_pin_status', {p_token:'x'.repeat(40)});
+    eq(n.error, 'unauthorized', '  érvénytelen tokennel sem');
+
+    // 10 rossz PIN → zárolás (002 rpw2_login)
+    for (let i=0;i<10;i++) await rpc('rpw2_login', {p_shop_id:SHOP_A, p_employee_id:USER_TECH, p_pin:'0000'});
+    const blokk = await rpc('rpw2_login', {p_shop_id:SHOP_A, p_employee_id:USER_TECH, p_pin:'4917'});
+    eq(blokk.error, 'locked', 'a 10. rossz PIN után a JÓ PIN sem enged be');
+
+    const st = await rpc('rpw2_pin_status', {p_token:TOK});
+    eq(st.ok, true, 'a csapatkezelő lekérdezheti');
+    const sor = (st.rows||[]).filter(r => r.id === USER_TECH)[0];
+    ok(!!sor, '  a zárolt kolléga szerepel benne');
+    eq(sor && sor.locked, true, '  locked = true');
+    eq(sor && sor.attempts, 10, '  attempts = 10');
+    ok(sor && sor.minutesLeft > 0 && sor.minutesLeft <= 15, '  minutesLeft 1..15 között');
+
+    // a MÁSIK szerviz vezetője NEM látja
+    const TB = (await rpc('rpw2_login', {p_shop_id:SHOP_B, p_employee_id:USER_B, p_pin:'4917'})).token;
+    const stb = await rpc('rpw2_pin_status', {p_token:TB});
+    eq(stb.ok, true, 'a másik szerviz is lekérdezheti — a SAJÁTJÁT');
+    ok((stb.rows||[]).filter(r => r.id === USER_TECH).length === 0,
+       '  de SHOP_A zárolt dolgozója nincs benne');
+  }
+
+  console.log('\n5. A feloldás jogot kér — a gomb elrejtése nem védelem');
+  {
+    const t = await rpc('rpw2_pin_unlock', {p_token:TOK_TECH, p_employee_id:USER_TECH});
+    eq(t.error, 'not_allowed', 'a technikus nem oldhat fel');
+    const TB = (await rpc('rpw2_login', {p_shop_id:SHOP_B, p_employee_id:USER_B, p_pin:'4917'})).token;
+    const b = await rpc('rpw2_pin_unlock', {p_token:TB, p_employee_id:USER_TECH});
+    eq(b.error, 'not_found', 'a MÁSIK szerviz vezetője sem — nem is látja');
+
+    const meg = await rpc('rpw2_login', {p_shop_id:SHOP_A, p_employee_id:USER_TECH, p_pin:'4917'});
+    eq(meg.error, 'locked', '  a zárolás eddig érvényben maradt');
+
+    const u = await rpc('rpw2_pin_unlock', {p_token:TOK, p_employee_id:USER_TECH});
+    eq(u.ok, true, 'a saját szerviz vezetője feloldja');
+    const be = await rpc('rpw2_login', {p_shop_id:SHOP_A, p_employee_id:USER_TECH, p_pin:'4917'});
+    eq(be.ok, true, '  utána azonnal be lehet lépni');
+
+    const st = await rpc('rpw2_pin_status', {p_token:TOK});
+    ok((st.rows||[]).filter(r => r.id === USER_TECH).length === 0,
+       '  és eltűnik a zárolás-listáról');
+
+    const a = await c.query("select count(*) n from rpw_audit where action='pin_unlock'");
+    ok(Number(a.rows[0].n) >= 1, 'a feloldás auditba kerül');
+  }
+
+  console.log('\n6. Új PIN esetén a régi rossz próbálkozások elévülnek');
+  {
+    for (let i=0;i<5;i++) await rpc('rpw2_login', {p_shop_id:SHOP_A, p_employee_id:USER_TECH, p_pin:'0000'});
+    const elotte = await rpc('rpw2_pin_status', {p_token:TOK});
+    ok((elotte.rows||[]).filter(r => r.id === USER_TECH).length === 1, 'öt rossz próbálkozás rögzült');
+    const r = await rpc('rpw2_pin_set', {p_token:TOK, p_employee_id:USER_TECH, p_new_pin:'6284'});
+    eq(r.ok, true, 'a vezető új PIN-t ad');
+    const utana = await rpc('rpw2_pin_status', {p_token:TOK});
+    ok((utana.rows||[]).filter(r => r.id === USER_TECH).length === 0,
+       '  a friss PIN-nel nem marad zárolás felé tartó számláló');
+  }
+}
+
 console.log('\n══ MIGRÁCIÓS ROLLBACK ══');
 {
-  // v4: a 006 van legfelül — előbb azt vonjuk vissza
+  // v4: a 007 van legfelül — fordított sorrendben bontunk
+  await D.rollback(c, '007_rollback.sql');
+  const p7 = await c.query("select to_regprocedure('public.rpw2_pin_status(text)') as p");
+  ok(!p7.rows[0].p, '007 rollback: a PIN-státusz függvény eltűnt');
   await D.rollback(c, '006_rollback.sql');
   await D.rollback(c, '005_rollback.sql');
   const pol = await c.query("select count(*) n from pg_policy where polrelid='public.rpw_jobs'::regclass");
@@ -376,8 +483,9 @@ console.log('\n══ MIGRÁCIÓS ROLLBACK ══');
   // újrafuttatás
   await D.migrate(c, '005_rls_lockdown.sql');
   await D.migrate(c, '006_workflow_enforcement.sql');
+  await D.migrate(c, '007_pin_lockout_admin.sql');
   const v2 = await c.query('select version from rpw_schema_version');
-  eq(v2.rows[0].version, '006', 'a 005+006 újra lefuttatható (idempotens)');
+  eq(v2.rows[0].version, '007', 'a 005+006+007 újra lefuttatható (idempotens)');
 }
 
 console.log('\n' + (fail ? '✗ ' : '✓ ') + pass + ' pass / ' + fail + ' fail');

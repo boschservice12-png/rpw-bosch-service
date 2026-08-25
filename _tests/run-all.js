@@ -168,7 +168,9 @@ let npmv = null;
 try { npmv = spawnSync('npm',['-v'],{encoding:'utf8'}).stdout.trim(); } catch(e){}
 let build = null;
 try {
-  const b = fs.readFileSync(path.join(ROOT,'index.html'),'utf8').slice(0,400).match(/BUILD:\s*([^\s*>-]+)/);
+  // A kotojel a build-nev RESZE (V4-MERGE-PIN007). A regi minta az elso
+  // kotojelnel vagott: az "OWN-STAFF-L3A"-bol "OWN" lett a jelentesben.
+  const b = fs.readFileSync(path.join(ROOT,'index.html'),'utf8').slice(0,400).match(/BUILD:\s*([A-Za-z0-9_.-]+)/);
   build = b ? b[1] : null;
 } catch(e){}
 

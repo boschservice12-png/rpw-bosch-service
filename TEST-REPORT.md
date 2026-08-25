@@ -3,7 +3,7 @@
 > **Ez a fájl generált.** Forrás: `_tests/last-run.json`.
 > Újragenerálás: `npm test && node _tests/gen-report.js`
 
-*Generálva: 2026-08-24T17:50:14.969Z*
+*Generálva: 2026-08-25T06:23:10.635Z*
 
 ---
 
@@ -15,7 +15,7 @@
 | npm | 10.9.7 |
 | jsdom | 30.0.1 |
 | embedded-postgres | 18.4.0-beta.17 |
-| Build | `OWN` |
+| Build | `V4-MERGE-PIN007` |
 
 ## Parancsok
 
@@ -40,13 +40,13 @@ Staging:               NOT VERIFIED
 
 | Kategória | Fájl | Állítás | Sikeres | Sikertelen | El sem indult |
 |---|---:|---:|---:|---:|---:|
-| **Unit** | 34 | 1360 | 1360 | 0 | 0 |
-| **Database integration** | 3 | 203 | 203 | 0 | 0 |
+| **Unit** | 34 | 1366 | 1366 | 0 | 0 |
+| **Database integration** | 3 | 241 | 241 | 0 | 0 |
 | **Frontend integration** | 1 | 176 | 176 | 0 | 0 |
 | **Static workflow audit** | 1 | 2 | 2 | 0 | 0 |
 | **Staging** | — | — | — | — | — |
 
-**Futási idő:** 28.9 s
+**Futási idő:** 24.8 s
 
 > ⚠ **A staging NEM igazolt** — a MANUAL-STAGING-CHECKLIST.md nincs kitöltve
 > Ezért a „minden teszt sikeres" állítás NEM tehető meg.
@@ -84,7 +84,7 @@ Ez fedi a brief 6. pontjának mind a 12 esetét és a 13. pont regresszióit.
 | unit | `test-dosare.js` | 22 | 0 | ✅ |
 | unit | `test-dosarflux.js` | 22 | 0 | ✅ |
 | unit | `test-edit.js` | 38 | 0 | ✅ |
-| unit | `test-entry.js` | 55 | 0 | ✅ |
+| unit | `test-entry.js` | 56 | 0 | ✅ |
 | unit | `test-gap.js` | 69 | 0 | ✅ |
 | unit | `test-lifecycle.js` | 39 | 0 | ✅ |
 | unit | `test-list-unwrap.js` | 64 | 0 | ✅ |
@@ -100,8 +100,8 @@ Ez fedi a brief 6. pontjának mind a 12 esetét és a 13. pont regresszióit.
 | unit | `test-p0-7-functions.js` | 38 | 0 | ✅ |
 | unit | `test-pin-dialog.js` | 24 | 0 | ✅ |
 | unit | `test-prog.js` | 30 | 0 | ✅ |
-| unit | `test-render.js` | 24 | 0 | ✅ |
-| unit | `test-rpc-consistency.js` | 50 | 0 | ✅ |
+| unit | `test-render.js` | 25 | 0 | ✅ |
+| unit | `test-rpc-consistency.js` | 54 | 0 | ✅ |
 | unit | `test-security-a-o.js` | 95 | 0 | ✅ |
 | unit | `test-staff.js` | 50 | 0 | ✅ |
 | unit | `test-state.js` | 28 | 0 | ✅ |
@@ -109,8 +109,8 @@ Ez fedi a brief 6. pontjának mind a 12 esetét és a 13. pont regresszióit.
 | unit | `test-typo.js` | 19 | 0 | ✅ |
 | unit | `test-wa.js` | 12 | 0 | ✅ |
 | unit | `test-xss.js` | 95 | 0 | ✅ |
-| integration | `test-int-migrations.js` | 42 | 0 | ✅ |
-| integration | `test-int-tenant.js` | 80 | 0 | ✅ |
+| integration | `test-int-migrations.js` | 46 | 0 | ✅ |
+| integration | `test-int-tenant.js` | 114 | 0 | ✅ |
 | integration | `test-int-workflow.js` | 81 | 0 | ✅ |
 | frontend | `test-fe-transition.js` | 176 | 0 | ✅ |
 | static | `test-static-workflow.js` | 2 | 0 | ✅ |

@@ -33,11 +33,15 @@ window.RPWWorkflow={migrateJob:function(){},phaseStatus:function(){return 'pendi
 html=html.replace('</head>',STUB+'</head>');
 
 // A jsdom nem hajt vegre navigaciot, de JELZI. Ezt fogjuk el.
+// FIGYELEM: a jelzes NEM tartalmazza a cel URL-t — a jsdom nem adja meg,
+// es a location.assign sem kicserelheto (belso wrapper). Ezert itt CSAK
+// azt allitjuk, hogy navigalt-e. A cel URL-t a test-entry.js meri, ahol
+// a location egy sima Node-global, tehat elkaphato.
 const {VirtualConsole}=require('jsdom');
 let NAV=null;
 const vc=new VirtualConsole();
 vc.on('jsdomError',function(e){
-  if(/navigation to another Document/i.test(e.message||''))NAV='rpw-recepcio-red.html';
+  if(/navigation to another Document/i.test(e.message||''))NAV='navigare';
 });
 vc.on('error',function(){}); vc.on('warn',function(){}); vc.on('info',function(){});
 const dom=new JSDOM(html,{runScripts:'dangerously',pretendToBeVisual:true,url:'https://x.test/index.html',virtualConsole:vc});
@@ -98,7 +102,9 @@ try{
   eq(j.dosarStatus,'deschid','automatikusan "mi nyitjuk"');
   eq(j.phases[1].status,'pending','a javítás NEM indul el');
   eq(w.categorizeJob(j),'dosare','külön kategória');
-  ok(NAV===null,'nem navigál el');
+  // 2026-08-25: az alkalmi dossziénál a MUNKA a biztosítói iratokkal van,
+  // ezért a mentés a dosszié lapjára visz. (Cél URL: test-entry.js)
+  ok(NAV!==null,'a dosszié lapjára navigál');
 
   grp('3 · LUCRARE NOUĂ — az autó itt van');
   NAV=null;
@@ -107,7 +113,7 @@ try{
   eq(j.phases[1].status,'active','a recepció ELINDUL');
   eq(j.conditions.whatsapp,true,'a feltételek beállnak');
   eq(w.categorizeJob(j),'lucrari','→ Lucrări képernyő');
-  ok(/rpw-recepcio-red\.html/.test(NAV||''),'átvisz a recepcióra');
+  ok(NAV!==null,'átvisz a recepcióra (cél URL: test-entry.js)');
 
   // ══════════════════════════════════════════════════════════
   grp('4 · A KAPUK — nem enged hiányos adatot');
@@ -191,7 +197,7 @@ try{
   eq(w.JOBS[0].conditions.whatsapp,true,'a 💬 gomb megjelöli');
   await w.deschideLucrare(j.id);
   eq(w.JOBS[0].sosire,'sosit','most már átveszi');
-  ok(/rpw-recepcio/.test(NAV||''),'  és átvisz a recepcióra');
+  ok(NAV!==null,'  és átvisz a recepcióra (cél URL: test-entry.js)');
 
   grp('11 · KÉSETTSÉG-FELISMERÉS');
   const P=d=>({programare:{date:d,time:'08:00'}});

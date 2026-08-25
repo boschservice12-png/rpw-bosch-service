@@ -23,6 +23,22 @@ Amíg ez nincs kitöltve, a tesztfuttató `Staging: NOT VERIFIED` állapotot jel
 - [ ] Belépés után a saját név jelenik meg, nem „service"
 - [ ] Belépés nélkül egyetlen belső oldal sem érhető el *(próbáld közvetlen URL-lel)*
 
+## 1b. PIN-zárolás kezelése *(007)*
+
+Ehhez a `007_pin_lockout_admin.sql` migrációnak le kell futnia. Enélkül a
+zárolás-jelző és a feloldó gomb NEM jelenik meg — a kliens nem létező
+RPC-t hív, és a hiba csendben elnyelődik.
+
+- [ ] `Echipă → Personal`: a zárolt kolléga mellett **piros** jelző, benne a hátralévő percek
+- [ ] 1-9 rossz PIN után **sárga** jelző a próbálkozások számával
+- [ ] A **Deblochează** gomb csak zárolásnál / rossz próbálkozásnál látszik
+- [ ] Feloldás után a kolléga **azonnal** be tud lépni a jó PIN-jével
+- [ ] Technikus (csapat-jog nélkül) belépve **nem** látja a jelzőket, és a
+      közvetlen `rpw2_pin_unlock` hívást a szerver elutasítja
+- [ ] Évszám (`1969`, `2026`), `1234`, `1111` PIN-t a szerver **elutasít**, román üzenettel
+- [ ] Kolléga PIN-jének átvétele → „PIN-ul e deja folosit de un coleg"
+- [ ] A **meglévő** PIN-ek változatlanul működnek *(a szigorítás csak új beállításra vonatkozik)*
+
 ## 2. Munka a dossziékkal
 
 - [ ] Munka megnyitása, mentés, fázisváltás
@@ -127,7 +143,15 @@ Ez a legfontosabb kézi teszt.
 ## 12. Verzióütközés kliens ↔ szerver
 
 - [ ] Régi kliens + új szerver → az alkalmazás **megáll**, román üzenettel
-- [ ] `rpw_server_capabilities` a helyes séma-verziót adja
+- [ ] `rpw_server_capabilities` a helyes séma-verziót adja (**`007`**)
+
+## 13. Alkalmi dosszié — a 2026-08-25-i útvonal
+
+- [ ] A panel kék gombja a **dosszié-ablakot** nyitja (nem közvetlenül az új-munka modált)
+- [ ] „Auto vine mai târziu" → a harmadik út elérhető gombbal
+- [ ] Dosszié mentése után a **dosszié lapjára** visz, a helyes `?job=` azonosítóval
+- [ ] Dosszié módban a telefon **opcionális** — üresen is menthető,
+      de hibás formátummal nem
 
 ---
 

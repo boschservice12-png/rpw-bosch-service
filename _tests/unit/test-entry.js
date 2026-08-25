@@ -73,7 +73,10 @@ console.log('\n4. A harom mentes eredmenye');
   eq(j.flux,'doar_dosar','  flux=doar_dosar'); eq(j.damageType,'asig','  asig');
   eq(j.dosarStatus,'deschis','  dosarStatus'); eq(j.nrDosar,'D-77','  karszam');
   eq(j.phase,1,'  phase=1'); eq(j.phases[1].status,'pending','  a javitas NEM indul');
-  eq(categorizeJob(j),'dosare','  -> Dosare ful'); ok(!LAST.nav,'  nem navigal');
+  eq(categorizeJob(j),'dosare','  -> Dosare ful');
+  // 2026-08-25: a dosszie mentese a DOSSZIE lapjara visz, nem a listara
+  ok(/rpw-dosar\.html/.test(LAST.nav||''),'  a dosszie lapjara navigal');
+  ok(/job=/.test(LAST.nav||''),'  a munka azonositojaval');
 
   j=await mk('lucrare',{njTip:'auto'});
   ok(!!j,'[lucrare/auto] letrejott');

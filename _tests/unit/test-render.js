@@ -20,7 +20,10 @@ setTimeout(()=>{try{
 
   w.setScreen('panou');let h=app.innerHTML;
   ok(/onclick="openNewJob\('prog'\)"/.test(h),'Panou: Programare noua gomb');
-  ok(/onclick="openNewJob\('dosar'\)"/.test(h),'Panou: Deschide dosar gomb');
+  // 2026-08-25: a felso kek gomb a DOSSZIE-ablakot nyitja (openDosarModal),
+  // nem kozvetlenul az uj-munka modalt.
+  ok(/onclick="openDosarModal\(\)"/.test(h),'Panou: Deschide dosar gomb');
+  ok(typeof w.openDosarModal==='function','openDosarModal letezik');
   ok(/onclick="openNewJob\('lucrare'\)"/.test(h),'Panou: Lucrare noua gomb');
   ok(!/startReceptie\(false\)/.test(h),'Panou: regi "Receptie auto" gomb eltunt');
 

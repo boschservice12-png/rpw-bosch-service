@@ -45,7 +45,17 @@ A `rpw2_session` a **végleges** munkamenet-RPC. A régi `rpw_session` (Red ERP-
 | Token | 64 hex karakter, **csak SHA-256 lenyomata** tárolódik |
 | Élettartam | 12 óra |
 | Zárolás | 10 rossz PIN → 15 perc |
+| Zárolás **feloldása** | csapatkezelői joggal, auditálva (`rpw2_pin_unlock`) |
+| Zárolás **láthatósága** | csak csapatkezelőnek, csak a saját szervizéből (`rpw2_pin_status`) |
+| PIN-minőség | évszám, csupa azonos, összefüggő futam elutasítva — **szerveroldalon** |
+| PIN-ütközés | egy szervizen belül nincs két azonos PIN |
 | Kiléptetés | PIN törlődik, munkamenetek visszavonva |
+
+**A PIN-szabályok a szerveren élnek** (`007`). A felület szövege korábban
+szigorúbbat ígért, mint amit a `004` betartatott — a `rpw2_pin_set` csak a
+hosszt nézte. A zárolás-jelző és a feloldó gomb pedig **nem létező RPC-t**
+hívott: a hívás `try/catch`-ben elnyelődött, és a vezető azt hitte, nincs
+zárolt kollégája. Mindkettő igazolva valódi adatbázison.
 
 **Token tárolása:** `localStorage`. Ez XSS esetén kiolvasható. Enyhítés: az `innerHTML`-utak escape-elve, a lightbox DOM-építésre váltva, a Content-Security-Policy **még nincs** — lásd a maradék kockázatokat.
 

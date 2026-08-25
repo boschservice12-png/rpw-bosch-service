@@ -50,12 +50,12 @@ Az „igazolva" oszlop megmondja, hogy állítás vagy mérés.
 | **Ami hátravan** | A `rpw-workflow.js` átállítása a szervertől kapott listára. Ma még saját szabályokat is tartalmaz |
 | **Igazolva** | Integrációs teszt: kötelező dokumentum nélkül **közvetlen RPC-hívással sem** zárható fázis |
 
-### 6. A `rpw-data.js` egyetlen oldalon sincs betöltve
+### 6. ~~A `rpw-data.js` egyetlen oldalon sincs betöltve~~ — ✅ MEGSZŰNT (V4)
 | | |
 |---|---|
-| **Mi a kockázat** | A javított fájl **halott kód** — a fázisátmenetek ma nem rajta mennek |
-| **Következmény** | A `SERVER_TRANSITIONS:true` bekapcsolása önmagában **nem** irányítja át a forgalmat; a hívási helyeket be kell kötni |
-| **Igazolva** | `grep -l "rpw-data.js" *.html` → üres |
+| **Mi volt** | A javított fájl halott kód volt — a `SERVER_TRANSITIONS:true` önmagában nem irányította át a forgalmat |
+| **Most** | 11 oldal tölti be, `RPWData.init`-tel; a fázisátmenetek a szerverre mennek |
+| **Igazolva** | `grep -l "rpw-data.js" *.html` → 11 oldal · `test-fe-transition.js`: valódi oldalkód jsdom-ban, mind a 7 fázisoldal |
 
 ### 7. Kilenc oldal duplikált runtime-ja
 | | |
@@ -125,3 +125,37 @@ Az `evaluare` és az `inchidere` oldalon a lezárás előtt egy **normál patch*
 
 ### `'unsafe-inline'` a CSP-ben
 Változatlan a V3 óta. Report-only staging fejléc készen áll a méréshez.
+
+---
+
+# 2026-08-25 — az összefésülés után
+
+## Amit a `007` megszüntetett
+
+| Korábbi kockázat | Állapot |
+|---|---|
+| A zárolás-jelző nem létező RPC-t hívott — a vezető azt hitte, nincs zárolt kollégája | ✅ **megszűnt** — `rpw2_pin_status`, valódi adatbázison igazolva |
+| A zárolást 15 percnél hamarabb nem lehetett feloldani | ✅ **megszűnt** — `rpw2_pin_unlock`, joghoz kötve, auditálva |
+| A felület szigorúbb PIN-szabályt ígért, mint amit a szerver betartatott | ✅ **megszűnt** — `weak_pin` + `pin_taken` a szerveren |
+
+## 🟠 Ami ÚJ
+
+### A `007` nem futott le éles adatbázison
+| | |
+|---|---|
+| **Mi a kockázat** | Amíg nem fut, a `Personal` lap zárolás-jelzője és feloldó gombja **továbbra sem jelenik meg** — a hiba csendes marad |
+| **Miért nincs megoldva** | Az 1. alapelv tiltja az éles adatbázis módosítását |
+| **Igazolva** | A `007` valódi PostgreSQL-en lefutott, rollbackkel és újrafuttatással — *tesztadatbázison* |
+| **Következő lépés** | `DEPLOYMENT.md` 9. lépés |
+
+### A meglévő PIN-ek lehetnek gyengék vagy ütközők
+A `007` **csak az új beállításra** szigorít. Aki ma `1234`-gyel lép be, azzal
+holnap is be fog. **Jogalap:** a visszamenőleges kényszerítés kizárná a
+dolgozókat a rendszerből, ami rosszabb, mint a gyenge PIN.
+**Következő lépés:** a PIN-kiosztás (1. kockázat) során a `007` már szűr —
+a két feladat egyszerre elvégezhető.
+
+### A dosszié-útvonal élesben nincs mérve
+Az alkalmi dosszié 2026-08-25-i útvonala (kék gomb → ablak → mentés → a
+dosszié lapja) **unit- és jsdom-szinten** igazolt. Valódi böngészőben,
+valódi szerverrel nem — `MANUAL-STAGING-CHECKLIST.md` 13. pont.
