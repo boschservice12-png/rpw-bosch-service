@@ -40,6 +40,74 @@
 
 
 # ════════════════════════════════════════════════════════════════
+#  AMI NEM MEHET KI A NYILVÁNOS SITE-RA
+#  ----------------------------------------------------------------
+#  Nincs `publish` könyvtár megadva, ezért a Netlify a repó GYÖKERÉT
+#  szolgálja ki. A V4 óta itt fekszik a migrációk, a tesztek és a
+#  biztonsági dokumentáció is — a `REMAINING-RISKS.md` kifejezetten
+#  FELSOROLJA a nyitott réseket, a `_migrations/` pedig a teljes
+#  jogosultsági modellt. Ezek nélkül a szabályok nélkül a site
+#  élesítésének pillanatában letölthetők lennének.
+#
+#  `force = true`: a szabály a statikus fájl KISZOLGÁLÁSA ELŐTT fut.
+#  A tartalom a 404-es lapé, a státusz 404 — nincs se tartalom,
+#  se „létezik, de tiltott" visszajelzés.
+# ════════════════════════════════════════════════════════════════
+[[redirects]]
+  from = "/_migrations/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/_db/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/_tests/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/*.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/*.sql"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/package.json"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/package-lock.json"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/rpw-config.staging.js"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.gitignore"
+  to = "/404.html"
+  status = 404
+  force = true
+
+# ════════════════════════════════════════════════════════════════
 #  STAGING — CSP REPORT-ONLY
 #  ----------------------------------------------------------------
 #  Ez a SZIGORÚ cél-CSP, `Report-Only` módban: NEM blokkol semmit,
