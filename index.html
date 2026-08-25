@@ -604,10 +604,9 @@ new_programare:{ro:'+ Programare noua',en:'+ New schedule',hu:'+ Uj programalas'
 prog_dauna:{ro:'Dosar daună (asigurare) — deschide dosarul',en:'Damage file (insurance) — open dossier',hu:'Kárdosszié (biztosítás) — nyisd meg a dossziét'},
 receptie_auto:{ro:'Receptie auto',en:'Car reception',hu:'Auto atvetel'},
 dosar_dauna:{ro:'Avizare daună',en:'Damage notification',hu:'Karbejelentes'},
-dosar_q:{ro:'Autovehiculul este in service?',en:'Is the car at the shop?',hu:'Az auto itt van a szervizben?'},
-dosar_tarziu:{ro:'Auto vine mai tarziu — doar dosarul',en:'Car comes later — file only',hu:'Az auto kesobb jon — csak a dosszie'},
-dosar_aici:{ro:'Auto este aici — receptie acum',en:'Car is here — reception now',hu:'Itt van — atvetel most'},
-dosar_fisier:{ro:'Preluare date din fisier (constatare / PV)',en:'Import data from file',hu:'Adatok atvetele fajlbol'},
+dosar_q:{ro:'Deschidem noi dosarul, sau preluăm unul existent?',en:'Do we open the file, or take over an existing one?',hu:'Mi nyitjuk a dossziet, vagy meglevot veszunk at?'},
+dosar_tarziu:{ro:'Deschide dosar daună',en:'Open claim file',hu:'Kardosszie nyitasa'},
+dosar_fisier:{ro:'Preluare dosar daună',en:'Take over claim file',hu:'Dosszie atvetele'},
 dosar_citire:{ro:'Se citeste documentul...',en:'Reading document...',hu:'Dokumentum beolvasasa...'},
 prog_modal_title:{ro:'Programare noua',en:'New schedule',hu:'Uj programalas'},
 prog_modal_sub:{ro:'Min. necesar pentru a deschide o lucrare',en:'Minimum to open a job',hu:'Minimum a munka megnyitasahoz'},
@@ -1283,7 +1282,6 @@ function renderPanou(){
     h+='<div class="prog-modal" onclick="closeDosarModal()"><div class="prog-box" onclick="event.stopPropagation()">';
     h+='<div class="prog-t">'+T('dosar_dauna')+'</div>';
     h+='<div class="prog-s">'+T('dosar_q')+'</div>';
-    h+='<button class="btn-prog-new" style="width:100%;margin-bottom:8px;justify-content:center" onclick="dosarAici()">'+T('dosar_aici')+'</button>';
     // ── HIÁNYZÓ HARMADIK ÚT (2026-08-24) ────────────────────────
     // A `dosarTarziu()` a kódban MEGVOLT, de gomb NEM hívta —
     // halott kód. Ez az az eset, amikor a kárbejelentés megvan,
@@ -2044,7 +2042,6 @@ window.closeDosarModal=function(){S.showDosar=0;render()};
 // Ezek objektumot adtak át, ami egyik ágra sem illett → mindkettő
 // csendben 'prog' módba esett. A gomb felirata mást ígért.
 // „Az auto itt van — recepció most" = lucrare (→ recepció lap).
-window.dosarAici=function(){S.showDosar=0;openNewJob('lucrare')};
 // „Az auto később jön — csak a dosszié" = dosar (→ dosszié lap).
 window.dosarTarziu=function(){S.showDosar=0;openNewJob('dosar')};
 
