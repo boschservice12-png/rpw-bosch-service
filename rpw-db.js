@@ -16,13 +16,29 @@
 (function(root){
   'use strict';
   function auth(){ return root.RPWAuth || null; }
+  // ── EGYESÍTETT BIZTONSÁGOS ÚT (2026-08-24) ──────────────────────
+  // KÉT párhuzamos „secure" ág volt ebben a fájlban:
+  //   · useSecure() → rpw_patch_secure / rpw_soft_delete / rpw_restore / rpw_purge
+  //   · useV3()     → rpw_patch_v3 / rpw_job_trash / rpw_job_restore / rpw_job_purge
+  // Az első nyert, mert előbb volt ellenőrizve — DE:
+  //   1. azok a függvények NEM LÉTEZNEK az adatbázisban (ellenőrizve),
+  //      tehát AUTH_REQUIRED=true mellett minden mentés és törlés elszállt volna;
+  //   2. nem dolgozta fel a szerver {ok:false} válaszát, így az elutasítás
+  //      SIKERNEK látszott — pont a „hibánál álljon meg" elv ellen.
+  // Mostantól EGY út van, és minden válasz átmegy az unwrap()-en.
   function useSecure(){ var a=auth(); return !!(a && a.required() && a.token()); }
+  function secureOn(){ return useSecure() || useV3(); }
   function tok(){ var a=auth(); return a?a.token():null; }
   function nowISO(){ try{ return new Date().toISOString(); }catch(e){ return null; } }
 
   // ── ÍRÁS: teljes job patch (data JSONB deep-merge) ──
   async function patch(sb, job){
-    if(useSecure()) return await sb.rpc('rpw_patch_secure', {p_id:job.id, p_patch:job, p_token:tok()});
+    // J (2026-08-24): verziózár a hitelesített úton is, és unwrap.
+    if(secureOn()){
+      var r0=unwrap(await sb.rpc('rpw_patch_v3', {p_token:tokenOf(), p_id:job.id, p_patch:job,
+        p_expected_version:(typeof job.version==='number'?job.version:null), p_phase:null}));
+      return r0.error?{data:null, error:r0.error}:{data:r0.data, error:null};
+    }
     return await sb.rpc('rpw_patch', {p_id:job.id, p_patch:job});
   }
   // rpw_patch_v2 utat használó helyek (dosar akták, ügyfél-feltöltő)
@@ -46,13 +62,35 @@
   function useV3(){
     try{ return (root.RPW_CFG&&root.RPW_CFG.PATCH_RPC)==='rpw_patch_v3' }catch(e){ return false }
   }
+  // ── 9 (v3) — A HIBAKÓD NEM VESZHET EL ────────────────────────────
+  // KORÁBBAN: {error:{message:d.error}} — a `code` eltűnt, és vele a
+  // `server_version` meg a `missing` lista is. Így a konfliktus-
+  // párbeszéd nem tudta megkülönböztetni a version_conflict-ot egy
+  // jogosultsági hibától.
+  // MOSTANTÓL egységes hibaobjektum:
+  //   { code, message, serverVersion, missing, details }
   function unwrap(res){
-    if(res&&res.error) return {error:res.error};
-    var d=res&&res.data;
-    if(typeof d==='string'){ try{ d=JSON.parse(d) }catch(e){ d=null } }
-    if(!d) return {error:{message:'empty'}};
-    if(d.ok!==true) return {error:{message:d.error||'denied'}};
-    return {data:d};
+    if(res && res.error){
+      // transport-szintű hiba (hálózat, PostgREST)
+      var t = res.error;
+      return { error: { code: t.code || 'transport',
+                        message: t.message || String(t),
+                        details: t } };
+    }
+    var d = res && res.data;
+    if(typeof d === 'string'){ try{ d = JSON.parse(d) }catch(e){ d = null } }
+    if(!d) return { error: { code:'empty', message:'Răspuns gol de la server.' } };
+    if(d.ok !== true){
+      return { error: {
+        code:          d.error || 'denied',
+        message:       d.message || d.error || 'Operațiunea a fost respinsă.',
+        serverVersion: (typeof d.server_version === 'number' ? d.server_version : null),
+        missing:       (Array.isArray(d.missing) ? d.missing : null),
+        need:          d.need || null,
+        details:       d
+      } };
+    }
+    return { data: d };
   }
   function actorOf(opts){
     try{
@@ -69,10 +107,10 @@
   }
   async function patchV2(sb, id, partial, opts){
     opts=opts||{};
-    if(useSecure()) return await sb.rpc('rpw_patch_secure', {p_id:id, p_patch:partial, p_token:tok()});
+    // J: a hitelesített út verziózárral és unwrap-pel (lásd a v3 ágat lentebb)
     // A v3 MAS szignaturaju: tokent var, es az actort/shop_id-t maga vezeti le.
     // A v2 megmarad valtozatlanul — igy a visszaallas egy config-sor.
-    if(useV3()){
+    if(secureOn()){
       var r=unwrap(await sb.rpc('rpw_patch_v3', {
         p_token: tokenOf(), p_id: id, p_patch: partial,
         p_expected_version: (opts.expected!==undefined?opts.expected:null),
@@ -99,13 +137,9 @@
   // ── OLVASÁS ──
   // Egy sor lekérése (a supabase .single() alakot adja vissza: {data:row, error})
   async function getRow(sb, id, cols){
-    if(useSecure()){
-      var r=await sb.rpc('rpw_job_get', {p_token:tok(), p_id:id});
-      if(r && r.error) return {data:null, error:r.error};
-      var row=(r && r.data && r.data.length)?r.data[0]:null;
-      return {data:row, error:(row?null:{message:'not found'})};
-    }
-    if(useV3()){
+    // A régi useSecure() ág eltávolítva: nem unwrap-elt, és saját
+    // hibaszöveget gyártott a szerveré helyett. EGY út maradt.
+    if(secureOn()){
       var r=unwrap(await sb.rpc('rpw_job_get',{p_token:tokenOf(), p_id:id}));
       if(r.error) return {data:null, error:r.error};
       return {data:{id:r.data.id, data:r.data.data, updated_at:r.data.updated_at, version:r.data.version}, error:null};
@@ -114,11 +148,9 @@
   }
   // Aktív (nem archivált) lista
   async function listActive(sb, cols){
-    if(useSecure()){
-      var r=await sb.rpc('rpw_jobs_list', {p_token:tok()});
-      return {data:(r&&r.data)||[], error:r?r.error:null};
-    }
-    if(useV3()){
+    // 4 (v3): a régi useSecure() ág TÖRÖLVE — nem unwrap-elt, így a
+    // {ok:false} szerverválasz SIKERES ADATKÉNT ment vissza a hívónak.
+    if(secureOn()){
       var r=unwrap(await sb.rpc('rpw_jobs_list',{p_token:tokenOf(), p_trashed:false}));
       if(r.error) return {data:null, error:r.error};
       return {data:r.data.rows||[], error:null};
@@ -127,11 +159,9 @@
   }
   // Archivált (Coș) lista
   async function listTrashed(sb, cols){
-    if(useSecure()){
-      var r=await sb.rpc('rpw_jobs_trashed', {p_token:tok()});
-      return {data:(r&&r.data)||[], error:r?r.error:null};
-    }
-    if(useV3()){
+    // 5 (v3): a `rpw_jobs_trashed` RPC NEM LÉTEZIK. Egyetlen listázó
+    // van: rpw_jobs_list(p_token, p_trashed).
+    if(secureOn()){
       var r=unwrap(await sb.rpc('rpw_jobs_list',{p_token:tokenOf(), p_trashed:true}));
       if(r.error) return {data:null, error:r.error};
       return {data:r.data.rows||[], error:null};
@@ -141,31 +171,35 @@
 
   // ── ÁLLAPOT-OSZLOP MŰVELETEK ──
   async function softDelete(sb, id){
-    if(useSecure()) return await sb.rpc('rpw_soft_delete', {p_id:id, p_token:tok()});
-    if(useV3()){
+    if(secureOn()){
       var r=unwrap(await sb.rpc('rpw_job_trash',{p_token:tokenOf(), p_id:id}));
       return r.error?{error:r.error}:{data:r.data, error:null};
     }
     return await scoped(sb.from('rpw_jobs').update({deleted_at:nowISO()}).eq('id',id));
   }
   async function restore(sb, id){
-    if(useSecure()) return await sb.rpc('rpw_restore', {p_id:id, p_token:tok()});
-    if(useV3()){
+    if(secureOn()){
       var r=unwrap(await sb.rpc('rpw_job_restore',{p_token:tokenOf(), p_id:id}));
       return r.error?{error:r.error}:{data:r.data, error:null};
     }
     return await scoped(sb.from('rpw_jobs').update({deleted_at:null}).eq('id',id));
   }
   async function purge(sb, id){
-    if(useSecure()) return await sb.rpc('rpw_purge', {p_id:id, p_token:tok()});
-    if(useV3()){
+    if(secureOn()){
       var r=unwrap(await sb.rpc('rpw_job_purge',{p_token:tokenOf(), p_id:id}));
       return r.error?{error:r.error}:{data:r.data, error:null};
     }
     return await scoped(sb.from('rpw_jobs').delete().eq('id',id));
   }
   async function purgeAllTrashed(sb){
-    if(useSecure()) return await sb.rpc('rpw_purge_all_trashed', {p_token:tok()});
+    // A rpw_purge_all_trashed nem létezik az adatbázisban — egyesével törlünk,
+    // így minden törlés külön auditsort kap.
+    if(secureOn()){
+      var lst=await listTrashed(sb);
+      var rows=(lst&&lst.data)||[];
+      for(var i=0;i<rows.length;i++){ await purge(sb, rows[i].id); }
+      return {data:{purged:rows.length}, error:null};
+    }
     return await scoped(sb.from('rpw_jobs').delete().not('deleted_at','is',null));
   }
 

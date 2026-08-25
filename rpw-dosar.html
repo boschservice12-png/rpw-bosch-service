@@ -20,10 +20,13 @@
 <script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
 <script src="rpw-workflow.js"></script>
 <script src="rpw-auth.js"></script>
+<script src="rpw-cache.js"></script>
+<script src="rpw-conflict.js"></script><!-- 6: verzióütközés kezelése --><!-- D: helyi gyorsítótár korlátokkal -->
 <script src="rpw-db.js"></script>
 <script src="rpw-roles.js"></script>
 <script src="rpw-photos.js"></script>
 <script src="rpw-save.js"></script>
+<script src="rpw-data.js"></script><!-- v4: szerveroldali átmenetek -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#f5f5f3;--w:#fff;--r:#dc2626;--r50:#fef2f2;--r100:#fee2e2;--r700:#b91c1c;--g:#16a34a;--gl:#dcfce7;--y:#ca8a04;--yl:#fef9c3;--bl:#2563eb;--bll:#dbeafe;--p:#7c3aed;--pl:#ede9fe;--or:#ea580c;--orl:#fff7ed;--tl:#0d9488;--tll:#ccfbf1;--t:#1a1a1a;--t2:#555;--t3:#999;--b:#e5e5e5;--b2:#d0d0d0;--rd:10px}
@@ -146,21 +149,34 @@ var SB_URL=RPW_CFG.SB_URL;
 var SB_KEY=RPW_CFG.SB_KEY;
 if(window.RPWAuth){try{RPWAuth.guard();}catch(e){}}
 var sb=supabase.createClient(SB_URL,SB_KEY);
+try{ if(window.RPWData) RPWData.init(sb, {onSync:(typeof onSyncState==='function'?onSyncState:null)}); }catch(e){ console.warn('RPWData init:', e); }
+
+// ── 11 (v4) — A SZERVERT MEGKÉRDEZZÜK, MIELŐTT ADATOT TÖLTENÉNK ──
+// Enélkül versenyhelyzet állna elő: az oldal már dolgozna az adattal,
+// mire kiderül, hogy a szerver verziója nem megfelelő.
+// PRODUCTION módban a hiba MEGÁLLÍTJA az alkalmazást (fail-closed).
+window.__rpwServerReady = (async function(){
+  try{
+    if(!window.RPWGuard || !RPWGuard.verifyServer) return {ok:true, skipped:true};
+    return await RPWGuard.verifyServer(sb, window.RPW_CFG);
+  }catch(e){ return {ok:false, problems:['verify_threw'], error:e}; }
+})();
 var JOB=null;
 var S={sec:{client:1,auto:1,acte:1,talon:0,docs:0,photos:1,elems:1}};
 
 function gJI(){return new URLSearchParams(location.search).get('job')}
 async function loadJob(){
+  try{ if(window.__rpwServerReady) await window.__rpwServerReady; }catch(e){}
   var jid=gJI();if(!jid){render();return}
-  var cached=localStorage.getItem('rpw_job_'+jid);
+  var cached=JSON.stringify(RPWCache.getJob(jid)||null);
   if(cached){try{JOB=JSON.parse(cached);if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};render()}catch(e){}}
   try{
     var res=await RPWDb.getRow(sb,jid);
     if(res.error)throw res.error;
-    var _lts=0,_sts=0;try{_lts=Date.parse(localStorage.getItem('rpw_job_ts_'+jid)||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
+    var _lts=0,_sts=0;try{_lts=Date.parse(null||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
     if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};
-    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+jid,res.data.updated_at||new Date().toISOString())}catch(e){}}
-    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB))}catch(e){}
+    try{RPWCache.setJob(JOB)}catch(e){}}
+    try{RPWCache.setJob(JOB)}catch(e){}
   }catch(e){if(!JOB)JOB=null}
   render();
 }
@@ -447,7 +463,7 @@ window.rpwOverride=async function(){
   var from=JOB.phase||1;
   var res=await RPWWorkflow.commitCriticalTransition(JOB, function(){
     return RPWWorkflow.managerOverride(JOB,{fromPhase:from,toPhase:to,actor:actor,reason:reason});
-  }, {save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  }, {action:'reopen', phase:to, reason:reason, save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
   if(!res.ok){
     if(res.notSynced){ dlgSay({tone:'warn',title:T('dlg_sync_t'),text:RPWWorkflow.t('wf_saved_not_synced',_ln),okText:T('dlg_ok')}); return; }
     var errs=(res.result&&res.result.errors)||[];
@@ -456,7 +472,21 @@ window.rpwOverride=async function(){
   dlgSay({tone:'ok',title:T('dlg_ov_t'),text:T('ovDone'),okText:T('dlg_ok'),onClose:render});
 };
 window.tS=function(s){S.sec[s]=S.sec[s]?0:1;render()};
-window.openLB=function(src){var lb=document.createElement('div');lb.className='lightbox';lb.onclick=function(){lb.remove()};lb.innerHTML='<img src="'+src+'"/>';document.body.appendChild(lb)};
+// E (2026-08-24) — XSS: a forrást NEM illesztjük HTML-be.
+// Korábban: lb.innerHTML='<img src="'+src+'"/>' — idézőjelet tartalmazó
+// vagy javascript: sémájú érték kitörhetett az attribútumból.
+// Most: DOM-építés + sémaellenőrzés (csak http/https/data:image/blob).
+window.openLB=function(src){
+  var u=String(src||'');
+  if(!/^(https?:|data:image\/|blob:)/i.test(u)) return;      // más séma: nem nyitjuk meg
+  var lb=document.createElement('div');
+  lb.className='lightbox';
+  lb.onclick=function(){lb.remove()};
+  var img=document.createElement('img');
+  img.src=u;                                                 // attribútum, nem HTML
+  lb.appendChild(img);
+  document.body.appendChild(lb);
+};
 window.trimiteLinkUpload=function(){
   if(!JOB)return;
   var link=location.origin+'/rpw-upload.html?job='+encodeURIComponent(JOB.id);
@@ -484,7 +514,7 @@ function _actaCompress(file){
   });
 }
 async function _saveActe(){
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
+  try{RPWCache.setJob(JOB)}catch(e){}
   try{await RPWDb.patchV2(sb,JOB.id,{dosarActe:JOB.dosarActe},{actor:'service'});return true}catch(err){return false}
 }
 // "Megis nalunk javittat" — a dosszie atkerul a javitasi folyamatba.
@@ -497,8 +527,10 @@ window.dosarPredat=async function(){
     cancelText:T('dlg_nu'),confirmText:T('dlg_da'),onConfirm:function(){ _dosarPredatGo(); }});
 };
 window._dosarPredatGo=async function(){
-  JOB.dosarPredat=ddDay(0); JOB.inchis=false;
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
+  // v4: a `dosarPredat` normál adat. Az `inchis` BEÁLLÍTÁSA innen
+  // eltűnt — az workflow-mező, és a szerver úgyis elutasítaná.
+  JOB.dosarPredat=ddDay(0);
+  try{RPWCache.setJob(JOB)}catch(e){}
   try{await RPWDb.patchV2(sb,JOB.id,{dosarPredat:JOB.dosarPredat},{actor:'service'})}catch(err){}
   toast('&#128228; '+T('dd_predat')+': '+JOB.dosarPredat);
   render();
@@ -509,21 +541,70 @@ window.dosarInchide=async function(){
     cancelText:T('dlg_nu'),confirmText:T('dlg_da'),onConfirm:function(){ _dosarInchideGo(); }});
 };
 window._dosarInchideGo=async function(){
-  JOB.inchis=true; JOB.dosarInchisLa=ddDay(0);
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
-  try{await RPWDb.patchV2(sb,JOB.id,{inchis:true,dosarInchisLa:JOB.dosarInchisLa},{actor:'service'})}catch(err){}
+  // v4: a dosszié lezárása WORKFLOW-MŰVELET — a 7. fázis lezárása.
+  // Korábban közvetlen `{inchis:true}` patch ment, ami megkerülte a
+  // jogosultság-, sorrend- és követelményellenőrzést. A 006 óta a
+  // szerver ezt a patch-et el is utasítja (protected_workflow_field).
+  var res = await RPWWorkflow.commitCriticalTransition(JOB, function(){
+    JOB.inchis = true; JOB.dosarInchisLa = ddDay(0);
+    return {ok:true};
+  }, { action:'complete', phase:7,
+       prepare:function(){ JOB.dosarInchisLa = ddDay(0); return {ok:true}; },
+       save:function(){ return RPWDb.patchV2(sb, JOB.id,
+              {dosarInchisLa:JOB.dosarInchisLa}, {expected:JOB.version}); } });
+  if(!res.ok){ _dosarHiba(res); render(); return; }
+  try{RPWCache.setJob(JOB)}catch(e){}
   toast('&#10003; '+T('dd_inchide'));
   render();
 };
+
+// A szerver elutasításának megjelenítése — románul, a hiánylistával.
+window._dosarHiba=function(res){
+  var e = (res && res.error) || {};
+  if(res && res.offline){ toast(e.message || 'Fără conexiune.', 1); return; }
+  if(e.code === 'requirements_missing' && Array.isArray(e.missing) && e.missing.length){
+    toast(e.missing.map(function(m){ return m.message; }).join(' · '), 1); return;
+  }
+  if(e.code === 'version_conflict'){
+    if(window.RPWConflict){
+      RPWConflict.show({ jobId:JOB.id, mine:{}, theirs:{},
+        serverVersion:e.serverVersion, isPhaseClose:true,
+        onReload:function(){ location.reload(); },
+        onReapply:function(){ location.reload(); },
+        onCancel:function(){} });
+    } else { toast(e.message || 'Conflict de date.', 1); }
+    return;
+  }
+  if(e.code === 'not_allowed'){
+    toast((e.message || 'Nu ai dreptul.') + (e.need ? ' ('+e.need+')' : ''), 1); return;
+  }
+  toast(e.message || 'Operațiunea a fost respinsă.', 1);
+};
 window.dosarInapoi=async function(){        // egy lepes vissza — tevedes eseten
   if(!JOB)return;
-  var patch={};
-  if(JOB.inchis){ JOB.inchis=false; JOB.dosarInchisLa=null; patch={inchis:false,dosarInchisLa:null}; }
-  else if(JOB.dosarPredat){ JOB.dosarPredat=null; patch={dosarPredat:null}; }
-  else return;
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
-  try{await RPWDb.patchV2(sb,JOB.id,patch,{actor:'service'})}catch(err){}
-  render();
+  // v4: ha a dosszié LE VAN ZÁRVA, a visszalépés ÚJRANYITÁS —
+  // workflow-művelet, override joggal és kötelező indoklással.
+  if(JOB.inchis){
+    var reason = (window.prompt && window.prompt(T('dd_reopenReason')||'Motivul redeschiderii:')) || '';
+    if(reason.trim().length < 5){
+      toast('Motivul este obligatoriu (minim 5 caractere).', 1); return;
+    }
+    var res = await RPWWorkflow.commitCriticalTransition(JOB, function(){
+      JOB.inchis=false; JOB.dosarInchisLa=null; return {ok:true};
+    }, { action:'reopen', phase:7, reason:reason.trim(),
+         save:function(){ return RPWDb.patchV2(sb, JOB.id,
+                {dosarInchisLa:null}, {expected:JOB.version}); } });
+    if(!res.ok){ _dosarHiba(res); render(); return; }
+    try{RPWCache.setJob(JOB)}catch(e){}
+    render(); return;
+  }
+  // A `dosarPredat` NEM workflow-mező — marad a normál mentési úton.
+  if(JOB.dosarPredat){
+    JOB.dosarPredat=null;
+    try{RPWCache.setJob(JOB)}catch(e){}
+    try{await RPWDb.patchV2(sb,JOB.id,{dosarPredat:null},{expected:JOB.version})}catch(err){}
+    render();
+  }
 };
 window.dosarToReparatie=async function(){
   if(!JOB)return;
@@ -531,10 +612,18 @@ window.dosarToReparatie=async function(){
     cancelText:T('dlg_nu'),confirmText:T('dlg_da'),onConfirm:function(){ _dosarToRepGo(); }});
 };
 window._dosarToRepGo=async function(){
+  // v4: a `flux` és a `doarDosar` normál adat; a `phase` NEM.
+  // Ha a munka még nem indult el, a szerver `start` átmenettel
+  // állítja be az 1. fázist.
   JOB.flux='reparatie'; JOB.doarDosar=false;
-  if(typeof JOB.phase!=='number'||JOB.phase<1)JOB.phase=1;
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
-  try{await RPWDb.patchV2(sb,JOB.id,{flux:'reparatie',doarDosar:false,phase:JOB.phase},{actor:'service'})}catch(err){}
+  try{RPWCache.setJob(JOB)}catch(e){}
+  // a `phase` KIMARAD a patch-ből — workflow-mező
+  try{await RPWDb.patchV2(sb,JOB.id,{flux:'reparatie',doarDosar:false},{expected:JOB.version})}catch(err){}
+  // ha a munka még nem indult el, a szerver indítja az 1. fázist
+  if(!JOB.phase || JOB.phase < 1){
+    try{ await RPWWorkflow.commitCriticalTransition(JOB, function(){ return {ok:true}; },
+           { action:'start', phase:1 }); }catch(e){}
+  }
   render();
 };
 // Iratszamlalo — EGYETLEN forras. A csik es a szekcio ugyanezt hasznalja.
@@ -594,7 +683,7 @@ window.setDosarStatus=async function(v){
   if(!JOB)return;
   JOB.dosarStatus=v;
   if(!JOB.damageType)JOB.damageType='asig';
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
+  try{RPWCache.setJob(JOB)}catch(e){}
   try{await RPWDb.patchV2(sb,JOB.id,{dosarStatus:v,damageType:JOB.damageType},{actor:'service'})}catch(err){}
   render();
 };
@@ -603,7 +692,7 @@ window.setDosarField=async function(k,v){
   v=String(v||'').trim();
   JOB[k]=v;
   var p={};p[k]=v;
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
+  try{RPWCache.setJob(JOB)}catch(e){}
   try{await RPWDb.patchV2(sb,JOB.id,p,{actor:'service'})}catch(err){}
   render();
 };

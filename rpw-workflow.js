@@ -680,9 +680,132 @@
     });
   }
 
+  /* ════════════════════════════════════════════════════════════════
+     KRITIKUS ÁTMENET — a v4 óta a SZERVER dönt
+
+     Ez az EGYETLEN pont, ahol a kilenc HTML-oldal fázist változtat.
+     Ezért itt terelünk át: ha a szerveroldali átmenet be van kapcsolva,
+     NEM a helyi mutációt mentjük el, hanem a `rpw_transition` RPC-t
+     hívjuk, és a szerver által visszaadott állapotot vesszük át.
+
+     A helyi `mutate` megmarad — de csak akkor fut, ha a szerveroldali
+     út ki van kapcsolva (fejlesztői konfiguráció).
+
+     opts:
+       action  'complete'|'start'|'skip'|'reopen'|'rework_open'|'rework_close'
+       phase   1..7
+       reason  emberi indoklás (skip/reopen/rework_open — min. 5 karakter)
+       reworkId, note   rework lezárásához
+       save    a régi mentési út (csak szerver nélkül)
+  ════════════════════════════════════════════════════════════════ */
+  function serverTransitionsOn(){
+    try{
+      var cfg = root.RPW_CFG || {};
+      return cfg.SERVER_TRANSITIONS === true && !!root.RPWData;
+    }catch(e){ return false; }
+  }
+
+  // Offline: kritikus műveletet NEM hajtunk végre automatikusan.
+  function isOffline(){
+    try{ return (typeof navigator !== 'undefined') && navigator.onLine === false; }
+    catch(e){ return false; }
+  }
+
+  async function commitViaServer(job, opts){
+    // 1) A verzió a SZERVERTŐL kapott érték — soha nem localStorage-ból
+    var expected = (typeof job.version === 'number') ? job.version : null;
+    if(expected == null){
+      return { ok:false, saved:false, serverRejected:true,
+               result:{ ok:false, errors:['no_version'] },
+               error:{ code:'no_version',
+                       message:'Versiunea dosarului lipsește. Reîncarcă pagina.' } };
+    }
+    if(isOffline()){
+      // A helyi workflow-állapotot NEM változtatjuk meg.
+      return { ok:false, saved:false, offline:true,
+               result:{ ok:false, errors:['offline'] },
+               error:{ code:'offline',
+                       message:'Fără conexiune nu se poate închide faza. Încearcă din nou când ești online.' } };
+    }
+
+    var api = root.RPWData && root.RPWData.__instance;
+    if(!api || typeof api.serverTransition !== 'function'){
+      return { ok:false, saved:false, serverRejected:true,
+               result:{ ok:false, errors:['no_data_layer'] },
+               error:{ code:'no_data_layer',
+                       message:'Stratul de date nu este inițializat.' } };
+    }
+
+    // ── ELŐKÉSZÍTŐ NORMÁL ADAT ──────────────────────────────────
+    // Néhány oldal a lezárás ELŐTT normál mezőket is beállít
+    // (pl. evalData.status, closing.closedAt). Ezek NEM workflow-mezők,
+    // tehát a rendes mentési úton mennek — a fázisváltás előtt.
+    if(typeof opts.prepare === 'function'){
+      var prep;
+      try{ prep = opts.prepare(); }
+      catch(e){ return { ok:false, saved:false, serverRejected:true,
+                         result:{ok:false, errors:['prepare_threw']},
+                         error:{code:'prepare_threw', message:String(e && e.message || e)} }; }
+      if(prep && prep.ok === false){
+        return { ok:false, saved:false, serverRejected:true, result:prep,
+                 error:{ code:'requirements_missing',
+                         message:'Faza nu poate fi închisă.',
+                         missing:(prep.missing||prep.errors||[]) } };
+      }
+      if(typeof opts.save === 'function'){
+        var pres;
+        try{ pres = await opts.save(); }catch(e){ pres = {failed:true}; }
+        if(!saveConfirmed(pres)){
+          return { ok:false, saved:false, notSynced:true,
+                   result:{ok:false, errors:['not_synced']},
+                   error:{ code:'not_synced',
+                           message:'Datele nu s-au salvat. Încearcă din nou.' } };
+        }
+        // a mentés új verziót adott — azt használjuk az átmenethez
+        if(typeof job.version === 'number') expected = job.version;
+      }
+    }
+
+    var res = await api.serverTransition(opts.action, {
+      id: job.id, phase: opts.phase, expectedVersion: expected,
+      reason: opts.reason || null, reworkId: opts.reworkId || null,
+      note: opts.note || null, fromPhase: opts.phase, toPhase: opts.phase
+    });
+
+    if(!res || res.ok !== true){
+      // ── ELUTASÍTÁS: a helyi állapot VÁLTOZATLAN marad ────────────
+      // Nem írjuk át a phase / phases / inchis / rework mezőket.
+      return { ok:false, saved:false, serverRejected:true,
+               conflict: !!(res && res.conflict),
+               serverVersion: res ? res.serverVersion : null,
+               error: res ? res.error : { code:'unknown', message:'Eroare necunoscută.' },
+               result:{ ok:false, missing:(res && res.error && res.error.missing) || [],
+                        errors:[(res && res.error && res.error.code) || 'denied'] } };
+    }
+
+    // ── SIKER: a SZERVER állapotát vesszük át ─────────────────────
+    if(res.data && typeof res.data === 'object'){
+      var k;
+      for(k in res.data){
+        if(Object.prototype.hasOwnProperty.call(res.data, k)) job[k] = res.data[k];
+      }
+    }
+    if(typeof res.version === 'number') job.version = res.version;
+
+    return { ok:true, saved:true, fromServer:true,
+             result:{ ok:true, missing:[], job:job },
+             version: res.version };
+  }
+
   async function commitCriticalTransition(job, mutate, opts){
     opts=opts||{};
     migrateJob(job);
+
+    // v4: ha a szerveroldali átmenet él ÉS tudjuk, melyik művelet ez,
+    // a szerver dönt. A helyi mutáció NEM fut le.
+    if(serverTransitionsOn() && opts.action){
+      return await commitViaServer(job, opts);
+    }
     var snap=snapshotCrit(job);
     var lsSnap=snapshotLS(job.id, opts.ls);   // előállapot a localStorage-ből is
     var result;
@@ -1155,6 +1278,8 @@
     isRealPerson: isRealPerson,
     hasOverrideGrant: hasOverrideGrant,
     commitCriticalTransition: commitCriticalTransition,
+    commitViaServer: commitViaServer,
+    serverTransitionsOn: serverTransitionsOn,
     isPhaseReadOnly: isPhaseReadOnly
   };
 

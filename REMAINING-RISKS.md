@@ -1,0 +1,127 @@
+# REMAINING-RISKS.md
+
+Ismert maradék kockázatok — **súly szerint**, nem sorrendben.
+Az „igazolva" oszlop megmondja, hogy állítás vagy mérés.
+
+---
+
+## 🔴 Élesítést blokkoló
+
+### 1. Tíz aktív dolgozónak nincs PIN-je
+| | |
+|---|---|
+| **Mi a kockázat** | Az `AUTH_REQUIRED:true` a 11 aktív dolgozóból 10-et kizár |
+| **Miért nincs megoldva** | Ez nem technikai kérdés — emberenként PIN-t kell kiosztani |
+| **Ki oldja meg** | **EMBERI DÖNTÉS** — `Echipă → Personal` lapon |
+| **Igazolva** | — |
+
+### 2. A migrációk nem futottak le éles adatbázison
+| | |
+|---|---|
+| **Mi a kockázat** | Amíg nem futnak, az `rpw_jobs` táblán él az `anon rw qual:true` szabály: az anon kulcs birtokában bárki közvetlenül olvashat és írhat, az RPC-ket megkerülve |
+| **Miért nincs megoldva** | Az 1. alapelv tiltja az éles adatbázis módosítását |
+| **Igazolva** | Az öt migráció **valódi PostgreSQL-en lefutott**, rollbackkel és újrafuttatással együtt — de *tesztadatbázison* |
+| **Következő lépés** | `DEPLOYMENT.md` szerint, staging környezetben |
+
+### 3. A staging ellenőrzés nem történt meg
+| | |
+|---|---|
+| **Mi a kockázat** | Valódi login, két böngészős ütközés, signed URL, OCR, e-mail, CSP — egyik sincs élesben mérve |
+| **Igazolva** | — **NEM VOLT IGAZOLHATÓ** |
+| **Következő lépés** | `MANUAL-STAGING-CHECKLIST.md` |
+
+---
+
+## 🟠 Közepes
+
+### 4. A `'unsafe-inline'` a script-src-ben marad
+| | |
+|---|---|
+| **Mi a kockázat** | XSS esetén a beszúrt inline script lefut, és a `localStorage`-ban lévő munkamenet-token kiolvasható |
+| **Miért marad** | Az alkalmazás 12 oldalon, több száz helyen használ inline scriptet és `onclick` kezelőt. Eltávolítása nonce/hash bevezetését és teljes handler-refaktort igényel — enélkül az alkalmazás **megbénulna** |
+| **Enyhítés** | A `netlify.toml` tartalmaz **report-only** szigorú CSP-t stagingre: méri, mi törne el, blokkolás nélkül |
+| **Igazolva** | Az XSS-escape unit teszttel (95 állítás), a `javascript:` séma tiltása a `openLB()`-ben |
+
+### 5. A tartalmi fázisszabályok kliens- és szerveroldalon is léteznek
+| | |
+|---|---|
+| **Mi a kockázat** | A `rpw-workflow.js` UX-előellenőrzése és a `rpw_phase_requirements` tábla eltérhet |
+| **Enyhítés** | A **szerver** dönt: a `rpw_transition` a táblából ellenőriz, és `requirements_missing` + `missing[]` listát ad vissza. A kliens ugyanezt a listát kérheti le (`rpw_requirements`) — így egy forrás marad |
+| **Ami hátravan** | A `rpw-workflow.js` átállítása a szervertől kapott listára. Ma még saját szabályokat is tartalmaz |
+| **Igazolva** | Integrációs teszt: kötelező dokumentum nélkül **közvetlen RPC-hívással sem** zárható fázis |
+
+### 6. A `rpw-data.js` egyetlen oldalon sincs betöltve
+| | |
+|---|---|
+| **Mi a kockázat** | A javított fájl **halott kód** — a fázisátmenetek ma nem rajta mennek |
+| **Következmény** | A `SERVER_TRANSITIONS:true` bekapcsolása önmagában **nem** irányítja át a forgalmat; a hívási helyeket be kell kötni |
+| **Igazolva** | `grep -l "rpw-data.js" *.html` → üres |
+
+### 7. Kilenc oldal duplikált runtime-ja
+| | |
+|---|---|
+| **Mi a kockázat** | Ugyanaz a logika (betöltés, cache, konfliktus, mentés) ~5000 sorban szétszórva; egy javítás kilenc helyen kell |
+| **Miért nincs megoldva** | A tesztek az oldalak *viselkedését* mérik, nem a szerkezetüket — refaktor után a zöld teszt nem bizonyítaná a változatlanságot |
+| **Javaslat** | Oldalanként, külön körökben, oldalankénti tesztekkel |
+
+---
+
+## 🟡 Alacsony
+
+### 8. A munkamenet-token `localStorage`-ban
+`httpOnly` süti csak saját backenddel lenne lehetséges; a Supabase anon-kulcsos modellben nem. Enyhítés: 12 órás lejárat, kijelentkezéskor teljes törlés, szerveroldali visszavonás.
+
+### 9. A rendszám maszkolva, de felismerhető
+`MS-01-ABC` → `MS-…-ABC`. **Jogalap:** a dolgozónak fel kell ismernie az autót a listán. **Kockázat:** a maszkolt alak szűk körben visszafejthető lehet (egy műhely napi 10-20 autója). A teljes rendszám csak a szerverről jön, a munka megnyitásakor.
+
+### 10. A rate-limit példányonkénti memóriában
+A Netlify-funkciók hidegindításkor nullázódnak. Durva abúzus ellen véd, elosztott támadás ellen nem. Valódi megoldás külső tárolót igényel.
+
+### 11. A kivezetett RPC-k léteznek
+`rpw_patch`, `rpw_login`, `rpw_team`, `rpw_next_job_number` — nincs bennük bérlővédelem. **Nem kapnak GRANT-ot** a `005`-ben, tehát production-ban nem hívhatók; `deprecated` választ adnak. Az RPC-konzisztencia teszt külön ellenőrzi, hogy nem kaptak jogot.
+
+---
+
+## Amit szándékosan NEM oldottam meg
+
+**Nem futtattam éles adatbázison semmit.** Az 1. alapelv ezt tiltja, és ez a helyes: egy hibás migráció élesben megállítaná a műhelyt.
+
+**Nem állítottam „minden teszt sikeres"-t.** A staging nem futott, ezért a tesztfuttató is `NOT VERIFIED`-et ír ki, és a `TEST-REPORT.md` is ezt tükrözi.
+
+---
+
+# V4 — új és megváltozott kockázatok
+
+## Amit a V4 megszüntetett
+
+| Korábbi kockázat | Állapot |
+|---|---|
+| A `rpw_patch_v3` megkerülte a workflow-t | ✅ **megszűnt** — 9 megkerülési kísérlet elutasítva valódi adatbázison |
+| A HTML-oldalak nem használták a `rpw_transition`-t | ✅ **megszűnt** — mind a 7 fázisoldal bizonyítva valódi UI-kóddal |
+| Bárki írhatott bármely mezőt | ✅ **megszűnt** — 30 mezőszintű jogosultsági szabály |
+| A `rpw_job_trash` nem kért `delete` jogot | ✅ **megszűnt** |
+| A `verifyServer` hálózati hibánál továbbengedett | ✅ **megszűnt** — production-ban fail-closed |
+
+## 🟠 Ami maradt vagy új
+
+### A `rpw-workflow.js` kettős szerepe
+A modul **továbbra is tartalmazza** a helyi fázislogikát (`completePhase`, `skipPhase`, `setState`). Élesben ez **nem fut le** — a `commitCriticalTransition` a szerverre megy —, de a kód ott van.
+
+**Miért maradt:** a fejlesztői (szerver nélküli) mód és az UX-előnézet erre épül. Eltávolítása a teljes offline működést törölné.
+
+**Kockázat:** ha valaki a jövőben KÖZVETLENÜL hívja a `RPWWorkflow.completePhase()`-t a tölcsér megkerülésével, helyben „done"-t kapna — a szerver viszont **nem** fogadná el a mentést (`protected_workflow_field`). Tehát adatromlás nem keletkezik, de a felület félrevezető lehetne a mentésig.
+
+**Enyhítés:** a statikus workflow-audit minden ilyen hívást megtalál.
+
+### A `prepare` ág kettős mentése
+Az `evaluare` és az `inchidere` oldalon a lezárás előtt egy **normál patch** is megy (a `evalData.status`, illetve a `closing.closedAt` miatt). Ha a patch sikerül, de az átmenet elbukik, a normál mező **elmentve marad**, a fázis viszont nem zárul le.
+
+**Miért így:** a fordított sorrend rosszabb lenne — a lezárt fázis után elveszett adat.
+**Kockázat:** alacsony; a felhasználó újrapróbálhatja, az adat nem vész el.
+
+### A rendszám maszkolása
+`MS-01-ABC` → `MS-…-ABC`. Egy műhely napi 10–20 autójánál a maszkolt alak szűk körben visszafejthető.
+**Jogalap:** a dolgozónak fel kell ismernie az autót a listán.
+
+### `'unsafe-inline'` a CSP-ben
+Változatlan a V3 óta. Report-only staging fejléc készen áll a méréshez.

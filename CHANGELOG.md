@@ -1,0 +1,210 @@
+# CHANGELOG.md
+
+## 2026-08-24 — P0/P1 javítási kör
+
+**A régi csomagot nem írtuk felül.** Ez új verzió.
+
+---
+
+### Adatbázis-migrációk *(fájlként, NEM futtatva)*
+
+| Fájl | Változtatás | Javított kockázat | Kompatibilitás |
+|---|---|---|---|
+| `_migrations/001_rls_lockdown.sql` | `rpw_jobs "anon rw" qual:true` megszüntetése; force RLS 7 táblán; `search_path` minden SECURITY DEFINER függvényen; grant-tisztítás; a régi (`rpw_patch`, `rpw_patch_v2`, `rpw_login`, `rpw_session`) utak visszavonása | 🔴 Bárki az anon kulccsal közvetlenül olvashatta/írhatta **bármely szerviz** munkáit | **Töréspont**: csak a `v3` kliens után futtatható |
+| `_migrations/002_server_transitions.sql` | `rpw_transition(token,id,phase,action,expected_version,reason)`; `rpw_patch_v3` verziózárral | 🔴 A fázisszabályok csak a böngészőben éltek — RPC-hívással bármelyik átugorható volt | Additív; `SERVER_TRANSITIONS:false` mellett nem használt |
+| *(mindkettőhöz)* | `001_rollback.sql`, `002_rollback.sql` | — | — |
+
+### Netlify-funkciók
+
+| Fájl | Változtatás | Javított kockázat |
+|---|---|---|
+| `functions/_shared.js` | **`auth.__token` → `auth.token`** — a mezőt soha senki nem állította be | 🔴 Az `ownsJob` tulajdonjog-ellenőrzés **mindig elbukott** |
+| `functions/_shared.js` | `rpw_session` → `rpw2_session`; `shop_id` kötelező | 🟠 Kevert munkamenet-modell |
+| `functions/ocr.js` | `H.detectMedia()` dönt a formátumról; ismeretlen → **415** | 🟠 Ismeretlen tartalom „alapértelmezett jpeg"-ként ment az AI-nak |
+
+### Kliens
+
+| Fájl | Változtatás | Javított kockázat |
+|---|---|---|
+| **`rpw-cache.js`** *(új)* | TTL 24 h, szerviz+dolgozó hatókör, `wipe()` kijelentkezéskor, MIN mód | 🔴 A **teljes** munkaobjektum (`client`, `phone`, `vin`, fotók) TTL nélkül a `localStorage`-ban, közös gépen a következő belépőnek is látszott |
+| 9 oldal | 42 gyorsítótár-hívás átterelve a modulra | ugyanaz |
+| `rpw-auth.js` | kijelentkezés → `RPWCache.wipe()` | ugyanaz |
+| `index.html` | indulási `migrateLegacy()` + 10 percenkénti `sweep()` | régi bejegyzések takarítása |
+| **`rpw-db.js`** | **Két párhuzamos „secure" út egyesítése.** A régi `rpw_patch_secure`, `rpw_soft_delete`, `rpw_restore`, `rpw_purge`, `rpw_purge_all_trashed` **nem létezik az adatbázisban** | 🔴 `AUTH_REQUIRED=true` mellett **minden mentés és törlés elszállt volna** |
+| `rpw-db.js` | minden válasz `unwrap()`-en megy át | 🔴 A szerver `{ok:false}` elutasítása **sikernek látszott** |
+| `rpw-db.js` | `purgeAllTrashed` egyesével töröl | minden törlés külön auditsort kap |
+| **`rpw-save.js`** | `else if` → `if`: a verziózár ága sosem futott le, ha volt token | 🔴 Az optimista zár **csendben kikapcsolt volna** |
+| `rpw-dosar.html` | `openLB` DOM-építéssel + sémaellenőrzés | 🟠 XSS: a képforrás escape nélkül ment `innerHTML`-be |
+| `index.html` | a PIN-figyelmeztetés szövege javítva | A „közös a Red ERP-vel" **már nem igaz** |
+
+### Tesztelés
+
+| Fájl | Változtatás |
+|---|---|
+| `_tests/run-all.js` | Új futtató: **„el sem indult" külön kategória és hibának számít**; `last-run.json` gépi jelentés; Node/npm/jsdom/build verziók |
+| **`_tests/test-security-a-o.js`** *(új)* | A brief 15 biztonsági tesztje (A–O) + P (gyorsítótár) — **89 állítás** |
+| 23 tesztfájl | fix fejlesztői útvonalak eltávolítva | 🟠 **6 teszt el sem indult**, és a régi futtató ezt sikernek vette |
+| `package-lock.json` *(új)* | 39 csomag rögzítve — `npm ci` reprodukálható |
+
+### Konfiguráció
+
+| Fájl | Változtatás |
+|---|---|
+| `rpw-config.staging.js` *(új)* | A biztonságos konfiguráció **külön fájlban, NEM aktív**. Előfeltételekkel és a PIN-blokkolóval a fejlécben |
+
+---
+
+## Mérés
+
+```
+30 tesztfájl · 1117 állítás · 1117 sikeres · 0 sikertelen · 0 el sem indult · 22,5 s
+```
+Node v22.22.2 · npm 10.9.7 · jsdom 30.0.1 · 2026-08-24
+
+---
+
+## 2026-08-24 (második kör) — a nyitott tételek lezárása
+
+### 13 — OCR bemenet- és kimenetvalidálás → **KÉSZ**
+
+| Fájl | Változtatás | Javított kockázat |
+|---|---|---|
+| `functions/_shared.js` | **`validateOcr()`** — típusonkénti mezőséma (`talon`, `buletin`, `constatare`, `audatex`); ismeretlen mezőket eldob, üres eredményt elutasít | 🟠 Az AI válaszát szerkezet-ellenőrzés nélkül fogadtuk el |
+| `functions/_shared.js` | `flagUncertain()` bővítve: rendszám, kárszám, **pénzügyi összegek**, órák — mind `needsConfirm:true` | 🟠 Csak `vin`/`cnp` volt jelölve |
+| `functions/ocr.js` | **Érvénytelen JSON → 502**, nem 200 | 🔴 Korábban `console.warn`, majd a szemét **sikerként** ment vissza |
+| `functions/ocr.js` | Séma-hiba → 502; a válasz `needsHumanReview:true`-t ad | Az AI eredménye **nem vált fázist** |
+
+### 14 — XSS-audit → **KÉSZ**
+
+| Fájl | Változtatás | Javított kockázat |
+|---|---|---|
+| `_tests/xss-audit.js` *(új)* | Statikus átvizsgáló: 13 219 sor, 1 048 HTML-építő sor | — |
+| `index.html` | `s.plate`, `s.client` **escape-elve** a „beragadt munkák" listában | 🔴 Valódi XSS: rendszám és ügyfélnév nyersen HTML-be |
+| `rpw-reconstatare-red.html` | `rc.responseNote` **escape-elve** | 🔴 Valódi XSS: a biztosító szabad szövege nyersen HTML-be |
+| `_tests/test-xss.js` *(új)* | **95 állítás** — `<img onerror>`, `<script>`, idézőjel, `javascript:`, `svg onload`, zárótag-törés | — |
+
+### 5 + 6 — szerveroldali elutasítás és ütközéskezelés → **KÉSZ**
+
+| Fájl | Változtatás |
+|---|---|
+| `_migrations/002_server_transitions.sql` | **`rpw__deny()`**: stabil hibakód + **román üzenet** + az **elutasított kísérlet auditálása** (`denied:<kód>`). Az audit hibája nem blokkolja a választ |
+| **`rpw-conflict.js`** *(új)* | Ütközéskor a felhasználó **dönt**: újratöltés vagy újraalkalmazás. A helyi módosítás megőrizve. Fázislezárásnál külön figyelmeztetés: **nincs automatikus összefésülés** |
+| `index.html` | `onSyncState('conflict')` → párbeszéd; `location.reload()` vagy újraküldés a szerver verziójával |
+| 9 oldal | `rpw-conflict.js` betöltve |
+| `_tests/test-conflict.js` *(új)* | **27 állítás** |
+
+### Mérés (tiszta könyvtár, `npm ci` után)
+
+```
+32 tesztfájl · 1239 állítás · 1239 sikeres · 0 sikertelen · 0 el sem indult · 23,5 s
+```
+
+---
+
+## 2026-08-24 (v3) — integrációs és biztonsági javítások
+
+**A v2 csomagot nem írtuk felül.**
+
+### 🔴 Kritikus integrációs hibák
+
+| Fájl | Változtatás | Javított kockázat |
+|---|---|---|
+| `rpw-data.js` | **Hat NEM LÉTEZŐ RPC** (`rpw_complete_phase`, `rpw_close_job`, `rpw_skip_phase`, `rpw_create_rework`, `rpw_resolve_rework`, `rpw_manager_override`) → egyetlen `rpw_transition` | 🔴 A `SERVER_TRANSITIONS:true` bekapcsolásakor **minden fázisváltás elszállt volna** |
+| `rpw-db.js` | `listActive`: a `useSecure()` ág törölve — nem unwrap-elt | 🔴 A `{ok:false}` szerverválasz **sikeres adatként** ment a hívónak |
+| `rpw-db.js` | `listTrashed`: `rpw_jobs_trashed` (nem létezik) → `rpw_jobs_list(p_token, p_trashed)` | 🔴 A kosár listázása elszállt volna |
+| `rpw-db.js` | `unwrap()`: `{code, message, serverVersion, missing, need, details}` | 🟠 A hibakód, a szerver verziószáma és a hiánylista **elveszett** |
+
+### 🔴 Atomi verziózár
+
+| Fájl | Változtatás |
+|---|---|
+| `002_server_rpc.sql`, `003_business_requirements.sql` | A verziófeltétel **magában az UPDATE-ben**: `where ... and version = p_expected_version`. Ha nem tér vissza sor: `not_found` vagy `version_conflict` + `server_version` + audit |
+| | A `p_expected_version` **kötelező** — hiánynál `expected_version_required` |
+
+**Igazolva:** két külön adatbáziskapcsolat, `Promise.all`, azonos verzió → **pontosan egy sikerül**. Mentésre és fázislezárásra is.
+
+### 🔴 Üzleti kapuk szerveroldalon
+
+| Fájl | Változtatás |
+|---|---|
+| `003_business_requirements.sql` | **`rpw_phase_requirements`** tábla: 14 alapszabály (fázis, művelet, kód, adatút, ellenőrzés típusa, súlyosság, override-olható, román üzenet) |
+| | `rpw__missing()` — a szerver ebből ellenőriz; `rpw_requirements()` — a kliens ugyanezt kéri le |
+| | Elutasítás: `requirements_missing` + `missing[]` román üzenetekkel |
+
+**Egy szabályforrás** — nincs két kézzel másolt rendszer.
+
+### 🔴 Migrációs sorrend
+
+Öt migráció, **függőségi sorrendben**: alapséma → RPC-k → szabályok → személyzet → RLS-lezárás. Mindegyikben `begin/commit`, előfeltétel-ellenőrzés (hiánynál `raise exception`), ellenőrző lekérdezés, rollback.
+
+A `005` **csak létező függvényre** grantol — a v2-ben a `001` olyanra adott jogot, amit a `002` hozott létre.
+
+### Egyéb
+
+| Fájl | Változtatás |
+|---|---|
+| `rpw-guard.js` | **Kilenc** production-feltétel (négy helyett); `rpw_server_capabilities` ellenőrzés; kliens–szerver verzióütközésnél megáll, románul |
+| `rpw-cache.js` | A **rendszám maszkolva** (`MS-…-ABC`); teljes tiltólista (`email`, `cnp`, `ocr`, `nrDosar`, `asigurator`…); `scrub()` védőháló beágyazott mezőkre; kijelentkezéskor a konfliktus-payload és az offline sor is törlődik |
+| `netlify.toml` | CSP: `frame-src 'none'`, `worker-src 'self'`, `upgrade-insecure-requests`; a `connect-src`-ből kivéve a felesleges `data:`/`blob:`; **report-only** szigorú CSP stagingre |
+
+### Tesztek
+
+| Fájl | Mit |
+|---|---|
+| `_tests/run-all.js` | **Háromkategóriás**: unit / integration / staging, külön ítélettel. A staging csak `STAGING-VERIFIED.json` alapján lehet `VERIFIED` |
+| `_tests/integration/_db.js` | Beágyazott PostgreSQL indítása |
+| `_tests/integration/test-int-tenant.js` | **VALÓDI adatbázis**: tenant-izoláció, atomi zár, üzleti kapuk, jogosultság, audit |
+| `_tests/integration/test-int-migrations.js` | **VALÓDI adatbázis**: migrációs ciklus, rollback fordítva, újrafuttatás, audit-hiba viselkedése |
+| `_tests/unit/test-rpc-consistency.js` | A kliens hívásai vs. a migrációk — ez fogta volna meg a v2 hibáját |
+| `_tests/unit/test-list-unwrap.js` | `listActive`/`listTrashed`, hibaobjektum-szerkezet |
+| `_tests/gen-report.js` | A `TEST-REPORT.md` **generálása** a `last-run.json`-ból |
+
+### Dokumentáció
+
+`REMAINING-RISKS.md`, `MANUAL-STAGING-CHECKLIST.md`, `FILE-CHANGES.md` — újak.
+`SECURITY.md` mostantól jelöli, **mi mivel van igazolva** (integrációs / unit / migráció kész / staging / emberi döntés).
+
+---
+
+## 2026-08-24 (v4) — a biztonságos workflow TÉNYLEGES bekötése
+
+**A V3 csomagot nem írtuk felül.**
+
+A V3-ban elkészült a `rpw_transition`, de **egyetlen HTML-oldal sem használta**. A fázisok továbbra is normál patch-csel záródtak, és a `rpw_patch_v3` tetszőleges deep merge-öt engedett — egy `{"inchis":true}` patch lezárta a dossziét minden ellenőrzés nélkül.
+
+### 🔴 Szerveroldal — `006_workflow_enforcement.sql`
+
+| Változtatás | Javított kockázat |
+|---|---|
+| **`rpw_protected_fields`** (25 minta) + rekurzív útellenőrzés (`rpw__patch_paths`, `rpw__protected_hits`) | 🔴 A `rpw_patch_v3` MEGKERÜLTE a teljes workflow-t. Nested, `null`, típusváltásos és teljes-objektumos megkerülés is |
+| **`rpw_patch_permissions`** (30 szabály) + `rpw__patch_needs` | 🔴 Bármely bejelentkezett dolgozó BÁRMELY mezőt írhatta |
+| `rpw_job_trash` **`delete` jogot kér** | 🔴 A V3-ban bárki kosárba tehetett bármit |
+| Indoklás **min. 5 érdemi karakter** skip / reopen / rework_open esetén | 🟠 Az üres indoklás átment |
+| Külön **`p_rework_id`** és **`p_note`** | 🟠 A `p_reason` egyszerre volt azonosító és indoklás |
+| `rpw_server_capabilities`: `protected_fields`, `patch_permissions`, `workflow_enforced` | a kliens ellenőrizni tudja |
+
+Elutasításkor: `protected_workflow_field` + a **konkrét mezőutak** (`phases.7.status`), román üzenettel, és `denied:protected_workflow_field` auditsor — **adattartalom nélkül**.
+
+### 🔴 Kliensoldal — a tölcsér átterelése
+
+| Fájl | Változtatás |
+|---|---|
+| `rpw-workflow.js` | **`commitCriticalTransition`** — az egyetlen pont, ahol a 9 oldal fázist vált — a szerverre megy, ha `SERVER_TRANSITIONS=true`. A helyi mutáció **NEM fut le**. Sikernél a SZERVER állapotát és verzióját veszi át; elutasításnál a `phase`/`phases`/`inchis`/`rework` **változatlan** |
+| | **Offline:** kritikus művelet nem hajtódik végre, a fázis nem lesz „done", RPC sem megy |
+| | **Hiányzó verzió:** `no_version` — null verzióval nem indul átmenet |
+| | **`prepare`** ág: a lezárás előtti normál mezők (pl. `evalData.status`, `closing.closedAt`) a rendes mentési úton mennek, a fázisváltás előtt |
+| `rpw-data.js` | A `{ok:false}` válasz **NEM siker** (a V3-ban az volt); `p_rework_id`/`p_note`; `RPWData.init()` közös példány |
+| **11 HTML-oldal** | `rpw-data.js` betöltve — **a függőségei után**; `RPWData.init()` bekötve; **mind a 11 kritikus hívási hely** megjelölve művelettel |
+| `rpw-dosar.html` | **`dosarInchide` → 7. fázis lezárása** (korábban közvetlen `{inchis:true}` patch!); **`dosarInapoi` → újranyitás** kötelező indoklással; a `phase` kikerült a patch-ből |
+| `index.html` | **`reactiveaza` → újranyitás** indoklással (korábban `job.inchis=false` patch); az előjegyzés nem nyitja újra a munkát |
+| `rpw-guard.js` | **`verifyServer` fail-closed**: production módban a hálózati hiba, időtúllépés és hibás válasz is **megállítja** az alkalmazást |
+| 11 oldal | `verifyServer` az adatbetöltés **ELŐTT** — nincs versenyhelyzet |
+
+### Tesztek
+
+| Fájl | Mit |
+|---|---|
+| `_tests/integration/test-int-workflow.js` | **81 állítás valódi PostgreSQL-en**: 9 megkerülési kísérlet, szerepkör-jogosultság, trash-jog, rework-azonosító, rollback |
+| `_tests/frontend/test-fe-transition.js` | **176 állítás VALÓDI oldalkóddal** jsdom-ban: mind a 7 fázisoldal + dosar; elutasítás, konfliktus, offline, kettős mentés |
+| `_tests/static/test-static-workflow.js` | Statikus workflow-audit dokumentált engedélylistával |
+| `_tests/run-all.js` | **Öt kategória**: unit / database integration / frontend integration / static audit / staging |

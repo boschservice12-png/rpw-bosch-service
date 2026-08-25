@@ -11,6 +11,7 @@
 <script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
 <script src="rpw-auth.js"></script>
 <script src="rpw-db.js"></script>
+<script src="rpw-data.js"></script><!-- v4: szerveroldali átmenetek -->
 <script>/* ── P0.1 (2026-08-23) — ezen az oldalon EDDIG NEM VOLT ŐR.
    Innen visszaállítható és VÉGLEG törölhető munka. */
 try{ if(window.RPWAuth) RPWAuth.guard(); }catch(e){}</script>
@@ -65,11 +66,24 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;backgr
   if(!CFG||!CFG.SB_URL){app.innerHTML='<div class="gate">Eroare de configurare.</div>';return;}
   if(!isAdmin()){app.innerHTML='<div class="hdr"><button class="back" onclick="location.assign(\'index.html\')">← Înapoi</button><div><div class="t">Coș — dosare șterse</div></div></div><div class="gate">🔒 Doar administrator.<br><br>Activați modul ADMIN în meniul principal, apoi reveniți.</div>';return;}
   var sb=supabase.createClient(CFG.SB_URL,CFG.SB_KEY);
+try{ if(window.RPWData) RPWData.init(sb, {onSync:(typeof onSyncState==='function'?onSyncState:null)}); }catch(e){ console.warn('RPWData init:', e); }
+
+// ── 11 (v4) — A SZERVERT MEGKÉRDEZZÜK, MIELŐTT ADATOT TÖLTENÉNK ──
+// Enélkül versenyhelyzet állna elő: az oldal már dolgozna az adattal,
+// mire kiderül, hogy a szerver verziója nem megfelelő.
+// PRODUCTION módban a hiba MEGÁLLÍTJA az alkalmazást (fail-closed).
+window.__rpwServerReady = (async function(){
+  try{
+    if(!window.RPWGuard || !RPWGuard.verifyServer) return {ok:true, skipped:true};
+    return await RPWGuard.verifyServer(sb, window.RPW_CFG);
+  }catch(e){ return {ok:false, problems:['verify_threw'], error:e}; }
+})();
   var ROWS=[];
 
   function fmt(ts){try{return new Date(ts).toLocaleString('ro-RO')}catch(e){return ts||''}}
 
   async function load(){
+  try{ if(window.__rpwServerReady) await window.__rpwServerReady; }catch(e){}
     try{
       var res=await RPWDb.listTrashed(sb);
       if(res.error)throw res.error;

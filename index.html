@@ -22,6 +22,8 @@
 <script src="rpw-util.js"></script>
 <script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
 <script src="rpw-auth.js"></script>
+<script src="rpw-cache.js"></script>
+<script src="rpw-conflict.js"></script><!-- 6: verzióütközés kezelése --><!-- D: helyi gyorsítótár korlátokkal -->
 <script src="rpw-db.js"></script>
 <script>/* PWA: service worker regisztráció (csak élő https oldalon) */
 if('serviceWorker' in navigator && location.protocol==='https:'){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})});}</script>
@@ -34,6 +36,7 @@ if('serviceWorker' in navigator && location.protocol==='https:'){window.addEvent
 try{ if(window.RPWAuth) RPWAuth.guard(); }catch(e){}</script>
 <script src="rpw-workflow.js"></script>
 <script src="rpw-save.js"></script>
+<script src="rpw-data.js"></script><!-- v4: szerveroldali átmenetek -->
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -394,9 +397,46 @@ if(!window.RPW_CFG){(document.getElementById('app')||document.body).innerHTML='<
 var SB_URL=RPW_CFG.SB_URL;
 var SB_KEY=RPW_CFG.SB_KEY;
 var sb=supabase.createClient(SB_URL,SB_KEY);
+try{ if(window.RPWData) RPWData.init(sb, {onSync:(typeof onSyncState==='function'?onSyncState:null)}); }catch(e){ console.warn('RPWData init:', e); }
+
+// ── 11 (v4) — A SZERVERT MEGKÉRDEZZÜK, MIELŐTT ADATOT TÖLTENÉNK ──
+// Enélkül versenyhelyzet állna elő: az oldal már dolgozna az adattal,
+// mire kiderül, hogy a szerver verziója nem megfelelő.
+// PRODUCTION módban a hiba MEGÁLLÍTJA az alkalmazást (fail-closed).
+window.__rpwServerReady = (async function(){
+  try{
+    if(!window.RPWGuard || !RPWGuard.verifyServer) return {ok:true, skipped:true};
+    return await RPWGuard.verifyServer(sb, window.RPW_CFG);
+  }catch(e){ return {ok:false, problems:['verify_threw'], error:e}; }
+})();
 /* PHASE 1: látható szinkron-állapot + robusztus mentő (rpw-save.js) */
 function rpwSyncLabel(st){var m={saving_local:['Salvare…','#6B7280'],syncing:['Sincronizare…','#2A6FDB'],synced:['✓ Salvat pe server','#1E9D55'],offline:['⚠ Offline – salvat local','#A6701F'],retry:['↻ Reîncercare…','#A6701F'],failed:['✗ Eșec salvare – reîncearcă','#C81E33'],permission:['✗ Fără permisiune','#C81E33'],conflict:['⚠ Conflict de date','#C81E33'],auth:['✗ Autentificare','#C81E33'],idle:['','#6B7280']};return m[st]||[st,'#6B7280'];}
-function onSyncState(st){var el=document.getElementById('rpw-sync');if(el){var l=rpwSyncLabel(st);el.textContent=l[0];el.style.color=l[1];el.style.opacity=l[0]?'1':'0';if(st==='synced'){setTimeout(function(){if(el&&el.textContent===l[0])el.style.opacity='0'},2000)}}var cb=document.getElementById('rpw-conflict');if(st==='conflict'){if(!cb){cb=document.createElement('div');cb.id='rpw-conflict';cb.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,Arial';cb.innerHTML='<div style="max-width:360px;background:#fff;border-radius:12px;padding:22px;text-align:center"><div style="font-size:34px">\u26A0\uFE0F</div><div style="font-size:17px;font-weight:800;color:#C81E33;margin:8px 0">Conflict de date</div><div style="font-size:13px;color:#3F4956;line-height:1.6">Alt utilizator a modificat aceast\u0103 fi\u0219\u0103. Modificarea ta local\u0103 este p\u0103strat\u0103. Re\u00EEncarc\u0103 pentru versiunea de pe server.</div><button onclick="location.reload()" style="margin-top:16px;background:#E11D2E;color:#fff;border:none;border-radius:9px;padding:11px 20px;font-weight:800;cursor:pointer">Re\u00EEncarc\u0103</button></div>';document.body.appendChild(cb);}}else if(cb){cb.remove();}}
+// 6 (2026-08-24): ütközéskor a felhasználó DÖNT — nincs csendes felülírás.
+function onSyncConflict(info){
+  info = info || {};
+  if(!window.RPWConflict) { toast('⚠ Conflict de date'); return; }
+  RPWConflict.show({
+    jobId: info.jobId,
+    mine: info.mine, theirs: info.theirs,
+    serverVersion: info.serverVersion,
+    isPhaseClose: !!info.isPhaseClose,
+    onReload: function(){ location.reload(); },
+    onReapply: function(kept, sv){
+      // A várt verziót a szerveréhez igazítjuk, és ÚJRA elküldjük.
+      // A tartalom a felhasználóé marad — nem fésülünk össze automatikusan.
+      if(kept && kept.patch && info.jobId){
+        var j = kept.patch; if(typeof sv === 'number') j.version = sv;
+        if(window.RPWSave && RPWSave.save) RPWSave.save(SB, j, {});
+        else if(window.saveJob) saveJob(j);
+      }
+      RPWConflict.clear(info.jobId);
+    },
+    onCancel: function(){}
+  });
+}
+function onSyncState(st, info){
+  if(st === 'conflict'){ try{ onSyncConflict(info||{}); }catch(e){} }
+  var el=document.getElementById('rpw-sync');if(el){var l=rpwSyncLabel(st);el.textContent=l[0];el.style.color=l[1];el.style.opacity=l[0]?'1':'0';if(st==='synced'){setTimeout(function(){if(el&&el.textContent===l[0])el.style.opacity='0'},2000)}}var cb=document.getElementById('rpw-conflict');if(st==='conflict'){if(!cb){cb=document.createElement('div');cb.id='rpw-conflict';cb.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,Arial';cb.innerHTML='<div style="max-width:360px;background:#fff;border-radius:12px;padding:22px;text-align:center"><div style="font-size:34px">\u26A0\uFE0F</div><div style="font-size:17px;font-weight:800;color:#C81E33;margin:8px 0">Conflict de date</div><div style="font-size:13px;color:#3F4956;line-height:1.6">Alt utilizator a modificat aceast\u0103 fi\u0219\u0103. Modificarea ta local\u0103 este p\u0103strat\u0103. Re\u00EEncarc\u0103 pentru versiunea de pe server.</div><button onclick="location.reload()" style="margin-top:16px;background:#E11D2E;color:#fff;border:none;border-radius:9px;padding:11px 20px;font-weight:800;cursor:pointer">Re\u00EEncarc\u0103</button></div>';document.body.appendChild(cb);}}else if(cb){cb.remove();}}
 var SAVER=(window.RPWSave&&RPWSave.createSaver)?RPWSave.createSaver({sb:sb,onState:onSyncState}):null;
 if(SAVER&&window.RPWSave&&RPWSave.bindBeforeUnload)RPWSave.bindBeforeUnload(SAVER,'Există modificări nesincronizate.');
 if(typeof saveJ==='function'){var _saveJ_orig=saveJ;saveJ=function(){if(typeof JOB==='undefined'||!JOB)return Promise.resolve();return SAVER?SAVER.save(JOB):_saveJ_orig();};}
@@ -422,6 +462,7 @@ function saveConfig(){try{localStorage.setItem('rpw_config',JSON.stringify(CONFI
 var _charts={};  // Chart.js peldanyok cache (destroy elott)
 
 async function loadJobs(){
+  try{ if(window.__rpwServerReady) await window.__rpwServerReady; }catch(e){}
   // 1. localStorage lista
   var cached=localStorage.getItem('rpw_jobs_list');
   if(cached){try{JOBS=JSON.parse(cached)}catch(e){}}
@@ -458,7 +499,7 @@ async function loadJobs(){
 }
 async function saveJob(job){
   // 1. localStorage ELOSZOR
-  try{localStorage.setItem('rpw_job_'+job.id,JSON.stringify(job));localStorage.setItem('rpw_job_ts_'+job.id,new Date().toISOString())}catch(e){}
+  try{RPWCache.setJob(job)}catch(e){}
   try{localStorage.removeItem("rpw_jobs_list")}catch(e){}
   // 2. Supabase — max 4mp timeout
   try{
@@ -478,7 +519,7 @@ async function freshJob(id){
     var r=await Promise.race([p,t]);
     if(r&&r.data&&r.data.data)j=r.data.data;
   }catch(e){}
-  if(!j){try{var c=localStorage.getItem('rpw_job_'+id);if(c)j=JSON.parse(c)}catch(e){}}
+  if(!j){try{var c=JSON.stringify(RPWCache.getJob(id)||null);if(c)j=JSON.parse(c)}catch(e){}}
   if(!j&&idx>=0)j=JOBS[idx];
   if(j&&idx>=0)JOBS[idx]=j;
   _freshAt[id]=Date.now();
@@ -486,7 +527,7 @@ async function freshJob(id){
 }
 async function deleteJob(id){
   try{localStorage.removeItem("rpw_jobs_list")}catch(e){}
-  try{localStorage.removeItem('rpw_job_'+id)}catch(e){}
+  try{RPWCache.del('job:'+id)}catch(e){}
   JOBS=JOBS.filter(function(j){return j.id!==id});
   render();
   // SOFT-DELETE: nem törlünk fizikailag, csak archiváljuk (Coș/Kuka) — visszaállítható
@@ -956,7 +997,7 @@ window.importZIP=async function(e){
     });
     await Promise.all(photoPromises);
     // Mentés localStorage
-    try{localStorage.setItem('rpw_job_'+job.id,JSON.stringify(job))}catch(err){}
+    try{RPWCache.setJob(job)}catch(err){}
     // Lista frissítés
     var exists=JOBS.some(function(x){return x.id===job.id});
     if(!exists)JOBS.unshift(job);
@@ -1425,7 +1466,7 @@ function renderStatistici(){
   // 5) Stuck — full
   h+='<div class="stat-card full"><div class="stat-card-h">'+T('stat_stuck')+' (≥<input type="number" min="1" max="60" value="'+S.statThreshold+'" onchange="setStuckThreshold(this.value)" style="width:42px;padding:2px 6px;font-size:11px;border:1px solid var(--b);border-radius:4px;font-family:inherit"> '+T('stat_days')+')</div>';
   if(stuck.length===0){h+='<div class="stat-empty">✅ —</div>'}
-  else{h+='<div class="stuck-list">';stuck.forEach(function(s){h+='<div class="stuck-row"><div><div class="stuck-id">'+s.number+'</div><div class="stuck-meta">'+(s.plate||'')+' '+(s.client?'· '+s.client:'')+' · '+T(PK[s.phase-1])+'</div></div><div class="stuck-days">'+s.days+' '+T('stat_days')+'</div></div>'});h+='</div>'}
+  else{h+='<div class="stuck-list">';stuck.forEach(function(s){h+='<div class="stuck-row"><div><div class="stuck-id">'+s.number+'</div><div class="stuck-meta">'+escH(s.plate||'')+' '+(s.client?'· '+escH(s.client):'')+' · '+T(PK[s.phase-1])+'</div></div><div class="stuck-days">'+s.days+' '+T('stat_days')+'</div></div>'});h+='</div>'}
   h+='</div>';
   // 6) FTR — full
   h+='<div class="stat-card full"><div class="stat-card-h">'+T('stat_ftr')+'</div>';
@@ -1666,7 +1707,9 @@ window.saveRepro=async function(){
   var vechi=job.programare.date||null;
   job.programare.date=S.reproDate;
   job.programare.time=S.reproTime||'08:00';
-  job.sosire='programat'; job.inchis=false; syncMirror(job);
+  // v4: az `inchis` workflow-mező — az előjegyzés nem nyitja újra a
+  // munkát. Ha zárva van, előbb újra kell nyitni (reactiveaza).
+  job.sosire='programat'; syncMirror(job);
   job.programare.reprogramari=(job.programare.reprogramari||0)+1;
   if(!Array.isArray(job.programare.istoric))job.programare.istoric=[];
   job.programare.istoric.push({din:vechi,catre:S.reproDate,la:new Date().toISOString()});
@@ -2159,7 +2202,9 @@ window.deschideLucrare=async function(jobId){
   if(!job.conditions||!job.conditions.whatsapp){toast(T('no_wa_yet'),1);return}
   if(!job.programare)job.programare={};
   job.sosire='sosit'; syncMirror(job);
-  if(!job.phase||job.phase<1)job.phase=1;
+  // v4: a `phase` workflow-mező; helyben csak a MEGJELENÍTÉSHEZ
+  // számolunk vele, a mentésbe nem kerül bele.
+  var _phaseView = (!job.phase||job.phase<1) ? 1 : job.phase;
   if(!job.phases)job.phases={};
   for(var p=1;p<=7;p++){if(!job.phases[p])job.phases[p]={status:'pending'}}
   if(job.phases[1].status==='pending'){job.phases[1].status='active';job.phases[1].started=new Date().toISOString()}
@@ -2181,7 +2226,22 @@ window.reactiveaza=async function(jobId){
   var job=await freshJob(jobId);
   if(!job)return;
   if(!job.programare)job.programare={};
-  job.sosire='programat'; job.inchis=false; syncMirror(job);
+  // v4: az `inchis` WORKFLOW-MEZŐ — nem állítható közvetlenül.
+  // Ha a munka le van zárva, az újraaktiválás ÚJRANYITÁS: a szerver
+  // ellenőrzi az override jogot, és kötelező indoklást kér.
+  if(job.inchis === true){
+    var reason=(window.prompt && window.prompt(T('reopen_reason')||'Motivul redeschiderii:'))||'';
+    if(reason.trim().length < 5){ toast('Motivul este obligatoriu (minim 5 caractere).',1); return; }
+    var res = await RPWWorkflow.commitCriticalTransition(job, function(){
+      job.inchis=false; return {ok:true};
+    }, { action:'reopen', phase:(job.phase||7), reason:reason.trim() });
+    if(!res.ok){
+      var e=(res.error)||{};
+      toast(e.message || T('reactivat_fail') || 'Operațiunea a fost respinsă.', 1);
+      render(); return;
+    }
+  }
+  job.sosire='programat'; syncMirror(job);
   await saveJob(job);
   toast(T('reactivat'));
   render();
@@ -2914,6 +2974,10 @@ window.ecPinSave=async function(empId, pin){
 };
 
 // Auto-refresh every 10 seconds
+// D (2026-08-24): egyszeri takarítás a régi, TTL nélküli bejegyzésekre,
+// majd a lejártak rendszeres eldobása.
+try{ if(window.RPWCache){ RPWCache.migrateLegacy(); RPWCache.sweep(); } }catch(e){}
+setInterval(function(){ try{ if(window.RPWCache) RPWCache.sweep(); }catch(e){} }, 10*60*1000);
 setInterval(loadJobs,60000);
 setTimeout(function(){try{azMaybeAuto()}catch(e){}},1400);
 loadConfig();

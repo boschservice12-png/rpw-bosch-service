@@ -153,13 +153,16 @@ exports.handler = async (event) => {
     return response(413, { error: 'Image too large (max ~5MB)' });
   }
 
-  // Media type detect (jpg az alapertelmezett, PDF kulon ag)
-  let mediaType = 'image/jpeg';
-  let isPdf = false;
-  if (image.startsWith('JVBER')) isPdf = true;          // %PDF base64 → dokumentum
-  else if (image.startsWith('iVBOR')) mediaType = 'image/png';
-  else if (image.startsWith('/9j/')) mediaType = 'image/jpeg';
-  else if (image.startsWith('UklGR')) mediaType = 'image/webp';
+  // ── C4 (2026-08-24) — a formátumot ELLENŐRIZZÜK, nem feltételezzük ──
+  // KORÁBBAN: `let mediaType = 'image/jpeg'` volt az alapértelmezés, és
+  // ismeretlen tartalom is jpeg-ként ment tovább az AI-nak. Most a közös
+  // detectMedia dönt, és ismeretlen formátumnál ELUTASÍTUNK.
+  const det = H.detectMedia(image);
+  if (!det) {
+    return response(415, { error: 'Format nerecunoscut. Acceptăm: JPEG, PNG, WebP, GIF, PDF.' });
+  }
+  const isPdf = det.kind === 'pdf';
+  const mediaType = det.media;
 
   // ────── Hivas az Anthropic API-t ──────
   try {
@@ -201,16 +204,37 @@ exports.handler = async (event) => {
     // JSON tisztitas (ha Claude markdown kodbloccal adna)
     let cleaned = text.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
 
-    // Ellenorizzuk, hogy valid JSON (csak validaciokent, ugyanazt adjuk vissza)
-    try {
-      JSON.parse(cleaned);
-    } catch (e) {
-      console.warn('OCR returned non-JSON text:', cleaned.slice(0, 200));
-      // Megis visszaadjuk, kliens majd kezeli
+    // ── 13 (2026-08-24) — HIBÁS AI-VÁLASZ NEM SIKERES VÁLASZ ──────
+    // KORÁBBAN: érvénytelen JSON esetén csak `console.warn` futott, és a
+    // válasz 200-zal ment vissza „result" néven. A kliens így szemetet
+    // kapott sikerként. Most az értelmezhetetlen válasz 502.
+    var parsed = null;
+    try { parsed = JSON.parse(cleaned); }
+    catch (e) {
+      console.warn('OCR: az AI nem JSON-t adott:', cleaned.slice(0, 200));
+      return response(502, { error: 'Răspuns AI invalid. Încearcă din nou sau introdu manual.',
+                             code: 'ai_invalid_json' });
     }
 
-    var _obj=null; try{ _obj=JSON.parse(cleaned); }catch(_){}
-    return response(200, { result: cleaned, uncertain: _obj?H.flagUncertain(_obj):null, model: MODEL });
+    // Séma-ellenőrzés: ismeretlen mezőket eldobunk, üres eredményt elutasítunk
+    var val = H.validateOcr(parsed, type);
+    if (!val.ok) {
+      console.warn('OCR: séma-hiba', val.error, Object.keys(parsed || {}));
+      return response(502, { error: 'Răspuns AI neconform. Verifică documentul sau introdu manual.',
+                             code: 'ai_schema_' + val.error });
+    }
+
+    // A kockázatos mezők EMBERI MEGERŐSÍTÉST kérnek (vin, cnp, rendszám,
+    // kárszám, összegek, órák). Az AI eredménye SOHA nem vált fázist —
+    // ezt a kliens dönti el, a felhasználó jóváhagyása után.
+    return response(200, {
+      result: JSON.stringify(val.data),
+      fields: val.data,
+      uncertain: H.flagUncertain(val.data),
+      ignored: val.ignored,
+      needsHumanReview: true,
+      model: MODEL
+    });
   } catch (e) {
     console.error('OCR proxy exception:', e);
     return response(500, { error: 'Server error: ' + (e.message || 'unknown') });
