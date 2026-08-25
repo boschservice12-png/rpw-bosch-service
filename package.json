@@ -10,7 +10,7 @@
     "test:frontend": "node _tests/run-all.js --frontend",
     "test:static": "node _tests/run-all.js --static",
     "report": "node _tests/gen-report.js",
-    "funkciok": "node _registry/generate.js && node _tests/unit/test-registry.js"
+    "funkciok": "node _registry/generate.js && node _registry/pdf.js && node _tests/unit/test-registry.js"
   },
   "devDependencies": {
     "jsdom": "30.0.1",
