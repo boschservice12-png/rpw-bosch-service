@@ -3,7 +3,7 @@
 > **Ez a fájl generált.** Forrás: `_tests/last-run.json`.
 > Újragenerálás: `npm test && node _tests/gen-report.js`
 
-*Generálva: 2026-08-25T11:18:59.307Z*
+*Generálva: 2026-08-25T14:00:53.368Z*
 
 ---
 
@@ -40,13 +40,13 @@ Staging:               NOT VERIFIED
 
 | Kategória | Fájl | Állítás | Sikeres | Sikertelen | El sem indult |
 |---|---:|---:|---:|---:|---:|
-| **Unit** | 39 | 1627 | 1627 | 0 | 0 |
+| **Unit** | 39 | 1637 | 1637 | 0 | 0 |
 | **Database integration** | 3 | 262 | 262 | 0 | 0 |
 | **Frontend integration** | 1 | 176 | 176 | 0 | 0 |
 | **Static workflow audit** | 1 | 2 | 2 | 0 | 0 |
 | **Staging** | — | — | — | — | — |
 
-**Futási idő:** 29.7 s
+**Futási idő:** 42.0 s
 
 > ⚠ **A staging NEM igazolt** — a MANUAL-STAGING-CHECKLIST.md nincs kitöltve
 > Ezért a „minden teszt sikeres" állítás NEM tehető meg.
@@ -96,7 +96,7 @@ Ez fedi a brief 6. pontjának mind a 12 esetét és a 13. pont regresszióit.
 | unit | `test-modal.js` | 19 | 0 | ✅ |
 | unit | `test-onelist.js` | 25 | 0 | ✅ |
 | unit | `test-oneway.js` | 27 | 0 | ✅ |
-| unit | `test-p0-1-guard.js` | 78 | 0 | ✅ |
+| unit | `test-p0-1-guard.js` | 88 | 0 | ✅ |
 | unit | `test-p0-3-tenant.js` | 34 | 0 | ✅ |
 | unit | `test-p0-5-admin.js` | 29 | 0 | ✅ |
 | unit | `test-p0-6-storage.js` | 24 | 0 | ✅ |
