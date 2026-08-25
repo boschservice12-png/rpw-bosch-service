@@ -3,7 +3,7 @@
 > **Ez a fájl generált.** Forrás: `_tests/last-run.json`.
 > Újragenerálás: `npm test && node _tests/gen-report.js`
 
-*Generálva: 2026-08-25T06:44:44.375Z*
+*Generálva: 2026-08-25T07:21:06.032Z*
 
 ---
 
@@ -40,13 +40,13 @@ Staging:               NOT VERIFIED
 
 | Kategória | Fájl | Állítás | Sikeres | Sikertelen | El sem indult |
 |---|---:|---:|---:|---:|---:|
-| **Unit** | 35 | 1473 | 1473 | 0 | 0 |
+| **Unit** | 36 | 1517 | 1517 | 0 | 0 |
 | **Database integration** | 3 | 241 | 241 | 0 | 0 |
 | **Frontend integration** | 1 | 176 | 176 | 0 | 0 |
 | **Static workflow audit** | 1 | 2 | 2 | 0 | 0 |
 | **Staging** | — | — | — | — | — |
 
-**Futási idő:** 26.3 s
+**Futási idő:** 28.8 s
 
 > ⚠ **A staging NEM igazolt** — a MANUAL-STAGING-CHECKLIST.md nincs kitöltve
 > Ezért a „minden teszt sikeres" állítás NEM tehető meg.
@@ -102,6 +102,7 @@ Ez fedi a brief 6. pontjának mind a 12 esetét és a 13. pont regresszióit.
 | unit | `test-pin-dialog.js` | 24 | 0 | ✅ |
 | unit | `test-prog.js` | 30 | 0 | ✅ |
 | unit | `test-render.js` | 25 | 0 | ✅ |
+| unit | `test-rot.js` | 44 | 0 | ✅ |
 | unit | `test-rpc-consistency.js` | 54 | 0 | ✅ |
 | unit | `test-security-a-o.js` | 95 | 0 | ✅ |
 | unit | `test-staff.js` | 50 | 0 | ✅ |

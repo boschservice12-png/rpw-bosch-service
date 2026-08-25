@@ -539,15 +539,6 @@ window.addPh=function(x,e){var f=e.target.files&&e.target.files[0];if(!f)return;
 window.delClosePhoto=async function(x){if(!JOB||!JOB.closingPhotos||!JOB.closingPhotos[x])return;if(!confirm('⚠️ Fotografia este o DOVADĂ. Sigur o ștergi DEFINITIV?'))return;JOB.closingPhotos[x]=null;await saveJ();render()};
 
 // KRITIKUS lezárás: megerősített (awaitolt) mentés — offline/hiba esetén NINCS siker + NINCS navigáció
-async function saveConfirmedNow(){
-  try{RPWCache.setJob(JOB);}catch(e){}
-  try{
-    if(typeof navigator!=='undefined' && navigator.onLine===false) return false;
-    var r=await RPWDb.patch(sb,JOB);
-    if(r&&r.error) return false;
-    return true;
-  }catch(e){ return false; }
-}
 window.closeJob=async function(){
   if(!JOB)return;
   var ln=gL();

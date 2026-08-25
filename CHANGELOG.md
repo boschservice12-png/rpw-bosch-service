@@ -1,5 +1,58 @@
 # CHANGELOG.md
 
+## 2026-08-25 (3) — Frontend-takarítás
+
+Mérésből, nem érzésből: minden lap betöltődik jsdom-ban a moduljaival, és a
+**valódi globálokat** kérdezzük.
+
+### Amit a mérés talált
+
+| Rothadás | Mennyi | Mit tettünk |
+|---|---|---|
+| **Hiányzó felirat** — a `T('kulcs')` a NYERS KULCSOT írta a képernyőre | 7 | pótolva mindhárom nyelven |
+| **Halott függvény** — sehol nem hívott kód | 5 (84 sor) | törölve |
+| **Nem létező függvény hívása** — `acteDoneTotal`, az eredményt senki nem használta | 1 | törölve |
+| **Halott gomb** — `onclick` nem létező függvényre | 0 | — |
+
+A hiányzó feliratok a felhasználó szeme előtt voltak: az újranyitás kérdése
+`reopen_reason`-t írt ki, a hiányos űrlap `incomplete`-et. A `T()` a nem talált
+kulcsot **önmagával** adja vissza, ezért a mögé írt `|| 'Motivul…'` tartalék
+**soha nem sült el** — igaznak látszó kód, ami hazudik.
+
+A törölt függvények közül a legbeszédesebb az `autoPopulate()` (48 sor): egy
+üzleti szabály **második, senki által nem hívott példánya** — az élő verzió a
+`syncFromElements()`. Két implementáció ugyanarra a szabályra: az egyik
+csendben elavul, és senki nem tudja, melyik az igazság.
+
+### `test-rot.js` — hogy ne jöjjön vissza
+
+44 állítás, tizenhárom lapon. Nem szövegkeresés: a lapok TÉNYLEGESEN
+betöltődnek, és ellenőrizzük, hogy
+
+* minden `onclick`/`onchange` **létező** függvényre mutat *(224 kezelő)*
+* minden `T('kulcs')` megvan a szótárban *(787 hivatkozás)*
+* nincs **duplikált** szótárkulcs — a későbbi csendben felülírja a korábbit
+
+A teszt **elbukik**, ha bármelyik visszatér: elgépelt kezelőnévvel és törölt
+felirattal is kipróbálva.
+
+A harmadik ellenőrzés a saját hibámból született: a takarítás közben `ore`
+kulcsot vettem fel oda, ahol **már létezett**. A „hiányzik" jelzés téves volt —
+a `T()` a román `ore` fordítást nem tudta megkülönböztetni a kulcs nevétől.
+A detektor azóta a **szótárat** kérdezi, nem a `T()` visszatérését.
+
+### Amit MÉRTÜNK, de NEM piszkáltunk
+
+**~48 „halott" CSS-osztály.** A lapok tizenegy helyen **futásidőben építenek**
+osztálynevet (`class="'+valami+'"`), tehát a statikus keresés nem bizonyíték.
+Vizuális teszt nincs, ami elkapná a tévedést — CSS-t törölni ezen az alapon
+kockázatosabb, mint hagyni.
+
+**`rpw-queue.js` (198 sor) — egyetlen lap sem tölti be.** Az `RPWData.create`
+elfogad `opts.queue`-t, csak senki nem ad neki. Ez nem szemét, hanem **be nem
+kötött képesség** (tartós offline sor). Döntést igényel: bekötni vagy elengedni.
+
+---
 ## 2026-08-25 (2) — A `classify` bekötése + két élő hiba a dosszién
 
 A `functions/classify.js` hónapok óta kész volt, és **sehol nem hívtuk**.

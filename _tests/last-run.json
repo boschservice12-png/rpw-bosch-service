@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-25T06:44:44.375Z",
+  "generated": "2026-08-25T07:21:06.032Z",
   "node": "v22.22.2",
   "npm": "10.9.7",
   "jsdom": "30.0.1",
@@ -7,11 +7,11 @@
   "build": "V4-CLASSIFY-BULK",
   "unit": {
     "cat": "unit",
-    "files": 35,
+    "files": 36,
     "nemIndult": 0,
     "bukott": 0,
-    "assertions": 1473,
-    "passed": 1473,
+    "assertions": 1517,
+    "passed": 1517,
     "failed": 0,
     "verdict": "PASS"
   },
@@ -49,7 +49,7 @@
     "verdict": "NOT VERIFIED",
     "note": "a MANUAL-STAGING-CHECKLIST.md nincs kitöltve"
   },
-  "duration_ms": 26326,
+  "duration_ms": 28784,
   "results": [
     {
       "cat": "unit",
@@ -58,7 +58,7 @@
       "status": "OK",
       "pass": 87,
       "fail": 0,
-      "ms": 2349
+      "ms": 2379
     },
     {
       "cat": "unit",
@@ -67,7 +67,7 @@
       "status": "OK",
       "pass": 50,
       "fail": 0,
-      "ms": 2313
+      "ms": 2370
     },
     {
       "cat": "unit",
@@ -76,7 +76,7 @@
       "status": "OK",
       "pass": 23,
       "fail": 0,
-      "ms": 926
+      "ms": 880
     },
     {
       "cat": "unit",
@@ -85,7 +85,7 @@
       "status": "OK",
       "pass": 27,
       "fail": 0,
-      "ms": 46
+      "ms": 43
     },
     {
       "cat": "unit",
@@ -94,7 +94,7 @@
       "status": "OK",
       "pass": 105,
       "fail": 0,
-      "ms": 1153
+      "ms": 1298
     },
     {
       "cat": "unit",
@@ -103,7 +103,7 @@
       "status": "OK",
       "pass": 28,
       "fail": 0,
-      "ms": 922
+      "ms": 973
     },
     {
       "cat": "unit",
@@ -112,7 +112,7 @@
       "status": "OK",
       "pass": 39,
       "fail": 0,
-      "ms": 972
+      "ms": 979
     },
     {
       "cat": "unit",
@@ -121,7 +121,7 @@
       "status": "OK",
       "pass": 22,
       "fail": 0,
-      "ms": 50
+      "ms": 43
     },
     {
       "cat": "unit",
@@ -130,7 +130,7 @@
       "status": "OK",
       "pass": 22,
       "fail": 0,
-      "ms": 40
+      "ms": 77
     },
     {
       "cat": "unit",
@@ -139,7 +139,7 @@
       "status": "OK",
       "pass": 38,
       "fail": 0,
-      "ms": 44
+      "ms": 43
     },
     {
       "cat": "unit",
@@ -148,7 +148,7 @@
       "status": "OK",
       "pass": 56,
       "fail": 0,
-      "ms": 44
+      "ms": 43
     },
     {
       "cat": "unit",
@@ -157,7 +157,7 @@
       "status": "OK",
       "pass": 69,
       "fail": 0,
-      "ms": 2552
+      "ms": 2486
     },
     {
       "cat": "unit",
@@ -166,7 +166,7 @@
       "status": "OK",
       "pass": 39,
       "fail": 0,
-      "ms": 48
+      "ms": 47
     },
     {
       "cat": "unit",
@@ -175,7 +175,7 @@
       "status": "OK",
       "pass": 64,
       "fail": 0,
-      "ms": 43
+      "ms": 49
     },
     {
       "cat": "unit",
@@ -184,7 +184,7 @@
       "status": "OK",
       "pass": 15,
       "fail": 0,
-      "ms": 42
+      "ms": 63
     },
     {
       "cat": "unit",
@@ -193,7 +193,7 @@
       "status": "OK",
       "pass": 70,
       "fail": 0,
-      "ms": 44
+      "ms": 47
     },
     {
       "cat": "unit",
@@ -202,7 +202,7 @@
       "status": "OK",
       "pass": 19,
       "fail": 0,
-      "ms": 970
+      "ms": 969
     },
     {
       "cat": "unit",
@@ -211,7 +211,7 @@
       "status": "OK",
       "pass": 24,
       "fail": 0,
-      "ms": 47
+      "ms": 45
     },
     {
       "cat": "unit",
@@ -220,7 +220,7 @@
       "status": "OK",
       "pass": 27,
       "fail": 0,
-      "ms": 47
+      "ms": 45
     },
     {
       "cat": "unit",
@@ -238,7 +238,7 @@
       "status": "OK",
       "pass": 34,
       "fail": 0,
-      "ms": 43
+      "ms": 44
     },
     {
       "cat": "unit",
@@ -247,7 +247,7 @@
       "status": "OK",
       "pass": 29,
       "fail": 0,
-      "ms": 70
+      "ms": 64
     },
     {
       "cat": "unit",
@@ -256,7 +256,7 @@
       "status": "OK",
       "pass": 24,
       "fail": 0,
-      "ms": 42
+      "ms": 49
     },
     {
       "cat": "unit",
@@ -265,7 +265,7 @@
       "status": "OK",
       "pass": 40,
       "fail": 0,
-      "ms": 50
+      "ms": 54
     },
     {
       "cat": "unit",
@@ -274,7 +274,7 @@
       "status": "OK",
       "pass": 24,
       "fail": 0,
-      "ms": 2841
+      "ms": 2871
     },
     {
       "cat": "unit",
@@ -283,7 +283,7 @@
       "status": "OK",
       "pass": 30,
       "fail": 0,
-      "ms": 41
+      "ms": 44
     },
     {
       "cat": "unit",
@@ -292,7 +292,16 @@
       "status": "OK",
       "pass": 25,
       "fail": 0,
-      "ms": 1808
+      "ms": 1715
+    },
+    {
+      "cat": "unit",
+      "file": "test-rot.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-rot.js",
+      "status": "OK",
+      "pass": 44,
+      "fail": 0,
+      "ms": 977
     },
     {
       "cat": "unit",
@@ -310,7 +319,7 @@
       "status": "OK",
       "pass": 95,
       "fail": 0,
-      "ms": 48
+      "ms": 44
     },
     {
       "cat": "unit",
@@ -319,7 +328,7 @@
       "status": "OK",
       "pass": 50,
       "fail": 0,
-      "ms": 2967
+      "ms": 3434
     },
     {
       "cat": "unit",
@@ -328,7 +337,7 @@
       "status": "OK",
       "pass": 28,
       "fail": 0,
-      "ms": 41
+      "ms": 68
     },
     {
       "cat": "unit",
@@ -337,7 +346,7 @@
       "status": "OK",
       "pass": 12,
       "fail": 0,
-      "ms": 40
+      "ms": 46
     },
     {
       "cat": "unit",
@@ -346,7 +355,7 @@
       "status": "OK",
       "pass": 19,
       "fail": 0,
-      "ms": 42
+      "ms": 45
     },
     {
       "cat": "unit",
@@ -355,7 +364,7 @@
       "status": "OK",
       "pass": 12,
       "fail": 0,
-      "ms": 43
+      "ms": 42
     },
     {
       "cat": "unit",
@@ -364,7 +373,7 @@
       "status": "OK",
       "pass": 95,
       "fail": 0,
-      "ms": 806
+      "ms": 941
     },
     {
       "cat": "integration",
@@ -373,7 +382,7 @@
       "status": "OK",
       "pass": 46,
       "fail": 0,
-      "ms": 1109
+      "ms": 1311
     },
     {
       "cat": "integration",
@@ -382,7 +391,7 @@
       "status": "OK",
       "pass": 114,
       "fail": 0,
-      "ms": 1265
+      "ms": 1611
     },
     {
       "cat": "integration",
@@ -391,7 +400,7 @@
       "status": "OK",
       "pass": 81,
       "fail": 0,
-      "ms": 1227
+      "ms": 1368
     },
     {
       "cat": "frontend",
@@ -400,7 +409,7 @@
       "status": "OK",
       "pass": 176,
       "fail": 0,
-      "ms": 1008
+      "ms": 993
     },
     {
       "cat": "static",

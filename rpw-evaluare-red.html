@@ -314,6 +314,8 @@ var PAINTABLE={l_m:false,r_m:false};  // tükrök: nincs fenyezes
 var WORK_V2_TO_V1={inlocuire:'replace',reparatie:'fix',vopsire:'uni',revopsire:'uni'};
 
 var i={
+incomplete:{ro:'Date incomplete — completează câmpurile lipsă.',en:'Incomplete data — fill in the missing fields.',hu:'Hiányos adatok — töltsd ki a hiányzó mezőket.'},
+
   titlu:{ro:'OFERTA DE PRET',en:'QUOTE',hu:'ARAJANLAT'},
   data:{ro:'Data',en:'Date',hu:'Datum'},
   unitate:{ro:'UNITATE',en:'UNIT',hu:'EGYSEG'},
@@ -510,54 +512,6 @@ function initJob(){
   if(!JOB.evalData.upsell)JOB.evalData.upsell=[];
   if(JOB.evalData.comanda.length===0 && JOB.evalData.upsell.length===0){
     syncFromElements();
-  }
-}
-
-function autoPopulate(){
-  var el=JOB.elements||{};
-  var cnt=0;
-  for(var k in el){
-    var e=el[k];
-    var target=null;
-    if(e.status==='damaged')target='comanda';
-    else if(e.status==='suggested')target='upsell';
-    if(!target)continue;
-    // Olvasd ki az ops objektumot (checkbox alapu), backward compat a work/workV2 mezokre
-    var ops=e.ops;
-    if(!ops){
-      ops={};
-      var oldW=e.workV2||e.work;
-      if(oldW==='replace'||oldW==='inlocuire'||oldW==='new')ops.inlocuire=true;
-      else if(oldW==='fix'||oldW==='reparatie')ops.reparatie=true;
-      else if(oldW==='vopsire'||oldW==='uni')ops.vopsire=true;
-      else if(oldW==='revopsire')ops.revopsire=true;
-    }
-    // Ket kulon sor mindegy ami bekapcsolva van
-    var opList=['inlocuire','demontat','dezasamblat','reparatie','vopsire','revopsire','mecanica'];
-    var added=false;
-    for(var oi=0;oi<opList.length;oi++){
-      var op=opList[oi];
-      if(ops[op]){
-        var prefix=target==='comanda'?'c_':'u_';
-        JOB.evalData[target].push({
-          id:prefix+Date.now().toString(36)+'_'+(cnt++),
-          elKey:k,
-          op:op,
-          hours:(op==='reparatie'&&e.oraNormata)?e.oraNormata:getNorma(k,op),
-          note:e.note||'',
-          photo:e.photo||null
-        });
-        added=true;
-      }
-    }
-    // Fallback: ha nincs ops de damaged/suggested (regi adat) - egy sor ures muvelettel
-    if(!added){
-      var prefix2=target==='comanda'?'c_':'u_';
-      JOB.evalData[target].push({
-        id:prefix2+Date.now().toString(36)+'_'+(cnt++),
-        elKey:k,op:'',hours:0,note:e.note||'',photo:e.photo||null
-      });
-    }
   }
 }
 
@@ -1057,13 +1011,6 @@ window.lb=function(src){S.lightbox=src;render()};
 window.closeLb=function(){S.lightbox=null;render()};
 
 window.upJob=async function(field,val){if(!JOB)return;JOB[field]=val;if(field==='brand')JOB.auto=val;await saveJ()};
-window.upYrKm=async function(val){
-  if(!JOB)return;
-  var parts=val.split('/');
-  if(parts[0])JOB.year=parts[0].trim().replace(/—/g,'');
-  if(parts[1])JOB.km=parts[1].trim().replace(/—/g,'');
-  await saveJ();
-};
 window.upCfg=function(path,val){var parts=path.split('.');if(parts.length===2){CONFIG[parts[0]][parts[1]]=val}else{CONFIG[path]=val}saveConfig()};
 window.upTarif=function(field,val){CONFIG.tarif[field]=parseFloat(val)||0;saveConfig();render()};
 
@@ -1115,18 +1062,6 @@ window.delRow=async function(id){
   var tab=S.tab;
   JOB.evalData[tab]=JOB.evalData[tab].filter(function(x){return x.id!==id});
   await saveJ();render();
-};
-
-window.aRP=function(rowId,e){
-  var f=e.target.files&&e.target.files[0];if(!f)return;
-  var row=null,tabs=['comanda','upsell'];
-  for(var ti=0;ti<tabs.length;ti++){var l=(JOB.evalData&&JOB.evalData[tabs[ti]])||[];for(var ri=0;ri<l.length;ri++){if(l[ri].id===rowId){row=l[ri];break}}if(row)break}
-  if(!row)return;
-  var key=row.photoRef||('evrow_'+rowId);
-  resizeFile(f).then(async function(dataUrl){
-    try{await uploadPhoto(key,dataUrl)}catch(err){toast('Upload: '+err.message,1);return}
-    row.photoRef=key;await saveJ();toast(T('saved'));render();
-  });
 };
 
 window.printDoc=function(){window.print()};

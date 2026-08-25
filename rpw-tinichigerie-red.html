@@ -209,7 +209,8 @@ function mapBodyType(w){
 
 function toast(m,e){S.ts=m;S.te=e?1:0;render();setTimeout(function(){S.ts=null;render()},3000)}
 
-var i={tinichigerie:{ro:'Tinichigerie',en:'Bodywork',hu:'Lakatos'},vehicul:{ro:'DATE VEHICUL',en:'VEHICLE DATA',hu:'JARMU ADATOK'},plate:{ro:'Nr. inmatr.',en:'Plate',hu:'Rendszam'},proprietar:{ro:'Proprietar',en:'Owner',hu:'Tulajdonos'},vin:{ro:'Serie sasiu',en:'VIN',hu:'VIN'},brand:{ro:'Marca',en:'Brand',hu:'Marka'},year:{ro:'An',en:'Year',hu:'Ev'},
+var i={incomplete:{ro:'Date incomplete — completează câmpurile lipsă.',en:'Incomplete data — fill in the missing fields.',hu:'Hiányos adatok — töltsd ki a hiányzó mezőket.'},
+tinichigerie:{ro:'Tinichigerie',en:'Bodywork',hu:'Lakatos'},vehicul:{ro:'DATE VEHICUL',en:'VEHICLE DATA',hu:'JARMU ADATOK'},plate:{ro:'Nr. inmatr.',en:'Plate',hu:'Rendszam'},proprietar:{ro:'Proprietar',en:'Owner',hu:'Tulajdonos'},vin:{ro:'Serie sasiu',en:'VIN',hu:'VIN'},brand:{ro:'Marca',en:'Brand',hu:'Marka'},year:{ro:'An',en:'Year',hu:'Ev'},
 comanda:{ro:'COMANDA TINICHIGERIE',en:'BODYWORK ORDER',hu:'LAKATOS RENDELES'},
 inlocuire:{ro:'Inlocuire',en:'Replace',hu:'Csere'},reparatie:{ro:'Reparatie',en:'Repair',hu:'Javitas'},dezasamblare:{ro:'Dezasamblare',en:'Disassembly',hu:'Szetszereles'},centrat:{ro:'Centrat',en:'Alignment',hu:'Centroz.'},extra:{ro:'Suplimentar',en:'Extra',hu:'Plusz'},
 ore:{ro:'ore',en:'hrs',hu:'ora'},obs:{ro:'Obs.',en:'Notes',hu:'Megj.'},totalOre:{ro:'TOTAL ORE',en:'TOTAL HRS',hu:'OSSZ ORA'},elemCount:{ro:'ELEMENTE',en:'ELEMENTS',hu:'ELEMEK'},

@@ -164,6 +164,19 @@ a két feladat egyszerre elvégezhető.
 | **Igazolva** | Logika és felület: 105 állítás, ebből 18 valódi lapkódon. A modell TALÁLATI ARÁNYA: nincs mérve — valódi iratok kellenek hozzá |
 | **Következő lépés** | `MANUAL-STAGING-CHECKLIST.md` 12b |
 
+### A `rpw-queue.js` be nem kötött képesség
+198 sor tartós offline sor, amit **egyetlen lap sem tölt be**. Az
+`RPWData.create` elfogad `opts.queue`-t — senki nem ad neki. Ma az offline
+mentés a `RPWSave` memóriájában él: **böngészőfrissítés után elveszik**.
+**Döntés kell:** bekötni (és akkor tesztelni), vagy elengedni (és törölni).
+Amíg egyik sem történik, a repó azt sugallja, hogy van tartós sor — pedig nincs.
+
+### A halott CSS nem mérhető statikusan
+~48 osztály látszik használatlannak, de a lapok tizenegy helyen futásidőben
+építenek osztálynevet. **Vizuális teszt nincs**, ami elkapná a téves törlést.
+Ezért ezek maradnak. Feloldás: képernyőkép-összehasonlítás staging ellen —
+addig a CSS-takarítás több kockázat, mint haszon.
+
 ### Az `ANTHROPIC_API_KEY` egyetlen ponton dől el
 Ha a kulcs hiányzik vagy lejár, a `classify` 500-at ad, és **minden** sor
 „nem ismerem fel" lesz. Ez nem törés — a kézi választás megmarad —, de a

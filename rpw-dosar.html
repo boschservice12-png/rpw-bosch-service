@@ -206,7 +206,8 @@ var EK=['fb','rb','hood','trunk','roof','fl_f','fr_f','rl_f','rr_f','fl_d','fr_d
 var VK=['front','back','left','right','serieCaros','km'];
 var EK_NAMES={fb:{ro:'Bara fata',en:'Front bumper',hu:'Elso lokh.'},rb:{ro:'Bara spate',en:'Rear bumper',hu:'Hatso lokh.'},hood:{ro:'Capota',en:'Hood',hu:'Motorhazt.'},trunk:{ro:'Portbagaj',en:'Trunk',hu:'Csomagtarto'},roof:{ro:'Plafon',en:'Roof',hu:'Teto'},fl_f:{ro:'Aripa stg fata',en:'LF fender',hu:'BE sarvedo'},fr_f:{ro:'Aripa dr fata',en:'RF fender',hu:'JE sarvedo'},rl_f:{ro:'Aripa stg spate',en:'LR fender',hu:'BH sarvedo'},rr_f:{ro:'Aripa dr spate',en:'RR fender',hu:'JH sarvedo'},fl_d:{ro:'Usa stg fata',en:'LF door',hu:'BE ajto'},fr_d:{ro:'Usa dr fata',en:'RF door',hu:'JE ajto'},rl_d:{ro:'Usa stg spate',en:'LR door',hu:'BH ajto'},rr_d:{ro:'Usa dr spate',en:'RR door',hu:'JH ajto'},l_s:{ro:'Prag stg',en:'L sill',hu:'B kuszob'},r_s:{ro:'Prag dr',en:'R sill',hu:'J kuszob'},l_m:{ro:'Ogl. stg',en:'L mirror',hu:'B tukor'},r_m:{ro:'Ogl. dr',en:'R mirror',hu:'J tukor'},a_l:{ro:'Stalp A stg',en:'L A-pil.',hu:'B A oszl.'},a_r:{ro:'Stalp A dr',en:'R A-pil.',hu:'J A oszl.'},b_l:{ro:'Stalp B stg',en:'L B-pil.',hu:'B B oszl.'},b_r:{ro:'Stalp B dr',en:'R B-pil.',hu:'J B oszl.'},c_l:{ro:'Stalp C stg',en:'L C-pil.',hu:'B C oszl.'},c_r:{ro:'Stalp C dr',en:'R C-pil.',hu:'J C oszl.'}};
 
-var i={dosar:{ro:'Dosar Auto',en:'Vehicle File',hu:'Auto Akta'},noJob:{ro:'Nu exista lucrare',en:'No job',hu:'Nincs munka'},openD:{ro:'Dashboard',en:'Dashboard',hu:'Dashboard'},
+var i={dd_reopenReason:{ro:'Motivul redeschiderii:',en:'Reason for reopening:',hu:'Az újranyitás oka:'},
+dosar:{ro:'Dosar Auto',en:'Vehicle File',hu:'Auto Akta'},noJob:{ro:'Nu exista lucrare',en:'No job',hu:'Nincs munka'},openD:{ro:'Dashboard',en:'Dashboard',hu:'Dashboard'},
 client:{ro:'Date client',en:'Client info',hu:'Ugyfel'},name:{ro:'Nume',en:'Name',hu:'Nev'},phone:{ro:'Telefon',en:'Phone',hu:'Tel'},note:{ro:'Obs.',en:'Notes',hu:'Megj.'},tipDauna:{ro:'Tip dauna',en:'Damage type',hu:'Kartipus'},asig:{ro:'Dauna asigurare',en:'Insurance',hu:'Biztositos'},autoD:{ro:'Dauna auto',en:'Self-paid',hu:'Magankar'},
 auto:{ro:'Date vehicul',en:'Vehicle data',hu:'Jarmu adatok'},plate:{ro:'Nr. inmatr.',en:'Plate',hu:'Rendszam'},proprietar:{ro:'Proprietar',en:'Owner',hu:'Tulajdonos'},vin:{ro:'Serie sasiu',en:'VIN',hu:'VIN'},km:{ro:'Kilometraj',en:'Odometer',hu:'Km ora'},brand:{ro:'Marca',en:'Brand',hu:'Marka'},year:{ro:'An',en:'Year',hu:'Ev'},
 talon:{ro:'Talon scanat',en:'Scanned card',hu:'Talon'},docs:{ro:'Documente',en:'Documents',hu:'Dokumentumok'},photos:{ro:'Fotografii ansamblu',en:'Overview photos',hu:'Attekintos fotok'},
@@ -325,7 +326,6 @@ function render(){
   if(_doarDosar){
     // CSAK DOSSZIE: nincs javitasi cso, nincs fazis, nincs override.
     // A dosszie sajat, harom lepeses elete: gyujtes -> atadva -> lezarva.
-    var _acte=(typeof acteDoneTotal==='function')?acteDoneTotal(job):null;
     var _st = job.inchis ? 3 : (job.dosarPredat ? 2 : 1);
     h+='<div class="dd-steps"><span class="dd-tag">'+T('dd_flux')+'</span>';
     [['dd_s1',1],['dd_s2',2],['dd_s3',3]].forEach(function(x){
