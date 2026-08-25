@@ -1,0 +1,451 @@
+{
+  "generated": "2026-08-25T11:18:59.307Z",
+  "node": "v22.22.2",
+  "npm": "10.9.7",
+  "jsdom": "30.0.1",
+  "embedded_postgres": "18.4.0-beta.17",
+  "build": "V4-QUEUE-SAVEFIX",
+  "unit": {
+    "cat": "unit",
+    "files": 39,
+    "nemIndult": 0,
+    "bukott": 0,
+    "assertions": 1627,
+    "passed": 1627,
+    "failed": 0,
+    "verdict": "PASS"
+  },
+  "integration": {
+    "cat": "integration",
+    "files": 3,
+    "nemIndult": 0,
+    "bukott": 0,
+    "assertions": 262,
+    "passed": 262,
+    "failed": 0,
+    "verdict": "PASS"
+  },
+  "frontend": {
+    "cat": "frontend",
+    "files": 1,
+    "nemIndult": 0,
+    "bukott": 0,
+    "assertions": 176,
+    "passed": 176,
+    "failed": 0,
+    "verdict": "PASS"
+  },
+  "static": {
+    "cat": "static",
+    "files": 1,
+    "nemIndult": 0,
+    "bukott": 0,
+    "assertions": 2,
+    "passed": 2,
+    "failed": 0,
+    "verdict": "PASS"
+  },
+  "staging": {
+    "verdict": "NOT VERIFIED",
+    "note": "a MANUAL-STAGING-CHECKLIST.md nincs kitöltve"
+  },
+  "duration_ms": 29695,
+  "results": [
+    {
+      "cat": "unit",
+      "file": "test-acceptance.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-acceptance.js",
+      "status": "OK",
+      "pass": 88,
+      "fail": 0,
+      "ms": 2337
+    },
+    {
+      "cat": "unit",
+      "file": "test-azi.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-azi.js",
+      "status": "OK",
+      "pass": 50,
+      "fail": 0,
+      "ms": 2266
+    },
+    {
+      "cat": "unit",
+      "file": "test-bar.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-bar.js",
+      "status": "OK",
+      "pass": 23,
+      "fail": 0,
+      "ms": 898
+    },
+    {
+      "cat": "unit",
+      "file": "test-case.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-case.js",
+      "status": "OK",
+      "pass": 27,
+      "fail": 0,
+      "ms": 43
+    },
+    {
+      "cat": "unit",
+      "file": "test-classify.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-classify.js",
+      "status": "OK",
+      "pass": 105,
+      "fail": 0,
+      "ms": 993
+    },
+    {
+      "cat": "unit",
+      "file": "test-conflict.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-conflict.js",
+      "status": "OK",
+      "pass": 28,
+      "fail": 0,
+      "ms": 845
+    },
+    {
+      "cat": "unit",
+      "file": "test-delete.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-delete.js",
+      "status": "OK",
+      "pass": 24,
+      "fail": 0,
+      "ms": 2505
+    },
+    {
+      "cat": "unit",
+      "file": "test-deploy.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-deploy.js",
+      "status": "OK",
+      "pass": 34,
+      "fail": 0,
+      "ms": 58
+    },
+    {
+      "cat": "unit",
+      "file": "test-dialogs.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-dialogs.js",
+      "status": "OK",
+      "pass": 39,
+      "fail": 0,
+      "ms": 1118
+    },
+    {
+      "cat": "unit",
+      "file": "test-dosare.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-dosare.js",
+      "status": "OK",
+      "pass": 25,
+      "fail": 0,
+      "ms": 44
+    },
+    {
+      "cat": "unit",
+      "file": "test-dosarflux.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-dosarflux.js",
+      "status": "OK",
+      "pass": 22,
+      "fail": 0,
+      "ms": 38
+    },
+    {
+      "cat": "unit",
+      "file": "test-edit.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-edit.js",
+      "status": "OK",
+      "pass": 38,
+      "fail": 0,
+      "ms": 45
+    },
+    {
+      "cat": "unit",
+      "file": "test-entry.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-entry.js",
+      "status": "OK",
+      "pass": 56,
+      "fail": 0,
+      "ms": 46
+    },
+    {
+      "cat": "unit",
+      "file": "test-gap.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-gap.js",
+      "status": "OK",
+      "pass": 69,
+      "fail": 0,
+      "ms": 2457
+    },
+    {
+      "cat": "unit",
+      "file": "test-lifecycle.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-lifecycle.js",
+      "status": "OK",
+      "pass": 39,
+      "fail": 0,
+      "ms": 41
+    },
+    {
+      "cat": "unit",
+      "file": "test-list-unwrap.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-list-unwrap.js",
+      "status": "OK",
+      "pass": 64,
+      "fail": 0,
+      "ms": 43
+    },
+    {
+      "cat": "unit",
+      "file": "test-load.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-load.js",
+      "status": "OK",
+      "pass": 15,
+      "fail": 0,
+      "ms": 51
+    },
+    {
+      "cat": "unit",
+      "file": "test-metrics.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-metrics.js",
+      "status": "OK",
+      "pass": 70,
+      "fail": 0,
+      "ms": 43
+    },
+    {
+      "cat": "unit",
+      "file": "test-modal.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-modal.js",
+      "status": "OK",
+      "pass": 19,
+      "fail": 0,
+      "ms": 858
+    },
+    {
+      "cat": "unit",
+      "file": "test-onelist.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-onelist.js",
+      "status": "OK",
+      "pass": 25,
+      "fail": 0,
+      "ms": 40
+    },
+    {
+      "cat": "unit",
+      "file": "test-oneway.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-oneway.js",
+      "status": "OK",
+      "pass": 27,
+      "fail": 0,
+      "ms": 42
+    },
+    {
+      "cat": "unit",
+      "file": "test-p0-1-guard.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-p0-1-guard.js",
+      "status": "OK",
+      "pass": 78,
+      "fail": 0,
+      "ms": 45
+    },
+    {
+      "cat": "unit",
+      "file": "test-p0-3-tenant.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-p0-3-tenant.js",
+      "status": "OK",
+      "pass": 34,
+      "fail": 0,
+      "ms": 39
+    },
+    {
+      "cat": "unit",
+      "file": "test-p0-5-admin.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-p0-5-admin.js",
+      "status": "OK",
+      "pass": 29,
+      "fail": 0,
+      "ms": 59
+    },
+    {
+      "cat": "unit",
+      "file": "test-p0-6-storage.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-p0-6-storage.js",
+      "status": "OK",
+      "pass": 24,
+      "fail": 0,
+      "ms": 41
+    },
+    {
+      "cat": "unit",
+      "file": "test-p0-7-functions.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-p0-7-functions.js",
+      "status": "OK",
+      "pass": 40,
+      "fail": 0,
+      "ms": 48
+    },
+    {
+      "cat": "unit",
+      "file": "test-pin-dialog.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-pin-dialog.js",
+      "status": "OK",
+      "pass": 24,
+      "fail": 0,
+      "ms": 2740
+    },
+    {
+      "cat": "unit",
+      "file": "test-prog.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-prog.js",
+      "status": "OK",
+      "pass": 30,
+      "fail": 0,
+      "ms": 42
+    },
+    {
+      "cat": "unit",
+      "file": "test-queue.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-queue.js",
+      "status": "OK",
+      "pass": 44,
+      "fail": 0,
+      "ms": 223
+    },
+    {
+      "cat": "unit",
+      "file": "test-render.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-render.js",
+      "status": "OK",
+      "pass": 25,
+      "fail": 0,
+      "ms": 1684
+    },
+    {
+      "cat": "unit",
+      "file": "test-rot.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-rot.js",
+      "status": "OK",
+      "pass": 47,
+      "fail": 0,
+      "ms": 1154
+    },
+    {
+      "cat": "unit",
+      "file": "test-rpc-consistency.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-rpc-consistency.js",
+      "status": "OK",
+      "pass": 54,
+      "fail": 0,
+      "ms": 63
+    },
+    {
+      "cat": "unit",
+      "file": "test-security-a-o.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-security-a-o.js",
+      "status": "OK",
+      "pass": 95,
+      "fail": 0,
+      "ms": 53
+    },
+    {
+      "cat": "unit",
+      "file": "test-staff.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-staff.js",
+      "status": "OK",
+      "pass": 50,
+      "fail": 0,
+      "ms": 2957
+    },
+    {
+      "cat": "unit",
+      "file": "test-state.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-state.js",
+      "status": "OK",
+      "pass": 28,
+      "fail": 0,
+      "ms": 43
+    },
+    {
+      "cat": "unit",
+      "file": "test-tenant.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-tenant.js",
+      "status": "OK",
+      "pass": 12,
+      "fail": 0,
+      "ms": 49
+    },
+    {
+      "cat": "unit",
+      "file": "test-typo.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-typo.js",
+      "status": "OK",
+      "pass": 19,
+      "fail": 0,
+      "ms": 40
+    },
+    {
+      "cat": "unit",
+      "file": "test-wa.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-wa.js",
+      "status": "OK",
+      "pass": 12,
+      "fail": 0,
+      "ms": 42
+    },
+    {
+      "cat": "unit",
+      "file": "test-xss.js",
+      "full": "/home/user/rpw-bosch-service/_tests/unit/test-xss.js",
+      "status": "OK",
+      "pass": 95,
+      "fail": 0,
+      "ms": 764
+    },
+    {
+      "cat": "integration",
+      "file": "test-int-migrations.js",
+      "full": "/home/user/rpw-bosch-service/_tests/integration/test-int-migrations.js",
+      "status": "OK",
+      "pass": 46,
+      "fail": 0,
+      "ms": 1197
+    },
+    {
+      "cat": "integration",
+      "file": "test-int-tenant.js",
+      "full": "/home/user/rpw-bosch-service/_tests/integration/test-int-tenant.js",
+      "status": "OK",
+      "pass": 114,
+      "fail": 0,
+      "ms": 1364
+    },
+    {
+      "cat": "integration",
+      "file": "test-int-workflow.js",
+      "full": "/home/user/rpw-bosch-service/_tests/integration/test-int-workflow.js",
+      "status": "OK",
+      "pass": 102,
+      "fail": 0,
+      "ms": 1254
+    },
+    {
+      "cat": "frontend",
+      "file": "test-fe-transition.js",
+      "full": "/home/user/rpw-bosch-service/_tests/frontend/test-fe-transition.js",
+      "status": "OK",
+      "pass": 176,
+      "fail": 0,
+      "ms": 911
+    },
+    {
+      "cat": "static",
+      "file": "test-static-workflow.js",
+      "full": "/home/user/rpw-bosch-service/_tests/static/test-static-workflow.js",
+      "status": "OK",
+      "pass": 2,
+      "fail": 0,
+      "ms": 61
+    }
+  ]
+}

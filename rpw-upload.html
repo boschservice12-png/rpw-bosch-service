@@ -17,6 +17,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="rpw-auth.js"></script>
 <script src="rpw-db.js"></script>
+<script src="rpw-queue.js"></script><!-- 2026-08-25: tartos offline sor -->
+<script src="rpw-data.js"></script><!-- v4: szerveroldali átmenetek -->
 <script src="rpw-photos.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -68,6 +70,18 @@ h2{font-size:15px;font-weight:800;margin-bottom:4px;display:flex;align-items:cen
   function toast(m,e){var t=document.createElement('div');t.className='toast'+(e?' err':'');t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove()},3000);}
   if(!CFG||!CFG.SB_URL){app.innerHTML='<div class="card">Eroare de configurare. Deschideți linkul primit prin WhatsApp pe telefon.</div>';return;}
   var sb=supabase.createClient(CFG.SB_URL,CFG.SB_KEY);
+try{ if(window.RPWData) RPWData.init(sb, {onSync:(typeof onSyncState==='function'?onSyncState:null)}); }catch(e){ console.warn('RPWData init:', e); }
+
+// ── 11 (v4) — A SZERVERT MEGKÉRDEZZÜK, MIELŐTT ADATOT TÖLTENÉNK ──
+// Enélkül versenyhelyzet állna elő: az oldal már dolgozna az adattal,
+// mire kiderül, hogy a szerver verziója nem megfelelő.
+// PRODUCTION módban a hiba MEGÁLLÍTJA az alkalmazást (fail-closed).
+window.__rpwServerReady = (async function(){
+  try{
+    if(!window.RPWGuard || !RPWGuard.verifyServer) return {ok:true, skipped:true};
+    return await RPWGuard.verifyServer(sb, window.RPW_CFG);
+  }catch(e){ return {ok:false, problems:['verify_threw'], error:e}; }
+})();
   var BUCKET=CFG.BUCKET||'rpw-photos';
   var DA=window.RPW_DAUNA_DOCS||[];
   var jid=new URLSearchParams(location.search).get('job');
@@ -78,6 +92,7 @@ h2{font-size:15px;font-weight:800;margin-bottom:4px;display:flex;align-items:cen
   function isImg(u){return /\.(jpg|jpeg|png|webp)(\?|$)/i.test(u.url||'')||(u.type||'').indexOf('image')===0}
 
   async function load(){
+  try{ if(window.__rpwServerReady) await window.__rpwServerReady; }catch(e){}
     if(!jid){app.innerHTML='<div class="card">Link invalid (lipsă dosar).</div>';return;}
     try{
       var res=await RPWDb.getRow(sb,jid,'id,data');

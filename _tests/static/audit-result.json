@@ -1,0 +1,233 @@
+{
+  "generated": "2026-08-25T11:18:59.205Z",
+  "files": 32,
+  "total": 28,
+  "allowed": 28,
+  "forbidden": 0,
+  "findings": [
+    {
+      "fajl": "index.html",
+      "sor": 983,
+      "mezo": "status:'done'",
+      "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
+      "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
+      "szoveg": "phases:{1:{status:'done',finished:report.generatedAt},2:{status:'active',started:report.ge"
+    },
+    {
+      "fajl": "index.html",
+      "sor": 1124,
+      "mezo": "inchis",
+      "ok": "megjelenítési kód — a JOB-ot nem módosítja",
+      "ut": "olvasás, nem írás",
+      "szoveg": "job.inchis=(p.status==='arhivat'||f7==='done');"
+    },
+    {
+      "fajl": "index.html",
+      "sor": 1127,
+      "mezo": "phase",
+      "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
+      "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
+      "szoveg": "if(typeof job.phase!=='number'||job.phase<1)job.phase=1;"
+    },
+    {
+      "fajl": "index.html",
+      "sor": 2213,
+      "mezo": "phases[]",
+      "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
+      "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
+      "szoveg": "for(var p=1;p<=7;p++){if(!job.phases[p])job.phases[p]={status:'pending'}}"
+    },
+    {
+      "fajl": "index.html",
+      "sor": 2214,
+      "mezo": "phases[].status",
+      "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
+      "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
+      "szoveg": "if(job.phases[1].status==='pending'){job.phases[1].status='active';job.phases[1].started=n"
+    },
+    {
+      "fajl": "index.html",
+      "sor": 2240,
+      "mezo": "inchis",
+      "ok": "a commitCriticalTransition mutate() törzse",
+      "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
+      "szoveg": "job.inchis=false; return {ok:true};"
+    },
+    {
+      "fajl": "rpw-cache.js",
+      "sor": 193,
+      "mezo": "phases[]",
+      "ok": "megjelenítési kód — csak a státusz betűjét tárolja",
+      "ut": "nem ír a JOB-ba, csak olvassa",
+      "szoveg": "if(p) out.phases[i]={status:p.status||'pending'};"
+    },
+    {
+      "fajl": "rpw-control-red.html",
+      "sor": 138,
+      "mezo": "phases[]",
+      "ok": "szerverválasz alkalmazása",
+      "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
+      "szoveg": "if(cached){try{JOB=JSON.parse(cached);if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){i"
+    },
+    {
+      "fajl": "rpw-control-red.html",
+      "sor": 143,
+      "mezo": "phases[]",
+      "ok": "szerverválasz alkalmazása",
+      "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
+      "szoveg": "if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version="
+    },
+    {
+      "fajl": "rpw-dosar.html",
+      "sor": 194,
+      "mezo": "phases[]",
+      "ok": "szerverválasz alkalmazása",
+      "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
+      "szoveg": "if(cached){try{JOB=JSON.parse(cached);if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){i"
+    },
+    {
+      "fajl": "rpw-dosar.html",
+      "sor": 199,
+      "mezo": "phases[]",
+      "ok": "szerverválasz alkalmazása",
+      "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
+      "szoveg": "if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version="
+    },
+    {
+      "fajl": "rpw-dosar.html",
+      "sor": 609,
+      "mezo": "inchis",
+      "ok": "a commitCriticalTransition mutate() törzse",
+      "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
+      "szoveg": "JOB.inchis = true; JOB.dosarInchisLa = ddDay(0);"
+    },
+    {
+      "fajl": "rpw-dosar.html",
+      "sor": 653,
+      "mezo": "inchis",
+      "ok": "a commitCriticalTransition mutate() törzse",
+      "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
+      "szoveg": "JOB.inchis=false; JOB.dosarInchisLa=null; return {ok:true};"
+    },
+    {
+      "fajl": "rpw-evaluare-red.html",
+      "sor": 510,
+      "mezo": "phases[]",
+      "ok": "inicializálás — hiányzó fázisok kitöltése",
+      "ut": "üres váz létrehozása; státuszt csak a rpw_transition ír",
+      "szoveg": "for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:'pending'}}"
+    },
+    {
+      "fajl": "rpw-inchidere-red.html",
+      "sor": 254,
+      "mezo": "phases[]",
+      "ok": "szerverválasz alkalmazása",
+      "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
+      "szoveg": "if(cached){try{JOB=JSON.parse(cached);if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){i"
+    },
+    {
+      "fajl": "rpw-inchidere-red.html",
+      "sor": 259,
+      "mezo": "phases[]",
+      "ok": "szerverválasz alkalmazása",
+      "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
+      "szoveg": "if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version="
+    },
+    {
+      "fajl": "rpw-recepcio-red.html",
+      "sor": 485,
+      "mezo": "phases[]",
+      "ok": "inicializálás — hiányzó fázisok kitöltése",
+      "ut": "üres váz létrehozása; státuszt csak a rpw_transition ír",
+      "szoveg": "for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:'pending'}}"
+    },
+    {
+      "fajl": "rpw-reconstatare-red.html",
+      "sor": 193,
+      "mezo": "phases[]",
+      "ok": "szerverválasz alkalmazása",
+      "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
+      "szoveg": "if(cached){try{JOB=JSON.parse(cached);if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){i"
+    },
+    {
+      "fajl": "rpw-reconstatare-red.html",
+      "sor": 198,
+      "mezo": "phases[]",
+      "ok": "szerverválasz alkalmazása",
+      "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
+      "szoveg": "if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version="
+    },
+    {
+      "fajl": "rpw-tinichigerie-red.html",
+      "sor": 147,
+      "mezo": "phases[]",
+      "ok": "szerverválasz alkalmazása",
+      "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
+      "szoveg": "if(cached){try{JOB=JSON.parse(cached);if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){i"
+    },
+    {
+      "fajl": "rpw-tinichigerie-red.html",
+      "sor": 152,
+      "mezo": "phases[]",
+      "ok": "szerverválasz alkalmazása",
+      "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
+      "szoveg": "if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version="
+    },
+    {
+      "fajl": "rpw-vopsitorie-red.html",
+      "sor": 155,
+      "mezo": "phases[]",
+      "ok": "szerverválasz alkalmazása",
+      "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
+      "szoveg": "if(cached){try{JOB=JSON.parse(cached);if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){i"
+    },
+    {
+      "fajl": "rpw-vopsitorie-red.html",
+      "sor": 160,
+      "mezo": "phases[]",
+      "ok": "szerverválasz alkalmazása",
+      "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
+      "szoveg": "if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version="
+    },
+    {
+      "fajl": "rpw-workflow.js",
+      "sor": 121,
+      "mezo": "phases[]",
+      "ok": "a helyi UX-előnézet és a fejlesztői (szerver nélküli) út",
+      "ut": "a rpw-workflow.js a kliensoldali modell. Élesben (SERVER_TRANSITIONS=true) a commitCriticalTransition NEM futtatja a helyi mutációt — a rpw_transition dönt. Ezt a frontend-integrációs teszt bizonyítja: a mutate() kivételt dob, és nem következik be.",
+      "szoveg": "if(!job.phases[n] || typeof job.phases[n]!=='object') job.phases[n]={status:'pending'};"
+    },
+    {
+      "fajl": "rpw-workflow.js",
+      "sor": 147,
+      "mezo": "phases[]",
+      "ok": "a helyi UX-előnézet és a fejlesztői (szerver nélküli) út",
+      "ut": "a rpw-workflow.js a kliensoldali modell. Élesben (SERVER_TRANSITIONS=true) a commitCriticalTransition NEM futtatja a helyi mutációt — a rpw_transition dönt. Ezt a frontend-integrációs teszt bizonyítja: a mutate() kivételt dob, és nem következik be.",
+      "szoveg": "job.phases[n]={status:st}; changed=true; p=job.phases[n];"
+    },
+    {
+      "fajl": "rpw-workflow.js",
+      "sor": 176,
+      "mezo": "phase",
+      "ok": "a helyi UX-előnézet és a fejlesztői (szerver nélküli) út",
+      "ut": "a rpw-workflow.js a kliensoldali modell. Élesben (SERVER_TRANSITIONS=true) a commitCriticalTransition NEM futtatja a helyi mutációt — a rpw_transition dönt. Ezt a frontend-integrációs teszt bizonyítja: a mutate() kivételt dob, és nem következik be.",
+      "szoveg": "if(cur!=null && job.phase!==cur){ job.phase=cur; changed=true; }"
+    },
+    {
+      "fajl": "rpw-workflow.js",
+      "sor": 476,
+      "mezo": "phase",
+      "ok": "a helyi UX-előnézet és a fejlesztői (szerver nélküli) út",
+      "ut": "a rpw-workflow.js a kliensoldali modell. Élesben (SERVER_TRANSITIONS=true) a commitCriticalTransition NEM futtatja a helyi mutációt — a rpw_transition dönt. Ezt a frontend-integrációs teszt bizonyítja: a mutate() kivételt dob, és nem következik be.",
+      "szoveg": "job.phase = (activePhase!=null) ? activePhase : phase;"
+    },
+    {
+      "fajl": "rpw-workflow.js",
+      "sor": 602,
+      "mezo": "phase",
+      "ok": "a helyi UX-előnézet és a fejlesztői (szerver nélküli) út",
+      "ut": "a rpw-workflow.js a kliensoldali modell. Élesben (SERVER_TRANSITIONS=true) a commitCriticalTransition NEM futtatja a helyi mutációt — a rpw_transition dönt. Ezt a frontend-integrációs teszt bizonyítja: a mutate() kivételt dob, és nem következik be.",
+      "szoveg": "job.phase=data.toPhase;"
+    }
+  ]
+}

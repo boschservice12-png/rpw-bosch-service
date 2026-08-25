@@ -62,13 +62,25 @@
   // Újraküldhető hibafajták (offline/hálózati/időtúllépés). conflict/permission NEM.
   var RETRYABLE = { network:1, timeout:1, error:1, offline:1 };
 
+  // A sor saját szótára → amit az oldalak jelzője ismer (rpwSyncLabel).
+  // Enélkül a felhasználó nyers `saved-local` feliratot látna.
+  var QSTATE = { 'saved-local':'offline', waiting:'retry', syncing:'syncing',
+                 synced:'synced', conflict:'conflict' };
+
   function create(sb, opts){
     opts = opts || {};
     var DB = opts.db || _db();
     if(!DB) throw new Error('RPWData: RPWDb hiányzik');
     var actor = opts.actor || null;
-    // Opcionális tartós offline-sor (RPWQueue). ALAP: nincs → változatlan viselkedés.
-    var queue = opts.queue || null;
+    // ── TARTÓS OFFLINE SOR ────────────────────────────────────────
+    // 2026-08-25: a modul eddig KÉSZEN állt, de senki nem adta át. Mostantól
+    // magától megtalálja a közös példányt, ha a lap betöltötte a rpw-queue.js-t.
+    // `opts.queue:false` → kikapcsolva (teszt / szándékos).
+    var queue = (opts.queue !== undefined)
+      ? (opts.queue || null)
+      : ((root.RPWQueue && root.RPWQueue.shared)
+          ? root.RPWQueue.shared({ onState: function(jobId, st){ setSync(QSTATE[st] || st); } })
+          : null);
     var syncState = 'idle';
     var pendingCount = 0;
     function setSync(s){ syncState=s; if(typeof opts.onState==='function'){ try{opts.onState(s);}catch(e){} } }
@@ -198,14 +210,61 @@
     // marad UX-validáció. Egységes {ok|conflict|error} eredmény.
     function serverEnabled(){ return !!(_cfg().SERVER_TRANSITIONS); }
     function authToken(){ var a=root.RPWAuth; return a?a.token():null; }
-    var TXN_RPC={
-      complete:      function(a){ return ['rpw_complete_phase', {p_id:a.id, p_phase:a.phase, p_expected_version:a.expectedVersion, p_token:a.token, p_idem_key:a.idemKey||null}]; },
-      close:         function(a){ return ['rpw_close_job',      {p_id:a.id, p_expected_version:a.expectedVersion, p_token:a.token, p_idem_key:a.idemKey||null}]; },
-      skip:          function(a){ return ['rpw_skip_phase',     {p_id:a.id, p_phase:a.phase, p_reason:a.reason||'', p_expected_version:a.expectedVersion, p_token:a.token}]; },
-      createRework:  function(a){ return ['rpw_create_rework',  {p_id:a.id, p_from_phase:a.fromPhase, p_to_phase:a.toPhase, p_reason:a.reason, p_expected_version:a.expectedVersion, p_token:a.token}]; },
-      resolveRework: function(a){ return ['rpw_resolve_rework', {p_id:a.id, p_rework_id:a.reworkId, p_note:a.note, p_expected_version:a.expectedVersion, p_token:a.token}]; },
-      override:      function(a){ return ['rpw_manager_override',{p_id:a.id, p_from:a.fromPhase, p_to:a.toPhase, p_reason:a.reason, p_token:a.token}]; }
+    // ── 2 (v3) — EGYETLEN, TÉNYLEGESEN LÉTEZŐ SZERVEROLDALI API ──
+    // KORÁBBAN hat külön RPC-nevet hívott ez a tábla:
+    //   rpw_complete_phase · rpw_close_job · rpw_skip_phase
+    //   rpw_create_rework · rpw_resolve_rework · rpw_manager_override
+    // EGYIK SEM LÉTEZETT az adatbázisban, és nem is volt hozzájuk
+    // migráció. Minden hívás elszállt volna, amint a SERVER_TRANSITIONS
+    // bekapcsol.
+    //
+    // A végleges modell (003_business_requirements.sql):
+    //   rpw_transition(p_token, p_id, p_phase, p_action,
+    //                  p_expected_version, p_reason)
+    //   p_action: start | complete | skip | reopen
+    //             | rework_open | rework_close
+    // A verzió MINDEN kritikus műveletnél KÖTELEZŐ.
+    var TXN_ACTION = {
+      complete:      'complete',
+      start:         'start',
+      close:         'complete',      // a 7. fázis lezárása = a munka lezárása
+      skip:          'skip',
+      reopen:        'reopen',
+      override:      'reopen',        // a felülbírálás újranyitás, override joggal
+      createRework:  'rework_open',
+      resolveRework: 'rework_close',
+      // v4: a tölcsér (commitCriticalTransition) a SZERVEROLDALI nevet
+      // adja át. Mindkét írásmódot elfogadjuk, hogy a régi hívási
+      // helyek se törjenek el.
+      rework_open:   'rework_open',
+      rework_close:  'rework_close'
     };
+    function txnCall(kind, a){
+      var action = TXN_ACTION[kind];
+      if(!action) return null;
+      // a fázis kiválasztása művelet szerint
+      var phase = a.phase;
+      if(phase == null) phase = (kind === 'close') ? 7
+                              : (kind === 'override' || kind === 'createRework') ? a.toPhase
+                              : a.fromPhase;
+      // 006: a `p_reason` EMBERI INDOKLÁS, a `p_rework_id` AZONOSÍTÓ,
+      // a `p_note` a rework lezárási megjegyzése. A V3-ban mindhárom
+      // ugyanabba a paraméterbe ment — pedig két külön dolog.
+      return ['rpw_transition', {
+        p_token: a.token,
+        p_id: a.id,
+        p_phase: (phase != null ? Number(phase) : null),
+        p_action: action,
+        p_expected_version: (a.expectedVersion != null ? Number(a.expectedVersion) : null),
+        p_reason:    (a.reason || null),
+        p_rework_id: (a.reworkId || null),
+        p_note:      (a.note || null)
+      }];
+    }
+    var TXN_RPC = {};
+    Object.keys(TXN_ACTION).forEach(function(k){
+      TXN_RPC[k] = function(a){ return txnCall(k, a); };
+    });
     async function serverTransition(kind, args){
       var build=TXN_RPC[kind];
       if(!build) return { ok:false, error:{message:'unknown_transition:'+kind} };
@@ -219,9 +278,33 @@
       pendingCount--;
       if(res && res.error){ setSync('failed'); return { ok:false, error:res.error, kind:classify(res.error) }; }
       var d = res ? res.data : null;
-      if(d && d.conflict){ setSync('conflict'); return { ok:false, conflict:true, serverVersion:d.server_version, kind:'conflict' }; }
+      if(typeof d === 'string'){ try{ d = JSON.parse(d); }catch(e){ d = null; } }
+      if(!d){ setSync('failed'); return { ok:false, error:{code:'empty', message:'Răspuns gol de la server.'}, kind:'error', rpc:call[0] }; }
+
+      // ── 4 (v4) — A SZERVER ELUTASÍTÁSA NEM SIKER ────────────────
+      // A V3-ban a {ok:false} válasz `ok:true`-ként ment vissza, mert
+      // csak a transport-hibát néztük. Így a kliens LEZÁRTNAK mutatta
+      // volna azt a fázist, amit a szerver elutasított.
+      if(d.ok !== true){
+        var kind = (d.error === 'version_conflict') ? 'conflict' : 'denied';
+        setSync(kind === 'conflict' ? 'conflict' : 'failed');
+        return {
+          ok: false, kind: kind, rpc: call[0],
+          conflict: (d.error === 'version_conflict'),
+          serverVersion: (typeof d.server_version === 'number' ? d.server_version : null),
+          error: {
+            code:          d.error || 'denied',
+            message:       d.message || 'Operațiunea a fost respinsă.',
+            serverVersion: (typeof d.server_version === 'number' ? d.server_version : null),
+            missing:       (Array.isArray(d.missing) ? d.missing : null),
+            need:          d.need || null,
+            fields:        (Array.isArray(d.fields) ? d.fields : null),
+            details:       d
+          }
+        };
+      }
       setSync(pendingCount>0?'syncing':'synced');
-      return { ok:true, data:(d&&d.data!==undefined)?d.data:d, version:(d?d.version:undefined), reworkId:(d?d.reworkId:undefined), rpc:call[0] };
+      return { ok:true, data:d.data, version:d.version, rpc:call[0] };
     }
 
     // ---- KOSÁR-műveletek --------------------------------------------
@@ -308,11 +391,45 @@
       getSyncState: getSyncState,
       getQueueState: getQueueState,
       serverTransition: serverTransition,
-      serverEnabled: serverEnabled
+      serverEnabled: serverEnabled,
+      queue: queue
     };
   }
 
-  var API = { create:create, pickCrit:pickCrit, CRIT_KEYS:CRIT_KEYS, classify:classify };
+  // v4: az oldalak egy KÖZÖS példányt használnak. A `init()` egyszer
+  // hozza létre; a `commitViaServer` ezen keresztül éri el.
+  var _inst = null, _online = false;
+  function init(sb, opts){
+    if(!_inst){
+      _inst = create(sb, opts);
+      _resume(_inst);          // ÚJRATÖLTÉS UTÁN: ami a sorban maradt, elindul
+    }
+    return _inst;
+  }
+
+  // ── ÚJRATÖLTÉS UTÁNI HELYREÁLLÍTÁS ────────────────────────────────
+  // A sor túléli az oldalfrissítést — de valakinek el kell indítania.
+  // Eddig senki nem indította: a rekord ott feküdt, és a munka sosem ért
+  // el a szerverre. Itt indul, egy helyen, minden lapnak.
+  function _resume(inst){
+    if(!inst || !inst.queue) return;
+    var go = function(){
+      try{
+        if(typeof navigator!=='undefined' && navigator.onLine===false) return;
+        inst.flushPendingWrites();
+      }catch(e){}
+    };
+    // indulás: a hálózatot nem várjuk meg, csak a lap életre kelését
+    try{ setTimeout(go, 1200); }catch(e){}
+    // és amikor visszatér a hálózat
+    if(!_online && typeof root.addEventListener==='function'){
+      _online = true;
+      try{ root.addEventListener('online', go); }catch(e){}
+    }
+  }
+  var API = { create:create, init:init, pickCrit:pickCrit, _resume:_resume,
+              CRIT_KEYS:CRIT_KEYS, classify:classify, QSTATE:QSTATE,
+              get __instance(){ return _inst; } };
   if(typeof module!=='undefined' && module.exports){ module.exports = API; }
   root.RPWData = API;
 })(typeof self!=='undefined'?self:(typeof window!=='undefined'?window:globalThis));

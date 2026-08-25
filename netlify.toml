@@ -14,7 +14,163 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' data: blob: https://*.supabase.co; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co https://api.anthropic.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; frame-src 'none'; worker-src 'self'; upgrade-insecure-requests"
+
+# ── 11 (v3) — CSP: mi változott és miért ─────────────────────────────
+# HOZZÁADVA:  frame-src 'none'        — nincs beágyazott keret
+#             worker-src 'self'       — csak saját worker
+#             upgrade-insecure-requests
+#             connect-src: api.anthropic.com (az OCR-hez)
+# ELTÁVOLÍTVA: connect-src data: és blob: — ezek NEM kellenek
+#             kapcsolathoz, csak img-src-hez, és tágították a felületet.
+#
+# ⚠ A `javascript:` URL-eket a CSP `script-src` önmagában NEM tiltja
+# megbízhatóan minden böngészőben. Ezért a kódban is ellenőrizzük:
+# lásd `openLB()` sémaellenőrzését a rpw-dosar.html-ben.
+#
+# ⚠ A 'unsafe-inline' MARAD a script-src-ben. Az alkalmazás inline
+# scripteket és onclick kezelőket használ — 12 oldalon, több száz
+# helyen. Eltávolítása nonce/hash bevezetését és a teljes inline
+# handler-refaktort igényli. Amíg ez nincs meg, a 'unsafe-inline'
+# eltávolítása MEGBÉNÍTANÁ az alkalmazást.
+# A STAGING report-only fejléc (lentebb) méri, mi törne el.
 
 # A funkciók (/.netlify/functions/*) SAJÁT CORS-fejléceiket adják (_shared.js allowlist),
 # ezért itt NINCS globális Access-Control-Allow-Origin: * (a korábbi nyitott CORS megszűnt).
+
+
+# ════════════════════════════════════════════════════════════════
+#  AMI NEM MEHET KI A NYILVÁNOS SITE-RA
+#  ----------------------------------------------------------------
+#  Nincs `publish` könyvtár megadva, ezért a Netlify a repó GYÖKERÉT
+#  szolgálja ki. A V4 óta itt fekszik a migrációk, a tesztek és a
+#  biztonsági dokumentáció is — a `REMAINING-RISKS.md` kifejezetten
+#  FELSOROLJA a nyitott réseket, a `_migrations/` pedig a teljes
+#  jogosultsági modellt. Ezek nélkül a szabályok nélkül a site
+#  élesítésének pillanatában letölthetők lennének.
+#
+#  `force = true`: a szabály a statikus fájl KISZOLGÁLÁSA ELŐTT fut.
+#  A tartalom a 404-es lapé, a státusz 404 — nincs se tartalom,
+#  se „létezik, de tiltott" visszajelzés.
+# ════════════════════════════════════════════════════════════════
+[[redirects]]
+  from = "/_migrations/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/_db/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/_tests/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/00-ARCHITEKTURA.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/CHANGELOG.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/DEPLOYMENT.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/FILE-CHANGES.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/MANUAL-STAGING-CHECKLIST.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/README.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/REMAINING-RISKS.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/SECURITY.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/TEST-REPORT.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/rpw_consistency_check.sql"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/package.json"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/package-lock.json"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/rpw-config.staging.js"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.gitignore"
+  to = "/404.html"
+  status = 404
+  force = true
+
+# ════════════════════════════════════════════════════════════════
+#  STAGING — CSP REPORT-ONLY
+#  ----------------------------------------------------------------
+#  Ez a SZIGORÚ cél-CSP, `Report-Only` módban: NEM blokkol semmit,
+#  csak jelenti, mi sértené meg. Így mérhető, mennyi inline script
+#  van még, mielőtt élesben bekapcsolnánk.
+#
+#  Lépések:
+#    1. Ez a fejléc stagingen bekapcsolva marad 1-2 hétig
+#    2. A jelentésekből kiderül, mely oldalak inline scriptjei törnek
+#    3. Azok átalakítása addEventListener-re
+#    4. Csak UTÁNA kerül a szigorú CSP az élő fejlécbe
+#
+#  ⚠ Élesben ellenőrzés nélkül NEM kapcsolható be.
+# ════════════════════════════════════════════════════════════════
+[[context.branch-deploy.headers]]
+  for = "/*"
+  [context.branch-deploy.headers.values]
+    Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co https://api.anthropic.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; frame-src 'none'"

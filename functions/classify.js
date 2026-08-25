@@ -8,10 +8,35 @@ const MODEL = 'claude-sonnet-4-5';
 const MAX_TOKENS = 200;
 const MAX_BODY = 8 * 1024 * 1024;
 
-const CLASSIFY_PROMPT = `Analizeaza aceasta imagine dintr-un service auto. Returneaza DOAR JSON valid:
-{ "type": "talon"|"buletin"|"constatare"|"foto_fata"|"foto_spate"|"foto_lateral_stg"|"foto_lateral_dr"|"foto_elem"|"altceva", "confidence": 0.0-1.0, "label": "descriere scurta in romana" }
-- talon=certificat inmatriculare; buletin=CI; constatare=constatare/deviz asigurator; foto_*=fotografii auto; altceva=orice altceva.
-- confidence>0.85 doar daca esti sigur. DOAR JSON.`;
+const CLASSIFY_PROMPT = `Analizeaza aceasta imagine dintr-un dosar de dauna auto (service auto din Romania).
+Returneaza DOAR JSON valid, fara alt text:
+{ "type": "<tip>", "confidence": 0.0-1.0, "label": "descriere scurta in romana" }
+
+Tipurile permise si ce inseamna:
+  constatare_amiabila  - constatare amiabila de accident / constatare asigurator / deviz
+  proces_verbal        - proces verbal de politie
+  buletin              - carte de identitate (CI) a unei persoane
+  talon_fata           - certificat de inmatriculare (talon), FATA
+  talon_verso          - certificat de inmatriculare (talon), VERSO
+  permis_fata          - permis de conducere, FATA
+  permis_verso         - permis de conducere, VERSO
+  declaratie_dauna     - declaratie de dauna completata
+  polita_rca           - polita de asigurare RCA sau CASCO
+  imputernicire        - imputernicire (firma / leasing)
+  foto_fata            - fotografie a masinii din FATA
+  foto_spate           - fotografie a masinii din SPATE
+  foto_stanga          - fotografie a masinii din LATERAL STANGA
+  foto_dreapta         - fotografie a masinii din LATERAL DREAPTA
+  foto_serie_caroserie - fotografie a seriei de caroserie (VIN) stantate sau de pe eticheta
+  foto_avarii          - prim-plan cu zona avariata (indoitura, zgarietura, element rupt)
+  altceva              - orice altceva, sau daca nu esti sigur ce document este
+
+REGULI:
+- NU decide daca actul apartine pagubitului sau vinovatului. Nu poti sti. Alege doar TIPUL.
+- fata/verso: fata are fotografia si numele; verso are rubricile si stampilele.
+- confidence > 0.85 doar daca esti sigur. Daca eziti intre doua tipuri, pune confidence sub 0.85.
+- Daca imaginea e neclara, taiata sau nu recunosti documentul: "altceva".
+- DOAR JSON.`;
 
 exports.handler = async function (event) {
   if (event.httpMethod === 'OPTIONS') return H.resp(event, 204, {});

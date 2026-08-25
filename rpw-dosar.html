@@ -20,10 +20,15 @@
 <script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
 <script src="rpw-workflow.js"></script>
 <script src="rpw-auth.js"></script>
+<script src="rpw-cache.js"></script>
+<script src="rpw-conflict.js"></script><!-- 6: verzióütközés kezelése --><!-- D: helyi gyorsítótár korlátokkal -->
 <script src="rpw-db.js"></script>
 <script src="rpw-roles.js"></script>
 <script src="rpw-photos.js"></script>
 <script src="rpw-save.js"></script>
+<script src="rpw-queue.js"></script><!-- 2026-08-25: tartos offline sor -->
+<script src="rpw-data.js"></script><!-- v4: szerveroldali átmenetek -->
+<script src="rpw-classify.js"></script><!-- 2026-08-25: iratbesorolás (AI-javaslat, emberi döntés) -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#f5f5f3;--w:#fff;--r:#dc2626;--r50:#fef2f2;--r100:#fee2e2;--r700:#b91c1c;--g:#16a34a;--gl:#dcfce7;--y:#ca8a04;--yl:#fef9c3;--bl:#2563eb;--bll:#dbeafe;--p:#7c3aed;--pl:#ede9fe;--or:#ea580c;--orl:#fff7ed;--tl:#0d9488;--tll:#ccfbf1;--t:#1a1a1a;--t2:#555;--t3:#999;--b:#e5e5e5;--b2:#d0d0d0;--rd:10px}
@@ -82,6 +87,26 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .el-detail{display:flex;flex-direction:column;gap:2px;flex:1}
 .empty{text-align:center;padding:30px;color:var(--t3);font-size:12px}
 .toast{position:fixed;bottom:20px;left:16px;right:16px;background:var(--w);padding:11px 14px;border-radius:var(--rd);font-size:12px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.12);border-left:4px solid var(--g);z-index:250}
+.toast.err{border-left-color:var(--r,#E11D2E)}
+.bulk-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;display:flex;align-items:flex-end;justify-content:center}
+.bulk-bx{background:var(--w,#fff);width:100%;max-width:640px;max-height:92vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column}
+.bulk-hd{padding:16px 18px 10px;border-bottom:1px solid var(--b,#e5e7eb)}
+.bulk-t{font-size:17px;font-weight:800}
+.bulk-s{font-size:12px;color:var(--t3,#6b7280);margin-top:3px;line-height:1.5}
+.bulk-ls{overflow:auto;padding:10px 14px;flex:1}
+.bulk-r{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--b,#eef2f7)}
+.bulk-th{width:52px;height:52px;border-radius:8px;object-fit:cover;background:#eef2f7;flex:none}
+.bulk-nm{font-size:11px;color:var(--t3,#6b7280);word-break:break-all}
+.bulk-sel{width:100%;padding:7px 8px;border:1px solid var(--b,#d1d5db);border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;margin-top:4px}
+.bulk-bd{display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;margin-top:4px}
+.bulk-ok{background:#DCFCE7;color:#166534}
+.bulk-lo{background:#FEF3C7;color:#92400E}
+.bulk-no{background:#F3F4F6;color:#4B5563}
+.bulk-wr{background:#FEE2E2;color:#B91C1C}
+.bulk-ft{padding:12px 16px;border-top:1px solid var(--b,#e5e7eb);display:flex;gap:8px}
+.bulk-fb{flex:1;padding:12px;border:none;border-radius:10px;font-weight:800;font-family:inherit;font-size:13px;cursor:pointer}
+.bulk-f1{background:#F3F4F6;color:#374151}
+.bulk-f2{background:#111;color:#fff}
 .acte-g{margin-bottom:10px;border:1px solid var(--b);border-radius:8px;overflow:hidden}
 .acte-gh{background:var(--bg);padding:7px 10px;font-size:11px;font-weight:800;display:flex;align-items:center;gap:6px}
 .acte-or{font-size:9px;font-weight:600;color:var(--bl)}
@@ -146,21 +171,34 @@ var SB_URL=RPW_CFG.SB_URL;
 var SB_KEY=RPW_CFG.SB_KEY;
 if(window.RPWAuth){try{RPWAuth.guard();}catch(e){}}
 var sb=supabase.createClient(SB_URL,SB_KEY);
+try{ if(window.RPWData) RPWData.init(sb, {onSync:(typeof onSyncState==='function'?onSyncState:null)}); }catch(e){ console.warn('RPWData init:', e); }
+
+// ── 11 (v4) — A SZERVERT MEGKÉRDEZZÜK, MIELŐTT ADATOT TÖLTENÉNK ──
+// Enélkül versenyhelyzet állna elő: az oldal már dolgozna az adattal,
+// mire kiderül, hogy a szerver verziója nem megfelelő.
+// PRODUCTION módban a hiba MEGÁLLÍTJA az alkalmazást (fail-closed).
+window.__rpwServerReady = (async function(){
+  try{
+    if(!window.RPWGuard || !RPWGuard.verifyServer) return {ok:true, skipped:true};
+    return await RPWGuard.verifyServer(sb, window.RPW_CFG);
+  }catch(e){ return {ok:false, problems:['verify_threw'], error:e}; }
+})();
 var JOB=null;
 var S={sec:{client:1,auto:1,acte:1,talon:0,docs:0,photos:1,elems:1}};
 
 function gJI(){return new URLSearchParams(location.search).get('job')}
 async function loadJob(){
+  try{ if(window.__rpwServerReady) await window.__rpwServerReady; }catch(e){}
   var jid=gJI();if(!jid){render();return}
-  var cached=localStorage.getItem('rpw_job_'+jid);
+  var cached=JSON.stringify(RPWCache.getJob(jid)||null);
   if(cached){try{JOB=JSON.parse(cached);if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};render()}catch(e){}}
   try{
     var res=await RPWDb.getRow(sb,jid);
     if(res.error)throw res.error;
-    var _lts=0,_sts=0;try{_lts=Date.parse(localStorage.getItem('rpw_job_ts_'+jid)||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
+    var _lts=0,_sts=0;try{_lts=Date.parse(null||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
     if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};
-    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+jid,res.data.updated_at||new Date().toISOString())}catch(e){}}
-    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB))}catch(e){}
+    try{RPWCache.setJob(JOB)}catch(e){}}
+    try{RPWCache.setJob(JOB)}catch(e){}
   }catch(e){if(!JOB)JOB=null}
   render();
 }
@@ -169,7 +207,8 @@ var EK=['fb','rb','hood','trunk','roof','fl_f','fr_f','rl_f','rr_f','fl_d','fr_d
 var VK=['front','back','left','right','serieCaros','km'];
 var EK_NAMES={fb:{ro:'Bara fata',en:'Front bumper',hu:'Elso lokh.'},rb:{ro:'Bara spate',en:'Rear bumper',hu:'Hatso lokh.'},hood:{ro:'Capota',en:'Hood',hu:'Motorhazt.'},trunk:{ro:'Portbagaj',en:'Trunk',hu:'Csomagtarto'},roof:{ro:'Plafon',en:'Roof',hu:'Teto'},fl_f:{ro:'Aripa stg fata',en:'LF fender',hu:'BE sarvedo'},fr_f:{ro:'Aripa dr fata',en:'RF fender',hu:'JE sarvedo'},rl_f:{ro:'Aripa stg spate',en:'LR fender',hu:'BH sarvedo'},rr_f:{ro:'Aripa dr spate',en:'RR fender',hu:'JH sarvedo'},fl_d:{ro:'Usa stg fata',en:'LF door',hu:'BE ajto'},fr_d:{ro:'Usa dr fata',en:'RF door',hu:'JE ajto'},rl_d:{ro:'Usa stg spate',en:'LR door',hu:'BH ajto'},rr_d:{ro:'Usa dr spate',en:'RR door',hu:'JH ajto'},l_s:{ro:'Prag stg',en:'L sill',hu:'B kuszob'},r_s:{ro:'Prag dr',en:'R sill',hu:'J kuszob'},l_m:{ro:'Ogl. stg',en:'L mirror',hu:'B tukor'},r_m:{ro:'Ogl. dr',en:'R mirror',hu:'J tukor'},a_l:{ro:'Stalp A stg',en:'L A-pil.',hu:'B A oszl.'},a_r:{ro:'Stalp A dr',en:'R A-pil.',hu:'J A oszl.'},b_l:{ro:'Stalp B stg',en:'L B-pil.',hu:'B B oszl.'},b_r:{ro:'Stalp B dr',en:'R B-pil.',hu:'J B oszl.'},c_l:{ro:'Stalp C stg',en:'L C-pil.',hu:'B C oszl.'},c_r:{ro:'Stalp C dr',en:'R C-pil.',hu:'J C oszl.'}};
 
-var i={dosar:{ro:'Dosar Auto',en:'Vehicle File',hu:'Auto Akta'},noJob:{ro:'Nu exista lucrare',en:'No job',hu:'Nincs munka'},openD:{ro:'Dashboard',en:'Dashboard',hu:'Dashboard'},
+var i={dd_reopenReason:{ro:'Motivul redeschiderii:',en:'Reason for reopening:',hu:'Az újranyitás oka:'},
+dosar:{ro:'Dosar Auto',en:'Vehicle File',hu:'Auto Akta'},noJob:{ro:'Nu exista lucrare',en:'No job',hu:'Nincs munka'},openD:{ro:'Dashboard',en:'Dashboard',hu:'Dashboard'},
 client:{ro:'Date client',en:'Client info',hu:'Ugyfel'},name:{ro:'Nume',en:'Name',hu:'Nev'},phone:{ro:'Telefon',en:'Phone',hu:'Tel'},note:{ro:'Obs.',en:'Notes',hu:'Megj.'},tipDauna:{ro:'Tip dauna',en:'Damage type',hu:'Kartipus'},asig:{ro:'Dauna asigurare',en:'Insurance',hu:'Biztositos'},autoD:{ro:'Dauna auto',en:'Self-paid',hu:'Magankar'},
 auto:{ro:'Date vehicul',en:'Vehicle data',hu:'Jarmu adatok'},plate:{ro:'Nr. inmatr.',en:'Plate',hu:'Rendszam'},proprietar:{ro:'Proprietar',en:'Owner',hu:'Tulajdonos'},vin:{ro:'Serie sasiu',en:'VIN',hu:'VIN'},km:{ro:'Kilometraj',en:'Odometer',hu:'Km ora'},brand:{ro:'Marca',en:'Brand',hu:'Marka'},year:{ro:'An',en:'Year',hu:'Ev'},
 talon:{ro:'Talon scanat',en:'Scanned card',hu:'Talon'},docs:{ro:'Documente',en:'Documents',hu:'Dokumentumok'},photos:{ro:'Fotografii ansamblu',en:'Overview photos',hu:'Attekintos fotok'},
@@ -225,11 +264,46 @@ zip_lead:{ro:'Poți descărca și așa, dar asigurătorul le va cere.',en:'You c
 zip_go:{ro:'Descarcă oricum',en:'Download anyway',hu:'Letöltés mégis'},
 zip_cancel:{ro:'Mai completez',en:'I will complete',hu:'Még pótolom'},
 dd_toRepQ:{ro:'Clientul repară totuși la noi? Lucrarea trece în fluxul de reparație.',en:'Client repairs here after all? The job moves to the repair flow.',hu:'Mégis nálunk javíttat? A munka átkerül a javítási folyamatba.'},
+bk_title:{ro:'Încarcă toate actele',en:'Upload all documents',hu:'Összes irat feltöltése'},
+bk_lead:{ro:'Sistemul a propus un loc pentru fiecare fișier. Verifică și corectează — nimic nu se încarcă până nu confirmi.',en:'A slot was proposed for each file. Check and correct — nothing is uploaded until you confirm.',hu:'A rendszer minden fájlhoz javasolt egy rést. Nézd át és javítsd — jóváhagyásig semmi nem töltődik fel.'},
+bk_working:{ro:'Se analizează… {n}/{t}',en:'Analyzing… {n}/{t}',hu:'Elemzés… {n}/{t}'},
+bk_wait:{ro:'…',en:'…',hu:'…'},
+bk_sure:{ro:'propunere {p}%',en:'suggestion {p}%',hu:'javaslat {p}%'},
+bk_unsure:{ro:'nesigur — poate: {s}',en:'unsure — maybe: {s}',hu:'bizonytalan — talán: {s}'},
+bk_taken:{ro:'locul e deja ocupat — alege tu',en:'slot already taken — you choose',hu:'a rés foglalt — te választasz'},
+bk_unknown:{ro:'nu recunosc — alege tu',en:'not recognized — you choose',hu:'nem ismerem fel — te választasz'},
+bk_replace:{ro:'înlocuiește fișierul existent',en:'replaces existing file',hu:'felülírja a meglévőt'},
+bk_skip:{ro:'— nu încărca —',en:'— skip —',hu:'— ne töltsd fel —'},
+bk_go:{ro:'Încarcă {n} fișiere',en:'Upload {n} files',hu:'{n} fájl feltöltése'},
+bk_cancel:{ro:'Renunț',en:'Cancel',hu:'Mégsem'},
+bk_none:{ro:'Nu ai ales niciun loc',en:'No slot chosen',hu:'Nem választottál rést'},
+bk_done:{ro:'✓ {n} fișiere încărcate',en:'✓ {n} files uploaded',hu:'✓ {n} fájl feltöltve'},
+bk_err:{ro:'{n} au eșuat',en:'{n} failed',hu:'{n} nem sikerült'},
+bk_up:{ro:'Se încarcă…',en:'Uploading…',hu:'Feltöltés…'},
+bk_saved:{ro:'✓ Salvat',en:'✓ Saved',hu:'✓ Mentve'},
+bk_savefail:{ro:'Salvare eșuată',en:'Save failed',hu:'A mentés nem sikerült'},
+bk_btn:{ro:'Încarcă toate actele deodată',en:'Upload all documents at once',hu:'Összes irat egyszerre'},
 ovNote:{ro:'Modul admin curent = doar poartă UI temporară, NU autentificare securizată.',en:'Current admin mode = temporary UI gate only, NOT secure authentication.',hu:'A jelenlegi admin mód = csak ideiglenes UI-kapu, NEM biztonságos autentikáció.'}};
 
 function gL(){return localStorage.getItem('rpw_lang')||'ro'}
 function sL(l){localStorage.setItem('rpw_lang',l);render()}
 function T(k){var e=i[k]||EK_NAMES[k];return e?e[gL()]||e.ro||k:k}
+
+// ── ÜZENETSÁV ────────────────────────────────────────────────────
+// 2026-08-25: EZ A FÜGGVÉNY HIÁNYZOTT ERRŐL AZ OLDALRÓL. Tizennégy
+// helyről hívtuk, mindegyik ReferenceError-t dobott. A legsúlyosabb
+// következmény: az `uploadActa` az ELSŐ sorában szállt el, a feltöltési
+// ciklus ELŐTT — a dossziéba EGYETLEN irat sem került be, és a
+// felhasználó hibaüzenetet sem kapott. A ZIP-export ugyanígy.
+// `textContent`: az üzenet SOHA nem HTML — akkor sem, ha szervertől jön.
+function toast(m,e){
+  var t=document.createElement('div');
+  t.className='toast'+(e?' err':'');
+  t.textContent=String(m==null?'':m);
+  (document.body||document.documentElement).appendChild(t);
+  setTimeout(function(){ try{ t.remove() }catch(_){} },3000);
+}
+window.toast=toast;
 
 var PHASE_PAGES={1:'rpw-recepcio-red.html',2:'rpw-evaluare-red.html',3:'rpw-reconstatare-red.html',4:'rpw-tinichigerie-red.html',5:'rpw-vopsitorie-red.html',6:'rpw-control-red.html',7:'rpw-inchidere-red.html'};
 
@@ -253,7 +327,6 @@ function render(){
   if(_doarDosar){
     // CSAK DOSSZIE: nincs javitasi cso, nincs fazis, nincs override.
     // A dosszie sajat, harom lepeses elete: gyujtes -> atadva -> lezarva.
-    var _acte=(typeof acteDoneTotal==='function')?acteDoneTotal(job):null;
     var _st = job.inchis ? 3 : (job.dosarPredat ? 2 : 1);
     h+='<div class="dd-steps"><span class="dd-tag">'+T('dd_flux')+'</span>';
     [['dd_s1',1],['dd_s2',2],['dd_s3',3]].forEach(function(x){
@@ -351,6 +424,9 @@ function render(){
     h+='<div class="dst-fields"><label class="dst-f"><span>Asigurător</span><input type="text" value="'+escA(job.asigurator||'')+'" placeholder="Allianz, Groupama…" onchange="setDosarField(\'asigurator\',this.value)"></label>';
     h+='<label class="dst-f"><span>Nr. dosar'+(mod==='deschis'?' *':'')+'</span><input type="text" value="'+escA(job.nrDosar||'')+'" placeholder="'+(mod==='deschid'?'se obține la deschidere':'obligatoriu')+'" onchange="setDosarField(\'nrDosar\',this.value)"></label></div>';
     h+='<button style="width:100%;padding:11px;border:none;border-radius:10px;background:'+(reqDone?'#111':'#9ca3af')+';color:#fff;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:12px" onclick="exportDosar()">⬇️ Descarcă dosar pentru asigurător (ZIP)</button>';
+    // 2026-08-25: EGY feltöltés a tizenkilenc helyett. A besorolás
+    // javaslat — a rések kitöltése emberi jóváhagyás után történik.
+    h+='<label style="display:block;width:100%;padding:11px;border:1px dashed var(--bl,#2563eb);border-radius:10px;background:var(--bll,#eff6ff);color:var(--bl,#2563eb);font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:12px;text-align:center">&#128228; '+T('bk_btn')+'<input type="file" accept="image/*,application/pdf" multiple style="display:none" onchange="bulkActe(event)"></label>';
     DA.forEach(function(g){
       var gDone=g.either?g.items.some(function(it){return slotFiles(it.key).length}):g.items.every(function(it){return slotFiles(it.key).length});
       var gOpt=!grpReq(g);
@@ -447,7 +523,7 @@ window.rpwOverride=async function(){
   var from=JOB.phase||1;
   var res=await RPWWorkflow.commitCriticalTransition(JOB, function(){
     return RPWWorkflow.managerOverride(JOB,{fromPhase:from,toPhase:to,actor:actor,reason:reason});
-  }, {save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  }, {action:'reopen', phase:to, reason:reason, save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
   if(!res.ok){
     if(res.notSynced){ dlgSay({tone:'warn',title:T('dlg_sync_t'),text:RPWWorkflow.t('wf_saved_not_synced',_ln),okText:T('dlg_ok')}); return; }
     var errs=(res.result&&res.result.errors)||[];
@@ -456,7 +532,21 @@ window.rpwOverride=async function(){
   dlgSay({tone:'ok',title:T('dlg_ov_t'),text:T('ovDone'),okText:T('dlg_ok'),onClose:render});
 };
 window.tS=function(s){S.sec[s]=S.sec[s]?0:1;render()};
-window.openLB=function(src){var lb=document.createElement('div');lb.className='lightbox';lb.onclick=function(){lb.remove()};lb.innerHTML='<img src="'+src+'"/>';document.body.appendChild(lb)};
+// E (2026-08-24) — XSS: a forrást NEM illesztjük HTML-be.
+// Korábban: lb.innerHTML='<img src="'+src+'"/>' — idézőjelet tartalmazó
+// vagy javascript: sémájú érték kitörhetett az attribútumból.
+// Most: DOM-építés + sémaellenőrzés (csak http/https/data:image/blob).
+window.openLB=function(src){
+  var u=String(src||'');
+  if(!/^(https?:|data:image\/|blob:)/i.test(u)) return;      // más séma: nem nyitjuk meg
+  var lb=document.createElement('div');
+  lb.className='lightbox';
+  lb.onclick=function(){lb.remove()};
+  var img=document.createElement('img');
+  img.src=u;                                                 // attribútum, nem HTML
+  lb.appendChild(img);
+  document.body.appendChild(lb);
+};
 window.trimiteLinkUpload=function(){
   if(!JOB)return;
   var link=location.origin+'/rpw-upload.html?job='+encodeURIComponent(JOB.id);
@@ -484,7 +574,7 @@ function _actaCompress(file){
   });
 }
 async function _saveActe(){
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
+  try{RPWCache.setJob(JOB)}catch(e){}
   try{await RPWDb.patchV2(sb,JOB.id,{dosarActe:JOB.dosarActe},{actor:'service'});return true}catch(err){return false}
 }
 // "Megis nalunk javittat" — a dosszie atkerul a javitasi folyamatba.
@@ -497,10 +587,12 @@ window.dosarPredat=async function(){
     cancelText:T('dlg_nu'),confirmText:T('dlg_da'),onConfirm:function(){ _dosarPredatGo(); }});
 };
 window._dosarPredatGo=async function(){
-  JOB.dosarPredat=ddDay(0); JOB.inchis=false;
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
+  // v4: a `dosarPredat` normál adat. Az `inchis` BEÁLLÍTÁSA innen
+  // eltűnt — az workflow-mező, és a szerver úgyis elutasítaná.
+  JOB.dosarPredat=ddDay(0);
+  try{RPWCache.setJob(JOB)}catch(e){}
   try{await RPWDb.patchV2(sb,JOB.id,{dosarPredat:JOB.dosarPredat},{actor:'service'})}catch(err){}
-  toast('&#128228; '+T('dd_predat')+': '+JOB.dosarPredat);
+  toast('\uD83D\uDCE4 '+T('dd_predat')+': '+JOB.dosarPredat);
   render();
 };
 window.dosarInchide=async function(){
@@ -509,21 +601,70 @@ window.dosarInchide=async function(){
     cancelText:T('dlg_nu'),confirmText:T('dlg_da'),onConfirm:function(){ _dosarInchideGo(); }});
 };
 window._dosarInchideGo=async function(){
-  JOB.inchis=true; JOB.dosarInchisLa=ddDay(0);
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
-  try{await RPWDb.patchV2(sb,JOB.id,{inchis:true,dosarInchisLa:JOB.dosarInchisLa},{actor:'service'})}catch(err){}
-  toast('&#10003; '+T('dd_inchide'));
+  // v4: a dosszié lezárása WORKFLOW-MŰVELET — a 7. fázis lezárása.
+  // Korábban közvetlen `{inchis:true}` patch ment, ami megkerülte a
+  // jogosultság-, sorrend- és követelményellenőrzést. A 006 óta a
+  // szerver ezt a patch-et el is utasítja (protected_workflow_field).
+  var res = await RPWWorkflow.commitCriticalTransition(JOB, function(){
+    JOB.inchis = true; JOB.dosarInchisLa = ddDay(0);
+    return {ok:true};
+  }, { action:'complete', phase:7,
+       prepare:function(){ JOB.dosarInchisLa = ddDay(0); return {ok:true}; },
+       save:function(){ return RPWDb.patchV2(sb, JOB.id,
+              {dosarInchisLa:JOB.dosarInchisLa}, {expected:JOB.version}); } });
+  if(!res.ok){ _dosarHiba(res); render(); return; }
+  try{RPWCache.setJob(JOB)}catch(e){}
+  toast('\u2713 '+T('dd_inchide'));
   render();
+};
+
+// A szerver elutasításának megjelenítése — románul, a hiánylistával.
+window._dosarHiba=function(res){
+  var e = (res && res.error) || {};
+  if(res && res.offline){ toast(e.message || 'Fără conexiune.', 1); return; }
+  if(e.code === 'requirements_missing' && Array.isArray(e.missing) && e.missing.length){
+    toast(e.missing.map(function(m){ return m.message; }).join(' · '), 1); return;
+  }
+  if(e.code === 'version_conflict'){
+    if(window.RPWConflict){
+      RPWConflict.show({ jobId:JOB.id, mine:{}, theirs:{},
+        serverVersion:e.serverVersion, isPhaseClose:true,
+        onReload:function(){ location.reload(); },
+        onReapply:function(){ location.reload(); },
+        onCancel:function(){} });
+    } else { toast(e.message || 'Conflict de date.', 1); }
+    return;
+  }
+  if(e.code === 'not_allowed'){
+    toast((e.message || 'Nu ai dreptul.') + (e.need ? ' ('+e.need+')' : ''), 1); return;
+  }
+  toast(e.message || 'Operațiunea a fost respinsă.', 1);
 };
 window.dosarInapoi=async function(){        // egy lepes vissza — tevedes eseten
   if(!JOB)return;
-  var patch={};
-  if(JOB.inchis){ JOB.inchis=false; JOB.dosarInchisLa=null; patch={inchis:false,dosarInchisLa:null}; }
-  else if(JOB.dosarPredat){ JOB.dosarPredat=null; patch={dosarPredat:null}; }
-  else return;
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
-  try{await RPWDb.patchV2(sb,JOB.id,patch,{actor:'service'})}catch(err){}
-  render();
+  // v4: ha a dosszié LE VAN ZÁRVA, a visszalépés ÚJRANYITÁS —
+  // workflow-művelet, override joggal és kötelező indoklással.
+  if(JOB.inchis){
+    var reason = (window.prompt && window.prompt(T('dd_reopenReason')||'Motivul redeschiderii:')) || '';
+    if(reason.trim().length < 5){
+      toast('Motivul este obligatoriu (minim 5 caractere).', 1); return;
+    }
+    var res = await RPWWorkflow.commitCriticalTransition(JOB, function(){
+      JOB.inchis=false; JOB.dosarInchisLa=null; return {ok:true};
+    }, { action:'reopen', phase:7, reason:reason.trim(),
+         save:function(){ return RPWDb.patchV2(sb, JOB.id,
+                {dosarInchisLa:null}, {expected:JOB.version}); } });
+    if(!res.ok){ _dosarHiba(res); render(); return; }
+    try{RPWCache.setJob(JOB)}catch(e){}
+    render(); return;
+  }
+  // A `dosarPredat` NEM workflow-mező — marad a normál mentési úton.
+  if(JOB.dosarPredat){
+    JOB.dosarPredat=null;
+    try{RPWCache.setJob(JOB)}catch(e){}
+    try{await RPWDb.patchV2(sb,JOB.id,{dosarPredat:null},{expected:JOB.version})}catch(err){}
+    render();
+  }
 };
 window.dosarToReparatie=async function(){
   if(!JOB)return;
@@ -531,10 +672,18 @@ window.dosarToReparatie=async function(){
     cancelText:T('dlg_nu'),confirmText:T('dlg_da'),onConfirm:function(){ _dosarToRepGo(); }});
 };
 window._dosarToRepGo=async function(){
+  // v4: a `flux` és a `doarDosar` normál adat; a `phase` NEM.
+  // Ha a munka még nem indult el, a szerver `start` átmenettel
+  // állítja be az 1. fázist.
   JOB.flux='reparatie'; JOB.doarDosar=false;
-  if(typeof JOB.phase!=='number'||JOB.phase<1)JOB.phase=1;
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
-  try{await RPWDb.patchV2(sb,JOB.id,{flux:'reparatie',doarDosar:false,phase:JOB.phase},{actor:'service'})}catch(err){}
+  try{RPWCache.setJob(JOB)}catch(e){}
+  // a `phase` KIMARAD a patch-ből — workflow-mező
+  try{await RPWDb.patchV2(sb,JOB.id,{flux:'reparatie',doarDosar:false},{expected:JOB.version})}catch(err){}
+  // ha a munka még nem indult el, a szerver indítja az 1. fázist
+  if(!JOB.phase || JOB.phase < 1){
+    try{ await RPWWorkflow.commitCriticalTransition(JOB, function(){ return {ok:true}; },
+           { action:'start', phase:1 }); }catch(e){}
+  }
   render();
 };
 // Iratszamlalo — EGYETLEN forras. A csik es a szekcio ugyanezt hasznalja.
@@ -594,7 +743,7 @@ window.setDosarStatus=async function(v){
   if(!JOB)return;
   JOB.dosarStatus=v;
   if(!JOB.damageType)JOB.damageType='asig';
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
+  try{RPWCache.setJob(JOB)}catch(e){}
   try{await RPWDb.patchV2(sb,JOB.id,{dosarStatus:v,damageType:JOB.damageType},{actor:'service'})}catch(err){}
   render();
 };
@@ -603,48 +752,210 @@ window.setDosarField=async function(k,v){
   v=String(v||'').trim();
   JOB[k]=v;
   var p={};p[k]=v;
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB))}catch(e){}
+  try{RPWCache.setJob(JOB)}catch(e){}
   try{await RPWDb.patchV2(sb,JOB.id,p,{actor:'service'})}catch(err){}
   render();
 };
+// ── EGY FÁJL EGY RÉSBE ──────────────────────────────────────────
+// EGYETLEN feltöltési út: a résenkénti gomb és a kötegelt feltöltés
+// is ezt hívja. Két út két külön hibát jelentene.
+async function _uploadFileToSlot(f,key){
+  var BUCKET=RPW_CFG.BUCKET||'rpw-photos';
+  var blob=await _actaCompress(f);
+  var isImg=/^image\//.test(blob.type||f.type||'');
+  var ext=isImg?'jpg':(((f.name||'file').split('.').pop())||'bin').toLowerCase();
+  var kk='acta_'+key+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  var path=JOB.id+'/acte/'+kk+'.'+ext;
+  var up=await sb.storage.from(BUCKET).upload(path,blob,{contentType:blob.type||f.type||'application/octet-stream',upsert:true});
+  if(up.error)throw up.error;
+  // P0.6: a bucket PRIVÁT — a publikus URL halott. Aláírt URL kell.
+  var url=await RPWPhotos.signedUrl(sb,path,{bucket:BUCKET});
+  return {url:url,path:path,name:f.name||(kk+'.'+ext),type:blob.type||f.type||'',ts:new Date().toISOString(),src:'service'};
+}
 window.uploadActa=async function(e,key,multi){
   var files=e.target.files;if(!files||!files.length||!JOB)return;
-  var BUCKET=RPW_CFG.BUCKET||'rpw-photos';
   if(!JOB.dosarActe)JOB.dosarActe={};
   var cur=JOB.dosarActe[key];var arr=(cur?(Array.isArray(cur)?cur.slice():[cur]):[]);
   if(!multi)arr=[]; // egy-rés: felülír
-  toast('Se încarcă…');
+  toast(T('bk_up'));
   for(var i=0;i<files.length;i++){
-    var f=files[i];
-    try{
-      var blob=await _actaCompress(f);
-      var isImg=/^image\//.test(blob.type||f.type||'');
-      var ext=isImg?'jpg':(((f.name||'file').split('.').pop())||'bin').toLowerCase();
-      var kk='acta_'+key+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-      var path=JOB.id+'/acte/'+kk+'.'+ext;
-      var up=await sb.storage.from(BUCKET).upload(path,blob,{contentType:blob.type||f.type||'application/octet-stream',upsert:true});
-      if(up.error)throw up.error;
-      // P0.6: a bucket PRIVÁT — a publikus URL halott. Aláírt URL kell.
-      var url=await RPWPhotos.signedUrl(sb,path,{bucket:BUCKET});
-      arr.push({url:url,path:path,name:f.name||(kk+'.'+ext),type:blob.type||f.type||'',ts:new Date().toISOString(),src:'service'});
-    }catch(err){toast('Eroare la fișier: '+(err&&err.message||err),1)}
+    try{ arr.push(await _uploadFileToSlot(files[i],key)); }
+    catch(err){ toast('Eroare la fișier: '+(err&&err.message||err),1) }
   }
   JOB.dosarActe[key]=arr;
-  var ok=await _saveActe();toast(ok?'✓ Salvat':'Salvare eșuată'+'',!ok);
+  var ok=await _saveActe();toast(ok?T('bk_saved'):T('bk_savefail'),!ok);
   render();
 };
 window.delActa=async function(key,ix){
   if(!JOB)return;
+  // 2026-08-25: itt `idx` állt — nem létező változó. A megerősítő gomb
+  // ReferenceError-t dobott, a törlés SOHA nem futott le.
   dlgAsk({tone:'danger',title:T('dlg_del_t'),text:T('dlg_del_s'),
     cancelText:T('dlg_pastreaza'),confirmText:T('dlg_sterge'),
-    onConfirm:function(){ _stergeActaGo(key,idx); }});
+    onConfirm:function(){ _stergeActaGo(key,ix); }});
 };
 window._stergeActaGo=async function(key,idx){
   if(!JOB.dosarActe)JOB.dosarActe={};
   var cur=JOB.dosarActe[key];var arr=(cur?(Array.isArray(cur)?cur.slice():[cur]):[]);
-  arr.splice(ix,1);
+  // 2026-08-25: itt `ix` állt — a paraméter neve `idx`. A `splice(undefined,1)`
+  // MINDIG az elsőt törölte, bármelyik × -re kattintottál.
+  if(!(idx>=0)||idx>=arr.length)return;
+  arr.splice(idx,1);
   JOB.dosarActe[key]=arr; // üres tömb marad (a szerver deep-merge NEM töröl kulcsot)
   await _saveActe();
+  render();
+};
+
+/* ══ KÖTEGELT FELTÖLTÉS — AI-JAVASLAT, EMBERI DÖNTÉS ═══════════════
+   A tizenkilenc rés egyesével töltése húsz perc. Itt a kolléga egyszer
+   jelöli ki az összes fényképet, a `classify` funkció megnézi őket, és
+   MEGJAVASOLJA, melyik résbe valók.
+
+   AMIT EZ SOSEM TESZ: nem tölt fel magától. A javaslat egy LISTA,
+   amit ember hagy jóvá. Ugyanaz az elv, mint a GAP-oknál: a rendszer
+   kérdez, nem ítél.
+
+   A károsult és a vétkes személyi igazolványa ugyanúgy néz ki — a
+   modell nem tudhatja, melyik kié. Ezt nem találgatjuk: a szabad rést
+   ajánljuk, és a sor jelöli, hogy a döntés emberé.               */
+var BULK={ open:false, busy:false, items:[], done:0, total:0 };
+
+function _blobToDataUrl(b){
+  return new Promise(function(res,rej){
+    var r=new FileReader();
+    r.onload=function(){ res(String(r.result||'')) };
+    r.onerror=function(){ rej(new Error('read')) };
+    r.readAsDataURL(b);
+  });
+}
+
+window.bulkActe=async function(e){
+  var files=e.target.files; if(!files||!files.length||!JOB) return;
+  if(BULK.busy) return;
+  BULK.items=[]; BULK.busy=true; BULK.done=0; BULK.total=files.length; BULK.open=true;
+  for(var i=0;i<files.length;i++){
+    BULK.items.push({ file:files[i], name:files[i].name||'', preview:'',
+                      res:null, slot:null, suggest:null, low:true, reason:'wait' });
+  }
+  e.target.value='';                       // ugyanaz a fájl újra kiválasztható
+  bulkRender();
+
+  for(var j=0;j<BULK.items.length;j++){
+    var it=BULK.items[j];
+    try{
+      var blob=await _actaCompress(it.file);
+      if(/^image\//.test(blob.type||it.file.type||'')){
+        it.preview=URL.createObjectURL(blob);
+        it.res=await RPWClassify.classifyImage(await _blobToDataUrl(blob));
+      }else{
+        // PDF-et nem küldünk a képosztályozónak — nem az a dolga.
+        it.res={ type:'altceva', confidence:0, label:'PDF' };
+      }
+    }catch(err){ it.res={ type:'altceva', confidence:0, label:'' }; }
+    BULK.done++;
+    bulkRender();
+  }
+
+  // A tervet EGYBEN számoljuk: így két „talon față" nem ugyanabba a
+  // résbe kerül, ahol a második csendben felülírná az elsőt.
+  var terv=RPWClassify.plan(BULK.items.map(function(x){ return x.res }), JOB.dosarActe||{});
+  terv.forEach(function(t,ix){
+    var it=BULK.items[ix];
+    it.suggest=t.slot; it.low=t.low; it.reason=t.reason;
+    it.slot=t.low?null:t.slot;             // bizonytalanra NEM választunk előre
+  });
+  BULK.busy=false;
+  bulkRender();
+};
+
+function _bulkSlotLabel(key){
+  var o=RPWClassify.slotOptions().filter(function(x){ return x.key===key })[0];
+  return o?(o.group+' / '+o.label):key;
+}
+function _bulkOccupied(key){
+  if(!key) return false;
+  if(RPWClassify.isMulti(key)) return false;
+  return RPWClassify.filesIn(JOB&&JOB.dosarActe,key).length>0;
+}
+
+function bulkRender(){
+  var el=document.getElementById('bulkOv');
+  if(!BULK.open){ if(el)el.remove(); return; }
+  if(!el){ el=document.createElement('div'); el.id='bulkOv'; el.className='bulk-ov'; document.body.appendChild(el); }
+
+  var kesz=BULK.items.filter(function(x){ return x.slot }).length;
+  var h='<div class="bulk-bx"><div class="bulk-hd"><div class="bulk-t">'+escH(T('bk_title'))+'</div>';
+  h+='<div class="bulk-s">'+escH(BULK.busy?T('bk_working').replace('{n}',BULK.done).replace('{t}',BULK.total):T('bk_lead'))+'</div></div>';
+  h+='<div class="bulk-ls">';
+
+  var opts=RPWClassify.slotOptions();
+  BULK.items.forEach(function(it,ix){
+    h+='<div class="bulk-r">';
+    h+=it.preview?('<img class="bulk-th" src="'+escU(it.preview)+'" alt="">'):'<div class="bulk-th"></div>';
+    h+='<div style="flex:1;min-width:0">';
+    h+='<div class="bulk-nm">'+escH(it.name)+'</div>';
+    h+='<select class="bulk-sel" onchange="bulkSet('+ix+',this.value)">';
+    h+='<option value="">'+escH(T('bk_skip'))+'</option>';
+    var grp='';
+    opts.forEach(function(o){
+      if(o.group!==grp){ if(grp)h+='</optgroup>'; h+='<optgroup label="'+escA(o.group)+'">'; grp=o.group; }
+      h+='<option value="'+escA(o.key)+'"'+(it.slot===o.key?' selected':'')+'>'+escH(o.label)+'</option>';
+    });
+    if(grp)h+='</optgroup>';
+    h+='</select>';
+
+    // A jelvény MEGMONDJA, miért ez a javaslat — vagy miért nincs.
+    if(BULK.busy && !it.res){ h+='<span class="bulk-bd bulk-no">'+escH(T('bk_wait'))+'</span>'; }
+    else if(it.reason==='ok'){ h+='<span class="bulk-bd bulk-ok">'+escH(T('bk_sure').replace('{p}',Math.round((it.res&&it.res.confidence||0)*100)))+'</span>'; }
+    else if(it.reason==='nesigur'){ h+='<span class="bulk-bd bulk-lo">'+escH(T('bk_unsure').replace('{s}',_bulkSlotLabel(it.suggest)))+'</span>'; }
+    else if(it.reason==='ocupat'){ h+='<span class="bulk-bd bulk-lo">'+escH(T('bk_taken'))+'</span>'; }
+    else { h+='<span class="bulk-bd bulk-no">'+escH(T('bk_unknown'))+'</span>'; }
+    if(it.slot && _bulkOccupied(it.slot)) h+=' <span class="bulk-bd bulk-wr">'+escH(T('bk_replace'))+'</span>';
+    h+='</div></div>';
+  });
+
+  h+='</div><div class="bulk-ft">';
+  h+='<button class="bulk-fb bulk-f1" onclick="bulkClose()">'+escH(T('bk_cancel'))+'</button>';
+  h+='<button class="bulk-fb bulk-f2"'+(BULK.busy||!kesz?' disabled style="opacity:.45"':'')+' onclick="bulkConfirm()">'+escH(T('bk_go').replace('{n}',kesz))+'</button>';
+  h+='</div></div>';
+  el.innerHTML=h;
+}
+
+window.bulkSet=function(ix,key){
+  var it=BULK.items[ix]; if(!it) return;
+  it.slot=key||null;
+  bulkRender();
+};
+window.bulkClose=function(){
+  BULK.items.forEach(function(it){ if(it.preview){ try{ URL.revokeObjectURL(it.preview) }catch(e){} } });
+  BULK.open=false; BULK.items=[]; BULK.busy=false;
+  bulkRender();
+};
+window.bulkConfirm=async function(){
+  if(BULK.busy||!JOB) return;
+  var valasztott=BULK.items.filter(function(x){ return x.slot });
+  if(!valasztott.length){ toast(T('bk_none'),1); return; }
+  BULK.busy=true; bulkRender();
+  if(!JOB.dosarActe)JOB.dosarActe={};
+
+  var hiba=0, rendben=0;
+  for(var i=0;i<valasztott.length;i++){
+    var it=valasztott[i];
+    try{
+      var multi=RPWClassify.isMulti(it.slot);
+      var cur=JOB.dosarActe[it.slot];
+      var arr=(cur?(Array.isArray(cur)?cur.slice():[cur]):[]);
+      if(!multi)arr=[];                       // egy-rés: felülír (a sor jelezte)
+      arr.push(await _uploadFileToSlot(it.file,it.slot));
+      JOB.dosarActe[it.slot]=arr;
+      rendben++;
+    }catch(err){ hiba++; }
+  }
+  var ok=await _saveActe();
+  BULK.busy=false;
+  bulkClose();
+  toast(ok?T('bk_done').replace('{n}',rendben)+(hiba?(' · '+T('bk_err').replace('{n}',hiba)):'')
+         :T('bk_savefail'), !ok||!!hiba);
   render();
 };
 

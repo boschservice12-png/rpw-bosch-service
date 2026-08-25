@@ -18,10 +18,14 @@
 <script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
 <script src="rpw-workflow.js"></script>
 <script src="rpw-auth.js"></script>
+<script src="rpw-cache.js"></script>
+<script src="rpw-conflict.js"></script><!-- 6: verzióütközés kezelése --><!-- D: helyi gyorsítótár korlátokkal -->
 <script src="rpw-db.js"></script>
 <script src="rpw-photos.js"></script><!-- P0.6: alairt URL-hez -->
 <script src="rpw-roles.js"></script>
 <script src="rpw-save.js"></script>
+<script src="rpw-queue.js"></script><!-- 2026-08-25: tartos offline sor -->
+<script src="rpw-data.js"></script><!-- v4: szerveroldali átmenetek -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#FAF8F5;--w:#fff;--r:#E11D2E;--r50:#FDF3F4;--r100:#FCE6E8;--r700:#B5121F;--bad:#C81E33;--g:#1E9D55;--gl:#E1F4E8;--y:#A6701F;--yl:#FAEFD8;--bl:#2A6FDB;--bll:#E2ECFA;--p:#5B3FA6;--pl:#EDE9F5;--or:#B5601F;--orl:#FBF0E4;--tl:#14753F;--tll:#E1F4E8;--t:#0F141A;--t2:#3F4956;--t3:#6B7280;--b:#E8EBEF;--b2:#D7DBE2;--rd:10px;--bosch:#005691}
@@ -255,6 +259,18 @@ if(window.RPWAuth){try{RPWAuth.guard();}catch(e){}}
 var SB_URL=RPW_CFG.SB_URL;
 var SB_KEY=RPW_CFG.SB_KEY;
 var sb=supabase.createClient(SB_URL,SB_KEY);
+try{ if(window.RPWData) RPWData.init(sb, {onSync:(typeof onSyncState==='function'?onSyncState:null)}); }catch(e){ console.warn('RPWData init:', e); }
+
+// ── 11 (v4) — A SZERVERT MEGKÉRDEZZÜK, MIELŐTT ADATOT TÖLTENÉNK ──
+// Enélkül versenyhelyzet állna elő: az oldal már dolgozna az adattal,
+// mire kiderül, hogy a szerver verziója nem megfelelő.
+// PRODUCTION módban a hiba MEGÁLLÍTJA az alkalmazást (fail-closed).
+window.__rpwServerReady = (async function(){
+  try{
+    if(!window.RPWGuard || !RPWGuard.verifyServer) return {ok:true, skipped:true};
+    return await RPWGuard.verifyServer(sb, window.RPW_CFG);
+  }catch(e){ return {ok:false, problems:['verify_threw'], error:e}; }
+})();
 /* PHASE 1: látható szinkron-állapot + robusztus mentő (rpw-save.js) */
 function rpwSyncLabel(st){var m={saving_local:['Salvare…','#6B7280'],syncing:['Sincronizare…','#2A6FDB'],synced:['✓ Salvat pe server','#1E9D55'],offline:['⚠ Offline – salvat local','#A6701F'],retry:['↻ Reîncercare…','#A6701F'],failed:['✗ Eșec salvare – reîncearcă','#C81E33'],permission:['✗ Fără permisiune','#C81E33'],conflict:['⚠ Conflict de date','#C81E33'],auth:['✗ Autentificare','#C81E33'],idle:['','#6B7280']};return m[st]||[st,'#6B7280'];}
 function onSyncState(st){var el=document.getElementById('rpw-sync');if(el){var l=rpwSyncLabel(st);el.textContent=l[0];el.style.color=l[1];el.style.opacity=l[0]?'1':'0';if(st==='synced'){setTimeout(function(){if(el&&el.textContent===l[0])el.style.opacity='0'},2000)}}var cb=document.getElementById('rpw-conflict');if(st==='conflict'){if(!cb){cb=document.createElement('div');cb.id='rpw-conflict';cb.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,Arial';cb.innerHTML='<div style="max-width:360px;background:#fff;border-radius:12px;padding:22px;text-align:center"><div style="font-size:34px">\u26A0\uFE0F</div><div style="font-size:17px;font-weight:800;color:#C81E33;margin:8px 0">Conflict de date</div><div style="font-size:13px;color:#3F4956;line-height:1.6">Alt utilizator a modificat aceast\u0103 fi\u0219\u0103. Modificarea ta local\u0103 este p\u0103strat\u0103. Re\u00EEncarc\u0103 pentru versiunea de pe server.</div><button onclick="location.reload()" style="margin-top:16px;background:#E11D2E;color:#fff;border:none;border-radius:9px;padding:11px 20px;font-weight:800;cursor:pointer">Re\u00EEncarc\u0103</button></div>';document.body.appendChild(cb);}}else if(cb){cb.remove();}}
@@ -299,6 +315,8 @@ var PAINTABLE={l_m:false,r_m:false};  // tükrök: nincs fenyezes
 var WORK_V2_TO_V1={inlocuire:'replace',reparatie:'fix',vopsire:'uni',revopsire:'uni'};
 
 var i={
+incomplete:{ro:'Date incomplete — completează câmpurile lipsă.',en:'Incomplete data — fill in the missing fields.',hu:'Hiányos adatok — töltsd ki a hiányzó mezőket.'},
+
   titlu:{ro:'OFERTA DE PRET',en:'QUOTE',hu:'ARAJANLAT'},
   data:{ro:'Data',en:'Date',hu:'Datum'},
   unitate:{ro:'UNITATE',en:'UNIT',hu:'EGYSEG'},
@@ -469,18 +487,19 @@ function photoUrl(photoKey){
 function gJI(){return new URLSearchParams(location.search).get('job')}
 
 async function loadJob(){
+  try{ if(window.__rpwServerReady) await window.__rpwServerReady; }catch(e){}
   loadNorme();loadConfig();
   var jid=gJI();if(!jid){render();return}
-  var cached=localStorage.getItem('rpw_job_'+jid);
+  var cached=JSON.stringify(RPWCache.getJob(jid)||null);
   if(cached){try{JOB=JSON.parse(cached);initJob();render()}catch(e){}}
   try{
     var res=await RPWDb.getRow(sb,jid);
     if(res.error)throw res.error;
-    var _lts=0,_sts=0;try{_lts=Date.parse(localStorage.getItem('rpw_job_ts_'+jid)||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
+    var _lts=0,_sts=0;try{_lts=Date.parse(null||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
     if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;
-    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+jid,res.data.updated_at||new Date().toISOString())}catch(e){}}
+    try{RPWCache.setJob(JOB)}catch(e){}}
     initJob();
-    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB))}catch(e){}
+    try{RPWCache.setJob(JOB)}catch(e){}
   }catch(e){if(!JOB)JOB=null}
   render();
 }
@@ -497,58 +516,10 @@ function initJob(){
   }
 }
 
-function autoPopulate(){
-  var el=JOB.elements||{};
-  var cnt=0;
-  for(var k in el){
-    var e=el[k];
-    var target=null;
-    if(e.status==='damaged')target='comanda';
-    else if(e.status==='suggested')target='upsell';
-    if(!target)continue;
-    // Olvasd ki az ops objektumot (checkbox alapu), backward compat a work/workV2 mezokre
-    var ops=e.ops;
-    if(!ops){
-      ops={};
-      var oldW=e.workV2||e.work;
-      if(oldW==='replace'||oldW==='inlocuire'||oldW==='new')ops.inlocuire=true;
-      else if(oldW==='fix'||oldW==='reparatie')ops.reparatie=true;
-      else if(oldW==='vopsire'||oldW==='uni')ops.vopsire=true;
-      else if(oldW==='revopsire')ops.revopsire=true;
-    }
-    // Ket kulon sor mindegy ami bekapcsolva van
-    var opList=['inlocuire','demontat','dezasamblat','reparatie','vopsire','revopsire','mecanica'];
-    var added=false;
-    for(var oi=0;oi<opList.length;oi++){
-      var op=opList[oi];
-      if(ops[op]){
-        var prefix=target==='comanda'?'c_':'u_';
-        JOB.evalData[target].push({
-          id:prefix+Date.now().toString(36)+'_'+(cnt++),
-          elKey:k,
-          op:op,
-          hours:(op==='reparatie'&&e.oraNormata)?e.oraNormata:getNorma(k,op),
-          note:e.note||'',
-          photo:e.photo||null
-        });
-        added=true;
-      }
-    }
-    // Fallback: ha nincs ops de damaged/suggested (regi adat) - egy sor ures muvelettel
-    if(!added){
-      var prefix2=target==='comanda'?'c_':'u_';
-      JOB.evalData[target].push({
-        id:prefix2+Date.now().toString(36)+'_'+(cnt++),
-        elKey:k,op:'',hours:0,note:e.note||'',photo:e.photo||null
-      });
-    }
-  }
-}
-
 var _saveTimer=null;
 async function saveJ(){
   if(!JOB)return;
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+JOB.id,new Date().toISOString())}catch(e){}
+  try{RPWCache.setJob(JOB)}catch(e){}
   clearTimeout(_saveTimer);
   _saveTimer=setTimeout(async function(){
     try{await RPWDb.patch(sb,JOB)}
@@ -972,7 +943,15 @@ async function _finishEval(nav){
     if(!JOB.evalData)JOB.evalData={};
     JOB.evalData.status='accepted'; JOB.evalData.prodReleasedAt=new Date().toISOString();
     return RPWWorkflow.completePhase(JOB,2,{actor:'evaluare'});
-  }, {save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  }, {action:'complete', phase:2,
+      prepare:function(){
+        var acc=RPWWorkflow.canAcceptEval(JOB);
+        if(!acc.ok) return {ok:false, errors:acc.missing};
+        if(!JOB.evalData)JOB.evalData={};
+        JOB.evalData.status='accepted'; JOB.evalData.prodReleasedAt=new Date().toISOString();
+        return {ok:true};
+      },
+      save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
   if(!res.ok){
     if(res.notSynced){ toast(RPWWorkflow.t('wf_saved_not_synced',_wln()),1); render(); return; }
     var errs=(res.result&&(res.result.errors||res.result.missing))||[];
@@ -1033,13 +1012,6 @@ window.lb=function(src){S.lightbox=src;render()};
 window.closeLb=function(){S.lightbox=null;render()};
 
 window.upJob=async function(field,val){if(!JOB)return;JOB[field]=val;if(field==='brand')JOB.auto=val;await saveJ()};
-window.upYrKm=async function(val){
-  if(!JOB)return;
-  var parts=val.split('/');
-  if(parts[0])JOB.year=parts[0].trim().replace(/—/g,'');
-  if(parts[1])JOB.km=parts[1].trim().replace(/—/g,'');
-  await saveJ();
-};
 window.upCfg=function(path,val){var parts=path.split('.');if(parts.length===2){CONFIG[parts[0]][parts[1]]=val}else{CONFIG[path]=val}saveConfig()};
 window.upTarif=function(field,val){CONFIG.tarif[field]=parseFloat(val)||0;saveConfig();render()};
 
@@ -1091,18 +1063,6 @@ window.delRow=async function(id){
   var tab=S.tab;
   JOB.evalData[tab]=JOB.evalData[tab].filter(function(x){return x.id!==id});
   await saveJ();render();
-};
-
-window.aRP=function(rowId,e){
-  var f=e.target.files&&e.target.files[0];if(!f)return;
-  var row=null,tabs=['comanda','upsell'];
-  for(var ti=0;ti<tabs.length;ti++){var l=(JOB.evalData&&JOB.evalData[tabs[ti]])||[];for(var ri=0;ri<l.length;ri++){if(l[ri].id===rowId){row=l[ri];break}}if(row)break}
-  if(!row)return;
-  var key=row.photoRef||('evrow_'+rowId);
-  resizeFile(f).then(async function(dataUrl){
-    try{await uploadPhoto(key,dataUrl)}catch(err){toast('Upload: '+err.message,1);return}
-    row.photoRef=key;await saveJ();toast(T('saved'));render();
-  });
 };
 
 window.printDoc=function(){window.print()};

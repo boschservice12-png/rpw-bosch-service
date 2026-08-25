@@ -1,0 +1,5 @@
+# Fejlesztoi fuggosegek — a npm ci allitja elo a package-lock.json-bol
+node_modules/
+
+# A staging igazolasat EMBER tolti ki, nem a repo
+STAGING-VERIFIED.json

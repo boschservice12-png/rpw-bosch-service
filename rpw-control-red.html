@@ -16,9 +16,13 @@
 <script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
 <script src="rpw-workflow.js"></script>
 <script src="rpw-auth.js"></script>
+<script src="rpw-cache.js"></script>
+<script src="rpw-conflict.js"></script><!-- 6: verzióütközés kezelése --><!-- D: helyi gyorsítótár korlátokkal -->
 <script src="rpw-db.js"></script>
 <script src="rpw-roles.js"></script>
 <script src="rpw-save.js"></script>
+<script src="rpw-queue.js"></script><!-- 2026-08-25: tartos offline sor -->
+<script src="rpw-data.js"></script><!-- v4: szerveroldali átmenetek -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#f5f5f3;--w:#fff;--r:#dc2626;--r50:#fef2f2;--r100:#fee2e2;--g:#16a34a;--gl:#dcfce7;--y:#ca8a04;--yl:#fef9c3;--bl:#2563eb;--bll:#dbeafe;--tl:#0d9488;--tll:#ccfbf1;--or:#ea580c;--orl:#fff7ed;--t:#1a1a1a;--t2:#555;--t3:#999;--b:#e5e5e5;--b2:#d0d0d0;--rd:10px}
@@ -107,6 +111,18 @@ if(window.RPWAuth){try{RPWAuth.guard();}catch(e){}}
 var SB_URL=RPW_CFG.SB_URL;
 var SB_KEY=RPW_CFG.SB_KEY;
 var sb=supabase.createClient(SB_URL,SB_KEY);
+try{ if(window.RPWData) RPWData.init(sb, {onSync:(typeof onSyncState==='function'?onSyncState:null)}); }catch(e){ console.warn('RPWData init:', e); }
+
+// ── 11 (v4) — A SZERVERT MEGKÉRDEZZÜK, MIELŐTT ADATOT TÖLTENÉNK ──
+// Enélkül versenyhelyzet állna elő: az oldal már dolgozna az adattal,
+// mire kiderül, hogy a szerver verziója nem megfelelő.
+// PRODUCTION módban a hiba MEGÁLLÍTJA az alkalmazást (fail-closed).
+window.__rpwServerReady = (async function(){
+  try{
+    if(!window.RPWGuard || !RPWGuard.verifyServer) return {ok:true, skipped:true};
+    return await RPWGuard.verifyServer(sb, window.RPW_CFG);
+  }catch(e){ return {ok:false, problems:['verify_threw'], error:e}; }
+})();
 var JOB=null,S={ts:null,te:0};
 // ── PHASE 1: látható szinkron-állapot + robusztus mentő ──
 function rpwSyncLabel(st){var m={saving_local:['Salvare…','#6B7280'],syncing:['Sincronizare…','#2A6FDB'],synced:['✓ Salvat pe server','#1E9D55'],offline:['⚠ Offline – salvat local','#A6701F'],retry:['↻ Reîncercare…','#A6701F'],failed:['✗ Eșec salvare – reîncearcă','#C81E33'],permission:['✗ Fără permisiune','#C81E33'],conflict:['⚠ Conflict de date','#C81E33'],auth:['✗ Autentificare','#C81E33'],idle:['','#6B7280']};return m[st]||[st,'#6B7280'];}
@@ -116,16 +132,17 @@ if(SAVER&&window.RPWSave&&RPWSave.bindBeforeUnload)RPWSave.bindBeforeUnload(SAVE
 
 function gJI(){return new URLSearchParams(location.search).get('job')}
 async function loadJob(){
+  try{ if(window.__rpwServerReady) await window.__rpwServerReady; }catch(e){}
   var jid=gJI();if(!jid){render();return}
-  var cached=localStorage.getItem('rpw_job_'+jid);
+  var cached=JSON.stringify(RPWCache.getJob(jid)||null);
   if(cached){try{JOB=JSON.parse(cached);if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};if(!JOB.controlChecks)JOB.controlChecks={};render()}catch(e){}}
   try{
     var res=await RPWDb.getRow(sb,jid);
     if(res.error)throw res.error;
-    var _lts=0,_sts=0;try{_lts=Date.parse(localStorage.getItem('rpw_job_ts_'+jid)||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
+    var _lts=0,_sts=0;try{_lts=Date.parse(null||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
     if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};if(!JOB.controlChecks)JOB.controlChecks={};
-    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+jid,res.data.updated_at||new Date().toISOString())}catch(e){}}
-    try{localStorage.setItem('rpw_job_'+jid,JSON.stringify(JOB))}catch(e){}
+    try{RPWCache.setJob(JOB)}catch(e){}}
+    try{RPWCache.setJob(JOB)}catch(e){}
     /* nincs auto-mentes betolteskor */
   }catch(e){if(!JOB)JOB=null}
   render();
@@ -134,7 +151,7 @@ async function saveJ(){
   if(!JOB)return;
   if(SAVER)return SAVER.save(JOB);              // PHASE 1: valódi Promise + látható állapot + offline sor
   // fallback, ha a mentőmodul nem töltött be — DE most már ellenőrizzük az {error}-t (#2)
-  try{localStorage.setItem('rpw_job_'+JOB.id,JSON.stringify(JOB));localStorage.setItem('rpw_job_ts_'+JOB.id,new Date().toISOString())}catch(e){}
+  try{RPWCache.setJob(JOB)}catch(e){}
   try{var r=await RPWDb.patch(sb,JOB);if(r&&r.error){onSyncState('failed');console.error('Save error:',r.error);return{failed:true,error:r.error}} onSyncState('synced');return{ok:true}}
   catch(e){onSyncState('failed');console.error('Save:',e);return{failed:true,error:e}}
 }
@@ -337,7 +354,7 @@ window.mkRework=async function(targetPhase,mode){
   var res=await RPWWorkflow.commitCriticalTransition(JOB, function(){
     return RPWWorkflow.createRework(JOB,{ category:category, targetPhase:(mode==='manager'?6:targetPhase),
       description:desc, assignedTo:who, createdBy:(ctrl||'').trim(), seed:(JOB.rework?JOB.rework.length:0) });
-  }, {save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  }, {action:'rework_open', phase:(mode==='manager'?6:targetPhase), reason:desc, save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
   if(!res.ok){
     if(res.notSynced){ toast(RPWWorkflow.t('wf_saved_not_synced',_ln),1); render(); return; }
     var errs=(res.result&&res.result.errors)||[];
@@ -356,7 +373,7 @@ window.advPh=async function(){
   JOB.control.lastAt=new Date().toISOString();
   var res=await RPWWorkflow.commitCriticalTransition(JOB, function(){
     return RPWWorkflow.completePhase(JOB,6,{actor:'control'});
-  }, {save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  }, {action:'complete', phase:6, save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
   if(!res.ok){
     if(res.notSynced){ toast(RPWWorkflow.t('wf_saved_not_synced',_ln),1); render(); return; }
     var errs=(res.result&&(res.result.errors||res.result.missing))||[];
