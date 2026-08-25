@@ -267,9 +267,6 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .ac-b.ac-ok{background:#dcfce7;color:#15803d}
 .ac-b.ac-part{background:#fef3c7;color:#92400e}
 .ac-b.ac-none{background:#f1f5f9;color:#64748b}
-.fx-b{display:inline-block;font-size:11px;border-radius:6px;padding:1px 5px;vertical-align:middle;margin-left:5px}
-.fx-p{background:#dbeafe}
-.fx-d{background:#e0e7ff}
 .edit-btn.eb-edit2{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;font-size:14px;line-height:1}
 .edit-btn.eb-edit2:hover{background:#e2e8f0}
 .nj-dup-info{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}
@@ -846,8 +843,6 @@ st_astept:{ro:'Asteptam masina',en:'Waiting for the car',hu:'Varjuk az autot'},
 st_acte:{ro:'acte',en:'docs',hu:'irat'},
 st_predat:{ro:'Predat asiguratorului',en:'Handed to insurer',hu:'Atadva a biztositonak'},
 st_inchis:{ro:'Inchis',en:'Closed',hu:'Lezarva'},
-badge_prog:{ro:'Programare',en:'Appointment',hu:'Elojegyzes'},
-badge_dosar:{ro:'Dosar dauna',en:'Claim file',hu:'Kardosszie'},
 open_dosar_btn:{ro:'Deschide dosarul',en:'Open the file',hu:'Dosszie megnyitasa'},
 m_prog_t:{ro:'Programare noua',en:'New appointment',hu:'Uj elojegyzes'},
 m_prog_s:{ro:'Masina vine mai tarziu — rezervam ora',en:'Car comes later — we book the slot',hu:'Az auto kesobb jon — idopontot foglalunk'},
@@ -1245,9 +1240,10 @@ function renderPanou(){
       h+='<tr class="panou-row '+rowCls+'" ondblclick="openCondModal(\''+j.id+'\')">';
       h+='<td><div style="font-weight:700">'+escH(j.client||j.proprietar||'—')+'</div><div style="font-size:10px;color:var(--t3)">'+escH(j.number||j.id||'')+'</div></td>';
       var _dd=(j.flux==='doar_dosar')||(j.flux==null&&j.doarDosar===true);
-      h+='<td class="mono" style="font-weight:700;letter-spacing:.4px">'+escH(j.plate||'—')
-        +(_dd?' <span class="fx-b fx-d" title="'+T('badge_dosar')+'">&#128193;</span>'
-             :' <span class="fx-b fx-p" title="'+T('badge_prog')+'">&#128197;</span>')+'</td>';
+      // 2026-08-25: a rendszám mellől kikerült a 📁/📅 jelvény. A két sáv
+      // megkülönböztetése enélkül is egyértelmű: a dosszié-sor kiemelt,
+      // iratszámlálót mutat, és „Deschide dosarul" a fő művelete.
+      h+='<td class="mono" style="font-weight:700;letter-spacing:.4px">'+escH(j.plate||'—')+'</td>';
       h+='<td class="pg-cell">'+progCell(j)+'</td>';
       if(tab==='viitoare'){
         // A status SAVONKENT mast mond, mert mas a lenyeg.

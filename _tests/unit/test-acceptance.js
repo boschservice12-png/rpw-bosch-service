@@ -223,7 +223,10 @@ try{
   let h=app();
   ok(/MS-81-AAA/.test(h),'az előjegyzés a listán');
   ok(/MS-82-BBB/.test(h),'a kárdosszié IS ugyanazon a listán');
-  ok(/fx-p/.test(h)&&/fx-d/.test(h),'két különböző jelvény');
+  // 2026-08-25: a rendszám melletti jelvény kikerült (felesleges volt).
+  // A két sáv megkülönböztetése a SORON látszik, nem egy ikonon:
+  ok(!/fx-b/.test(h),'nincs jelvény a rendszám mellett');
+  ok(/Deschide dosarul|deschideDosar/.test(h),'a dosszié-sor fő művelete a dosszié megnyitása');
   ok(/Groupama/.test(h),'a dosszié soron látszik a biztosító (melyik eset)');
   ok(/acte/.test(h),'iratszámláló a dosszié soron');
   ok(/openEditJob/.test(h),'✎ gomb');

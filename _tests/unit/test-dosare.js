@@ -44,7 +44,12 @@ ok(html.indexOf("setPanouTab(\\'dosare\\')")<0,'a kulon Dosare ful megszunt');
 ok(/tab==='viitoare' && _dd/.test(html),'a dosar SOR sajat agat kap');
 ok(/tab==='viitoare' && _dd[\s\S]{0,300}deschideDosar/.test(html),'  -> Deschide dosarul a fo muvelet');
 ok(/if\(_dd\)\{[\s\S]{0,400}acteCount/.test(html),'a dosar sor iratszamlalot mutat');
-ok(/fx-b fx-d/.test(html)&&/fx-b fx-p/.test(html),'jelveny kulonbozteti meg a ket savot');
+// 2026-08-25: a rendszam melletti 📁/📅 jelveny KIKERULT — felesleges volt.
+// A ket sav megkulonboztetese enelkul is egyertelmu, es EZT kotjuk ki:
+ok(!/fx-b/.test(html),'a rendszam mellett nincs tobbe jelveny');
+ok(/_dd\?'row-dosar'|_dd/.test(html),'  a dosar sor sajat agat kap (kiemeles)');
+ok(/if\(_dd\)\{[\s\S]{0,400}acteCount/.test(html),'  iratszamlalot mutat');
+ok(/tab==='viitoare' && _dd[\s\S]{0,300}deschideDosar/.test(html),'  es Deschide dosarul a fo muvelete');
 ok(/if\(job\.flux==='doar_dosar'\) *return 'dosare'/.test(html),'az ADATMODELL valtozatlan');
 
 console.log('\n'+(fail?'x ':'OK ')+pass+' pass / '+fail+' fail');

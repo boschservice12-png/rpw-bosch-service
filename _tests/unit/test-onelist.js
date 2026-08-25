@@ -23,9 +23,12 @@ ok(/\} else \{[\s\S]{0,200}st_astept/.test(html),'programare sor -> "varjuk az a
 ok(/T\('col_status'\)/.test(html),'egyetlen STATUS oszlop');
 ok(!/tab==='dosare'\s*\n?\s*\? *'<th>'\+T\('col_asig'\)/.test(html),'a kulon ASIGURATOR/ACTE oszloppar megszunt');
 
-console.log('\n4. Jelveny mondja meg, melyik sav');
-ok(/fx-b fx-d/.test(html),'dosar jelveny');
-ok(/fx-b fx-p/.test(html),'programare jelveny');
+console.log('\n4. A SOR mondja meg, melyik sav — jelveny nelkul');
+// 2026-08-25: a rendszam melletti 📁/📅 jelveny kikerult. A megkulonboztetes
+// a sor tartalmaban van: sajat ag, iratszamlalo, sajat fo muvelet.
+ok(!/fx-b/.test(html),'nincs jelveny a rendszam mellett');
+ok(/tab==='viitoare' && _dd/.test(html),'a dosar sor sajat agat kap');
+ok(/if\(_dd\)\{[\s\S]{0,400}acteCount/.test(html),'  es iratszamlalot mutat');
 ok(/j\.flux==='doar_dosar'\)\|\|\(j\.flux==null&&j\.doarDosar===true\)/.test(html),'regi mezovel is mukodik');
 
 console.log('\n5. Muveletek soronkent');
