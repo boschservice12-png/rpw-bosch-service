@@ -47,3 +47,10 @@
 | **K-22: igen** | Audatex ésszerűség-ellenőrzés | importált óra/összeg határok között; felülírás előtt megerősítés; a törlés nyomot hagy. |
 | **K-23: „a jogosultak operálhatnak csak"** | fázis-terv jogosultsághoz kötve | a fázis-terv / munkaállomás-beosztás megépül, de KIZÁRÓLAG az arra jogosult szerepkör (műszakvezető/irodavezető) kezelheti — a dolgozó látja, nem módosítja. *(Ha úgy értetted, hogy NE épüljön meg, csak a jogosultság-szigorítás kell — egy szó, és javítom.)* |
 
+## L7–L8 utáni döntés (2026-08-25)
+
+| # | döntés | értelmezés (erre építek) |
+|---|---|---|
+| **K-25: nem — fix; lezárás után mentődik** | az archívum-ZIP | FIX, mindig TELJES csomag (nincs szelektor), és a sikeres lezárás UTÁN automatikusan mentődik a saját storage-ba; a sikeres mentés teszi az ügyet „Separat"-tá. **Ez pontosítja a K-12-t: nem külön kézi gomb — a lezárás után fut.** |
+| **K-24** | — | MÉG NYITOTT (rework-határidő + azi-jelzés). |
+
