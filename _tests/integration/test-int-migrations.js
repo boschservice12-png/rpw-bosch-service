@@ -24,7 +24,7 @@ console.log('\n1. A migrációk sorrendben lefutnak tiszta adatbázison');
     catch (e) { ok(false, '  ' + f + ' — ' + e.message.slice(0,120)); }
   }
   const v = await c.query('select version from rpw_schema_version');
-  eq(v.rows[0].version, '007', 'a séma-verzió 007 (v4 + PIN-zárolás)');
+  eq(v.rows[0].version, '008', 'a séma-verzió 008 (job_create + kivezetések)');
 }
 
 console.log('\n2. Az ellenőrző lekérdezések a várt eredményt adják');
@@ -104,7 +104,7 @@ console.log('\n4. Előfeltétel-ellenőrzés: hiányzó függőségnél MEGSZAKA
   // és a valódi migrációkban is ott van
   ['002_server_rpc.sql','003_business_requirements.sql',
    '004_staff_posts_legacy.sql','005_rls_lockdown.sql',
-   '007_pin_lockout_admin.sql'].forEach(f => {
+   '007_pin_lockout_admin.sql','008_job_create_deprecations.sql'].forEach(f => {
     const sql = fs.readFileSync(path.join(MIG, f), 'utf8');
     ok(/ELŐFELTÉTEL HIÁNYZIK/.test(sql), '  ' + f + ': van előfeltétel-ellenőrzés');
   });
@@ -112,7 +112,7 @@ console.log('\n4. Előfeltétel-ellenőrzés: hiányzó függőségnél MEGSZAKA
 
 console.log('\n5. Rollback FORDÍTOTT sorrendben');
 {
-  for (const f of ['007_rollback.sql','006_rollback.sql','005_rollback.sql','004_rollback.sql',
+  for (const f of ['008_rollback.sql','007_rollback.sql','006_rollback.sql','005_rollback.sql','004_rollback.sql',
                    '003_rollback.sql','002_rollback.sql']) {
     try { await D.rollback(c, f); ok(true, '  ' + f); }
     catch (e) { ok(false, '  ' + f + ' — ' + e.message.slice(0,120)); }
@@ -130,12 +130,12 @@ console.log('\n6. A migrációk ÚJRA lefuttathatók');
 {
   for (const f of ['002_server_rpc.sql','003_business_requirements.sql',
                    '004_staff_posts_legacy.sql','005_rls_lockdown.sql',
-                   '006_workflow_enforcement.sql','007_pin_lockout_admin.sql']) {
+                   '006_workflow_enforcement.sql','007_pin_lockout_admin.sql','008_job_create_deprecations.sql']) {
     try { await D.migrate(c, f); ok(true, '  ' + f); }
     catch (e) { ok(false, '  ' + f + ' — ' + e.message.slice(0,120)); }
   }
   const v = await c.query('select version from rpw_schema_version');
-  eq(v.rows[0].version, '007', 'újra 007');
+  eq(v.rows[0].version, '008', 'újra 008');
   const r = await c.query('select count(*) n from rpw_phase_requirements');
   eq(r.rows[0].n, '14', 'a szabályok nem duplikálódtak (idempotens)');
 }

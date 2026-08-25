@@ -507,8 +507,15 @@ async function saveJob(job){
   try{
     var p=RPWDb.patch(sb,job);
     var t=new Promise(function(_,rej){setTimeout(function(){rej('timeout')},4000)});
-    await Promise.race([p,t]);
-  }catch(e){console.warn('SB offline, localStorage OK')}
+    var r=await Promise.race([p,t]);
+    if(r&&r.error){
+      // F-110: az elutasítás nem "offline" és nem siker — szólunk.
+      console.error('Save respins:', r.error);
+      try{toast((r.error.message||r.error.code||'Salvarea a fost respinsă'),1)}catch(_){}
+      return {failed:true, error:r.error};
+    }
+    return {ok:true};
+  }catch(e){console.warn('SB offline, localStorage OK'); return {offline:true}}
 }
 var _freshAt={};
 async function freshJob(id){
@@ -1917,6 +1924,23 @@ window.njAfterRender=function(){
   njSync();
 };
 
+// ── F-120: secure módban a munkalapot a SZERVER hozza létre ─────────
+// (rpw_job_create: szám, kezdő állapot, tenant, actor, audit — mind ott).
+// Nem-secure (mai éles) módban a helyi út fut tovább változatlanul.
+// Fail-closed: secure módban szerver-elutasításnál NINCS helyi mentés.
+async function njServerCreate(j){
+  if(!(window.RPWDb && RPWDb.secureOn && RPWDb.secureOn())) return {legacy:true};
+  var yr=String(new Date().getFullYear()).slice(-2);
+  var r=await RPWDb.createJob(sb, j.id, j, 'MS-'+yr);
+  if(r && r.data && r.data.data){
+    var d=r.data.data, k;
+    for(k in d){ if(Object.prototype.hasOwnProperty.call(d,k)) j[k]=d[k]; }
+    if(typeof r.data.version==='number') j.version=r.data.version;
+    return {ok:true};
+  }
+  return {failed:true, error:(r&&r.error)||{code:'unknown'}};
+}
+
 window.submitNewJob=async function(){
   var miss=njMissing();
   if(miss.length){toast(T('nj_missing')+': '+miss.join(', '),1);return}
@@ -1925,7 +1949,12 @@ window.submitNewJob=async function(){
     var num=await njNextNumber();
     var flux   = 'reparatie';
     var sosire = (mode==='lucrare') ? 'sosit' : 'programat';
-    var asig   = (mode==='lucrare' && S.njTip==='asig');
+    // ── JAVÍTÁS (2026-08-25, Ferenc találta) ────────────────────────
+    // A 'prog' (Programare nouă) ág HIÁNYZOTT innen: az űrlap bekérte a
+    // "Dauna asigurare" típust, a biztosítót és a dosszié-állapotot, de a
+    // mentés eldobta → a dosszié-oldal "Dauna auto"-t mutatott, az Acte
+    // szekció el sem készült. Most MINDEN mód átviszi, amit bekért.
+    var asig   = (S.njTip==='asig');
     var ph={1:{status:'pending'},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}};
     if(sosire==='sosit')ph[1]={status:'active',started:now};
     var j={
@@ -1953,8 +1982,10 @@ window.submitNewJob=async function(){
     };
     if(asig){j.asigurator=(S.njAsig||'');j.nrDosar=(S.njDosar||'')}
     syncMirror(j);                   // regi mezo tukrozese
+    var cr=await njServerCreate(j);
+    if(cr.failed){ toast((cr.error.message||cr.error.code||'Crearea a fost respinsă'),1); return; }
     JOBS.push(j);
-    await saveJob(j);
+    if(cr.legacy) await saveJob(j);  // secure módban a szerver már beírta
     var plate=j.plate;
     S.showNew=0;
     if(mode==='lucrare'){
@@ -2046,8 +2077,10 @@ window.dosarTarziu=async function(){
       phases:{1:{status:'pending'},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}}
     };
     syncMirror(j);
+    var cr=await njServerCreate(j);
+    if(cr.failed){ toast((cr.error.message||cr.error.code||'Crearea a fost respinsă'),1); return; }
     JOBS.push(j);
-    await saveJob(j);
+    if(cr.legacy) await saveJob(j);  // secure módban a szerver már beírta
     deschideDosar(j.id);
   }catch(e){ toast('Error: '+e.message,1) }
 };

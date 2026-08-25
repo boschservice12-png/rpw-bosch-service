@@ -32,14 +32,77 @@
   function nowISO(){ try{ return new Date().toISOString(); }catch(e){ return null; } }
 
   // ── ÍRÁS: teljes job patch (data JSONB deep-merge) ──
+  // ── VÉDETT WORKFLOW-MEZŐK (F-109 / F-111) ─────────────────────────
+  // Secure (v3) módban a workflow-állapotot KIZÁRÓLAG az rpw_transition
+  // módosíthatja. A 006-os migráció az EGÉSZ patch-et elutasítja, ha ilyen
+  // mező van benne — ezért a normál mentésből itt, a db-rétegben, MINDEN
+  // hívóra egységesen kiszűrjük őket. Legacy (v2) módban NEM szűrünk:
+  // ott a fázisállapot ma is a normál mentéssel él; a szűrés eltörné.
+  var WF_PROTECTED = ['phase','phases','inchis','rework','completedBy','finished',
+                      'started','reopened','skipReason','override','transition',
+                      'workflowState','history','version','shop_id','audit'];
+  var WF_PROTECTED_IN_CLOSING = ['status','closed','completed'];
+  function stripWorkflow(obj){
+    if(!obj || typeof obj!=='object' || Array.isArray(obj)) return obj;
+    var out={}, k;
+    for(k in obj){
+      if(!Object.prototype.hasOwnProperty.call(obj,k)) continue;
+      if(WF_PROTECTED.indexOf(k)>=0) continue;
+      out[k]=obj[k];
+    }
+    if(out.closing && typeof out.closing==='object' && !Array.isArray(out.closing)){
+      var c={}, ck;
+      for(ck in out.closing){
+        if(!Object.prototype.hasOwnProperty.call(out.closing,ck)) continue;
+        if(WF_PROTECTED_IN_CLOSING.indexOf(ck)>=0) continue;
+        c[ck]=out.closing[ck];
+      }
+      out.closing=c;
+    }
+    return out;
+  }
+
+  // ── F-110: a szerver explicit elutasítása SOHA nem siker ──────────
+  // A legacy út válaszát nem ismerjük teljes bizonyossággal (az éles séma
+  // eltér a migrációktól), ezért itt NEM követeljük meg az ok:true-t —
+  // de az explicit {ok:false} és a {conflict:true} mostantól HIBA, nem adat.
+  // A secure út (unwrap) szigorú: ott CSAK az ok:true siker.
+  function legacyGuard(res){
+    try{
+      var d = res && res.data;
+      if(typeof d === 'string'){ try{ d = JSON.parse(d) }catch(e){} }
+      if(d && typeof d==='object' && (d.ok === false || d.conflict === true)){
+        return { data:null, error:{ code:(d.error||'denied'),
+                 message:(d.message||d.error||'Operațiunea a fost respinsă.'),
+                 serverVersion:(typeof d.server_version==='number'?d.server_version:null),
+                 details:d } };
+      }
+    }catch(e){}
+    return res;
+  }
+
+  // ── F-120: MUNKALAP LÉTREHOZÁSA A SZERVEREN (008) ────────────────
+  // Secure módban a számot és a kezdő workflow-állapotot a SZERVER adja.
+  // A kliens csak a normál mezőket küldi — a védetteket itt szűrjük ki,
+  // mert a szerver az ilyen patch-et EGÉSZBEN elutasítaná.
+  async function createJob(sb, id, data, prefix){
+    var clean = stripWorkflow(data||{});
+    delete clean.id; delete clean.number; delete clean.created;
+    var r = unwrap(await sb.rpc('rpw_job_create', {
+      p_token: tokenOf(), p_id: id, p_data: clean, p_prefix: (prefix||'RPW') }));
+    if(r.error) return {data:null, error:r.error};
+    return {data:r.data, error:null};
+  }
+
   async function patch(sb, job){
     // J (2026-08-24): verziózár a hitelesített úton is, és unwrap.
     if(secureOn()){
-      var r0=unwrap(await sb.rpc('rpw_patch_v3', {p_token:tokenOf(), p_id:job.id, p_patch:job,
+      var r0=unwrap(await sb.rpc('rpw_patch_v3', {p_token:tokenOf(), p_id:job.id,
+        p_patch:stripWorkflow(job),
         p_expected_version:(typeof job.version==='number'?job.version:null), p_phase:null}));
       return r0.error?{data:null, error:r0.error}:{data:r0.data, error:null};
     }
-    return await sb.rpc('rpw_patch', {p_id:job.id, p_patch:job});
+    return legacyGuard(await sb.rpc('rpw_patch', {p_id:job.id, p_patch:job}));
   }
   // rpw_patch_v2 utat használó helyek (dosar akták, ügyfél-feltöltő)
   // opts.rpc: felülírható RPC-név. ALAP: RPW_CFG.PATCH_RPC || 'rpw_patch_v2'
@@ -112,13 +175,13 @@
     // A v2 megmarad valtozatlanul — igy a visszaallas egy config-sor.
     if(secureOn()){
       var r=unwrap(await sb.rpc('rpw_patch_v3', {
-        p_token: tokenOf(), p_id: id, p_patch: partial,
+        p_token: tokenOf(), p_id: id, p_patch: stripWorkflow(partial),
         p_expected_version: (opts.expected!==undefined?opts.expected:null),
         p_phase: opts.phase||null }));
       if(r.error) return {data:null, error:r.error};
       return {data:r.data, error:null};
     }
-    return await sb.rpc(patchRpc(opts), {p_id:id, p_patch:partial, p_expected_version:(opts.expected!==undefined?opts.expected:null), p_actor:actorOf(opts), p_phase:opts.phase||null});
+    return legacyGuard(await sb.rpc(patchRpc(opts), {p_id:id, p_patch:partial, p_expected_version:(opts.expected!==undefined?opts.expected:null), p_actor:actorOf(opts), p_phase:opts.phase||null}));
   }
 
   // ── TÖBB-BÉRLŐS SZŰRÉS (2026-08-23) ────────────────────────────
@@ -203,7 +266,10 @@
     return await scoped(sb.from('rpw_jobs').delete().not('deleted_at','is',null));
   }
 
-  var API={ shopId:shopId, actorOf:actorOf, useV3:useV3, tokenOf:tokenOf, useSecure:useSecure, patch:patch, patchV2:patchV2, getRow:getRow, listActive:listActive,
+  var API={ shopId:shopId,
+              stripWorkflow:stripWorkflow, legacyGuard:legacyGuard,
+              createJob:createJob, secureOn:secureOn,
+              WF_PROTECTED:WF_PROTECTED, actorOf:actorOf, useV3:useV3, tokenOf:tokenOf, useSecure:useSecure, patch:patch, patchV2:patchV2, getRow:getRow, listActive:listActive,
             listTrashed:listTrashed, softDelete:softDelete, restore:restore, purge:purge, purgeAllTrashed:purgeAllTrashed };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWDb=API;

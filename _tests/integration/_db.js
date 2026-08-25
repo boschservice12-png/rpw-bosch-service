@@ -44,6 +44,6 @@ async function rollback(c, file){
 }
 const ALL = ['001_base_schema.sql','002_server_rpc.sql','003_business_requirements.sql',
              '004_staff_posts_legacy.sql','005_rls_lockdown.sql','006_workflow_enforcement.sql',
-             '007_pin_lockout_admin.sql'];
+             '007_pin_lockout_admin.sql','008_job_create_deprecations.sql'];
 
 module.exports = { start, stop, migrate, rollback, ALL, split };

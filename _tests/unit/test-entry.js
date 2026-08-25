@@ -100,6 +100,34 @@ console.log('\n4. A harom mentes eredmenye');
   eq(j.nrDosar,'','  karszam meg ures — helyes');
   eq(j.programare.date,njDay(0),'  datum: ma');
 
+  console.log('\n4b. F-120: secure módban a szerver hozza létre a munkalapot');
+  {
+    // secure mód szimulálva: RPWDb.secureOn=true, createJob a szerver válaszát adja
+    let created=null;
+    global.RPWDb={secureOn:()=>true, createJob:async(sb,id,data,prefix)=>{
+      created={id,prefix};
+      return {data:{data:{id:id,number:'MS-26-777',phase:1,inchis:false,
+        phases:{1:{status:'pending'}},plate:data.plate||'',client:data.client||''},version:1},error:null};
+    }};
+    global.sb={};
+    JOBS.length=0;LAST={};S.showDosar=1;
+    await dosarTarziu();
+    const sj=JOBS[JOBS.length-1];
+    ok(!!created,'a gomb a szervert hívta');
+    ok(created.prefix.indexOf('MS-')===0,'  a prefix MS-évszám');
+    eq(sj.number,'MS-26-777','  a SZERVER számát vettük át');
+    eq(sj.version,1,'  a szerver verzióját is');
+    ok(!LAST.saved,'  NINCS külön helyi saveJob (a szerver már beírta)');
+
+    // fail-closed: elutasítás -> semmi nem jön létre helyben
+    global.RPWDb={secureOn:()=>true, createJob:async()=>({data:null,error:{code:'not_allowed',message:'nu'}})};
+    JOBS.length=0;LAST={};S.showDosar=1;
+    await dosarTarziu();
+    eq(JOBS.length,0,'elutasításnál NINCS helyi munkalap (fail-closed)');
+    ok(/nu|not_allowed/.test(LAST.toast||''),'  és a hiba látszik');
+    delete global.RPWDb; delete global.sb;
+  }
+
   console.log('\n5. Regi hivasok elnek');
   openProgModal();   eq(S.njMode,'prog','openProgModal -> prog');
   startReceptie();   eq(S.njMode,'lucrare','startReceptie -> lucrare');

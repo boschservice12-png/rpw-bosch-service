@@ -498,7 +498,10 @@ async function saveJ(){
     try{
       var p=RPWDb.patch(sb,JOB);
       var t=new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'))},4000)});
-      Promise.race([p,t]).catch(function(e){console.warn('SB offline:',e.message)});
+      Promise.race([p,t]).then(function(r){
+        if(r&&r.error){ try{onSyncState('failed')}catch(_){} console.error('Save respins:',r.error); }
+        else { try{onSyncState('synced')}catch(_){} }
+      }).catch(function(e){try{onSyncState('offline')}catch(_){} console.warn('SB offline:',e.message)});
     }catch(e){console.error('Save:',e)}
   },600);
 }

@@ -162,8 +162,17 @@ async function saveJ(){
   try{RPWCache.setJob(JOB)}catch(e){}
   clearTimeout(_saveTimer);
   _saveTimer=setTimeout(async function(){
-    try{await RPWDb.patch(sb,JOB)}
-    catch(e){console.error('Save:',e)}
+    try{
+      var r=await RPWDb.patch(sb,JOB);
+      if(r&&r.error){
+        // F-110: az elutasítás nem tűnhet el némán — és nem "synced".
+        try{onSyncState('failed')}catch(_){}
+        console.error('Save respins:', r.error);
+      } else {
+        try{onSyncState('synced')}catch(_){}
+      }
+    }
+    catch(e){try{onSyncState('failed')}catch(_){} console.error('Save:',e)}
   },500);
 }
 

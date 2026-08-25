@@ -318,7 +318,7 @@
   },
   {
    "id": "F-106",
-   "nev": "Mentes regi uton (v2, vedelem nelkul)",
+   "nev": "Mentes regi uton (v2/v1, vedelem nelkul) — KIVEZETES ALATT",
    "fe": [
     [
      "rpw-db.js",
@@ -326,7 +326,8 @@
     ]
    ],
    "be": [
-    "rpw_patch"
+    "rpw_patch",
+    "rpw_patch_v2"
    ],
    "teszt": "_tests/unit/test-rpc-consistency.js",
    "allapot": "el"
@@ -512,6 +513,25 @@
    "be": [],
    "teszt": "_tests/unit/test-acceptance.js",
    "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-120",
+   "nev": "Munkalap szerveroldali letrehozasa (szam, kezdo allapot, tenant, actor, audit a szerveren)",
+   "fe": [
+    [
+     "rpw-db.js",
+     "createJob"
+    ],
+    [
+     "index.html",
+     "njServerCreate"
+    ]
+   ],
+   "be": [
+    "rpw_job_create"
+   ],
+   "teszt": "_tests/integration/test-int-jobcreate.js",
+   "allapot": "nincs-bekotve"
   },
   {
    "id": "F-201",

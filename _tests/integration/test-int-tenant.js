@@ -357,7 +357,7 @@ console.log('\n══ SZERVER-KÉPESSÉGEK ══');
 {
   const cap = await rpc('rpw_server_capabilities', {});
   eq(cap.ok, true, 'lekérdezhető');
-  eq(cap.schema_version, '007', '  séma-verzió 007 (v4 + PIN-zárolás)');
+  eq(cap.schema_version, '008', '  séma-verzió 008 (job_create + kivezetések)');
   eq(cap.rls_locked, true, '  az RLS lezárva');
   eq(cap.business_gates_server_side, true, '  az üzleti kapuk szerveroldalon');
   ok(cap.rpcs.indexOf('rpw_transition') >= 0, '  a rpw_transition szerepel');
@@ -470,7 +470,8 @@ console.log('\n══ PIN-ZÁROLÁS ÉS PIN-MINŐSÉG (007) ══');
 
 console.log('\n══ MIGRÁCIÓS ROLLBACK ══');
 {
-  // v4: a 007 van legfelül — fordított sorrendben bontunk
+  // v4: a 008 van legfelül — fordított sorrendben bontunk
+  await D.rollback(c, '008_rollback.sql');
   await D.rollback(c, '007_rollback.sql');
   const p7 = await c.query("select to_regprocedure('public.rpw2_pin_status(text)') as p");
   ok(!p7.rows[0].p, '007 rollback: a PIN-státusz függvény eltűnt');

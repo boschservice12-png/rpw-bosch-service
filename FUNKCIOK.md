@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 82 | 27 | 46 | 3 | 6 | 7 |
+| 83 | 27 | 46 | 3 | 7 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -41,7 +41,7 @@ szám nélkül, azt is megmondja.
 | **F-103** | Kovetkezo munkalapszam kerese a szervertol | `index.html` | `rpw_next_job_number` `rpw_job_number` | `integration/test-int-workflow.js` | ✅ él |
 | **F-104** | Munkalapok listaja | `rpw-db.js` | `rpw_jobs_list` | `integration/test-int-workflow.js` | ✅ él |
 | **F-105** | Egy munkalap betoltese | `rpw-db.js` | `rpw_job_get` | `integration/test-int-workflow.js` | ✅ él |
-| **F-106** | Mentes regi uton (v2, vedelem nelkul) | `rpw-db.js` | `rpw_patch` | `unit/test-rpc-consistency.js` | ✅ él |
+| **F-106** | Mentes regi uton (v2/v1, vedelem nelkul) — KIVEZETES ALATT | `rpw-db.js` | `rpw_patch` `rpw_patch_v2` | `unit/test-rpc-consistency.js` | ✅ él |
 | **F-107** | Mentes vedett uton (v3, munkafolyamat-mezok tiltva) | `rpw-db.js` `rpw-config.js` | `rpw_patch_v3` | `integration/test-int-workflow.js` | ⚠️ nincs bekötve |
 | **F-108** | Verzioutkozes kezelese (ketten irtak egyszerre) | `rpw-conflict.js` | — | `unit/test-conflict.js` | 🟦 csak frontend |
 | **F-109** | Vedett mezok kiszurese mentes elott | `rpw-save.js` | — | `integration/test-int-workflow.js` | 🟦 csak frontend |
@@ -55,6 +55,7 @@ szám nélkül, azt is megmondja.
 | **F-117** | Meglevo munkalap szerkesztese | `index.html` | — | `unit/test-edit.js` | 🟦 csak frontend |
 | **F-118** | Idopont (programare) ablak | `index.html` | — | `unit/test-prog.js` | 🟦 csak frontend |
 | **F-119** | Idopont-athelyezes (reprogramare) | `index.html` | — | `unit/test-acceptance.js` | 🟦 csak frontend |
+| **F-120** | Munkalap szerveroldali letrehozasa (szam, kezdo allapot, tenant, actor, audit a szerveren) | `rpw-db.js` `index.html` | `rpw_job_create` | `integration/test-int-jobcreate.js` | ⚠️ nincs bekötve |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 
