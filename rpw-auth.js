@@ -50,7 +50,12 @@
   function token(opts){ var s=session(opts); return s?s.token:null; }
   function employeeId(opts){ var s=session(opts); return s?s.employeeId:null; }
   function shopId(opts){ var s=session(opts); return s?s.shopId:null; }
-  function logout(opts){ ((opts&&opts.store)||defStore()).del(KEY); }
+  function logout(opts){
+    ((opts&&opts.store)||defStore()).del(KEY);
+    // D (2026-08-24): a helyi gyorsítótár is ürül — közös gépen a
+    // következő belépő ne lássa az előző munkáit.
+    try{ if(root.RPWCache) root.RPWCache.wipe(); }catch(e){}
+  }
   // Szerver-oldali kijelentkezes: a token visszavonasa. Hiba eseten is
   // toroljuk helyben — a felhasznalo szandeka az elsodleges.
   async function logoutServer(sb, opts){

@@ -72,9 +72,67 @@ function validateClassify(obj){
 // VIN/CNP mezők jelölése emberi megerősítésre (nem léptet fázist AI alapján)
 function flagUncertain(fields){
   var out = {}; fields = fields||{};
-  if(fields.vin){ out.vin = { value:fields.vin, ok:/^[A-HJ-NPR-Z0-9]{17}$/.test(String(fields.vin).toUpperCase()) }; }
-  if(fields.cnp){ out.cnp = { value:fields.cnp, ok:/^\d{13}$/.test(String(fields.cnp)) }; }
+  // 13 (2026-08-24) — MINDEN kockázatos mező emberi megerősítést kér.
+  // Az `ok:false` azt jelenti: a felületen JELÖLNI kell, és a felhasználónak
+  // meg kell erősítenie. Az `ok:true` sem „biztos" — csak formailag helyes.
+  if(fields.vin){ out.vin = { value:fields.vin, needsConfirm:true,
+    ok:/^[A-HJ-NPR-Z0-9]{17}$/.test(String(fields.vin).toUpperCase()) }; }
+  if(fields.cnp){ out.cnp = { value:fields.cnp, needsConfirm:true,
+    ok:/^\d{13}$/.test(String(fields.cnp)) }; }
+  // rendszám (RO): MS 12 ABC / B 123 ABC
+  if(fields.plate||fields.nr){ var pl=String(fields.plate||fields.nr);
+    out.plate = { value:pl, needsConfirm:true,
+      ok:/^[A-Z]{1,2}\s?\d{2,3}\s?[A-Z]{3}$/i.test(pl.replace(/-/g,' ').trim()) }; }
+  // kárszám: sosem tekintjük biztosnak
+  if(fields.nrDosar||fields.claim){ var cl=String(fields.nrDosar||fields.claim);
+    out.nrDosar = { value:cl, needsConfirm:true, ok:cl.length>=4 }; }
+  // pénzügyi összegek: mindig megerősítendők
+  ['total','totalFaraTva','manopera','piese','vopsea','suma'].forEach(function(k){
+    if(fields[k]!==undefined && fields[k]!==null && fields[k]!==''){
+      var v=Number(String(fields[k]).replace(/[^\d.,-]/g,'').replace(',','.'));
+      out[k]={ value:fields[k], needsConfirm:true, ok:isFinite(v)&&v>=0 };
+    }
+  });
+  // órák (Audatex)
+  ['oreManopera','oreVopsire','oreTinichigerie'].forEach(function(k){
+    if(fields[k]!==undefined && fields[k]!==null && fields[k]!==''){
+      var v=Number(String(fields[k]).replace(',','.'));
+      out[k]={ value:fields[k], needsConfirm:true, ok:isFinite(v)&&v>=0&&v<1000 };
+    }
+  });
   return out;
+}
+
+// ── 13: OCR KIMENET SZIGORÚ SÉMA-ELLENŐRZÉSE ────────────────────
+// Az AI szövegmodell — a válasza NEM megbízható szerkezet. Ha nem
+// értelmezhető objektum, az NEM sikeres válasz (a hívó 502-t ad).
+var OCR_SCHEMA = {
+  talon:      ['vin','plate','nr','marca','model','an','proprietar','serie','categorie','masaMax','culoare'],
+  buletin:    ['cnp','nume','prenume','serie','numar','adresa','emis','valabil'],
+  constatare: ['nrDosar','asigurator','dataConstatare','vinovat','plateVinovat','elemente','observatii','plate','vin'],
+  audatex:    ['nrDosar','total','totalFaraTva','manopera','piese','vopsea',
+               'oreManopera','oreVopsire','oreTinichigerie','pozitii','moneda']
+};
+function validateOcr(obj, type){
+  if(obj===null || typeof obj!=='object' || Array.isArray(obj)){
+    return { ok:false, error:'not_an_object' };
+  }
+  var allowed = OCR_SCHEMA[type];
+  if(!allowed) return { ok:false, error:'unknown_type' };
+  var clean={}, extra=[], k;
+  for(k in obj){
+    if(!Object.prototype.hasOwnProperty.call(obj,k)) continue;
+    if(allowed.indexOf(k)>=0){
+      var v=obj[k];
+      // csak egyszerű értékek és tömbök — beágyazott objektum nem várt
+      if(v===null || typeof v==='string' || typeof v==='number' ||
+         typeof v==='boolean' || Array.isArray(v)) clean[k]=v;
+      else extra.push(k);
+    } else extra.push(k);
+  }
+  // ha EGYETLEN várt mező sincs, az AI nem azt csinálta, amit kértünk
+  if(Object.keys(clean).length===0) return { ok:false, error:'no_known_fields' };
+  return { ok:true, data:clean, ignored:extra };
 }
 
 // Best-effort rate-limit (per-instance memória; cold startnál resetel — NEM globális).
@@ -110,7 +168,7 @@ async function requireAuth(event){
     return { ok:false, code:500, error:'Configurare server incompletă' };
   }
   try{
-    var r = await fetch(url + '/rest/v1/rpc/rpw_session', {
+    var r = await fetch(url + '/rest/v1/rpc/rpw2_session', {   // önálló személyzet
       method:'POST',
       headers:{ 'apikey':key, 'Authorization':'Bearer '+key, 'Content-Type':'application/json' },
       body: JSON.stringify({ p_token: token })
@@ -120,7 +178,12 @@ async function requireAuth(event){
     if(typeof out === 'string'){ try{ out = JSON.parse(out); }catch(e){ out = null; } }
     if(!out || out.ok !== true) return { ok:false, code:401, error:'Sesiune expirată' };
     var emp = out.employee || {};
-    return { ok:true, user:emp, shopId:emp.shop_id, name:emp.name, role:emp.role };
+    if(!emp.shop_id) return { ok:false, code:401, error:'Sesiune invalidă' };
+    // A tokent VISSZAADJUK, mert az ownsJob-nak szüksége van rá.
+    // KORÁBBAN `auth.__token`-t olvasott, amit SOHA senki nem állított be
+    // → a munka-tulajdonjog ellenőrzése csendben mindig elbukott.
+    return { ok:true, user:emp, shopId:emp.shop_id, name:emp.name, role:emp.role,
+             can:emp.can||null, token:token };
   }catch(e){ return { ok:false, code:401, error:'Auth eșuat' }; }
 }
 
@@ -133,7 +196,7 @@ async function ownsJob(auth, jobId){
     var r = await fetch(url + '/rest/v1/rpc/rpw_job_get', {
       method:'POST',
       headers:{ 'apikey':key, 'Authorization':'Bearer '+key, 'Content-Type':'application/json' },
-      body: JSON.stringify({ p_token: auth.__token, p_id: jobId })
+      body: JSON.stringify({ p_token: (auth && auth.token) || null, p_id: jobId })
     });
     if(!r.ok) return false;
     var out = await r.json();
@@ -142,4 +205,4 @@ async function ownsJob(auth, jobId){
   }catch(e){ return false; }
 }
 
-module.exports = { corsHeaders, resp, tooLarge, validEmail, safeAttachment, detectMedia, validateClassify, flagUncertain, rateLimited, requireAuth, ownsJob, allowedOrigins, ALLOWED_EXT, CLASSIFY_TYPES };
+module.exports = { corsHeaders, resp, tooLarge, validEmail, safeAttachment, detectMedia, validateClassify, validateOcr, OCR_SCHEMA, flagUncertain, rateLimited, requireAuth, ownsJob, allowedOrigins, ALLOWED_EXT, CLASSIFY_TYPES };

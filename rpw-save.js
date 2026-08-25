@@ -68,10 +68,15 @@
         var useRpc=rpc, params = { p_id: job.id, p_patch: job };
         // AUTH-tudatos: token esetén a token-ellenőrzött secure útvonal
         var _a=root.RPWAuth;
+        // J (2026-08-24): a verziózár MINDKÉT úton működik.
+        // Korábban `else if` volt: amint volt token, a zár ága sosem futott le.
         if(_a && _a.required && _a.required() && _a.token && _a.token()){
-          useRpc='rpw_patch_secure'; params={ p_id: job.id, p_patch: job, p_token: _a.token() };
+          useRpc='rpw_patch_v3';
+          params={ p_id: job.id, p_patch: job, p_token: _a.token(),
+                   p_expected_version: (useLock && typeof job.version==='number') ? job.version : null,
+                   p_phase: (job.phase != null) ? String(job.phase) : null };
         } else if(rpc === 'rpw_patch_v2'){
-          params.p_expected_version = (useLock && typeof job.version === 'number') ? job.version : null; // null → nincs zár (a szerver deep-merge véd)
+          params.p_expected_version = (useLock && typeof job.version === 'number') ? job.version : null;
           params.p_actor = actor;
           params.p_phase = (job.phase != null) ? String(job.phase) : null;
         }
@@ -189,8 +194,12 @@
     try{
       var useRpc=rpc, params={ p_id: job.id, p_patch: job };
       var _a=root.RPWAuth;
+      // J: a hitelesített út is verziózárral (lásd fent)
       if(_a && _a.required && _a.required() && _a.token && _a.token()){
-        useRpc='rpw_patch_secure'; params={ p_id: job.id, p_patch: job, p_token: _a.token() };
+        useRpc='rpw_patch_v3';
+        params={ p_id: job.id, p_patch: job, p_token: _a.token(),
+                 p_expected_version:(typeof job.version==='number'?job.version:null),
+                 p_phase:(job.phase!=null?String(job.phase):null) };
       } else if(rpc==='rpw_patch_v2'){ params.p_expected_version=null; params.p_actor=opts.actor||null; params.p_phase=(job.phase!=null?String(job.phase):null); }
       var res=await Promise.race([ sb.rpc(useRpc, params), timeoutP ]);
       if(res && res.error) return {ok:false, kind:classify(res.error), error:res.error};
