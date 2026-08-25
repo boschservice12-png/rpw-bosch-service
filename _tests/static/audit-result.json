@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-25T14:00:53.231Z",
+  "generated": "2026-08-25T14:23:21.007Z",
   "files": 32,
   "total": 28,
   "allowed": 28,
@@ -7,7 +7,7 @@
   "findings": [
     {
       "fajl": "index.html",
-      "sor": 983,
+      "sor": 982,
       "mezo": "status:'done'",
       "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
       "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
@@ -15,7 +15,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 1124,
+      "sor": 1123,
       "mezo": "inchis",
       "ok": "megjelenítési kód — a JOB-ot nem módosítja",
       "ut": "olvasás, nem írás",
@@ -23,7 +23,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 1127,
+      "sor": 1126,
       "mezo": "phase",
       "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
       "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
@@ -31,7 +31,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 2213,
+      "sor": 2210,
       "mezo": "phases[]",
       "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
       "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
@@ -39,7 +39,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 2214,
+      "sor": 2211,
       "mezo": "phases[].status",
       "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
       "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
@@ -47,7 +47,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 2240,
+      "sor": 2237,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",

@@ -52,5 +52,28 @@ ok(/if\(_dd\)\{[\s\S]{0,400}acteCount/.test(html),'  iratszamlalot mutat');
 ok(/tab==='viitoare' && _dd[\s\S]{0,300}deschideDosar/.test(html),'  es Deschide dosarul a fo muvelete');
 ok(/if\(job\.flux==='doar_dosar'\) *return 'dosare'/.test(html),'az ADATMODELL valtozatlan');
 
+console.log('\n5. Az Avizare dauna ablak KET utat kinal (2026-08-25)');
+{
+  // A harmadik gomb („Auto este aici — receptie acum") kikerult: az a ZOLD
+  // „Lucrare noua" gomb dolga, nem az avizalase. Ami maradt:
+  //   • Deschide dosar dauna  -> mi nyitjuk (openNewJob('dosar'))
+  //   • Preluare dosar dauna  -> meglevo constatare/PV atvetele fajlbol
+  // FIGYELEM: a `h+=newJobModalHtml()` KETSZER szerepel a fajlban (a lista-
+  // nezetben is), ezert a zaro hatart a nyito hatartol KELL keresni.
+  const _mb = html.indexOf('if(S.showDosar)');
+  const modal = html.slice(_mb, html.indexOf('h+=newJobModalHtml()', _mb));
+  const gombok = (modal.match(/btn-prog-new/g)||[]).length;
+  ok(gombok === 2, 'pontosan ket ut van az ablakban (' + gombok + ')');
+  ok(/onclick="dosarTarziu\(\)"/.test(modal), '  Deschide dosar dauna -> dosarTarziu');
+  ok(/onchange="dosarFisier\(event\)"/.test(modal), '  Preluare dosar dauna -> fajlbol');
+  ok(!/dosarAici/.test(html), 'a kivezetett harmadik ut sehol nem maradt (halott kod sem)');
+  ok(!/dosar_aici/.test(html), '  a felirata sem');
+  ok(/dosar_tarziu:\{ro:'Deschide dosar/.test(html), 'az elso gomb neve: Deschide dosar dauna');
+  ok(/dosar_fisier:\{ro:'Preluare dosar/.test(html), 'a masodike: Preluare dosar dauna');
+  // a kerdes a KET megmarado uthoz szol, nem a kivezetetthez
+  ok(!/dosar_q:\{ro:'Autovehiculul este in service/.test(html),
+     'a kerdes nem a kivezetett gombra kerdez tobbe');
+}
+
 console.log('\n'+(fail?'x ':'OK ')+pass+' pass / '+fail+' fail');
 process.exit(fail?1:0);
