@@ -1,13 +1,20 @@
 {
  "_olvasd": "Minden funkcionak SZAMA van. Ha egy lepes eltunik vagy atalakul, a _tests/unit/test-registry.js a SZAMAVAL jelzi. Uj funkcio = uj sor ITT, kulonben a teszt 'nincs beszamozva' hibat ad.",
- "_verzio": "1.0",
+ "_verzio": "2.0",
  "_mezok": {
   "id": "F-### allando szam, SOHA nem valtozik es nem hasznaljuk ujra",
   "nev": "mit csinal, magyarul, egy mondatban",
   "fe": "frontend horgony: [fajl, keresett szoveg] parok - ezeknek letezniuk KELL",
   "be": "backend RPC nevek a _migrations/*.sql-bol",
   "teszt": "melyik teszt orzi; null = MEG NINCS TESZTJE",
-  "allapot": "el | csak-frontend | csak-backend | nincs-bekotve"
+  "allapot": "OROKOLT v1 mezo (el|csak-frontend|csak-backend|nincs-bekotve) — a bekotottseg tenye",
+  "category": "BUSINESS_CAPABILITY|SECURITY_CONTROL|WORKFLOW_TRANSITION|UI_COMPONENT|DATA_OPERATION|INTEGRATION|INFRASTRUCTURE|ADMIN_OPERATION",
+  "criticality": "P0(10p) P1(5p) P2(2p) P3(1p) — sulyozott keszultseghez",
+  "owner": "felelos terulet",
+  "chain": "erteklanc-szakasz 1..10 (lasd generate.js)",
+  "nextFunctions": "mely funkciok kovetkeznek utana a lancban",
+  "lifecycle": "ACTIVE|DEPRECATED|REMOVED — kezi; a STATUSZT a derive.js szamolja",
+  "backendType": "POSTGRES_RPC|SERVERLESS_FUNCTION|STORAGE|EXTERNAL_API|NONE"
  },
  "funkciok": [
   {
@@ -22,8 +29,31 @@
    "be": [
     "rpw_login"
    ],
-   "teszt": "_tests/unit/test-rpc-consistency.js",
-   "allapot": "el"
+   "teszt": "_tests/unit/test-deprecation.js",
+   "allapot": "el",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P0",
+   "owner": "Office",
+   "chain": "1",
+   "nextFunctions": [
+    "F-002"
+   ],
+   "lifecycle": "DEPRECATED",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "DEPRECATED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "DEPRECATED"
   },
   {
    "id": "F-002",
@@ -38,7 +68,30 @@
     "rpw2_session"
    ],
    "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P0",
+   "owner": "Office",
+   "chain": "1",
+   "nextFunctions": [
+    "F-104"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-003",
@@ -53,7 +106,28 @@
     "rpw_logout"
    ],
    "teszt": "_tests/unit/test-rpc-consistency.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "1",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-004",
@@ -67,8 +141,29 @@
    "be": [
     "rpw_team"
    ],
-   "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
+   "teszt": "_tests/unit/test-deprecation.js",
+   "allapot": "el",
+   "category": "DATA_OPERATION",
+   "criticality": "P2",
+   "owner": "Office",
+   "chain": "9",
+   "nextFunctions": [],
+   "lifecycle": "DEPRECATED",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "DEPRECATED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "DEPRECATED"
   },
   {
    "id": "F-005",
@@ -83,7 +178,28 @@
     "rpw2_team"
    ],
    "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "DATA_OPERATION",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "9",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-006",
@@ -98,7 +214,30 @@
     "rpw2_roster"
    ],
    "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "DATA_OPERATION",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "1",
+   "nextFunctions": [
+    "F-016"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-007",
@@ -113,7 +252,28 @@
     "rpw2_employee_save"
    ],
    "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "ADMIN_OPERATION",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "9",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-008",
@@ -128,7 +288,28 @@
     "rpw2_role_save"
    ],
    "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "ADMIN_OPERATION",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "9",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-009",
@@ -138,7 +319,28 @@
     "rpw2_can"
    ],
    "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "csak-backend"
+   "allapot": "csak-backend",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "9",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "DORMANT",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "DORMANT"
   },
   {
    "id": "F-010",
@@ -153,7 +355,30 @@
     "rpw2_pin_set"
    ],
    "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P0",
+   "owner": "Office",
+   "chain": "1",
+   "nextFunctions": [
+    "F-016"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-011",
@@ -168,7 +393,28 @@
     "rpw2_pin_status"
    ],
    "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "1",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-012",
@@ -183,7 +429,28 @@
     "rpw2_pin_unlock"
    ],
    "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "ADMIN_OPERATION",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "1",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-013",
@@ -193,7 +460,28 @@
     "rpw__pin_weak"
    ],
    "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "csak-backend"
+   "allapot": "csak-backend",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "1",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "DORMANT",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "DORMANT"
   },
   {
    "id": "F-014",
@@ -206,7 +494,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-p0-5-admin.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "UI_COMPONENT",
+   "criticality": "P2",
+   "owner": "Office",
+   "chain": "9",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-015",
@@ -227,7 +536,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-pin-dialog.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "UI_COMPONENT",
+   "criticality": "P2",
+   "owner": "Office",
+   "chain": "9",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-016",
@@ -242,7 +572,30 @@
     "rpw2_login"
    ],
    "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P0",
+   "owner": "Office",
+   "chain": "1",
+   "nextFunctions": [
+    "F-002"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-101",
@@ -255,7 +608,30 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-entry.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "UI_COMPONENT",
+   "criticality": "P1",
+   "owner": "Reception",
+   "chain": "2",
+   "nextFunctions": [
+    "F-120"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-102",
@@ -268,7 +644,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-case.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "UI_COMPONENT",
+   "criticality": "P1",
+   "owner": "Reception",
+   "chain": "2",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-103",
@@ -283,8 +680,31 @@
     "rpw_next_job_number",
     "rpw_job_number"
    ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "el"
+   "teszt": "_tests/unit/test-deprecation.js",
+   "allapot": "el",
+   "category": "DATA_OPERATION",
+   "criticality": "P1",
+   "owner": "Reception",
+   "chain": "2",
+   "nextFunctions": [
+    "F-120"
+   ],
+   "lifecycle": "DEPRECATED",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "DEPRECATED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "DEPRECATED"
   },
   {
    "id": "F-104",
@@ -299,7 +719,28 @@
     "rpw_jobs_list"
    ],
    "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "DATA_OPERATION",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-105",
@@ -314,7 +755,28 @@
     "rpw_job_get"
    ],
    "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "DATA_OPERATION",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-106",
@@ -329,13 +791,38 @@
     "rpw_patch",
     "rpw_patch_v2"
    ],
-   "teszt": "_tests/unit/test-rpc-consistency.js",
-   "allapot": "el"
+   "teszt": "_tests/unit/test-save-consolidation.js",
+   "allapot": "el",
+   "category": "DATA_OPERATION",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [],
+   "lifecycle": "DEPRECATED",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "DEPRECATED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "DEPRECATED"
   },
   {
    "id": "F-107",
    "nev": "Mentes vedett uton (v3, munkafolyamat-mezok tiltva)",
    "fe": [
+    [
+     "rpw-db.js",
+     "stripWorkflow"
+    ],
     [
      "rpw-db.js",
      "rpw_patch_v3"
@@ -348,8 +835,31 @@
    "be": [
     "rpw_patch_v3"
    ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "nincs-bekotve"
+   "teszt": "_tests/unit/test-save-consolidation.js",
+   "allapot": "nincs-bekotve",
+   "category": "DATA_OPERATION",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [
+    "F-110"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "DORMANT",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "DORMANT"
   },
   {
    "id": "F-108",
@@ -362,7 +872,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-conflict.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "DATA_OPERATION",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-109",
@@ -375,20 +906,68 @@
    ],
    "be": [],
    "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [
+    "F-111"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-110",
    "nev": "Szerveroldali elutasitas felismerese (nem nemul el a hiba)",
    "fe": [
     [
+     "rpw-db.js",
+     "legacyGuard"
+    ],
+    [
      "rpw-save.js",
      "function serverRejection"
     ]
    ],
    "be": [],
-   "teszt": null,
-   "allapot": "csak-frontend"
+   "teszt": "_tests/unit/test-save-consolidation.js",
+   "allapot": "csak-frontend",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-111",
@@ -396,14 +975,42 @@
    "fe": [
     [
      "rpw-workflow.js",
-     "phase"
+     "commitCriticalTransition"
+    ],
+    [
+     "rpw-workflow.js",
+     "localFallbackForbidden"
     ]
    ],
    "be": [
     "rpw_transition"
    ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "nincs-bekotve"
+   "teszt": "_tests/frontend/test-fe-click.js",
+   "allapot": "nincs-bekotve",
+   "category": "WORKFLOW_TRANSITION",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "5",
+   "nextFunctions": [
+    "F-112",
+    "F-113"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "DORMANT",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": true,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "DORMANT"
   },
   {
    "id": "F-112",
@@ -411,24 +1018,79 @@
    "fe": [
     [
      "rpw-workflow.js",
-     "need"
+     "loadServerMissing"
+    ],
+    [
+     "rpw-data.js",
+     "serverCanComplete"
     ]
    ],
    "be": [
     "rpw_requirements"
    ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "nincs-bekotve"
+   "teszt": "_tests/unit/test-transition-chain.js",
+   "allapot": "nincs-bekotve",
+   "category": "WORKFLOW_TRANSITION",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "5",
+   "nextFunctions": [
+    "F-111"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "DORMANT",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "DORMANT"
   },
   {
    "id": "F-113",
    "nev": "Lezarhato-e a munkalap",
-   "fe": [],
+   "fe": [
+    [
+     "rpw-data.js",
+     "rpw_can_complete"
+    ]
+   ],
    "be": [
     "rpw_can_complete"
    ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "csak-backend"
+   "teszt": "_tests/unit/test-transition-chain.js",
+   "allapot": "csak-backend",
+   "category": "WORKFLOW_TRANSITION",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "7",
+   "nextFunctions": [
+    "F-409"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "DORMANT",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "DORMANT"
   },
   {
    "id": "F-114",
@@ -443,7 +1105,30 @@
     "rpw_job_trash"
    ],
    "teszt": "_tests/unit/test-delete.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "DATA_OPERATION",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "9",
+   "nextFunctions": [
+    "F-115"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-115",
@@ -458,7 +1143,28 @@
     "rpw_job_restore"
    ],
    "teszt": "_tests/unit/test-delete.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "DATA_OPERATION",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "9",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-116",
@@ -473,7 +1179,28 @@
     "rpw_job_purge"
    ],
    "teszt": "_tests/unit/test-delete.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "DATA_OPERATION",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "9",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-117",
@@ -486,7 +1213,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-edit.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "UI_COMPONENT",
+   "criticality": "P2",
+   "owner": "Reception",
+   "chain": "2",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-118",
@@ -499,7 +1247,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-prog.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "UI_COMPONENT",
+   "criticality": "P2",
+   "owner": "Reception",
+   "chain": "2",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-119",
@@ -512,7 +1281,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-acceptance.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "BUSINESS_CAPABILITY",
+   "criticality": "P1",
+   "owner": "Reception",
+   "chain": "2",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-120",
@@ -531,7 +1321,31 @@
     "rpw_job_create"
    ],
    "teszt": "_tests/integration/test-int-jobcreate.js",
-   "allapot": "nincs-bekotve"
+   "allapot": "nincs-bekotve",
+   "category": "BUSINESS_CAPABILITY",
+   "criticality": "P0",
+   "owner": "Reception",
+   "chain": "2",
+   "nextFunctions": [
+    "F-107",
+    "F-111"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "DORMANT",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "DORMANT"
   },
   {
    "id": "F-201",
@@ -544,7 +1358,31 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-dosare.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "UI_COMPONENT",
+   "criticality": "P1",
+   "owner": "Reception",
+   "chain": "4",
+   "nextFunctions": [
+    "F-202",
+    "F-203"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-202",
@@ -565,7 +1403,30 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-entry.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "BUSINESS_CAPABILITY",
+   "criticality": "P0",
+   "owner": "Reception",
+   "chain": "4",
+   "nextFunctions": [
+    "F-204"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-203",
@@ -582,7 +1443,30 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-dosare.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "BUSINESS_CAPABILITY",
+   "criticality": "P1",
+   "owner": "Reception",
+   "chain": "4",
+   "nextFunctions": [
+    "F-204"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-215",
@@ -601,7 +1485,28 @@
     "rpw_jobs_list"
    ],
    "teszt": "_tests/unit/test-dup-dosar.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P1",
+   "owner": "Reception",
+   "chain": "4",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-204",
@@ -618,7 +1523,30 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-dosarflux.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "BUSINESS_CAPABILITY",
+   "criticality": "P0",
+   "owner": "Reception",
+   "chain": "4",
+   "nextFunctions": [
+    "F-112"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-205",
@@ -631,7 +1559,30 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-classify.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "BUSINESS_CAPABILITY",
+   "criticality": "P0",
+   "owner": "Reception",
+   "chain": "4",
+   "nextFunctions": [
+    "F-112"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-206",
@@ -644,7 +1595,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-dialogs.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "DATA_OPERATION",
+   "criticality": "P1",
+   "owner": "Reception",
+   "chain": "4",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-207",
@@ -661,7 +1633,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-dosare.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "UI_COMPONENT",
+   "criticality": "P1",
+   "owner": "Reception",
+   "chain": "4",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-208",
@@ -674,7 +1667,30 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-classify.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "BUSINESS_CAPABILITY",
+   "criticality": "P1",
+   "owner": "Reception",
+   "chain": "4",
+   "nextFunctions": [
+    "F-209"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-209",
@@ -687,7 +1703,30 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-classify.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "INTEGRATION",
+   "criticality": "P1",
+   "owner": "Reception",
+   "chain": "4",
+   "nextFunctions": [
+    "F-205"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-210",
@@ -704,7 +1743,30 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-p0-7-functions.js",
-   "allapot": "nincs-bekotve"
+   "allapot": "nincs-bekotve",
+   "category": "INTEGRATION",
+   "criticality": "P1",
+   "owner": "Reception",
+   "chain": "4",
+   "nextFunctions": [
+    "F-209"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "SERVERLESS_FUNCTION",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "DORMANT",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "DORMANT"
   },
   {
    "id": "F-211",
@@ -717,7 +1779,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-p0-7-functions.js",
-   "allapot": "nincs-bekotve"
+   "allapot": "nincs-bekotve",
+   "category": "INTEGRATION",
+   "criticality": "P1",
+   "owner": "Reception",
+   "chain": "4",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "SERVERLESS_FUNCTION",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "DORMANT",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "DORMANT"
   },
   {
    "id": "F-212",
@@ -730,7 +1813,30 @@
    ],
    "be": [],
    "teszt": null,
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "INTEGRATION",
+   "criticality": "P1",
+   "owner": "Reception",
+   "chain": "8",
+   "nextFunctions": [
+    "F-205"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "IMPLEMENTED",
+   "verification": {
+    "unit": false,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "IMPLEMENTED"
   },
   {
    "id": "F-213",
@@ -743,7 +1849,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-p0-6-storage.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "INFRASTRUCTURE",
+   "criticality": "P1",
+   "owner": "Production",
+   "chain": "4",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "STORAGE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-214",
@@ -756,7 +1883,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-p0-6-storage.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "INFRASTRUCTURE",
+   "criticality": "P2",
+   "owner": "Production",
+   "chain": "4",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "STORAGE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-301",
@@ -769,7 +1917,30 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-queue.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "INFRASTRUCTURE",
+   "criticality": "P1",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [
+    "F-303"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-302",
@@ -782,7 +1953,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-queue.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "INFRASTRUCTURE",
+   "criticality": "P1",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-303",
@@ -795,7 +1987,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-queue.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "INFRASTRUCTURE",
+   "criticality": "P1",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-304",
@@ -807,8 +2020,29 @@
     ]
    ],
    "be": [],
-   "teszt": null,
-   "allapot": "csak-frontend"
+   "teszt": "_tests/unit/test-sync-state.js",
+   "allapot": "csak-frontend",
+   "category": "UI_COMPONENT",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-305",
@@ -821,7 +2055,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-delete.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "INFRASTRUCTURE",
+   "criticality": "P1",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-306",
@@ -834,7 +2089,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-delete.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "INFRASTRUCTURE",
+   "criticality": "P2",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-307",
@@ -847,7 +2123,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-delete.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P1",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-308",
@@ -860,7 +2157,28 @@
    ],
    "be": [],
    "teszt": null,
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P1",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "IMPLEMENTED",
+   "verification": {
+    "unit": false,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "IMPLEMENTED"
   },
   {
    "id": "F-309",
@@ -873,7 +2191,28 @@
    ],
    "be": [],
    "teszt": null,
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "UI_COMPONENT",
+   "criticality": "P1",
+   "owner": "Production",
+   "chain": "3",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "IMPLEMENTED",
+   "verification": {
+    "unit": false,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "IMPLEMENTED"
   },
   {
    "id": "F-401",
@@ -885,8 +2224,31 @@
     ]
    ],
    "be": [],
-   "teszt": "_tests/frontend/test-fe-transition.js",
-   "allapot": "csak-frontend"
+   "teszt": "_tests/frontend/test-fe-click.js",
+   "allapot": "csak-frontend",
+   "category": "WORKFLOW_TRANSITION",
+   "criticality": "P0",
+   "owner": "Reception",
+   "chain": "5",
+   "nextFunctions": [
+    "F-402"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UI_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": true,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UI_VERIFIED"
   },
   {
    "id": "F-402",
@@ -898,8 +2260,32 @@
     ]
    ],
    "be": [],
-   "teszt": "_tests/frontend/test-fe-transition.js",
-   "allapot": "csak-frontend"
+   "teszt": "_tests/frontend/test-fe-click.js",
+   "allapot": "csak-frontend",
+   "category": "WORKFLOW_TRANSITION",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "5",
+   "nextFunctions": [
+    "F-403",
+    "F-404"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UI_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": true,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UI_VERIFIED"
   },
   {
    "id": "F-403",
@@ -911,8 +2297,31 @@
     ]
    ],
    "be": [],
-   "teszt": "_tests/frontend/test-fe-transition.js",
-   "allapot": "csak-frontend"
+   "teszt": "_tests/frontend/test-fe-click.js",
+   "allapot": "csak-frontend",
+   "category": "WORKFLOW_TRANSITION",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "5",
+   "nextFunctions": [
+    "F-404"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UI_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": true,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UI_VERIFIED"
   },
   {
    "id": "F-404",
@@ -924,8 +2333,31 @@
     ]
    ],
    "be": [],
-   "teszt": "_tests/frontend/test-fe-transition.js",
-   "allapot": "csak-frontend"
+   "teszt": "_tests/frontend/test-fe-click.js",
+   "allapot": "csak-frontend",
+   "category": "WORKFLOW_TRANSITION",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "5",
+   "nextFunctions": [
+    "F-405"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UI_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": true,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UI_VERIFIED"
   },
   {
    "id": "F-405",
@@ -937,8 +2369,31 @@
     ]
    ],
    "be": [],
-   "teszt": "_tests/frontend/test-fe-transition.js",
-   "allapot": "csak-frontend"
+   "teszt": "_tests/frontend/test-fe-click.js",
+   "allapot": "csak-frontend",
+   "category": "WORKFLOW_TRANSITION",
+   "criticality": "P0",
+   "owner": "Production",
+   "chain": "5",
+   "nextFunctions": [
+    "F-406"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UI_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": true,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UI_VERIFIED"
   },
   {
    "id": "F-406",
@@ -950,8 +2405,31 @@
     ]
    ],
    "be": [],
-   "teszt": "_tests/frontend/test-fe-transition.js",
-   "allapot": "csak-frontend"
+   "teszt": "_tests/frontend/test-fe-click.js",
+   "allapot": "csak-frontend",
+   "category": "WORKFLOW_TRANSITION",
+   "criticality": "P0",
+   "owner": "Quality",
+   "chain": "6",
+   "nextFunctions": [
+    "F-407"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UI_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": true,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UI_VERIFIED"
   },
   {
    "id": "F-407",
@@ -963,8 +2441,31 @@
     ]
    ],
    "be": [],
-   "teszt": "_tests/frontend/test-fe-transition.js",
-   "allapot": "csak-frontend"
+   "teszt": "_tests/frontend/test-fe-click.js",
+   "allapot": "csak-frontend",
+   "category": "WORKFLOW_TRANSITION",
+   "criticality": "P0",
+   "owner": "Office",
+   "chain": "7",
+   "nextFunctions": [
+    "F-409"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UI_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": true,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UI_VERIFIED"
   },
   {
    "id": "F-408",
@@ -977,7 +2478,28 @@
    ],
    "be": [],
    "teszt": null,
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "INTEGRATION",
+   "criticality": "P1",
+   "owner": "Production",
+   "chain": "5",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "IMPLEMENTED",
+   "verification": {
+    "unit": false,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "IMPLEMENTED"
   },
   {
    "id": "F-409",
@@ -990,7 +2512,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-oneway.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "BUSINESS_CAPABILITY",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "7",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-410",
@@ -1003,7 +2546,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-wa.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "INTEGRATION",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "8",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-411",
@@ -1020,7 +2584,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-p0-7-functions.js",
-   "allapot": "nincs-bekotve"
+   "allapot": "nincs-bekotve",
+   "category": "INTEGRATION",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "8",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "SERVERLESS_FUNCTION",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "DORMANT",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "DORMANT"
   },
   {
    "id": "F-501",
@@ -1035,7 +2620,30 @@
     "rpw_cleanup_list"
    ],
    "teszt": "_tests/unit/test-delete.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "ADMIN_OPERATION",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "9",
+   "nextFunctions": [
+    "F-502"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-502",
@@ -1050,7 +2658,28 @@
     "rpw_cleanup_hard_delete"
    ],
    "teszt": "_tests/unit/test-delete.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "DATA_OPERATION",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "9",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-503",
@@ -1063,7 +2692,30 @@
    ],
    "be": [],
    "teszt": null,
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "ADMIN_OPERATION",
+   "criticality": "P1",
+   "owner": "Office",
+   "chain": "9",
+   "nextFunctions": [
+    "F-502"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "IMPLEMENTED",
+   "verification": {
+    "unit": false,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "IMPLEMENTED"
   },
   {
    "id": "F-504",
@@ -1078,7 +2730,28 @@
     "rpw_posts_get"
    ],
    "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "DATA_OPERATION",
+   "criticality": "P2",
+   "owner": "Production",
+   "chain": "5",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-505",
@@ -1093,7 +2766,28 @@
     "rpw_post_upsert"
    ],
    "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "ADMIN_OPERATION",
+   "criticality": "P2",
+   "owner": "Production",
+   "chain": "5",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-506",
@@ -1108,7 +2802,28 @@
     "rpw_post_assign"
    ],
    "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "DATA_OPERATION",
+   "criticality": "P2",
+   "owner": "Production",
+   "chain": "5",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "INTEGRATION_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": true,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "INTEGRATION_VERIFIED"
   },
   {
    "id": "F-901",
@@ -1122,8 +2837,31 @@
    "be": [
     "rpw_server_capabilities"
    ],
-   "teszt": "_tests/unit/test-p0-1-guard.js",
-   "allapot": "el"
+   "teszt": "_tests/unit/test-sync-state.js",
+   "allapot": "el",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P0",
+   "owner": "Platform",
+   "chain": "10",
+   "nextFunctions": [
+    "F-902"
+   ],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": true,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-902",
@@ -1135,8 +2873,29 @@
     ]
    ],
    "be": [],
-   "teszt": "_tests/unit/test-p0-1-guard.js",
-   "allapot": "csak-frontend"
+   "teszt": "_tests/unit/test-sync-state.js",
+   "allapot": "csak-frontend",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P0",
+   "owner": "Platform",
+   "chain": "10",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-903",
@@ -1149,7 +2908,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-p0-1-guard.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P0",
+   "owner": "Platform",
+   "chain": "10",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-904",
@@ -1162,7 +2942,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-p0-1-guard.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "INFRASTRUCTURE",
+   "criticality": "P0",
+   "owner": "Platform",
+   "chain": "10",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-905",
@@ -1175,7 +2976,28 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-deploy.js",
-   "allapot": "csak-frontend"
+   "allapot": "csak-frontend",
+   "category": "SECURITY_CONTROL",
+   "criticality": "P1",
+   "owner": "Platform",
+   "chain": "10",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
   },
   {
    "id": "F-906",
@@ -1190,7 +3012,77 @@
     "jsonb_deep_merge"
    ],
    "teszt": "_tests/unit/test-queue.js",
-   "allapot": "el"
+   "allapot": "el",
+   "category": "INFRASTRUCTURE",
+   "criticality": "P1",
+   "owner": "Platform",
+   "chain": "3",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "POSTGRES_RPC",
+   "auditRequired": false,
+   "blockers": [],
+   "status": "UNIT_VERIFIED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "UNIT_VERIFIED"
+  },
+  {
+   "id": "F-907",
+   "nev": "Kozos inditasi modul (config->auth->kliens->adat->capabilities->oldal, fail-closed)",
+   "fe": [
+    [
+     "rpw-bootstrap.js",
+     "RPWBootstrap"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/unit/test-bootstrap.js",
+   "allapot": "nincs-bekotve",
+   "category": "INFRASTRUCTURE",
+   "criticality": "P1",
+   "owner": "Platform",
+   "chain": "10",
+   "nextFunctions": [],
+   "lifecycle": "ACTIVE",
+   "backendType": "NONE",
+   "auditRequired": false,
+   "blockers": [
+    "az oldalak atallitasa a kozos modulra meg nem tortent meg"
+   ],
+   "status": "BLOCKED",
+   "verification": {
+    "unit": true,
+    "database": false,
+    "ui": false,
+    "e2e": false,
+    "staging": false,
+    "production": false
+   },
+   "anchorsOk": true,
+   "lastVerifiedAt": "2026-08-25T17:52:58.540Z",
+   "productionStatus": "BLOCKED"
   }
- ]
+ ],
+ "_derived": {
+  "at": "2026-08-25T17:59:00.912Z",
+  "from": "2026-08-25T17:52:58.540Z",
+  "metrics": {
+   "osszes": 35,
+   "P0": 39,
+   "P1": 29,
+   "lanc": 40,
+   "biztonsag": 36,
+   "teszteles": 94,
+   "production": 0
+  }
+ }
 }

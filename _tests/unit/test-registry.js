@@ -13,9 +13,13 @@ function ok(c,m){ if(c){pass++} else {fail++; console.log('  x '+m)} }
 const reg=JSON.parse(R('_registry/funkciok.json'));
 const F=reg.funkciok;
 
-console.log('\n1. A nyilvantartas alaki rendje');
+console.log('\n1. A nyilvantartas alaki rendje (v2 sema)');
 {
   const latott=new Set();
+  const CATS=['BUSINESS_CAPABILITY','SECURITY_CONTROL','WORKFLOW_TRANSITION','UI_COMPONENT',
+              'DATA_OPERATION','INTEGRATION','INFRASTRUCTURE','ADMIN_OPERATION'];
+  const STATUSES=['PLANNED','IMPLEMENTED','UNIT_VERIFIED','INTEGRATION_VERIFIED','UI_VERIFIED',
+                  'STAGING_VERIFIED','PRODUCTION_VERIFIED','DORMANT','BLOCKED','DEPRECATED','REMOVED'];
   F.forEach(f=>{
     ok(/^F-\d{3}$/.test(f.id), 'rossz szam-formatum: '+f.id);
     ok(!latott.has(f.id), 'KETSZER kiosztott szam: '+f.id);
@@ -23,7 +27,41 @@ console.log('\n1. A nyilvantartas alaki rendje');
     ok(f.nev && f.nev.length>5, f.id+': nincs ertheto nev');
     ok(['el','csak-frontend','csak-backend','nincs-bekotve'].indexOf(f.allapot)>=0,
        f.id+': ismeretlen allapot ('+f.allapot+')');
+    ok(CATS.indexOf(f.category)>=0, f.id+': ismeretlen kategoria ('+f.category+')');
+    ok(['P0','P1','P2','P3'].indexOf(f.criticality)>=0, f.id+': ismeretlen kritikalitas');
+    ok(STATUSES.indexOf(f.productionStatus)>=0, f.id+': ismeretlen productionStatus');
+    ok(['POSTGRES_RPC','SERVERLESS_FUNCTION','STORAGE','EXTERNAL_API','NONE'].indexOf(f.backendType)>=0,
+       f.id+': ismeretlen backendType');
+    (f.nextFunctions||[]).forEach(n=>ok(F.some(x=>x.id===n),
+       f.id+': nextFunctions nem letezo szamra mutat: '+n));
   });
+}
+
+console.log('\n1b. A statusz a VALODI teszteredmenynek felel meg (a 34. pont 11. szabalya)');
+{
+  // PRODUCTION_VERIFIED CSAK emberi evidence-szel lehetseges
+  let evidence={};
+  try{ evidence=JSON.parse(R('_registry/evidence.json')); }catch(e){}
+  F.forEach(f=>{
+    if(f.productionStatus==='PRODUCTION_VERIFIED'){
+      const ev=evidence[f.id]||{};
+      ok(ev.staging===true && ev.production===true,
+        f.id+': PRODUCTION_VERIFIED emberi bizonyitek NELKUL — TILOS');
+    }
+    if(f.verification && (f.verification.staging||f.verification.production)){
+      const ev=evidence[f.id]||{};
+      ok(ev.staging===true||ev.production===true,
+        f.id+': staging/production jelzes evidence.json-bejegyzes nelkul');
+    }
+  });
+  // minden P0-nak van tesztje (7. szabaly)
+  F.filter(f=>f.criticality==='P0'&&f.lifecycle==='ACTIVE').forEach(f=>{
+    ok(!!f.teszt, 'P0 TESZT NELKUL: '+f.id+' ('+f.nev+')');
+  });
+  // deprecated RPC-t a frontend nem hivja (6. szabaly reszben — a tobbi a test-deprecation.js-ben)
+  const deprBE=new Set();
+  F.filter(f=>f.lifecycle==='DEPRECATED').forEach(f=>(f.be||[]).forEach(r=>deprBE.add(r)));
+  ok(deprBE.size>0, 'vannak kivezetes alatti backend-utak (elvart)');
 }
 
 console.log('\n2. Minden beszamozott funkcio HORGONYA megvan a kodban');

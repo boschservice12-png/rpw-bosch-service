@@ -1,0 +1,4 @@
+{
+  "_olvasd": "EMBERI bizonyítékok helye. A derive.js CSAK innen fogad el staging/production/e2e igazolást. Bejegyzés: \"F-###\": {\"staging\":true, \"production\":false, \"e2e\":false, \"ki\":\"név\", \"mikor\":\"YYYY-MM-DD\", \"mit\":\"mit ellenőrzött pontosan\"}. Gép ide NEM ír.",
+  "_pelda": {"staging": false, "production": false, "e2e": false, "ki": "", "mikor": "", "mit": ""}
+}
