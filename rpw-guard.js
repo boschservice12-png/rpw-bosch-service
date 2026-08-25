@@ -131,6 +131,11 @@
   }
 
   function halt(message, problems){
+    // FAIL-CLOSED ELŐSZÖR (2026-08-25): a config nullázása NEM függhet a
+    // document-től — enélkül headless/beágyazott környezetben a halt néma
+    // no-op volt, és az üzleti réteg tovább futott hibás szerver ellen.
+    root.RPW_CFG = null;   // nincs config → nincs DB-kliens → nincs lista,
+                           // nincs mentés, nincs queue-flush, nincs fázisváltás
     if(typeof document === 'undefined') return;
     var paint = function(){
       if(!document.body) return;
@@ -148,7 +153,6 @@
       box.appendChild(t1); box.appendChild(t2); box.appendChild(t3);
       wrap.appendChild(box); document.body.appendChild(wrap);
     };
-    root.RPW_CFG = null;   // nincs config → nincs DB-kliens
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',paint);
     else paint();
   }
@@ -170,7 +174,7 @@
     return r;
   }
   var API={ productionSafety:productionSafety, enforce:enforce, strictNeeded:strictNeeded,
-            checkCapabilities:checkCapabilities, verifyServer:verifyServer,
+            checkCapabilities:checkCapabilities, verifyServer:verifyServer, halt:halt,
             REQUIRED_RPCS:REQUIRED_RPCS, MIN_SCHEMA:MIN_SCHEMA };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWGuard=API;

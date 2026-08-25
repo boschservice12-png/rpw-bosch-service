@@ -797,14 +797,64 @@
              version: res.version };
   }
 
+  // ── PRODUCTION-ZÁR (2026-08-25) ──────────────────────────────────
+  // Éles (PRODUCTION=true) módban NINCS lokális workflow-fallback:
+  // ha a szerver-út bármiért nem elérhető, a kritikus művelet ELUTASÍTva,
+  // nem helyben végrehajtva. (A guard a configot is elutasítja, ha
+  // PRODUCTION=true mellett SERVER_TRANSITIONS!==true — ez a második zár.)
+  function localFallbackForbidden(){
+    try{ return (root.RPW_CFG||{}).PRODUCTION === true; }catch(e){ return false; }
+  }
+
+  // ── F-112/113: LEZÁRHATÓSÁG-ELŐNÉZET ────────────────────────────
+  // Az oldal betöltésekor hívható: a szerver hiánylistáját adja vissza
+  // (ugyanaz a rpw__missing, amit a rpw_transition kényszerít).
+  // Kikapcsolt szerver-átmeneteknél {server:false} — a helyi lista él.
+  async function loadServerMissing(job, phase){
+    if(!serverTransitionsOn()) return { server:false };
+    var api = root.RPWData && root.RPWData.__instance;
+    if(!api || typeof api.serverCanComplete !== 'function') return { server:false };
+    var r = await api.serverCanComplete(job.id, phase);
+    if(!r || r.ok !== true) return { server:true, ok:false, error:(r&&r.error)||null };
+    return { server:true, ok:true, can:r.can, missing:r.missing };
+  }
+
+  // ── DUPLA KATTINTÁS ELLENI ZÁR (2026-08-25) ─────────────────────
+  // A valódi-kattintás teszt mutatta ki: két gyors katt két rpw_transition
+  // hívást indított. A verziózár a másodikat úgyis elutasítaná, de felesleges
+  // kört és hibaüzenetet okozna — ezért amíg egy kritikus művelet fut,
+  // ugyanarra a munkalapra másik NEM indul.
+  var _inFlight = {};
+
   async function commitCriticalTransition(job, mutate, opts){
     opts=opts||{};
     migrateJob(job);
+    if(job && job.id && _inFlight[job.id]){
+      return { ok:false, saved:false, busy:true,
+               result:{ ok:false, errors:['in_flight'] },
+               error:{ code:'in_flight', message:'Operațiunea anterioară este încă în curs.' } };
+    }
+    if(job && job.id) _inFlight[job.id] = true;
+    try{
+      return await _commitCriticalInner(job, mutate, opts);
+    } finally {
+      if(job && job.id) delete _inFlight[job.id];
+    }
+  }
+
+  async function _commitCriticalInner(job, mutate, opts){
 
     // v4: ha a szerveroldali átmenet él ÉS tudjuk, melyik művelet ez,
     // a szerver dönt. A helyi mutáció NEM fut le.
     if(serverTransitionsOn() && opts.action){
       return await commitViaServer(job, opts);
+    }
+    if(localFallbackForbidden()){
+      // Éles módban ide csak hibás konfigurációval juthatnánk — állj.
+      return { ok:false, saved:false, serverRejected:true,
+               result:{ ok:false, errors:['local_fallback_forbidden'] },
+               error:{ code:'local_fallback_forbidden',
+                       message:'În producție tranzițiile se fac numai prin server.' } };
     }
     var snap=snapshotCrit(job);
     var lsSnap=snapshotLS(job.id, opts.ls);   // előállapot a localStorage-ből is
@@ -1278,6 +1328,8 @@
     isRealPerson: isRealPerson,
     hasOverrideGrant: hasOverrideGrant,
     commitCriticalTransition: commitCriticalTransition,
+    loadServerMissing: loadServerMissing,
+    localFallbackForbidden: localFallbackForbidden,
     commitViaServer: commitViaServer,
     serverTransitionsOn: serverTransitionsOn,
     isPhaseReadOnly: isPhaseReadOnly

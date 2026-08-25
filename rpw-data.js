@@ -265,6 +265,23 @@
     Object.keys(TXN_ACTION).forEach(function(k){
       TXN_RPC[k] = function(a){ return txnCall(k, a); };
     });
+    // ── F-112/113: LEZÁRHATÓSÁG-ELŐNÉZET A SZERVERTŐL ────────────
+    // Ugyanazt a szabályforrást kérdezi (rpw__missing), amit a
+    // rpw_transition kényszerít — a kliens itt CSAK megjelenít.
+    async function serverCanComplete(jobId, phase){
+      try{
+        var res = await sb.rpc('rpw_can_complete',
+          { p_token: authToken(), p_id: jobId, p_phase: phase });
+        if(res && res.error) return { ok:false, error:res.error };
+        var d = res ? res.data : null;
+        if(typeof d === 'string'){ try{ d = JSON.parse(d); }catch(e){ d=null; } }
+        if(!d || d.ok !== true) return { ok:false, error:(d&&{code:d.error,message:d.message})||{code:'empty'} };
+        return { ok:true, can: d.can === true,
+                 missing: (Array.isArray(d.missing)? d.missing : []),
+                 version: (typeof d.version==='number'? d.version : null) };
+      }catch(e){ return { ok:false, error:{code:'exception', message:String(e&&e.message||e)} }; }
+    }
+
     async function serverTransition(kind, args){
       var build=TXN_RPC[kind];
       if(!build) return { ok:false, error:{message:'unknown_transition:'+kind} };
@@ -391,6 +408,7 @@
       getSyncState: getSyncState,
       getQueueState: getQueueState,
       serverTransition: serverTransition,
+      serverCanComplete: serverCanComplete,
       serverEnabled: serverEnabled,
       queue: queue
     };
