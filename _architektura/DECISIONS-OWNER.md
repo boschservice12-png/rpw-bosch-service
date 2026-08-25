@@ -38,3 +38,12 @@
 |---|---|---|
 | **K-19** — „a Programare lapon egy Avizare daună fül; itt nyissuk a biztosító-dossziékat; a programált biztosítós autónál 2 állapot: Dosar deschis vagy Avizare daună" | a főablak cél-szerkezete | (1) A főablak fülei közé bekerül egy **„Avizare daună"** fül: a biztosítós kárügyek (doar_dosar) OTT listázódnak és OTT nyílnak — nem a mai felugró kék ablakból, és nem a Viitoare-ba összemosva (a 2026-08-25-i „egy lista" összevonás ezzel visszafordul). (2) A Viitoare-fülön a biztosítós javításra programált autó soron KÉT állapot egyike látszik: **„Dosar deschis"** (dosarStatus='deschis') vagy **„Avizare daună"** (dosarStatus='deschid'). Megvalósítás: az IMPLEMENTATION-BACKLOG-ba, az elemzési fázis után. |
 
+## L5–L6 utáni döntések (2026-08-25)
+
+| # | döntés | értelmezés (erre építek) |
+|---|---|---|
+| **K-20: igen** | „Elvégezte" = bejelentkezett dolgozó | a sorok lezárásánál a bejelentkezett munkamenet neve kerül be egy kattintással; gépelt név csak kivételes útként, jelölve. |
+| **K-21: legyen — kontrollálni, ki csinálta** | pótmunka-jóváhagyás nyommal | a reconstatare/aftersales termelésbe engedése rögzíti: KI (bejelentkezett név) + MIKOR + mit; visszakereshető. |
+| **K-22: igen** | Audatex ésszerűség-ellenőrzés | importált óra/összeg határok között; felülírás előtt megerősítés; a törlés nyomot hagy. |
+| **K-23: „a jogosultak operálhatnak csak"** | fázis-terv jogosultsághoz kötve | a fázis-terv / munkaállomás-beosztás megépül, de KIZÁRÓLAG az arra jogosult szerepkör (műszakvezető/irodavezető) kezelheti — a dolgozó látja, nem módosítja. *(Ha úgy értetted, hogy NE épüljön meg, csak a jogosultság-szigorítás kell — egy szó, és javítom.)* |
+
