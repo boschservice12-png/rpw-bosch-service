@@ -1729,8 +1729,17 @@ window.njNextNumber=async function(){
   var yr=new Date().getFullYear().toString().slice(-2);
   var prefix='MS-'+yr+'-';
   try{
-    var r=await sb.rpc('rpw_next_job_number',{p_prefix:prefix});
-    if(r && !r.error && r.data) return String(r.data);
+    if(window.RPWDb && RPWDb.secureOn && RPWDb.secureOn()){
+      // Kivezetés: secure módban a tokenes rpw_job_number ad számot.
+      // (Az rpw_job_create úton a számot amúgy is a szerver adja.)
+      var tok=(window.RPWAuth&&RPWAuth.token&&RPWAuth.token())||null;
+      var r2=await sb.rpc('rpw_job_number',{p_token:tok, p_prefix:'MS-'+yr});
+      var d2=r2&&r2.data; if(typeof d2==='string'){try{d2=JSON.parse(d2)}catch(e){d2=null}}
+      if(d2 && d2.ok===true && d2.data && d2.data.number) return String(d2.data.number);
+    } else {
+      var r=await sb.rpc('rpw_next_job_number',{p_prefix:prefix});
+      if(r && !r.error && r.data) return String(r.data);
+    }
   }catch(e){}
   var mx=0;
   JOBS.forEach(function(j){

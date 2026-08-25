@@ -78,11 +78,21 @@
     }catch(e){ return {ok:true, offline:true}; }   // halozat nelkul a helyi session marad
   }
   // A cég csapata — a bejelentkezett dolgozó szervizéből.
+  // Kivezetés (2026-08-25): strict/secure módban a régi utak TILOSAK.
+  function legacyAllowed(opts){
+    try{
+      var c=cfg(opts);
+      if(c.PRODUCTION===true || c.AUTH_REQUIRED===true || c.PATCH_RPC==='rpw_patch_v3') return false;
+    }catch(e){}
+    return true;
+  }
+
   async function team(sb, opts){
     var t=token(opts);
     if(!t)return {ok:false, error:'no_token'};
     try{
-      var r=await sb.rpc('rpw_team',{p_token:t});
+      // strict/secure módban a DEPRECATED rpw_team helyett a rpw2_team megy
+      var r=await sb.rpc(legacyAllowed(opts)?'rpw_team':'rpw2_team',{p_token:t});
       var out=r&&r.data;
       if(typeof out==='string'){ try{out=JSON.parse(out)}catch(e){out=null} }
       if(!out||out.ok!==true)return {ok:false, error:(out&&out.error)||'invalid'};
@@ -107,7 +117,10 @@
       // az embereit. A régi (ERP-alapú) út tartalékként megmarad.
       var res = opts.employeeId
         ? await sb.rpc('rpw2_login',{p_shop_id:shop, p_employee_id:opts.employeeId, p_pin:pPin})
-        : await sb.rpc('rpw_login', {p_shop_id:shop, p_pin:pPin});   // régi tartalék
+        : (legacyAllowed(opts)
+            ? await sb.rpc('rpw_login', {p_shop_id:shop, p_pin:pPin})   // régi tartalék — CSAK legacy módban
+            : {data:{ok:false,error:'legacy_login_disabled',
+                     message:'Alege numele din listă — intrarea fără nume a fost retrasă.'},error:null});
       if(res && res.error) return {ok:false, error:'server'};
       var out=res && res.data;
       if(typeof out==='string'){ try{out=JSON.parse(out)}catch(e){out=null} }
