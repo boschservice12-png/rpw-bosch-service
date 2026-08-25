@@ -324,6 +324,85 @@ console.log('\n21. Idegen tenant továbbra is not_found');
   eq(r2.error, 'not_found', 'idegen trash: not_found');
 }
 
+console.log('\n══ A NORMÁL MENTÉS ÚTJA (a kliens, ahogy VALÓBAN küld) ══');
+{
+  // A `rpw-save.js` a TELJES munkaobjektumot küldi. Ez a szakasz azt méri,
+  // mi történik ilyenkor a 006 utáni szerveren — és hogy a kliens szűrése
+  // (stripProtected) tényleg elég-e.
+  const fs = require('fs'), path = require('path');
+  const SAVE = fs.readFileSync(path.resolve(__dirname,'..','..','rpw-save.js'), 'utf8');
+  // a modul betöltése Node-ban (globál nélkül)
+  const mod = { exports:{} };
+  new Function('module','exports','self','window',SAVE)(mod, mod.exports, undefined, undefined);
+  const RPWSave = mod.exports;
+
+  // egy VALÓSÁGHŰ munkaobjektum: a workflow-mezők mindig benne vannak
+  const teljesMunka = {
+    id: JOB, plate:'MS-01-AAA', client:'Teszt', note:'megjegyzés',
+    phase: 2, inchis:false, phases:{ 1:{status:'done'}, 2:{status:'active'} },
+    rework:{}, history:[], closing:{ closedAt:'2026-08-25', status:'x' },
+    evalData:{ comanda:[] }
+  };
+
+  console.log('\n23. A TELJES munka küldése — a szerver elutasítja');
+  {
+    const r = await rpc('rpw_patch_v3', { p_token:TOK_MGR, p_id:JOB,
+      p_patch:JSON.stringify(teljesMunka), p_expected_version:await ver(), p_phase:'2' });
+    eq(r.error, 'protected_workflow_field', 'egész patch elutasítva');
+    ok((r.fields||[]).indexOf('phase') >= 0, '  és megmondja, MELYIK mező miatt');
+    ok((r.fields||[]).indexOf('inchis') >= 0, '  (inchis is)');
+    // FONTOS: a mezők ÉRTÉKE változatlan volt — a puszta JELENLÉT is elutasítás
+    const d = await data();
+    eq(d.note, undefined, '  és semmi nem íródott ki (a note sem)');
+  }
+
+  console.log('\n24. Ugyanaz a munka a kliens szűrőjével — ÁTMEGY');
+  {
+    ok(typeof RPWSave.stripProtected === 'function', 'a szűrő ki van exportálva');
+    const szurt = RPWSave.stripProtected(teljesMunka);
+    eq(szurt.phase, undefined,  'phase kiszűrve');
+    eq(szurt.phases, undefined, 'phases kiszűrve');
+    eq(szurt.inchis, undefined, 'inchis kiszűrve');
+    eq(szurt.rework, undefined, 'rework kiszűrve');
+    eq(szurt.history, undefined,'history kiszűrve');
+    eq(szurt.plate, 'MS-01-AAA','a rendszám MEGMARAD');
+    eq(szurt.note, 'megjegyzés', 'a megjegyzés MEGMARAD');
+    eq(szurt.closing.closedAt, '2026-08-25', 'a closing.closedAt MEGMARAD');
+    eq(szurt.closing.status, undefined,      '  de a closing.status nem');
+
+    const elotte = (await data()).phase;
+    const r = await rpc('rpw_patch_v3', { p_token:TOK_MGR, p_id:JOB,
+      p_patch:JSON.stringify(szurt), p_expected_version:await ver(), p_phase:'2' });
+    eq(r.ok, true, 'a szűrt mentés SIKERES');
+    const d = await data();
+    eq(d.note, 'megjegyzés', '  és az adat tényleg kint van a szerveren');
+    // a patch `phase:2`-t vitt volna — a szűrés után a szerver fázisa ÉRINTETLEN
+    eq(d.phase, elotte, '  a fázist NEM írta át (maradt: ' + elotte + ')');
+  }
+
+  console.log('\n25. A verzió KÖTELEZŐ — enélkül nincs mentés');
+  {
+    const szurt = RPWSave.stripProtected(teljesMunka);
+    const r = await rpc('rpw_patch_v3', { p_token:TOK_MGR, p_id:JOB,
+      p_patch:JSON.stringify(szurt), p_expected_version:null, p_phase:null });
+    eq(r.error, 'expected_version_required', 'verzió nélkül elutasítva');
+    // ezért küldi a rpw-save.js MINDIG a job.version-t a v3 úton
+    ok(/p_expected_version: \(typeof job\.version==='number'\)/.test(SAVE),
+       '  a kliens ezért mindig küldi a verziót');
+  }
+
+  console.log('\n26. Elavult verzióval ütközés — NEM csendes felülírás');
+  {
+    const szurt = RPWSave.stripProtected(teljesMunka);
+    szurt.note = 'masodik iras';
+    const r = await rpc('rpw_patch_v3', { p_token:TOK_MGR, p_id:JOB,
+      p_patch:JSON.stringify(szurt), p_expected_version:0, p_phase:null });
+    ok(r.ok !== true, 'elavult verzió elutasítva');
+    const d = await data();
+    eq(d.note, 'megjegyzés', '  a korábbi tartalom sértetlen');
+  }
+}
+
 console.log('\n══ ROLLBACK ══');
 
 console.log('\n22. A 006 rollback visszaállítja a V3 állapotot');

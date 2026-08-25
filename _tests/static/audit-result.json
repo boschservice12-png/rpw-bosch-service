@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-25T07:21:05.928Z",
+  "generated": "2026-08-25T08:07:33.660Z",
   "files": 31,
   "total": 28,
   "allowed": 28,
@@ -7,7 +7,7 @@
   "findings": [
     {
       "fajl": "index.html",
-      "sor": 983,
+      "sor": 988,
       "mezo": "status:'done'",
       "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
       "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
@@ -15,7 +15,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 1124,
+      "sor": 1129,
       "mezo": "inchis",
       "ok": "megjelenítési kód — a JOB-ot nem módosítja",
       "ut": "olvasás, nem írás",
@@ -23,7 +23,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 1127,
+      "sor": 1132,
       "mezo": "phase",
       "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
       "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
@@ -31,7 +31,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 2212,
+      "sor": 2217,
       "mezo": "phases[]",
       "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
       "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
@@ -39,7 +39,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 2213,
+      "sor": 2218,
       "mezo": "phases[].status",
       "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
       "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
@@ -47,7 +47,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 2239,
+      "sor": 2244,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
@@ -63,7 +63,7 @@
     },
     {
       "fajl": "rpw-control-red.html",
-      "sor": 137,
+      "sor": 138,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -71,7 +71,7 @@
     },
     {
       "fajl": "rpw-control-red.html",
-      "sor": 142,
+      "sor": 143,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -79,7 +79,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 193,
+      "sor": 194,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -87,7 +87,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 198,
+      "sor": 199,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -95,7 +95,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 608,
+      "sor": 609,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
@@ -103,7 +103,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 652,
+      "sor": 653,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
@@ -111,7 +111,7 @@
     },
     {
       "fajl": "rpw-evaluare-red.html",
-      "sor": 509,
+      "sor": 510,
       "mezo": "phases[]",
       "ok": "inicializálás — hiányzó fázisok kitöltése",
       "ut": "üres váz létrehozása; státuszt csak a rpw_transition ír",
@@ -119,7 +119,7 @@
     },
     {
       "fajl": "rpw-inchidere-red.html",
-      "sor": 253,
+      "sor": 254,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -127,7 +127,7 @@
     },
     {
       "fajl": "rpw-inchidere-red.html",
-      "sor": 258,
+      "sor": 259,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -135,7 +135,7 @@
     },
     {
       "fajl": "rpw-recepcio-red.html",
-      "sor": 484,
+      "sor": 485,
       "mezo": "phases[]",
       "ok": "inicializálás — hiányzó fázisok kitöltése",
       "ut": "üres váz létrehozása; státuszt csak a rpw_transition ír",
@@ -143,7 +143,7 @@
     },
     {
       "fajl": "rpw-reconstatare-red.html",
-      "sor": 192,
+      "sor": 193,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -151,7 +151,7 @@
     },
     {
       "fajl": "rpw-reconstatare-red.html",
-      "sor": 197,
+      "sor": 198,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -159,7 +159,7 @@
     },
     {
       "fajl": "rpw-tinichigerie-red.html",
-      "sor": 146,
+      "sor": 147,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -167,7 +167,7 @@
     },
     {
       "fajl": "rpw-tinichigerie-red.html",
-      "sor": 151,
+      "sor": 152,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -175,7 +175,7 @@
     },
     {
       "fajl": "rpw-vopsitorie-red.html",
-      "sor": 154,
+      "sor": 155,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -183,7 +183,7 @@
     },
     {
       "fajl": "rpw-vopsitorie-red.html",
-      "sor": 159,
+      "sor": 160,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",

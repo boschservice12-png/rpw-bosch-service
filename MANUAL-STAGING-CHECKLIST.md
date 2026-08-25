@@ -106,6 +106,16 @@ Ez a legfontosabb kézi teszt.
 - [ ] Vissza online → a mentés **magától lefut**
 - [ ] Az offline sorban **nincs** érzékeny adat
 
+## 9b. Tartós offline sor *(2026-08-25)*
+
+- [ ] Repülőgép mód → menteni valamit → a jelző „⚠ Offline – salvat local"
+- [ ] **Oldal frissítése offline állapotban** → a munka nem tűnt el
+- [ ] Hálózat vissza → a mentés **magától** elmegy, a jelző „✓ Salvat pe server"
+- [ ] Két különböző dosszié offline mentése → **mindkettő** megérkezik, sorrendben
+- [ ] Ugyanaz a dosszié kétszer offline → **egy** rekord megy el, a későbbi értékkel
+- [ ] Privát böngészőablakban is működik *(vagy legalább nem tör el)*
+- [ ] Ütközés esetén a sor **megtartja** a rekordot, és nem ír felül csendben
+
 ## 10. CSP
 
 - [ ] Kapcsold be a **report-only** fejlécet stagingen

@@ -1,5 +1,64 @@
 # CHANGELOG.md
 
+## 2026-08-25 (4) — A tartós offline sor bekötése + a mentési út három hibája
+
+A `rpw-queue.js` hónapokig készen állt, és **egyetlen lap sem töltötte be**.
+Bekötés közben kiderült, hogy a sor önmagában **nem ért volna semmit**: a
+mentési út, amibe be kellett kötni, három ponton romlott.
+
+### 🔴 Amit a bekötés közben találtam — valódi adatbázison igazolva
+
+| # | Hiba | Következmény |
+|---|---|---|
+| 1 | **A `{ok:false}` sikernek látszott.** A `rpw_patch_v3` az elutasítást a válasz TÖRZSÉBEN adja vissza, a `rpw-save.js` viszont csak a transport-hibát nézte | A felhasználó **zöld pipát** látott („✓ Salvat pe server"), az adat viszont nem került ki. Néma adatvesztés. |
+| 2 | **A normál mentés a TELJES munkát küldte**, benne a `phase`, `phases`, `inchis` mezőkkel | A `006` óta a szerver az **egész patch-et elutasítja**, ha védett mező van benne — akkor is, ha az értéke változatlan. Élesítés után **egyetlen mentés sem menne át.** |
+| 3 | **A verzió hiányzott.** A `rpw_patch_v3` kötelezően kéri; a `rpw-save.js` alapból `null`-t küldött (`useLock:false`) | `expected_version_required` — a mentés akkor is elbukna, ha az 1–2. nem lenne. |
+
+Mérés a `007`-ig migrált PostgreSQL-en:
+
+```
+TELJES munka mentése → {"ok":false,"error":"protected_workflow_field",
+                        "fields":["phase","inchis","phases.1.status"]}
+CSAK a nem védett     → {"ok":false,"error":"expected_version_required"}
+szűrve + verzióval    → {"ok":true}
+```
+
+**Javítás:** `stripProtected()` a `rpw-save.js`-ben — a normál mentés a
+`006` védett listáját (13 felső szintű mező + `closing` három kulcsa) kiveszi.
+A `closing.closedAt` **marad**, a `closing.status` nem. A verzió a v3 úton
+mostantól **mindig** megy. A `serverRejection()` pedig elutasításnak veszi,
+ami elutasítás.
+
+A **kritikus** mentés (`commitConfirmed`, helyi fázisváltás után) szándékosan
+**nem** szűr: az csak akkor fut, ha a szerveroldali átmenet ki van kapcsolva.
+
+### A sor bekötése
+
+| Hol | Mi történik |
+|---|---|
+| 11 lap | betölti a `rpw-queue.js`-t, a `rpw-data.js` **előtt** |
+| `RPWQueue.shared()` | egy lapon EGY sor — különben ugyanarra a dossziéra két rekord születne |
+| `RPWData.create` | magától megtalálja a közös sort (`opts.queue:false` → ki) |
+| `RPWData.init` | **újratöltés után elindítja** — eddig senki nem indította |
+| `online` esemény | a hálózat visszatérésekor is ürít |
+| `RPWSave` | offline / kimerült újrapróbálkozás → **a sorba**; igazolt siker → **ki a sorból** |
+| `QSTATE` | a sor állapotai lefordulnak arra, amit a lapok jelzője ismer |
+
+**Amit NEM tesz a sorba:** `permission`, `conflict`, `auth`, `rejected` — azt
+az újraküldés sem javítaná meg, csak örökre ott ragadna.
+
+`index.html`: a lista mostantól a **verziót is** átveszi a sorból a munkára —
+enélkül a panelről indított mentés `expected_version_required`-et kapna.
+
+### Tesztek
+
+* **`test-queue.js`** *(44 állítás)* — a teljes út: offline mentés →
+  „újratöltés" (új példány, ugyanaz a tár) → online → megérkezik.
+  Kipróbálva mutációval: a bekötés kivételére **elbukik**.
+* **`test-int-workflow.js` +21 állítás** — valódi PostgreSQL: a teljes munka
+  elutasítva, a szűrt átmegy, verzió nélkül nem, elavult verzióval nem.
+
+---
 ## 2026-08-25 (3) — Frontend-takarítás
 
 Mérésből, nem érzésből: minden lap betöltődik jsdom-ban a moduljaival, és a

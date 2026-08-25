@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<!-- BUILD: V4-CLASSIFY-BULK 2026-08-25 -->
+<!-- BUILD: V4-QUEUE-SAVEFIX 2026-08-25 -->
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23dc2626'/><circle cx='50' cy='50' r='18' fill='%23fff'/></svg>" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -36,6 +36,7 @@ if('serviceWorker' in navigator && location.protocol==='https:'){window.addEvent
 try{ if(window.RPWAuth) RPWAuth.guard(); }catch(e){}</script>
 <script src="rpw-workflow.js"></script>
 <script src="rpw-save.js"></script>
+<script src="rpw-queue.js"></script><!-- 2026-08-25: tartos offline sor -->
 <script src="rpw-data.js"></script><!-- v4: szerveroldali átmenetek -->
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -486,7 +487,11 @@ async function loadJobs(){
     var t=new Promise(function(_,rej){setTimeout(function(){rej('timeout')},4000)});
     var res=await Promise.race([p,t]);
     if(res&&!res.error&&res.data){
-      var sbJobs=(res.data||[]).map(function(r){return r.data}).filter(function(d){return d&&typeof d.phase==='number'}).map(migrateState);
+      // A verzió a SOR mellől jön, nem a JSON-ból. A `rpw_patch_v3`
+      // kötelezően kéri — enélkül minden mentés `expected_version_required`.
+      var sbJobs=(res.data||[]).map(function(r){
+        var d=r.data; if(d && r.version!=null) d.version=r.version; return d;
+      }).filter(function(d){return d&&typeof d.phase==='number'}).map(migrateState);
       sbJobs.forEach(function(sj){
         var idx=JOBS.findIndex(function(x){return x.id===sj.id});
         if(idx>=0)JOBS[idx]=sj;else JOBS.push(sj);

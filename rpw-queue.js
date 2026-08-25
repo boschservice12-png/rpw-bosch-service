@@ -191,8 +191,19 @@
     };
   }
 
-  var API = { create:create, idbBackend:idbBackend, memBackend:memBackend, deepMerge:deepMerge,
-              DB_NAME:DB_NAME, STORE:STORE };
+  // ── KÖZÖS PÉLDÁNY ────────────────────────────────────────────────
+  // Egy lapon EGY sor van. Ha minden hívó sajátot csinálna, ugyanarra a
+  // dossziéra két rekord születne, és a sorrend elveszne.
+  var _shared = null;
+  function shared(opts){
+    if(!_shared) _shared = create(opts||{});
+    return _shared;
+  }
+
+  var API = { create:create, shared:shared, idbBackend:idbBackend, memBackend:memBackend,
+              deepMerge:deepMerge, DB_NAME:DB_NAME, STORE:STORE,
+              get __shared(){ return _shared; },
+              __resetShared: function(){ _shared=null; } };
   if(typeof module!=='undefined' && module.exports){ module.exports = API; }
   root.RPWQueue = API;
 })(typeof self!=='undefined'?self:(typeof window!=='undefined'?window:globalThis));

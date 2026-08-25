@@ -62,13 +62,25 @@
   // Újraküldhető hibafajták (offline/hálózati/időtúllépés). conflict/permission NEM.
   var RETRYABLE = { network:1, timeout:1, error:1, offline:1 };
 
+  // A sor saját szótára → amit az oldalak jelzője ismer (rpwSyncLabel).
+  // Enélkül a felhasználó nyers `saved-local` feliratot látna.
+  var QSTATE = { 'saved-local':'offline', waiting:'retry', syncing:'syncing',
+                 synced:'synced', conflict:'conflict' };
+
   function create(sb, opts){
     opts = opts || {};
     var DB = opts.db || _db();
     if(!DB) throw new Error('RPWData: RPWDb hiányzik');
     var actor = opts.actor || null;
-    // Opcionális tartós offline-sor (RPWQueue). ALAP: nincs → változatlan viselkedés.
-    var queue = opts.queue || null;
+    // ── TARTÓS OFFLINE SOR ────────────────────────────────────────
+    // 2026-08-25: a modul eddig KÉSZEN állt, de senki nem adta át. Mostantól
+    // magától megtalálja a közös példányt, ha a lap betöltötte a rpw-queue.js-t.
+    // `opts.queue:false` → kikapcsolva (teszt / szándékos).
+    var queue = (opts.queue !== undefined)
+      ? (opts.queue || null)
+      : ((root.RPWQueue && root.RPWQueue.shared)
+          ? root.RPWQueue.shared({ onState: function(jobId, st){ setSync(QSTATE[st] || st); } })
+          : null);
     var syncState = 'idle';
     var pendingCount = 0;
     function setSync(s){ syncState=s; if(typeof opts.onState==='function'){ try{opts.onState(s);}catch(e){} } }
@@ -379,19 +391,44 @@
       getSyncState: getSyncState,
       getQueueState: getQueueState,
       serverTransition: serverTransition,
-      serverEnabled: serverEnabled
+      serverEnabled: serverEnabled,
+      queue: queue
     };
   }
 
   // v4: az oldalak egy KÖZÖS példányt használnak. A `init()` egyszer
   // hozza létre; a `commitViaServer` ezen keresztül éri el.
-  var _inst = null;
+  var _inst = null, _online = false;
   function init(sb, opts){
-    if(!_inst) _inst = create(sb, opts);
+    if(!_inst){
+      _inst = create(sb, opts);
+      _resume(_inst);          // ÚJRATÖLTÉS UTÁN: ami a sorban maradt, elindul
+    }
     return _inst;
   }
-  var API = { create:create, init:init, pickCrit:pickCrit,
-              CRIT_KEYS:CRIT_KEYS, classify:classify,
+
+  // ── ÚJRATÖLTÉS UTÁNI HELYREÁLLÍTÁS ────────────────────────────────
+  // A sor túléli az oldalfrissítést — de valakinek el kell indítania.
+  // Eddig senki nem indította: a rekord ott feküdt, és a munka sosem ért
+  // el a szerverre. Itt indul, egy helyen, minden lapnak.
+  function _resume(inst){
+    if(!inst || !inst.queue) return;
+    var go = function(){
+      try{
+        if(typeof navigator!=='undefined' && navigator.onLine===false) return;
+        inst.flushPendingWrites();
+      }catch(e){}
+    };
+    // indulás: a hálózatot nem várjuk meg, csak a lap életre kelését
+    try{ setTimeout(go, 1200); }catch(e){}
+    // és amikor visszatér a hálózat
+    if(!_online && typeof root.addEventListener==='function'){
+      _online = true;
+      try{ root.addEventListener('online', go); }catch(e){}
+    }
+  }
+  var API = { create:create, init:init, pickCrit:pickCrit, _resume:_resume,
+              CRIT_KEYS:CRIT_KEYS, classify:classify, QSTATE:QSTATE,
               get __instance(){ return _inst; } };
   if(typeof module!=='undefined' && module.exports){ module.exports = API; }
   root.RPWData = API;

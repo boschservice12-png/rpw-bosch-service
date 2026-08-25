@@ -164,12 +164,15 @@ a két feladat egyszerre elvégezhető.
 | **Igazolva** | Logika és felület: 105 állítás, ebből 18 valódi lapkódon. A modell TALÁLATI ARÁNYA: nincs mérve — valódi iratok kellenek hozzá |
 | **Következő lépés** | `MANUAL-STAGING-CHECKLIST.md` 12b |
 
-### A `rpw-queue.js` be nem kötött képesség
-198 sor tartós offline sor, amit **egyetlen lap sem tölt be**. Az
-`RPWData.create` elfogad `opts.queue`-t — senki nem ad neki. Ma az offline
-mentés a `RPWSave` memóriájában él: **böngészőfrissítés után elveszik**.
-**Döntés kell:** bekötni (és akkor tesztelni), vagy elengedni (és törölni).
-Amíg egyik sem történik, a repó azt sugallja, hogy van tartós sor — pedig nincs.
+### ~~A `rpw-queue.js` be nem kötött képesség~~ — ✅ BEKÖTVE (2026-08-25)
+11 lap tölti be, a `RPWData.init` újratöltés után elindítja, a `RPWSave`
+tölti. Az offline mentés **túléli a frissítést**. Igazolva: `test-queue.js`
+(44 állítás), a teljes úttal.
+
+**Ami a bekötésből hátravan:** az IndexedDB-út **élesben nincs mérve**. A
+teszt memóriatáron fut (két külön példány, ugyanaz a tár) — a valódi
+IndexedDB viselkedése (kvóta, privát ablak, több fül egyszerre) staging-et
+igényel. `MANUAL-STAGING-CHECKLIST.md` 9. pont.
 
 ### A halott CSS nem mérhető statikusan
 ~48 osztály látszik használatlannak, de a lapok tizenegy helyen futásidőben
