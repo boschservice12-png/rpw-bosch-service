@@ -41,16 +41,51 @@ console.log('\n1. A záró szabályok tényleg zárnak');
 }
 
 // Illeszkedik-e egy útvonal valamelyik szabályra?
+// FIGYELEM: a Netlify-nál a splat CSAK az útvonal VÉGÉN működik. A
+// `/*.md` alakú kiterjesztés-minta NEM megbízható — ezért a fájlokat
+// NÉVVEL zárjuk, és ez a teszt követeli meg, hogy egy se maradjon ki.
 function zarva(nev, konyvtar){
   const ut = '/' + nev + (konyvtar ? '/valami.txt' : '');
   return szabalyok.some(r => {
     if(r.from.endsWith('/*')) return ut.indexOf(r.from.slice(0, -1)) === 0;
-    if(r.from.startsWith('/*.')){                       // /*.md
-      const kit = r.from.slice(2);
-      return ut.endsWith(kit);
-    }
     return r.from === ut;
   });
+}
+
+console.log('\n1b. A fájl szerkezete érvényes TOML');
+{
+  // Ez a hiba ELVITTE a deployt, és a teszt mégis zöld volt:
+  //     [context.branch-deploy.headers]     ← tábla
+  //     [[context.branch-deploy.headers]]   ← ugyanaz a név, tábla-TÖMBKÉNT
+  // A Netlify válasza: „trying to redefine an already defined table".
+  // Node-ban nincs TOML-elemző, ezért pont ezt az ütközést keressük.
+  const fejlecek = [];
+  TOML.split('\n').forEach((sor, i) => {
+    const m = sor.match(/^\s*(\[\[?)([^\]]+)\]\]?\s*$/);
+    if(m) fejlecek.push({ nev:m[2].trim(), tomb:(m[1]==='[['), sor:i+1 });
+  });
+  ok(fejlecek.length > 0, 'találhatók szakaszfejlécek (' + fejlecek.length + ')');
+
+  const utkozes = [];
+  const latott = {};
+  fejlecek.forEach(f => {
+    if(latott[f.nev] !== undefined && latott[f.nev] !== f.tomb) utkozes.push(f.nev + ' (' + f.sor + '. sor)');
+    latott[f.nev] = f.tomb;
+  });
+  ok(utkozes.length === 0, 'egy név sem szerepel táblaként ÉS tábla-tömbként is' +
+     (utkozes.length ? ' — ÜTKÖZÉS: ' + utkozes.join(', ') : ''));
+
+  // ugyanaz az egyszerű tábla kétszer szintén hiba
+  const egyszeru = fejlecek.filter(f => !f.tomb).map(f => f.nev);
+  const dupla = egyszeru.filter((n,i) => egyszeru.indexOf(n) !== i);
+  ok(dupla.length === 0, 'nincs kétszer deklarált tábla' +
+     (dupla.length ? ' — ' + [...new Set(dupla)].join(', ') : ''));
+
+  // minden záró szabály teljes: from + to + status + force
+  const hianyos = szabalyok.filter(r => !r.from || !r.status || !r.force);
+  ok(hianyos.length === 0, 'minden szabály teljes');
+  ok(!/from\s*=\s*"\/\*\./.test(TOML),
+     'nincs /*.kiterjesztés minta — a Netlify-nál az nem megbízható');
 }
 
 console.log('\n2. A belső anyagok le vannak zárva');

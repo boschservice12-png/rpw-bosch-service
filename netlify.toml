@@ -72,13 +72,61 @@
   force = true
 
 [[redirects]]
-  from = "/*.md"
+  from = "/00-ARCHITEKTURA.md"
   to = "/404.html"
   status = 404
   force = true
 
 [[redirects]]
-  from = "/*.sql"
+  from = "/CHANGELOG.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/DEPLOYMENT.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/FILE-CHANGES.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/MANUAL-STAGING-CHECKLIST.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/README.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/REMAINING-RISKS.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/SECURITY.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/TEST-REPORT.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/rpw_consistency_check.sql"
   to = "/404.html"
   status = 404
   force = true
@@ -122,7 +170,6 @@
 #
 #  ⚠ Élesben ellenőrzés nélkül NEM kapcsolható be.
 # ════════════════════════════════════════════════════════════════
-[context.branch-deploy.headers]
 [[context.branch-deploy.headers]]
   for = "/*"
   [context.branch-deploy.headers.values]
