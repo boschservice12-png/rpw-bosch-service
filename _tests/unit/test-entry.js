@@ -36,7 +36,7 @@ const eq=(g,e,m)=>ok(g===e,m+'  got='+JSON.stringify(g));
 console.log('\n1. A gomb donti el a fluxot');
 openNewJob('prog');    eq(S.njMode,'prog','Programare noua'); eq(S.njTip,null,'  tipus nyitva'); eq(S.njDate,'','  datum ures');
 openNewJob('dosar');   eq(S.njMode,'prog','ismeretlen mod -> prog'); eq(S.njTip,null,'  nem dont helyettunk');
-openNewJob('lucrare'); eq(S.njMode,'lucrare','Lucrare noua'); eq(S.njDate,njDay(0),'  datum alapbol MA');
+openNewJob('lucrare'); eq(S.njMode,'prog','a lucrare urlap-mod kivezetve -> prog');
 
 console.log('\n2. Kotelezo mezok modonkent');
 function fill(mode,o){openNewJob(mode);S.njPlate='MS-50-BSS';S.njPhone='0740123456';Object.assign(S,o||{});return njMissing()}
@@ -45,10 +45,6 @@ ok(fill('prog',{njDate:njDay(1),njTip:'auto'}).length===0,'prog + sajat zseb -> 
 ok(fill('prog',{njDate:njDay(1),njTip:'asig'}).indexOf('nj_m_pay')>=0,'prog + asig -> keri a dosszie-allapotot');
 ok(fill('prog',{njDate:njDay(1),njTip:'asig',njPay:'deschis',njDosar:'D-1',njClient:'Kovacs'}).length===0,'  megadva + nevvel -> mehet');
 ok(fill('prog',{njTip:'auto'}).indexOf('nj_m_date')>=0,'prog: datum nelkul blokkol');
-ok(fill('lucrare',{}).indexOf('m_m_tip')>=0,'lucrare: tipus nelkul blokkol');
-ok(fill('lucrare',{njTip:'auto'}).length===0,'lucrare + sajat zseb: nem kerdez dossziet');
-ok(fill('lucrare',{njTip:'asig'}).indexOf('nj_m_pay')>=0,'lucrare + asig: KERDEZI a dosszie-allapotot');
-ok(fill('lucrare',{njTip:'asig',njPay:'deschid',njClient:'Kovacs'}).length===0,'  megadva + nevvel -> mehet');
 
 console.log('\n3. njSetTip: auto valasztaskor a dosszie-allapot torlodik');
 openNewJob('lucrare');S.njPay='deschis';njSetTip('auto');
@@ -85,24 +81,36 @@ console.log('\n4. A harom mentes eredmenye');
   ok(/job=/.test(LAST.nav||''),'  a munka azonositojaval');
   ok(JOBS.indexOf(j)>=0,'  a listaba is bekerult');
 
-  j=await mk('lucrare',{njTip:'auto'});
-  ok(!!j,'[lucrare/auto] letrejott');
-  eq(j.sosire,'sosit','  sosire=sosit'); eq(j.flux,'reparatie','  flux=reparatie');
-  eq(j.damageType,null,'  sajat zseb -> damageType null');
-  eq(j.phases[1].status,'active','  phases[1]=active');
+  // ── LUCRARE NOUA (2026-08-25): urlap NELKUL, egyenesen a recepciora ──
+  JOBS.length=0;LAST={};
+  await lucrareAcum();
+  j=LAST.saved;
+  ok(!!j,'[Lucrare noua] a gomb letrehozta a munkalapot');
+  eq(j.sosire,'sosit','  sosire=sosit — az auto ITT VAN');
+  eq(j.flux,'reparatie','  flux=reparatie');
+  eq(j.damageType,null,'  a kartipust a recepcio donti el');
+  eq(j.plate,'','  ures rendszam — a talonbol/OCR-bol jon');
+  eq(j.phase,1,'  phase=1'); eq(j.phases[1].status,'active','  az 1. fazis AKTIV');
   eq(j.programare.status,'in_lucru','  tukor in_lucru');
   eq(categorizeJob(j),'lucrari','  -> Lucrari');
-  ok(/rpw-recepcio-red\.html/.test(LAST.nav||''),'  recepciora navigal');
+  eq(j.conditions.programare,true,'  a fogadasi feltetelek beallitva');
+  ok(/rpw-recepcio-red\.html/.test(LAST.nav||''),'  EGYENESEN a recepciora navigal');
+  ok(/job=/.test(LAST.nav||''),'  a munka azonositojaval');
+  ok(JOBS.indexOf(j)>=0,'  a listaba is bekerult');
 
-  j=await mk('lucrare',{njTip:'asig',njPay:'deschid',njAsig:'Allianz Tiriac',njClient:'Kovacs'});
-  eq(j.damageType,'asig','[lucrare/asig] asig'); eq(j.dosarStatus,'deschid','  dosarStatus=deschid');
+  // Az elojegyzes + biztositos kar: amit az urlap BEKER, azt at is viszi
+  j=await mk('prog',{njDate:njDay(1),njTip:'asig',njPay:'deschid',njAsig:'Allianz Tiriac',njClient:'Kovacs'});
+  eq(j.damageType,'asig','[prog/asig] a tipus atment'); eq(j.dosarStatus,'deschid','  dosarStatus=deschid');
+  eq(j.asigurator,'Allianz Tiriac','  a biztosito is');
   eq(j.nrDosar,'','  karszam meg ures — helyes');
-  eq(j.programare.date,njDay(0),'  datum: ma');
 
   console.log('\n5. Regi hivasok elnek');
   openProgModal();   eq(S.njMode,'prog','openProgModal -> prog');
-  startReceptie();   eq(S.njMode,'lucrare','startReceptie -> lucrare');
-  openNewJobRec();   eq(S.njMode,'lucrare','openNewJobRec -> lucrare');
+  // a regi aliasok mostantol a KOZVETLEN utat inditjak (urlap nelkul)
+  JOBS.length=0;LAST={}; await startReceptie();
+  ok(/rpw-recepcio-red\.html/.test(LAST.nav||''),'startReceptie -> egyenesen recepcio');
+  JOBS.length=0;LAST={}; await openNewJobRec();
+  ok(/rpw-recepcio-red\.html/.test(LAST.nav||''),'openNewJobRec -> egyenesen recepcio');
 
   console.log('\n'+(fail?'x ':'OK ')+pass+' pass / '+fail+' fail');
   process.exit(fail?1:0);

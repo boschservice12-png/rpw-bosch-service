@@ -670,7 +670,6 @@ nj_date_past:{ro:'Data aleasă e în trecut',en:'The chosen date is in the past'
 nj_dup:{ro:'Exista deja o lucrare activa pe acest numar',en:'An active job already exists for this plate',hu:'Erre a rendszamra mar van elo munka'},
 nj_open:{ro:'Salveaza',en:'Save',hu:'Mentes'},
 nj_open_prog:{ro:'Programeaza',en:'Schedule',hu:'Elojegyzes'},
-nj_open_lucrare:{ro:'Recepție auto',en:'Car reception',hu:'Auto atvetel'},
 nj_open_edit:{ro:'Salvează modificările',en:'Save changes',hu:'Modositasok mentese'},
 m_edit_t:{ro:'Editează datele',en:'Edit details',hu:'Adatok javitasa'},
 m_edit_s:{ro:'Data se schimbă doar prin Reprogramare',en:'Date changes only via Reschedule',hu:'A datum csak Atutemezessel valtozik'},
@@ -847,8 +846,6 @@ st_inchis:{ro:'Inchis',en:'Closed',hu:'Lezarva'},
 open_dosar_btn:{ro:'Deschide dosarul',en:'Open the file',hu:'Dosszie megnyitasa'},
 m_prog_t:{ro:'Programare noua',en:'New appointment',hu:'Uj elojegyzes'},
 m_prog_s:{ro:'Masina vine mai tarziu — rezervam ora',en:'Car comes later — we book the slot',hu:'Az auto kesobb jon — idopontot foglalunk'},
-m_lucrare_t:{ro:'Lucrare noua',en:'New job',hu:'Uj munka'},
-m_lucrare_s:{ro:'Masina e aici — incepe lucrarea',en:'Car is here — work starts',hu:'Az auto itt van — indul a munka'},
 m_tip:{ro:'Tipul lucrarii',en:'Job type',hu:'A munka tipusa'},
 m_tip_asig:{ro:'Dauna asigurare',en:'Insurance claim',hu:'Biztositoi kar'},
 m_tip_asig_s:{ro:'Deconteaza asiguratorul',en:'Insurer settles',hu:'A biztosito fizet'},
@@ -1182,7 +1179,7 @@ function renderPanou(){
   h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
 
   // Header + Programare noua gomb
-  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn" style="background:#15181C;color:#fff;border-color:#15181C" onclick="azOpen()">'+T('az_q')+'</button>'+'<button class="btn-prog-new" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="background:var(--bl,#2563eb)" onclick="setPanouTab(\'dosare\')">🛡 '+T('dosar_dauna')+'</button><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="openNewJob(\'lucrare\')">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
+  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn" style="background:#15181C;color:#fff;border-color:#15181C" onclick="azOpen()">'+T('az_q')+'</button>'+'<button class="btn-prog-new" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="background:var(--bl,#2563eb)" onclick="setPanouTab(\'dosare\')">🛡 '+T('dosar_dauna')+'</button><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="lucrareAcum()">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
 
   // Tabs
   h+='<div class="panou-tabs">';
@@ -1568,7 +1565,7 @@ window.setPanouTab=function(t){S.panouTab=t;render()};
 function newJobModalHtml(){
   if(!S.showNew) return '';
   var mode=S.njMode||'prog';
-  var TT={prog:['m_prog_t','m_prog_s'],lucrare:['m_lucrare_t','m_lucrare_s'],edit:['m_edit_t','m_edit_s']}[mode];
+  var TT={prog:['m_prog_t','m_prog_s'],edit:['m_edit_t','m_edit_s']}[mode];
   var h='';
   h+='<div class="prog-modal"><div class="prog-box nj-box">';
   h+='<div class="prog-t">'+T(TT[0])+'</div>';
@@ -1577,8 +1574,8 @@ function newJobModalHtml(){
   // A csillag csak ott, ahol tényleg kötelező: alkalmi dossziénál nem az.
   h+='<div class="prog-field"><label>'+T('phone_label')+' *'+'</label><input id="iPhone" type="tel" value="'+escH(S.njPhone||'')+'" placeholder="'+T('phone_ph')+'" oninput="S.njPhone=this.value;njSync()"/></div>';
 
-  // TIPUS — csak a "Lucrare noua"-nal kerdes. A dosar mindig asig.
-  if(mode==='lucrare'||mode==='prog'||mode==='edit'){
+  // TIPUS — az elojegyzesnel es adatjavitasnal kerdes.
+  if(mode==='prog'||mode==='edit'){
     h+='<div class="prog-field"><label>'+T('m_tip')+' *</label><div class="nj-pick">';
     h+='<button class="nj-opt'+(S.njTip==='asig'?' on':'')+'" onclick="njSetTip(\'asig\')"><b>&#128737; '+T('m_tip_asig')+'</b><i>'+T('m_tip_asig_s')+'</i></button>';
     h+='<button class="nj-opt'+(S.njTip==='auto'?' on':'')+'" onclick="njSetTip(\'auto\')"><b>&#128176; '+T('m_tip_auto')+'</b><i>'+T('m_tip_auto_s')+'</i></button>';
@@ -1587,7 +1584,7 @@ function newJobModalHtml(){
 
   // DOSSZIE-ALLAPOT — csak biztositos esetben. A kulon 'dosar' urlap-mod
   // 2026-08-25-en kikerult: az Avizare dauna gomb egybol a dosszie lapra visz.
-  var kellDosar = (mode==='lucrare'||mode==='prog'||mode==='edit') && S.njTip==='asig';
+  var kellDosar = (mode==='prog'||mode==='edit') && S.njTip==='asig';
   if(kellDosar){
     h+='<div class="prog-field"><label>'+T('nj_pay')+' *</label><div class="nj-pick">';
     h+='<button class="nj-opt'+(S.njPay==='deschid'?' on':'')+'" onclick="njSet(\'njPay\',\'deschid\')"><b>&#128737; '+T('nj_pay_a')+'</b><i>'+T('nj_pay_a_s')+'</i></button>';
@@ -1605,7 +1602,7 @@ function newJobModalHtml(){
   }
 
   // DATUM — programare-nal es lucrare-nal (Ferenc dontese: a lucrare is kap datumot)
-  if(mode==='prog'||mode==='lucrare'){   // edit modban NINCS datum — az a Reprogramare dolga
+  if(mode==='prog'){   // edit modban NINCS datum — az a Reprogramare dolga
     h+='<div class="prog-field"><label>'+T('nj_date')+' *</label><div class="nj-chips">';
     h+='<button class="nj-chip'+(S.njDate===njDay(0)?' on':'')+'" onclick="njQuick(0)">'+T('nj_today')+'</button>';
     h+='<button class="nj-chip'+(S.njDate===njDay(1)?' on':'')+'" onclick="njQuick(1)">'+T('nj_tomorrow')+'</button>';
@@ -1774,12 +1771,12 @@ function njKey(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
 
 window.openNewJob=function(mode){
   S.showNew=1;
-  S.njMode=(mode==='lucrare')?mode:'prog';
+  S.njMode='prog';   // 2026-08-25: a 'lucrare' urlap-mod kivezetve (lucrareAcum az ut)
   S.njEditId=null;
   S.njPlate='';S.njPhone='';S.njClient='';S.njAuto='';S.njAsig='';S.njDosar='';
   S.njTip=null;
   S.njPay=null;
-  S.njDate=(S.njMode==='lucrare')?njDay(0):'';
+  S.njDate='';
   S.njTime='08:00';
   render();
 };
@@ -1789,7 +1786,7 @@ window.njSetTip=function(v){S.njTip=v;if(v==='auto')S.njPay=null;render()};
 window.njQuick=function(off){S.njDate=njDay(off);render()};
 
 // legacy aliasok
-window.openNewJobRec=function(){openNewJob('lucrare')};
+window.openNewJobRec=function(){return lucrareAcum()};
 
 // ── ADATJAVITAS — ugyanaz a urlap, csak meglevo munkat ment.
 // A DATUMOT szandekosan NEM engedi: arra a Reprogramare valo, ami szamolja
@@ -1826,21 +1823,21 @@ window.submitEditJob=async function(){
 };
 window.openProgModal=function(){openNewJob('prog')};
 window.closeProgModal=function(){closeNewJob()};
-window.startReceptie=function(){openNewJob('lucrare')};
+window.startReceptie=function(){return lucrareAcum()};
 
 function njMissing(){
   var m=[], mode=S.njMode||'prog';
   if(!njOkPlate(S.njPlate))m.push(T('nj_m_plate'));
   if(!njOkPhone(S.njPhone))m.push(T('nj_m_phone'));
-  if((mode==='lucrare'||mode==='prog'||mode==='edit')&&!S.njTip)m.push(T('m_m_tip'));
-  var kellDosar=(mode==='lucrare'||mode==='prog'||mode==='edit')&&S.njTip==='asig';
+  if((mode==='prog'||mode==='edit')&&!S.njTip)m.push(T('m_m_tip'));
+  var kellDosar=(mode==='prog'||mode==='edit')&&S.njTip==='asig';
   if(kellDosar&&!S.njPay)m.push(T('nj_m_pay'));
   if(kellDosar&&S.njPay==='deschis'&&!String(S.njDosar||'').trim())m.push(T('nj_m_nrdosar'));
   // A karosult neve a biztositonal KOTELEZO mezo — ne a pultnal derüljon ki.
   if(kellDosar&&!String(S.njClient||'').trim())m.push(T('nj_m_client'));
   // Ugyanaz az eset ketszer: ez valodi hiba, nem engedjuk.
   if(njDup())m.push(T('nj_dup_real'));
-  if((mode==='prog'||mode==='lucrare')&&!S.njDate)m.push(T('nj_m_date'));   // edit: nincs datum
+  if(mode==='prog'&&!S.njDate)m.push(T('nj_m_date'));   // edit: nincs datum
   return m;
 }
 // ── ESET-azonossag, NEM rendszam-azonossag.
@@ -1928,10 +1925,12 @@ window.submitNewJob=async function(){
     var mode=S.njMode||'prog', now=new Date().toISOString();
     var num=await njNextNumber();
     var flux   = 'reparatie';
-    var sosire = (mode==='lucrare') ? 'sosit' : 'programat';
-    var asig   = (mode==='lucrare' && S.njTip==='asig');
+    var sosire = 'programat';   // az 'itt van' ut a lucrareAcum — nem az urlap
+    // A tipus dont, nem a mod: az urlap AMIT BEKER, azt at is viszi.
+    // (A 'lucrare' mod kivezetesevel a regi mod-feltetel mindig hamis
+    // lenne, es a biztosito/dosszie-allapot csendben elveszne.)
+    var asig   = (S.njTip==='asig');
     var ph={1:{status:'pending'},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}};
-    if(sosire==='sosit')ph[1]={status:'active',started:now};
     var j={
       id:(window.RPWUtil?RPWUtil.jobId():('RPW-'+String(Date.now()).slice(-6))),
       number:num,
@@ -1961,9 +1960,7 @@ window.submitNewJob=async function(){
     await saveJob(j);
     var plate=j.plate;
     S.showNew=0;
-    if(mode==='lucrare'){
-      location.assign('rpw-recepcio-red.html?job='+j.id);
-    } else {
+    {
       S.screen='panou';
       S.panouTab='viitoare';
       toast(T('m_ok_prog')+': '+plate);
@@ -2050,6 +2047,41 @@ window.dosarTarziu=async function(){
     JOBS.push(j);
     await saveJob(j);
     deschideDosar(j.id);
+  }catch(e){ toast('Error: '+e.message,1) }
+};
+
+// ── A LUCRARE NOUA IS EGYENES UT (Ferenc, 2026-08-25) ───────────────
+// KORABBAN: a zold gomb URLAPOT nyitott (rendszam, telefon, tipus, datum),
+// majd a mentes utan vitt a recepciora — AHOL UGYANEZEK A MEZOK ott vannak,
+// raadasul talonbol, OCR-rel. Ket helyen ugyanaz az adat.
+// MOSTANTOL: a gomb letrehozza a munkalapot es EGYBOL a recepcio-lapra
+// visz. A kartipust, ugyfelet, rendszamot OTT veszik fel — a recepcio
+// elso kepernyoje eppen a tipus-valaszto.
+window.lucrareAcum=async function(){
+  try{
+    var now=new Date().toISOString();
+    var hh=String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
+    var num=await njNextNumber();
+    var j={
+      id:(window.RPWUtil?RPWUtil.jobId():('RPW-'+String(Date.now()).slice(-6))),
+      number:num,
+      auto:'',vin:'',plate:'',client:'',phone:'',note:'',szinkod:'',
+      sosire:'sosit',            // az auto ITT VAN
+      flux:'reparatie',
+      inchis:false,
+      phase:1,                   // SOHA nem 0
+      damageType:null,           // a recepcio tipus-valasztoja donti el
+      dosarStatus:null,
+      created:now,
+      photos:[],docs:[],panels:{},elements:{},materials:[],
+      programare:{date:njDay(0),time:hh,confirmed:true,reprogramari:0,istoric:[]},
+      conditions:{programare:true,loc:true,om:true,piese:false,whatsapp:true},
+      phases:{1:{status:'active',started:now},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}}
+    };
+    syncMirror(j);
+    JOBS.push(j);
+    await saveJob(j);
+    location.assign('rpw-recepcio-red.html?job='+encodeURIComponent(j.id));
   }catch(e){ toast('Error: '+e.message,1) }
 };
 

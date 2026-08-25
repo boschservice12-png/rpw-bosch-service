@@ -114,14 +114,21 @@ try{
   j.plate='MS-20-BBB'; j.client='Nagy Z.'; j.asigurator='Groupama';
   await w.saveJob(j);
 
-  grp('3 · LUCRARE NOUĂ — az autó itt van');
+  grp('3 · LUCRARE NOUĂ — az autó itt van (2026-08-25: űrlap nélkül)');
+  // A zöld gomb létrehozza a munkalapot és EGYBŐL a recepcióra visz;
+  // a rendszámot/ügyfelet/kártípust OTT veszik fel (talon + OCR).
   NAV=null;
-  j=await nyit('lucrare',{njPlate:'MS-30-CCC',njPhone:'0740333333',njTip:'auto',njDate:today()});
+  await w.lucrareAcum();
+  j=w.JOBS[w.JOBS.length-1];
+  ok(!!j,'létrejött');
   eq(j.sosire,'sosit','sosire=sosit');
   eq(j.phases[1].status,'active','a recepció ELINDUL');
   eq(j.conditions.whatsapp,true,'a feltételek beállnak');
+  eq(j.damageType,null,'a kártípust a recepció dönti el');
+  eq(j.plate,'','üres rendszám — a talonból jön');
   eq(w.categorizeJob(j),'lucrari','→ Lucrări képernyő');
   ok(NAV!==null,'átvisz a recepcióra (cél URL: test-entry.js)');
+  j.plate='MS-30-CCC'; j.phone='0740333333'; await w.saveJob(j);
 
   // ══════════════════════════════════════════════════════════
   grp('4 · A KAPUK — nem enged hiányos adatot');

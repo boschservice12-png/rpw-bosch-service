@@ -24,7 +24,7 @@ setTimeout(()=>{try{
   // nem kozvetlenul az uj-munka modalt.
   ok(/setPanouTab\('dosare'\)/.test(h) && /Avizare daun/.test(h),'Panou: Avizare dauna ful-gomb');
   ok(typeof w.dosarTarziu==='function','dosarTarziu (a ful letrehozo utja) letezik');
-  ok(/onclick="openNewJob\('lucrare'\)"/.test(h),'Panou: Lucrare noua gomb');
+  ok(/onclick="lucrareAcum\(\)"/.test(h),'Panou: Lucrare noua gomb (kozvetlen ut)');
   ok(!/startReceptie\(false\)/.test(h),'Panou: regi "Receptie auto" gomb eltunt');
 
   w.setScreen('lucrari');h=app.innerHTML;
@@ -56,8 +56,9 @@ setTimeout(()=>{try{
   ok(w.S.njMode==='prog','ismeretlen mod -> prog (nincs csendes melle-eses)');
   ok(w.S.njTip===null,'  a tipus nyitva marad, nem donti el helyettunk');
 
-  w.openNewJob('lucrare');
-  w.S.njPlate=w.njPlate('ms50bss');w.S.njPhone='0740123456';w.njSetTip('auto');w.njSync();
+  w.openNewJob('prog');
+  w.S.njPlate=w.njPlate('ms50bss');w.S.njPhone='0740123456';w.njSetTip('auto');
+  w.njQuick(1);w.njSync();
   ok(w.document.getElementById('njSave').disabled===false,'minden megvan -> mentes engedelyezve');
   ok(w.document.getElementById('njWhy').textContent==='','hianylista kiurult');
 

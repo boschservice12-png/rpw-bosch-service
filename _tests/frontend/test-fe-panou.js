@@ -38,7 +38,15 @@ const JOBS=[
 
 (async()=>{
 const raw=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-const dom=new JSDOM(inline(raw),{url:'https://rpw.teszt/index.html',
+// jsdom nem enged valodi navigaciot: a kiserletet a hibajelzesbol fogjuk el.
+let NAV=null;
+const vc=new jsdom.VirtualConsole();
+['jsdomError','error','warn','info','log'].forEach(ev=>vc.on(ev,(...a)=>{
+  const t=String((a[0]&&a[0].message)||a[0]||'');
+  if(/navigat|not implemented/i.test(t)) NAV=t;
+  if(process.env.NAVDBG) console.log('   ['+ev+']',t.slice(0,90));
+}));
+const dom=new JSDOM(inline(raw),{virtualConsole:vc, url:'https://rpw.teszt/index.html',
  runScripts:'dangerously',pretendToBeVisual:true,
  beforeParse(w){
   w.__sbMock={rpc:(n)=>Promise.resolve({data:(n==='rpw_server_capabilities'?CAPS:
@@ -90,12 +98,52 @@ console.log('\n2. Az Avizare daună fül — valódi fülváltással');
   ok(!/markRatat/.test(row),'nincs Ratat a dosszié-soron');
 }
 
-console.log('\n3. A fül-gomb kattintása tényleg vált (oda-vissza)');
+console.log('\n3. Lucrare nouă — VALÓDI kattintás, űrlap nélkül a recepcióra');
 {
   const back=[...w.document.querySelectorAll('.panou-tab')]
     .find(b=>(b.getAttribute('onclick')||'').indexOf("'viitoare'")>=0);
   back.click(); await sleep(30);
-  ok(/MS-22-BBB/.test(app())&&!/MS-11-AAA/.test(app()),'vissza a Viitoare-ra');
+  const zold=[...w.document.querySelectorAll('button')]
+    .find(b=>(b.getAttribute('onclick')||'')==='lucrareAcum()');
+  ok(!!zold,'a zöld Lucrare nouă gomb VALÓDI elem');
+  const elotte=w.JOBS.length;
+  NAV=null;
+  // A panelen a mentes a TARTOS SOROn megy (rpw-save.js, 800ms debounce),
+  // ezert a navigacio nem azonnali. Nem alszunk vakon: varunk ra.
+  const t0=Date.now();
+  if(zold) zold.click();
+  while(NAV===null && Date.now()-t0<8000) await sleep(50);
+  console.log('    i a navigacio '+(Date.now()-t0)+' ms utan indult (sor-alapu mentes)');
+  ok(w.JOBS.length===elotte+1,'a kattintás LÉTREHOZTA a munkalapot ('+elotte+'→'+w.JOBS.length+')');
+  const uj=w.JOBS[w.JOBS.length-1];
+  ok(!/nj-box/.test(app()),'NEM nyílt űrlap');
+  ok(uj.sosire==='sosit','sosire=sosit — az autó itt van');
+  ok(uj.flux==='reparatie','flux=reparatie');
+  ok(uj.phase===1 && uj.phases[1].status==='active','phase=1, az 1. fázis AKTÍV');
+  ok(uj.damageType===null,'a kártípust a recepció dönti el (null)');
+  ok(uj.plate==='','üres rendszám — a talonból/OCR-ből jön');
+  ok(uj.conditions && uj.conditions.programare===true,'a fogadási feltételek beállítva');
+  // jsdom-ban csak az látszik, hogy navigáció TÖRTÉNT; a cél URL-t a
+  // forrás rögzíti (lásd lentebb, 5. szakasz) — így nem hiszünk vakon.
+  ok(NAV!==null && /navigation|not implemented/i.test(NAV),
+     'a kattintás NAVIGÁLT (nem maradt a panelen) — jsdom: '+String(NAV).slice(0,60));
+}
+
+console.log('\n4. A fül-gomb kattintása tényleg vált (oda-vissza)');
+{
+  ok(/MS-22-BBB/.test(app())&&!/MS-11-AAA/.test(app()),'a Viitoare-fül a helyén');
+}
+
+console.log('\n5. A célok a forrásban (amit jsdom nem tud megmutatni)');
+{
+  const src=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
+  const fn=src.slice(src.indexOf('window.lucrareAcum'), src.indexOf('window.dosarFisier'));
+  ok(/rpw-recepcio-red\.html\?job='\+encodeURIComponent\(j\.id\)/.test(fn),
+     'lucrareAcum → rpw-recepcio-red.html?job=<id>');
+  ok(!/openNewJob/.test(fn),'  űrlapot nem nyit');
+  ok(!/S\.njMode='lucrare'|mode==='lucrare'/.test(src),'a lucrare űrlap-mód sehol nem maradt');
+  ok(/var asig   = \(S\.njTip==='asig'\)/.test(src),
+     'az űrlap AMIT BEKÉR, azt át is viszi (nincs adatvesztés)');
 }
 
 console.log('\n'+(fail?'✗ ':'OK ')+pass+' pass / '+fail+' fail');

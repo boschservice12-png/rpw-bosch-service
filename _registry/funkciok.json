@@ -246,15 +246,19 @@
   },
   {
    "id": "F-101",
-   "nev": "Uj munkalap ablak megnyitasa",
+   "nev": "Uj munkalap: Lucrare noua (urlap nelkul, egyenesen a recepciora)",
    "fe": [
     [
      "index.html",
-     "window.openNewJob"
+     "window.lucrareAcum"
+    ],
+    [
+     "index.html",
+     "onclick=\"lucrareAcum()\""
     ]
    ],
    "be": [],
-   "teszt": "_tests/unit/test-entry.js",
+   "teszt": "_tests/frontend/test-fe-panou.js",
    "allapot": "csak-frontend"
   },
   {
@@ -268,6 +272,23 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-case.js",
+   "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-121",
+   "nev": "Elojegyzes urlap (Programare noua) — az EGYETLEN megmarado urlap-ut",
+   "fe": [
+    [
+     "index.html",
+     "window.openNewJob"
+    ],
+    [
+     "index.html",
+     "function njMissing"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/unit/test-entry.js",
    "allapot": "csak-frontend"
   },
   {
