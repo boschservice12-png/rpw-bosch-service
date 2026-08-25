@@ -50,9 +50,11 @@ setTimeout(()=>{try{
   ok(!/Allianz/.test(h),'sajat zseb -> biztosito blokk eltunt');
   ok(w.S.njPay===null,'  a dosszie-allapot torlodott');
 
-  w.openNewJob('dosar');h=app.innerHTML;
-  ok(/Allianz/.test(h),'dosar mod -> mindig asig, biztosito lathato');
-  ok(!/type="date"/.test(h),'dosar mod -> nincs datum');
+  // 2026-08-25: nincs tobbe 'dosar' urlap-mod. Ismeretlen mod -> 'prog',
+  // ami a biztonsagos alapertelmezes (nem esik csendben mas agra).
+  w.openNewJob('dosar');
+  ok(w.S.njMode==='prog','ismeretlen mod -> prog (nincs csendes melle-eses)');
+  ok(w.S.njTip===null,'  a tipus nyitva marad, nem donti el helyettunk');
 
   w.openNewJob('lucrare');
   w.S.njPlate=w.njPlate('ms50bss');w.S.njPhone='0740123456';w.njSetTip('auto');w.njSync();

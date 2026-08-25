@@ -528,7 +528,7 @@
   },
   {
    "id": "F-202",
-   "nev": "Deschide dosar dauna - MI nyitjuk a kardossziet",
+   "nev": "Deschide dosar dauna - a dossziet MI nyitjuk (urlap nelkul, egybol a dosszie lapra)",
    "fe": [
     [
      "index.html",
@@ -537,10 +537,14 @@
     [
      "index.html",
      "dosar_tarziu"
+    ],
+    [
+     "index.html",
+     "deschideDosar(j.id)"
     ]
    ],
    "be": [],
-   "teszt": "_tests/unit/test-dosare.js",
+   "teszt": "_tests/unit/test-entry.js",
    "allapot": "csak-frontend"
   },
   {
@@ -559,6 +563,25 @@
    "be": [],
    "teszt": "_tests/unit/test-dosare.js",
    "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-215",
+   "nev": "Duplikatum-figyelmeztetes a dosszie lapon (ugyanaz a rendszam + biztosito + karszam)",
+   "fe": [
+    [
+     "rpw-dosar.html",
+     "window.dosarDupCheck"
+    ],
+    [
+     "rpw-dosar.html",
+     "dup-warn"
+    ]
+   ],
+   "be": [
+    "rpw_jobs_list"
+   ],
+   "teszt": "_tests/unit/test-dup-dosar.js",
+   "allapot": "el"
   },
   {
    "id": "F-204",

@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 81 | 26 | 46 | 3 | 6 | 7 |
+| 82 | 27 | 46 | 3 | 6 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -61,8 +61,9 @@ szám nélkül, azt is megmondja.
 | szám | mit csinál | frontend | backend | teszt | állapot |
 |---|---|---|---|---|---|
 | **F-201** | Avizare dauna ablak megnyitasa | `index.html` | — | `unit/test-dosare.js` | 🟦 csak frontend |
-| **F-202** | Deschide dosar dauna - MI nyitjuk a kardossziet | `index.html` | — | `unit/test-dosare.js` | 🟦 csak frontend |
+| **F-202** | Deschide dosar dauna - a dossziet MI nyitjuk (urlap nelkul, egybol a dosszie lapra) | `index.html` | — | `unit/test-entry.js` | 🟦 csak frontend |
 | **F-203** | Preluare dosar dauna - meglevo dosszie atvetele fajlbol | `index.html` | — | `unit/test-dosare.js` | 🟦 csak frontend |
+| **F-215** | Duplikatum-figyelmeztetes a dosszie lapon (ugyanaz a rendszam + biztosito + karszam) | `rpw-dosar.html` | `rpw_jobs_list` | `unit/test-dup-dosar.js` | ✅ él |
 | **F-204** | Dosszie oldal iratrekeszekkel | `rpw-dosar.html` | — | `unit/test-dosarflux.js` | 🟦 csak frontend |
 | **F-205** | Irat feltoltese egy rekeszbe | `rpw-dosar.html` | — | `unit/test-classify.js` | 🟦 csak frontend |
 | **F-206** | Irat torlese a rekeszbol | `rpw-dosar.html` | — | `unit/test-dialogs.js` | 🟦 csak frontend |

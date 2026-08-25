@@ -93,18 +93,26 @@ try{
   eq(w.categorizeJob(j),'viitoare','→ Lucrări viitoare');
   ok(NAV===null,'nem navigál el');
 
-  grp('2 · DESCHIDE DOSAR DAUNĂ — csak ügyintézés');
+  grp('2 · AVIZARE DAUNĂ — a gomb átvette a "Deschide dosarul" műveletét');
+  // 2026-08-25: nincs többé űrlap. A gomb létrehozza a dossziét és egyből
+  // a dosszié lapjára visz — a rendszámot, biztosítót, kárszámot OTT
+  // töltik ki, ott, ahol amúgy is látszanak. Nincs kétszeri adatbevitel.
   NAV=null;
-  j=await nyit('dosar',{njPlate:'MS-20-BBB',njPhone:'0740222222',njAsig:'Groupama',njClient:'Nagy Z.'});
+  await w.dosarTarziu();
+  j=w.JOBS[w.JOBS.length-1];
   ok(!!j,'létrejött');
   eq(j.flux,'doar_dosar','flux=doar_dosar');
   eq(j.damageType,'asig','asig');
   eq(j.dosarStatus,'deschid','automatikusan "mi nyitjuk"');
   eq(j.phases[1].status,'pending','a javítás NEM indul el');
   eq(w.categorizeJob(j),'dosare','külön kategória');
-  // 2026-08-25: az alkalmi dossziénál a MUNKA a biztosítói iratokkal van,
-  // ezért a mentés a dosszié lapjára visz. (Cél URL: test-entry.js)
-  ok(NAV!==null,'a dosszié lapjára navigál');
+  eq(j.plate,'','üres rendszám — a dosszié lapján töltik ki');
+  // jsdom nem enged valodi navigaciot: itt csak azt latjuk, hogy TORTENT.
+  // Hogy a cel tenyleg rpw-dosar.html?job=..., azt a test-entry.js orzi.
+  ok(NAV!==null,'a dosszié lapjára navigál (cél URL: test-entry.js)');
+  // Amit a felhasználó a dosszié lapon beír — innentől a lista is ezt látja.
+  j.plate='MS-20-BBB'; j.client='Nagy Z.'; j.asigurator='Groupama';
+  await w.saveJob(j);
 
   grp('3 · LUCRARE NOUĂ — az autó itt van');
   NAV=null;
@@ -218,7 +226,12 @@ try{
   grp('13 · A LISTA MEGJELENÍTÉSE');
   w.JOBS.length=0; w.__db.length=0;
   await nyit('prog',{njPlate:'MS-81-AAA',njPhone:'0740811111',njTip:'auto',njDate:w.njDay(1)});
-  await nyit('dosar',{njPlate:'MS-82-BBB',njPhone:'0740822222',njAsig:'Groupama',njClient:'B'});
+  // 2026-08-25: a kardosszie az Avizare dauna gombbal jon letre, uresen,
+  // es az adatokat a dosszie lapjan toltik ki. Itt ugyanezt jatsszuk le.
+  await w.dosarTarziu();
+  const _dsz=w.JOBS[w.JOBS.length-1];
+  _dsz.plate='MS-82-BBB'; _dsz.phone='0740822222'; _dsz.asigurator='Groupama'; _dsz.client='B';
+  await w.saveJob(_dsz);
   w.S.screen='panou'; w.S.panouTab='viitoare'; w.render();
   let h=app();
   ok(/MS-81-AAA/.test(h),'az előjegyzés a listán');
@@ -249,9 +262,13 @@ try{
   ok(/nj-box/.test(h),'modál megnyílik');
   ok(/m_tip|Dau/.test(h),'típusválasztó ott van (prog módban is)');
   ok(/type="date"/.test(h),'dátum ott van');
+  // 2026-08-25: az űrlapnak nincs többé 'dosar' módja — ismeretlen mód
+  // esetén a biztonságos 'prog'-ra esik, nem valami más ágra csendben.
   w.openNewJob('dosar'); h=app();
-  ok(!/type="date"/.test(h),'dosar módban NINCS dátum');
-  ok(/Groupama/.test(h),'dosar módban van biztosító-lista');
+  eq(w.S.njMode,'prog','ismeretlen mód → prog');
+  ok(/type="date"/.test(h),'  a prog űrlap dátumot kér');
+  w.openNewJob('prog'); w.njSetTip('asig'); h=app();
+  ok(/Groupama/.test(h),'asig típusnál ott a biztosító-lista');
   w.njSet('njPlate','MS-82-BBB'); w.njSync();
   const dupdiv=w.document.getElementById('njDup');
   ok(dupdiv&&dupdiv.style.display!=='none','ismert rendszámnál jelez');

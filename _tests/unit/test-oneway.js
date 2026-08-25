@@ -7,10 +7,16 @@ const wf =fs.readFileSync('rpw-workflow.js','utf8');
 let pass=0,fail=0;
 const ok=(c,m)=>{c?pass++:(fail++,console.log('  x '+m))};
 
-console.log('\n1. A nyito modal: dosar modban NINCS kerdes');
-ok(/if\(mode!=='dosar'\)\{[\s\S]{0,400}nj_pay/.test(idx),'a valaszto csak nem-dosar modban jelenik meg');
-ok(/S\.njPay=\(S\.njMode==='dosar'\)\?'deschid':null/.test(idx),'dosar mod -> automatikusan deschid');
-ok(/kellDosar&&mode!=='dosar'&&!S\.njPay/.test(idx),'a validacio se keri');
+// 2026-08-25: az urlap 'dosar' modja MEGSZUNT. Az Avizare dauna gomb
+// atvette a „Deschide dosarul" muveletet: letrehozza a dossziet es
+// egybol a dosszie lapjara visz. Nincs tobbe ket helyen ugyanaz a mezo.
+console.log('\n1. Az urlapnak nincs tobbe kulon dosar-modja');
+ok(!/mode!=='dosar'/.test(idx),'a kivezetett mod feltetele sehol nem maradt');
+ok(!/njMode==='dosar'/.test(idx),'  a nyitas sem allit be dosar-modot');
+ok(/S\.njMode=\(mode==='lucrare'\)\?mode:'prog'/.test(idx),'  ket mod maradt: prog es lucrare');
+ok(!/openNewJob\('dosar'\)/.test(idx),'  senki nem hivja dosar-modban');
+ok(/window\.dosarTarziu=async function/.test(idx),'a gomb sajat utat kapott');
+ok(/deschideDosar\(j\.id\)/.test(idx),'  ugyanazt a deschideDosar-t hivja, mint a lista gombja');
 
 console.log('\n2. A dosszie-oldal: doar_dosar -> nincs modvalto');
 ok(/_ddj \? 'deschid' :/.test(dos),'a mod kenyszeritve deschid-re');

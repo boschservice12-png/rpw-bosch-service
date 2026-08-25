@@ -162,6 +162,16 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .dd-a3{background:#16a34a}
 .dd-a2:hover,.dd-a3:hover{filter:brightness(.93)}
 .dd-undo{background:transparent;border:1px solid var(--b);color:var(--t3);border-radius:20px;padding:5px 11px;font:700 11px inherit;cursor:pointer}
+
+/* Duplikatum-figyelmeztetes: nem blokkol, de nem is nemul el. */
+.dup-warn{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9999;
+  display:flex;align-items:center;gap:12px;max-width:92vw;
+  background:#7f1d1d;color:#fff;border-radius:10px;padding:11px 14px;
+  box-shadow:0 8px 26px rgba(0,0,0,.32);font-size:13px}
+.dup-warn b{white-space:nowrap}
+.dup-warn span{opacity:.85;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.dup-warn a{color:#fff;text-decoration:underline;white-space:nowrap}
+.dup-warn button{background:none;border:0;color:#fff;font-size:18px;line-height:1;cursor:pointer;padding:0 2px}
 </style>
 </head>
 <body>
@@ -755,7 +765,60 @@ window.setDosarField=async function(k,v){
   try{RPWCache.setJob(JOB)}catch(e){}
   try{await RPWDb.patchV2(sb,JOB.id,p,{actor:'service'})}catch(err){}
   render();
+  if(k==='asigurator'||k==='nrDosar') dosarDupCheck();
 };
+
+// ── DUPLIKATUM-FIGYELMEZTETES (2026-08-25) ──────────────────────────
+// KORABBAN az uj-dosszie URLAP blokkolta a masodik azonos esetet:
+// ugyanaz a rendszam + ugyanaz a biztosito + ugyanaz a karszam.
+// Az urlap 2026-08-25-en kikerult (az Avizare dauna gomb egybol ide
+// hoz), es a karszamot MOST ITT adjak meg — ezert a figyelmeztetes is
+// ide kerult at. NEM blokkol, mert a dosszie ekkor mar letezik; de
+// nem is nemul el, mert a ket azonos dosszie valodi kar.
+//
+// Egy autonak lehet egyszerre Allianz-kara es Groupama-kara: az KET
+// szabalyos eset. Csak az UGYANAZ ketszer a duplikatum.
+function _dupPlateKey(x){ return String(x||'').toUpperCase().replace(/[^A-Z0-9]/g,'') }
+function _dupCaseKey(asig,nr){
+  var a=String(asig||'').trim().toUpperCase(), d=String(nr||'').trim().toUpperCase();
+  if(!a && !d) return null;                       // nincs mibol azonositani
+  return 'ASIG|'+a+'|'+d;
+}
+window.dosarDupCheck=async function(){
+  if(!JOB) return null;
+  var plate=_dupPlateKey(JOB.plate);
+  if(!plate) return null;                         // rendszam nelkul nem azonosithato
+  var mine=_dupCaseKey(JOB.asigurator, JOB.nrDosar);
+  if(!mine) return null;
+  var rows=[];
+  try{
+    var r=await RPWDb.listActive(sb);
+    if(r && r.error) return null;                 // offline vagy szerverhiba: csendben
+    rows=(r && r.data) || [];
+  }catch(e){ return null }
+  for(var i=0;i<rows.length;i++){
+    var j=(rows[i] && rows[i].data) || rows[i];
+    if(!j || j.id===JOB.id) continue;
+    if(j.inchis) continue;                        // lezart eset nem szamit
+    if(_dupPlateKey(j.plate)!==plate) continue;
+    if(_dupCaseKey(j.asigurator, j.nrDosar)!==mine) continue;
+    _dupWarn(j);
+    return j;
+  }
+  return null;
+};
+function _dupWarn(j){
+  var mit=(j.nrDosar||'?')+' · '+(j.asigurator||'?');
+  var hova='rpw-dosar.html?job='+encodeURIComponent(j.id);
+  var box=document.createElement('div');
+  box.className='dup-warn';
+  box.innerHTML='<b>&#9888; Acest dosar exista deja</b>'
+    +'<span>'+escA(JOB.plate||'')+' &middot; '+escA(mit)+'</span>'
+    +'<a href="'+escA(hova)+'">Deschide dosarul existent</a>'
+    +'<button onclick="this.parentNode.remove()">&times;</button>';
+  var prev=document.querySelector('.dup-warn'); if(prev) prev.remove();
+  (document.body||document.documentElement).appendChild(box);
+}
 // ── EGY FÁJL EGY RÉSBE ──────────────────────────────────────────
 // EGYETLEN feltöltési út: a résenkénti gomb és a kötegelt feltöltés
 // is ezt hívja. Két út két külön hibát jelentene.
