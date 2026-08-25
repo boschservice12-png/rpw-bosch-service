@@ -3,7 +3,7 @@
 > **Ez a fájl generált.** Forrás: `_tests/last-run.json`.
 > Újragenerálás: `npm test && node _tests/gen-report.js`
 
-*Generálva: 2026-08-25T08:07:33.800Z*
+*Generálva: 2026-08-25T09:00:56.360Z*
 
 ---
 
@@ -46,7 +46,7 @@ Staging:               NOT VERIFIED
 | **Static workflow audit** | 1 | 2 | 2 | 0 | 0 |
 | **Staging** | — | — | — | — | — |
 
-**Futási idő:** 35.8 s
+**Futási idő:** 30.5 s
 
 > ⚠ **A staging NEM igazolt** — a MANUAL-STAGING-CHECKLIST.md nincs kitöltve
 > Ezért a „minden teszt sikeres" állítás NEM tehető meg.
