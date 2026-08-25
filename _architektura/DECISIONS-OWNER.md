@@ -13,3 +13,13 @@
 | **K-6** — „a javítás lezárása egy fájlban, menthető a saját storage-ban" | a Separat fül jelentése | A lezárt javítás TELJES dokumentációját EGY fájlba (ZIP) kell összefogni, és a SAJÁT tárhelyre (Supabase Storage) menteni — nem csak letölteni. A Separat fül az így archivált ügyeké. Ez új célkövetelmény az L8/lezárás felé (a mai export csak böngésző-letöltés). |
 | **K-7** — „egy belépő" | egy létrehozási belépőpont | Munkalap/ügy létrehozás CSAK a főablak három gombjáról. A Lucrări képernyő létrehozó gombja és az Import ZIP kivezetendő (nézet marad). |
 | **K-8: igen** | a napindító döntést kér | A „Ce facem azi?" a késett tételeknél nem zárható be némán: döntést kér (átütemezem / ratat / ma hívom). |
+
+## L2 utáni döntések (2026-08-25)
+
+| # | döntés | értelmezés (erre építek) |
+|---|---|---|
+| **K-9: igen** | a kárügynek (doar_dosar) SAJÁT lezárási feltétele lesz | minden kötelező irat megvan (vagy indokolt hiány) + dosarPredat kitöltve — NEM a javítási phase-7 szabályai. Szerveroldali szabályként (külön ág a lezárásban). |
+| **K-10: csak figyelmeztető** | a „Predat la asigurător" nem zárolódik | átírásnál/törlésnél FIGYELMEZTETÉS (mit indít újra: 3 nap / 30 nap), de nem blokkol; auditsor a K-5 szerint. |
+| **K-11: védett, egyszer használatos token** | ügyfél-feltöltő link teljes védelme | egyszer használatos token + lejárat + visszavonhatóság + fájltípus/méret-limit + feltöltés-audit (a spec 20. pontja teljes egészében). |
+| **K-12: Arhivează** | az archívum KÜLÖN gombbal készül | a lezárt ügyön külön „Arhivează" gomb készíti a ZIP-et a saját storage-ba; a SIKERES mentés teszi az ügyet „Separat"-tá. Nem automatikus a lezáráskor. |
+
