@@ -54,3 +54,11 @@
 | **K-25: nem — fix; lezárás után mentődik** | az archívum-ZIP | FIX, mindig TELJES csomag (nincs szelektor), és a sikeres lezárás UTÁN automatikusan mentődik a saját storage-ba; a sikeres mentés teszi az ügyet „Separat"-tá. **Ez pontosítja a K-12-t: nem külön kézi gomb — a lezárás után fut.** |
 | **K-24** | — | MÉG NYITOTT (rework-határidő + azi-jelzés). |
 
+## L9–L12 utáni döntések (2026-08-25)
+
+| # | döntés | értelmezés |
+|---|---|---|
+| **K-26: igen, szerver oldal** | a Parametri a szerverre költözik | tenantonként EGY paraméter-készlet a DB-ben; szerkesztés vezetői (`team`) joghoz kötve; a kliens csak olvassa. |
+| **K-24: nem** | nincs rework-határidő | a rework marad határidő nélkül; a lezárás-blokkolás (nyitott rework) változatlanul él. |
+| **K-27** | — | NYITOTT — addig a statisztika a mai (kliens-oldali) marad. |
+
