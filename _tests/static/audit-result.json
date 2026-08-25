@@ -1,6 +1,6 @@
 {
-  "generated": "2026-08-25T06:23:10.533Z",
-  "files": 30,
+  "generated": "2026-08-25T06:44:44.269Z",
+  "files": 31,
   "total": 28,
   "allowed": 28,
   "forbidden": 0,
@@ -79,7 +79,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 172,
+      "sor": 193,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -87,7 +87,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 177,
+      "sor": 198,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -95,7 +95,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 549,
+      "sor": 608,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
@@ -103,7 +103,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 593,
+      "sor": 652,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",

@@ -155,6 +155,20 @@ dolgozókat a rendszerből, ami rosszabb, mint a gyenge PIN.
 **Következő lépés:** a PIN-kiosztás (1. kockázat) során a `007` már szűr —
 a két feladat egyszerre elvégezhető.
 
+### Az iratbesorolás élesben nincs mérve
+| | |
+|---|---|
+| **Mi a kockázat** | A besorolás minősége csak VALÓDI iratokon derül ki. Rossz javaslat esetén a kolléga rossz résbe tölthet — ha nem nézi meg |
+| **Mi védi** | A javaslat sosem ír magától: a lista jóváhagyásig semmit nem tölt fel, a bizonytalan sor üresen marad, a felülírás veszélye ki van írva |
+| **Ami NEM védi** | Ha valaki gondolkodás nélkül nyomja a „Încarcă"-t. A rossz rés viszont **javítható** — törlés + újratöltés, és a törlés most már működik |
+| **Igazolva** | Logika és felület: 105 állítás, ebből 18 valódi lapkódon. A modell TALÁLATI ARÁNYA: nincs mérve — valódi iratok kellenek hozzá |
+| **Következő lépés** | `MANUAL-STAGING-CHECKLIST.md` 12b |
+
+### Az `ANTHROPIC_API_KEY` egyetlen ponton dől el
+Ha a kulcs hiányzik vagy lejár, a `classify` 500-at ad, és **minden** sor
+„nem ismerem fel" lesz. Ez nem törés — a kézi választás megmarad —, de a
+funkció értéke elvész, és ezt csak a felületen látni. Riasztás nincs rá.
+
 ### A dosszié-útvonal élesben nincs mérve
 Az alkalmi dosszié 2026-08-25-i útvonala (kék gomb → ablak → mentés → a
 dosszié lapja) **unit- és jsdom-szinten** igazolt. Valódi böngészőben,

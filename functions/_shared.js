@@ -61,10 +61,20 @@ function detectMedia(b64){
 }
 
 // OCR/classify AI-kimenet szigorú validálása (soha nem bízunk vakon az AI-ban)
-var CLASSIFY_TYPES = ['talon','buletin','constatare','foto_fata','foto_spate','foto_lateral_stg','foto_lateral_dr','foto_elem','altceva'];
+// A szotar a DOSSZIE RESEIT koveti (RPW_DAUNA_DOCS), nem forditva.
+// A regi, szukebb szotar (talon, constatare, foto_lateral_*) tovabbra is
+// elfogadott — az ALIAS forditja at. Igy egy regebbi kliens valasza sem vesz el.
+var CLASSIFY_TYPES = ['constatare_amiabila','proces_verbal',
+  'buletin','talon_fata','talon_verso','permis_fata','permis_verso',
+  'declaratie_dauna','polita_rca','imputernicire',
+  'foto_fata','foto_spate','foto_stanga','foto_dreapta',
+  'foto_serie_caroserie','foto_avarii','altceva'];
+var CLASSIFY_ALIAS = { talon:'talon_fata', constatare:'constatare_amiabila',
+  foto_lateral_stg:'foto_stanga', foto_lateral_dr:'foto_dreapta', foto_elem:'foto_avarii' };
 function validateClassify(obj){
   if(!obj || typeof obj!=='object') return { type:'altceva', confidence:0, label:'invalid' };
-  var type = CLASSIFY_TYPES.indexOf(obj.type)>=0 ? obj.type : 'altceva';
+  var raw  = CLASSIFY_ALIAS[obj.type] || obj.type;
+  var type = CLASSIFY_TYPES.indexOf(raw)>=0 ? raw : 'altceva';
   var c = Number(obj.confidence); if(!(c>=0 && c<=1)) c=0;
   var label = typeof obj.label==='string' ? obj.label.slice(0,120) : '';
   return { type, confidence:c, label };
@@ -205,4 +215,4 @@ async function ownsJob(auth, jobId){
   }catch(e){ return false; }
 }
 
-module.exports = { corsHeaders, resp, tooLarge, validEmail, safeAttachment, detectMedia, validateClassify, validateOcr, OCR_SCHEMA, flagUncertain, rateLimited, requireAuth, ownsJob, allowedOrigins, ALLOWED_EXT, CLASSIFY_TYPES };
+module.exports = { corsHeaders, resp, tooLarge, validEmail, safeAttachment, detectMedia, validateClassify, validateOcr, OCR_SCHEMA, flagUncertain, rateLimited, requireAuth, ownsJob, allowedOrigins, ALLOWED_EXT, CLASSIFY_TYPES, CLASSIFY_ALIAS };

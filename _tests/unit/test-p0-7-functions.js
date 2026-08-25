@@ -132,6 +132,12 @@ console.log('\n8. A KLIENS küldi a tokent minden hívásnál');
     const fejlec=(s.match(/RPWAuth\.fnHeaders\(\)/g)||[]).length;
     ok(fejlec>0, f+': használja a fejléc-készítőt ('+fejlec+' hívás)');
   });
+  // 2026-08-25: az iratbesoroló modul is a funkciót hívja — tokennel.
+  {
+    const c=R('rpw-classify.js');
+    ok(/netlify\/functions\/classify/.test(c),'rpw-classify.js: hívja a classify funkciót');
+    ok(/RPWAuth\.fnHeaders\(\)/.test(c),     '  és a közös fejléc-készítőn át küld tokent');
+  }
 }
 
 console.log('\n9. A CORS önmagában nem jogosultság');

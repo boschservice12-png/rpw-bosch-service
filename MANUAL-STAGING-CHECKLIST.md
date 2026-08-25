@@ -145,6 +145,24 @@ Ez a legfontosabb kézi teszt.
 - [ ] Régi kliens + új szerver → az alkalmazás **megáll**, román üzenettel
 - [ ] `rpw_server_capabilities` a helyes séma-verziót adja (**`007`**)
 
+## 12b. Kötegelt iratfeltöltés *(classify)*
+
+Ehhez `ANTHROPIC_API_KEY` kell a Netlify-környezetben, és **belépett**
+felhasználó — a `classify` kötelezően tokent vár.
+
+- [ ] Egy irat feltöltése a résenkénti gombbal **működik** *(ez volt a `toast`-hiba)*
+- [ ] A feltöltött irat **×** gombja a HELYES fájlt törli — nem az elsőt
+- [ ] „Încarcă toate actele deodată" → több fájl kijelölése után megnyílik a jóváhagyó lista
+- [ ] Amíg a lista nyitva van, a dossziéba **semmi nem kerül be** *(ellenőrizd másik böngészőből)*
+- [ ] A felismert iratok a helyes résbe vannak előválasztva
+- [ ] A felismerhetetlen fájl sora **üresen** marad, indoklással
+- [ ] A legördülőben átállított rés **felülírja** a javaslatot
+- [ ] „Încarcă N fișiere" után minden fájl a választott résbe kerül
+- [ ] Foglalt rés választásakor a sor **előre jelzi** a felülírást
+- [ ] Két azonos irat (pl. két személyi) **nem** ugyanabba a résbe kerül
+- [ ] `ANTHROPIC_API_KEY` nélkül: a lista megnyílik, minden sor „nem ismerem fel" —
+      a kézi választás **továbbra is** működik
+
 ## 13. Alkalmi dosszié — a 2026-08-25-i útvonal
 
 - [ ] A panel kék gombja a **dosszié-ablakot** nyitja (nem közvetlenül az új-munka modált)

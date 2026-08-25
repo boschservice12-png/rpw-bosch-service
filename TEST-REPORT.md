@@ -3,7 +3,7 @@
 > **Ez a fájl generált.** Forrás: `_tests/last-run.json`.
 > Újragenerálás: `npm test && node _tests/gen-report.js`
 
-*Generálva: 2026-08-25T06:23:10.635Z*
+*Generálva: 2026-08-25T06:44:44.375Z*
 
 ---
 
@@ -15,7 +15,7 @@
 | npm | 10.9.7 |
 | jsdom | 30.0.1 |
 | embedded-postgres | 18.4.0-beta.17 |
-| Build | `V4-MERGE-PIN007` |
+| Build | `V4-CLASSIFY-BULK` |
 
 ## Parancsok
 
@@ -40,13 +40,13 @@ Staging:               NOT VERIFIED
 
 | Kategória | Fájl | Állítás | Sikeres | Sikertelen | El sem indult |
 |---|---:|---:|---:|---:|---:|
-| **Unit** | 34 | 1366 | 1366 | 0 | 0 |
+| **Unit** | 35 | 1473 | 1473 | 0 | 0 |
 | **Database integration** | 3 | 241 | 241 | 0 | 0 |
 | **Frontend integration** | 1 | 176 | 176 | 0 | 0 |
 | **Static workflow audit** | 1 | 2 | 2 | 0 | 0 |
 | **Staging** | — | — | — | — | — |
 
-**Futási idő:** 24.8 s
+**Futási idő:** 26.3 s
 
 > ⚠ **A staging NEM igazolt** — a MANUAL-STAGING-CHECKLIST.md nincs kitöltve
 > Ezért a „minden teszt sikeres" állítás NEM tehető meg.
@@ -79,6 +79,7 @@ Ez fedi a brief 6. pontjának mind a 12 esetét és a 13. pont regresszióit.
 | unit | `test-azi.js` | 50 | 0 | ✅ |
 | unit | `test-bar.js` | 23 | 0 | ✅ |
 | unit | `test-case.js` | 27 | 0 | ✅ |
+| unit | `test-classify.js` | 105 | 0 | ✅ |
 | unit | `test-conflict.js` | 28 | 0 | ✅ |
 | unit | `test-dialogs.js` | 39 | 0 | ✅ |
 | unit | `test-dosare.js` | 22 | 0 | ✅ |
@@ -97,7 +98,7 @@ Ez fedi a brief 6. pontjának mind a 12 esetét és a 13. pont regresszióit.
 | unit | `test-p0-3-tenant.js` | 34 | 0 | ✅ |
 | unit | `test-p0-5-admin.js` | 29 | 0 | ✅ |
 | unit | `test-p0-6-storage.js` | 24 | 0 | ✅ |
-| unit | `test-p0-7-functions.js` | 38 | 0 | ✅ |
+| unit | `test-p0-7-functions.js` | 40 | 0 | ✅ |
 | unit | `test-pin-dialog.js` | 24 | 0 | ✅ |
 | unit | `test-prog.js` | 30 | 0 | ✅ |
 | unit | `test-render.js` | 25 | 0 | ✅ |

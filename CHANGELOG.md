@@ -1,5 +1,46 @@
 # CHANGELOG.md
 
+## 2026-08-25 (2) — A `classify` bekötése + két élő hiba a dosszién
+
+A `functions/classify.js` hónapok óta kész volt, és **sehol nem hívtuk**.
+A biztosítós dosszié 19 rését egyesével kellett tölteni.
+
+### Kötegelt feltöltés — AI-javaslat, EMBERI döntés
+
+Egy gomb, egy fájlválasztás: a kolléga kijelöli az összes fényképet, a
+`classify` megnézi mindet, és megjavasolja, melyik résbe valók. A lista
+**jóváhagyásig nem ír semmit** — sem a tárolóba, sem az adatbázisba.
+
+| Döntés | Miért |
+|---|---|
+| A modell szótára a **rések** szerint lett újraírva (9 → 17 típus) | a régi `talon`, `foto_lateral_stg` nem feleltethető meg résnek |
+| A károsult / vétkes kérdést **nem találgatjuk** | két személyi igazolvány ugyanúgy néz ki; a prompt kifejezetten tiltja |
+| 0.85 alatti bizonyosságnál **nincs előválasztás** | a sor üresen marad, a kolléga választ |
+| A terv **egyben** készül | különben két „talon față" ugyanabba a résbe menne, és a második csendben felülírná az elsőt |
+| A felülírás veszélye **ki van írva a sorra** | nem csendes adatvesztés |
+| A régi típusok **alias**-on át élnek tovább | egy korábbi válasz sem esik `altceva`-ba |
+
+### 🔴 Két élő hiba, amit közben találtam
+
+| Hiba | Következmény |
+|---|---|
+| **A `toast()` nem létezett a `rpw-dosar.html`-en**, de 14 helyről hívtuk | Az `uploadActa` az ELSŐ sorában szállt el, a feltöltési ciklus előtt: **a dossziéba egyetlen irat sem került be**, és a felhasználó hibát sem látott. A ZIP-export ugyanígy. |
+| **A `delActa` a nem létező `idx`-et adta át**, a `_stergeActaGo` pedig a nem létező `ix`-szel vágott | A törlés `ReferenceError`-t dobott; ha mégis lefutott volna, **mindig az első fájlt** törli, bármelyik ×-re kattintasz. |
+
+Mindkettő pontosan abban a funkcióban volt, amire a kötegelt feltöltés
+épül. Ezért előbb ezek javultak, és csak utána jött az új képesség.
+
+**Egyetlen feltöltési út:** a résenkénti gomb és a kötegelt feltöltés
+ugyanazt a `_uploadFileToSlot()`-ot hívja. A tárolóba egy helyről írunk.
+
+### Tesztek
+
+Új `test-classify.js` — **105 állítás**, ebből tizennyolc **valódi
+lapkódon** jsdom-ban: a `bulkActe` és a `bulkConfirm` ténylegesen lefut,
+és rögzítjük, mi került a tárolóba és mikor. A teszt elbukik, ha a
+besorolás bármit feltölt jóváhagyás nélkül.
+
+---
 ## 2026-08-25 — A V4 és a dosszié/PIN ág összefésülése + `007`
 
 Két ág futott párhuzamosan ugyanarról a pontról (`OWN-STAFF-L3A`):

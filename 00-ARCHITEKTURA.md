@@ -175,13 +175,18 @@ npm i jsdom && node _tests/test-acceptance.js
 | 1 | **RPC-szintű bérlő-zár + RLS** | a második cégnél azonnal kell |
 | 2 | `AUTH_REQUIRED` bekapcsolása | előbb mindenkinek PIN kell |
 | 3 | **`audatex` OCR bekötése** | ma kézzel viszed be az órákat |
-| 4 | **`classify` bekötése** | megvan, sehol nem hívjuk — ez a 20 perces feltöltés megoldása |
+| 4 | ~~`classify` bekötése~~ | ✅ **kész (2026-08-25)** — kötegelt feltöltés a dosszién, AI-javaslattal |
 | 5 | `constatare` prompt bővítése | a vétkes adatai a lapról, nem külön fotókból |
 | 6 | GAP-statisztika | a `gapLog` gyűlik, senki nem összegzi |
 | 7 | Pótmunka saját zsebes javításnál | a `Reconstatare` ki van kapcsolva `auto` típusnál |
 | 8 | Szerepkörök románul | a Red ERP magyarul adja |
 
-**A 4-es a legnagyobb egyszeri nyereség**: a `classify.js` kész, csak nincs hívva. Vele a 17 rés egyesével töltése egyetlen feltöltéssé válna.
+**A 4-es megvan.** A `classify.js` be van kötve: a dosszié 19 rése egyetlen
+feltöltéssel tölthető. A besorolás **javaslat** — a rések kitöltése emberi
+jóváhagyás után történik (`rpw-classify.js`, `bulkActe`/`bulkConfirm`).
+
+Most a **3-as** (Audatex-OCR) a legnagyobb hátralévő nyereség: ma kézzel
+viszed be az órákat.
 
 
 ---

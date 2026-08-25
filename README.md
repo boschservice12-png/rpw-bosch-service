@@ -29,6 +29,7 @@ generálva. Kézzel írt tesztszám nincs a dokumentációban.
 
 ```
 *.html, *.js               az alkalmazás
+rpw-classify.js            iratbesorolás (AI-javaslat, emberi döntés)
 functions/                 Netlify functions
 _migrations/               számozott SQL-migrációk + rollback
 _tests/unit/               kliensoldali tesztek
