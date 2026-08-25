@@ -23,3 +23,12 @@
 | **K-11: védett, egyszer használatos token** | ügyfél-feltöltő link teljes védelme | egyszer használatos token + lejárat + visszavonhatóság + fájltípus/méret-limit + feltöltés-audit (a spec 20. pontja teljes egészében). |
 | **K-12: Arhivează** | az archívum KÜLÖN gombbal készül | a lezárt ügyön külön „Arhivează" gomb készíti a ZIP-et a saját storage-ba; a SIKERES mentés teszi az ügyet „Separat"-tá. Nem automatikus a lezáráskor. |
 
+## L3 utáni döntések (2026-08-25)
+
+| # | döntés | értelmezés (erre építek) |
+|---|---|---|
+| **K-13: igen** | külföldi ügyfél felvehető | lazább rendszám/telefon-minta + „külföldi" jelölő; a szigorú román minta ajánlásként megmarad (figyelmeztet, nem blokkol). |
+| **K-14: utólagos rögzítés** | múltbeli dátum marad | a múltbeli dátum ENGEDETT (utólagos rögzítésre használjátok); a felületen jelölés különbözteti meg a valóban késett prognózistól (utólag rögzített ≠ késett riasztás). |
+| **K-15: igen** | napi kapacitás-figyelmeztetés | előjegyzéskor a rendszer a Parametri-oldal kapacitás-értékéből számol, és figyelmeztet („erre a napra már N autó"); nem blokkol. |
+| **K-16: 3** | átütemezési küszöb | a 3. átütemezéstől: kötelező indok + a „Ce facem azi?" napindító külön jelzi (K-8 kapcsolódás); az előzmény mostantól a KI-t is rögzíti. |
+
