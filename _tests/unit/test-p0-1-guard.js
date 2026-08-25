@@ -137,5 +137,55 @@ console.log('\n8. A production-őr a négy kapcsolót nézi');
   Object.assign(g,old);
 }
 
+console.log('\n== A MEGALLAS CSAK OTT VED, AHOL SZAMIT (2026-08-25) ==');
+{
+  // A `halt()` DOM nelkul no-op (`if(typeof document==='undefined') return`),
+  // ezert a megallast csak akkor lehet MERNI, ha van egy minimalis document.
+  // A `body` szandekosan null: a kirajzolas visszaterjen, a config viszont
+  // mar nullazodott — pontosan ez a megallas lenyege.
+  const g2=global; const W={}; W.self=W;
+  const regiDoc=g2.document;
+  g2.document={ readyState:'complete', body:null, addEventListener:function(){} };
+  g2.window=W; g2.self=W;
+  eval(R('rpw-guard.js'));
+  const G=W.RPWGuard;
+  // Eles hiba: a szerveren NINCS `rpw_server_capabilities`, ezert a kliens
+  // `no_capabilities`-szel MEGALLT — pedig egyetlen hianyzo funkciot sem
+  // hasznalt. A muhely allt. A fail-closed ott marad, ahol tenyleg kockazat.
+  const sbNincsCap = { rpc: async () => ({ data:null, error:null }) };
+
+  const OVATOS  = { PRODUCTION:false, SERVER_TRANSITIONS:false,
+                    AUTH_REQUIRED:false, PATCH_RPC:'rpw_patch_v2' };
+  const SZIGORU = [
+    ['PRODUCTION',         { PRODUCTION:true,  SERVER_TRANSITIONS:false, AUTH_REQUIRED:false, PATCH_RPC:'rpw_patch_v2' }],
+    ['SERVER_TRANSITIONS', { PRODUCTION:false, SERVER_TRANSITIONS:true,  AUTH_REQUIRED:false, PATCH_RPC:'rpw_patch_v2' }],
+    ['AUTH_REQUIRED',      { PRODUCTION:false, SERVER_TRANSITIONS:false, AUTH_REQUIRED:true,  PATCH_RPC:'rpw_patch_v2' }],
+    ['PATCH_RPC v3',       { PRODUCTION:false, SERVER_TRANSITIONS:false, AUTH_REQUIRED:false, PATCH_RPC:'rpw_patch_v3' }]
+  ];
+
+  ok(typeof G.strictNeeded === 'function', 'van szigoru-mod dontes');
+  ok(G.strictNeeded(OVATOS) === false, 'ovatos konfiguracio -> NEM szigoru');
+  SZIGORU.forEach(function(x){
+    ok(G.strictNeeded(x[1]) === true, '  ' + x[0] + ' -> szigoru');
+  });
+
+  // a valodi lefutas: megall-e az alkalmazas?
+  return (async function(){
+    W.RPW_CFG = Object.assign({}, OVATOS);
+    var r1 = await G.verifyServer(sbNincsCap, W.RPW_CFG);
+    eq(r1.problems, ['no_capabilities'], 'ovatos: jelzi a hianyt');
+    ok(W.RPW_CFG !== null, '  de NEM allitja meg az alkalmazast');
+
+    W.RPW_CFG = Object.assign({}, SZIGORU[1][1]);      // SERVER_TRANSITIONS
+    var r2 = await G.verifyServer(sbNincsCap, W.RPW_CFG);
+    eq(r2.problems, ['no_capabilities'], 'szigoru: jelzi a hianyt');
+    ok(W.RPW_CFG === null, '  ES megallitja (fail-closed marad)');
+
+    g2.document=regiDoc;
+    console.log('\n' + (fail ? 'x ' : 'OK ') + pass + ' pass / ' + fail + ' fail');
+    process.exit(fail ? 1 : 0);
+  })();
+}
+
 console.log('\n'+(fail?'✗ ':'✓ ')+pass+' pass / '+fail+' fail');
 process.exit(fail?1:0);

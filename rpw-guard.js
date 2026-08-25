@@ -66,6 +66,20 @@
              capabilities: cap };
   }
 
+  // Szigorú-e a mód? Csak ilyenkor jelent valódi kockázatot, ha a szerver
+  // nem tudja, amit a kliens vár — mert csak ilyenkor HASZNÁLJA is.
+  //   PRODUCTION        → élesítés lezárva, mindennek a helyén kell lennie
+  //   SERVER_TRANSITIONS→ a fázisváltás a szerveren dől el (rpw_transition)
+  //   AUTH_REQUIRED     → a munkamenet kötelező (rpw2_session)
+  //   PATCH_RPC v3      → a mentés a védett úton megy (rpw_patch_v3)
+  function strictNeeded(cfg){
+    cfg = cfg || root.RPW_CFG || {};
+    return cfg.PRODUCTION === true
+        || cfg.SERVER_TRANSITIONS === true
+        || cfg.AUTH_REQUIRED === true
+        || cfg.PATCH_RPC === 'rpw_patch_v3';
+  }
+
   // Induláskor hívandó. Ütközésnél megállítja az alkalmazást.
   async function verifyServer(sb, cfg){
     cfg = cfg || root.RPW_CFG || {};
@@ -81,7 +95,22 @@
       var cap = res && res.data;
       if(typeof cap === 'string'){ try{ cap = JSON.parse(cap); }catch(e){ cap = null; } }
       var r = checkCapabilities(cap, cfg);
-      if(!r.ok) halt(r.message, r.problems);
+      // ── 2026-08-25 — A MEGÁLLÁS CSAK OTT VÉD, AHOL SZÁMÍT ──────────
+      // A képesség-ellenőrzés attól óv, hogy a kliens olyan szerver-utat
+      // használjon, amit a szerver nem tud. Ha a kliens ÓVATOS módban van
+      // (nincs szerveroldali átmenet, nincs v3-patch, nincs auth-kényszer),
+      // akkor a hiányzó ÚJ RPC-k nem érintik: az alkalmazás pontosan úgy
+      // működik, ahogy a migrációk előtt is.
+      //
+      // Élesben ez a különbség megbénította a műhelyt: a szerveren nincs
+      // `rpw_server_capabilities`, ezért a kliens „no_capabilities"-szel
+      // MEGÁLLT — pedig egyetlen olyan funkciót sem használt, ami hiányzott.
+      // Fail-closed maradunk ott, ahol tényleg kockázat van.
+      if(!r.ok){
+        if(strictNeeded(cfg)) halt(r.message, r.problems);
+        else { try{ console.warn('RPW: a szerver régebbi, mint a kliens — óvatos módban futunk tovább.',
+                                 r.problems); }catch(e){} }
+      }
       return r;
     }catch(e){
       // ── 11 (v4) — PRODUCTION-BAN FAIL-CLOSED ────────────────────
@@ -140,7 +169,7 @@
     }
     return r;
   }
-  var API={ productionSafety:productionSafety, enforce:enforce,
+  var API={ productionSafety:productionSafety, enforce:enforce, strictNeeded:strictNeeded,
             checkCapabilities:checkCapabilities, verifyServer:verifyServer,
             REQUIRED_RPCS:REQUIRED_RPCS, MIN_SCHEMA:MIN_SCHEMA };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
