@@ -72,6 +72,18 @@
   force = true
 
 [[redirects]]
+  from = "/_registry/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/FUNKCIOK.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
   from = "/00-ARCHITEKTURA.md"
   to = "/404.html"
   status = 404
