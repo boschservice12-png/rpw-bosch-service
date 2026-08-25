@@ -90,6 +90,36 @@
   force = true
 
 [[redirects]]
+  from = "/FUNCTION-MAP.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/FUNCTION-GAPS.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/DEPRECATION-PLAN.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/PRODUCTION-READINESS.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/ROLLBACK.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
   from = "/00-ARCHITEKTURA.md"
   to = "/404.html"
   status = 404

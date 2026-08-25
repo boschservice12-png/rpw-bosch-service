@@ -4,7 +4,7 @@
 > A **státuszt is gép számolja** (`derive.js`) a teszteredményből + kódhorgonyokból +
 > az `evidence.json` emberi bizonyítékaiból. Kézzel átírni tilos.
 
-Gépi futás: `2026-08-25T17:52:58.540Z`
+Gépi futás: `2026-08-25T18:06:19.480Z`
 
 ## Vezetői összefoglaló
 
