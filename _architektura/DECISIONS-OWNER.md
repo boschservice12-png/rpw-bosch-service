@@ -32,3 +32,9 @@
 | **K-15: igen** | napi kapacitás-figyelmeztetés | előjegyzéskor a rendszer a Parametri-oldal kapacitás-értékéből számol, és figyelmeztet („erre a napra már N autó"); nem blokkol. |
 | **K-16: 3** | átütemezési küszöb | a 3. átütemezéstől: kötelező indok + a „Ce facem azi?" napindító külön jelzi (K-8 kapcsolódás); az előzmény mostantól a KI-t is rögzíti. |
 
+## L4 közbeni iránydöntés (2026-08-25)
+
+| # | döntés | értelmezés (erre építek) |
+|---|---|---|
+| **K-19** — „a Programare lapon egy Avizare daună fül; itt nyissuk a biztosító-dossziékat; a programált biztosítós autónál 2 állapot: Dosar deschis vagy Avizare daună" | a főablak cél-szerkezete | (1) A főablak fülei közé bekerül egy **„Avizare daună"** fül: a biztosítós kárügyek (doar_dosar) OTT listázódnak és OTT nyílnak — nem a mai felugró kék ablakból, és nem a Viitoare-ba összemosva (a 2026-08-25-i „egy lista" összevonás ezzel visszafordul). (2) A Viitoare-fülön a biztosítós javításra programált autó soron KÉT állapot egyike látszik: **„Dosar deschis"** (dosarStatus='deschis') vagy **„Avizare daună"** (dosarStatus='deschid'). Megvalósítás: az IMPLEMENTATION-BACKLOG-ba, az elemzési fázis után. |
+
