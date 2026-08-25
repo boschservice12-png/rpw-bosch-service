@@ -1,5 +1,64 @@
 # CHANGELOG.md
 
+## 2026-08-25 (5) — „Nem tudok törölni" — két hiba egy úton
+
+Két, egymástól független hiba ült a törlés útján. Egyiket sem fogta meg
+teszt, mert **mindkettő csak akkor derül ki, ha a gombkezelő tényleg lefut.**
+
+### 🔴 1. Minden oldalbetöltés kijelentkeztetett
+
+A `rpw-cache.js` indulási takarítója (`migrateLegacy`) a **`rpw_auth`**,
+`rpw_admin` és `rpw_last_who` kulcsokat is törölte — és ez a takarítás
+**minden oldalbetöltéskor** lefut:
+
+```js
+try{ if(window.RPWCache){ RPWCache.migrateLegacy(); RPWCache.sweep(); } }catch(e){}
+```
+
+Belépsz → betölt az oldal → kiléptet. Az `isAdmin()` a munkamenetből
+dolgozik, ezért a törlés `Doar admin poate șterge`-t írt.
+
+A szerveradat ezt megerősítette: **8 belépés három nap alatt**, ugyanattól
+az embertől. Nem a felhasználó felejtett el belépni — a rendszer dobta ki.
+
+**Javítás:** a munkamenet-kulcsok külön listára kerültek
+(`LEGACY_SESSION`), és **kizárólag kijelentkezéskor** (`wipe`) törlődnek.
+A régi, TTL nélküli munkaadat (`rpw_job_*`) takarítása változatlan — az
+közös gépen adatvédelmi kérdés.
+
+### 🔴 2. A törlés gombja nem létező függvényt hívott
+
+```js
+RPWWorkflow.ask({lang:L(), tone:'danger', …})   // L: sehol nem definiálva
+```
+
+Bejelentkezve is `ReferenceError` — a megerősítő ablak **meg sem nyílt**.
+Rákattintasz, és nem történik semmi. A nyelvet mindenhol a `gL()` adja.
+
+### A teszt, ami VÉDTE a hibát
+
+A `test-dialogs.js` szó szerint ezt várta el:
+
+```js
+ok(/RPWWorkflow\.ask\(\{lang:L\(\),tone:'danger'/.test(idx), 'munka torlese -> danger parbeszed');
+```
+
+A szöveg egyezett, tehát zöld volt — miközben a párbeszéd **sosem nyílt
+meg**. Egy teszt, ami a forrás betűit nézi, a hibát is rögzítheti.
+
+### Új: `test-delete.js` — a lánc, nem a szöveg
+
+24 állítás. Elindítja a lapot, belép, **megnyomja a gombot**, és megnézi,
+mi ért el a szerverig:
+
+* a munkamenet túléli az oldalbetöltést, és csak kijelentkezéskor törlődik
+* bejelentkezett vezetőnél a törlés a szerverig megy (`deleted_at`)
+* bejelentkezés nélkül nem megy semmi — de a felhasználó üzenetet kap
+* programált munkát adminként sem lehet törölni (poka-yoke)
+
+Mindkét hiba visszatételével kipróbálva: **10 állítás bukik el.**
+
+---
 ## 2026-08-25 (4) — A tartós offline sor bekötése + a mentési út három hibája
 
 A `rpw-queue.js` hónapokig készen állt, és **egyetlen lap sem töltötte be**.

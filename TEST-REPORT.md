@@ -3,7 +3,7 @@
 > **Ez a fájl generált.** Forrás: `_tests/last-run.json`.
 > Újragenerálás: `npm test && node _tests/gen-report.js`
 
-*Generálva: 2026-08-25T09:40:15.853Z*
+*Generálva: 2026-08-25T10:57:02.787Z*
 
 ---
 
@@ -40,13 +40,13 @@ Staging:               NOT VERIFIED
 
 | Kategória | Fájl | Állítás | Sikeres | Sikertelen | El sem indult |
 |---|---:|---:|---:|---:|---:|
-| **Unit** | 38 | 1598 | 1598 | 0 | 0 |
+| **Unit** | 39 | 1622 | 1622 | 0 | 0 |
 | **Database integration** | 3 | 262 | 262 | 0 | 0 |
 | **Frontend integration** | 1 | 176 | 176 | 0 | 0 |
 | **Static workflow audit** | 1 | 2 | 2 | 0 | 0 |
 | **Staging** | — | — | — | — | — |
 
-**Futási idő:** 26.6 s
+**Futási idő:** 30.4 s
 
 > ⚠ **A staging NEM igazolt** — a MANUAL-STAGING-CHECKLIST.md nincs kitöltve
 > Ezért a „minden teszt sikeres" állítás NEM tehető meg.
@@ -81,6 +81,7 @@ Ez fedi a brief 6. pontjának mind a 12 esetét és a 13. pont regresszióit.
 | unit | `test-case.js` | 27 | 0 | ✅ |
 | unit | `test-classify.js` | 105 | 0 | ✅ |
 | unit | `test-conflict.js` | 28 | 0 | ✅ |
+| unit | `test-delete.js` | 24 | 0 | ✅ |
 | unit | `test-deploy.js` | 34 | 0 | ✅ |
 | unit | `test-dialogs.js` | 39 | 0 | ✅ |
 | unit | `test-dosare.js` | 22 | 0 | ✅ |

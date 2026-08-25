@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-25T09:40:15.757Z",
+  "generated": "2026-08-25T10:57:02.686Z",
   "files": 32,
   "total": 28,
   "allowed": 28,
@@ -55,7 +55,7 @@
     },
     {
       "fajl": "rpw-cache.js",
-      "sor": 180,
+      "sor": 193,
       "mezo": "phases[]",
       "ok": "megjelenítési kód — csak a státusz betűjét tárolja",
       "ut": "nem ír a JOB-ba, csak olvassa",

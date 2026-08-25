@@ -2265,7 +2265,10 @@ window.dJ=async function(id){
   if(_j && categorizeJob(_j)==='viitoare'){toast(T('nu_sterg_programat'),1);return}
   var _j=JOBS.filter(function(x){return x.id===id})[0]||{};
   if(window.RPWWorkflow&&RPWWorkflow.ask){
-    RPWWorkflow.ask({lang:L(),tone:'danger',title:T('dlg_del_t'),
+    // 2026-08-25: itt az `L` nevű függvény állt — SEHOL nem definiálva. A törlés
+    // gombja ReferenceError-t dobott a megerősítő ablak MEGNYITÁSA ELŐTT:
+    // rákattintottál, és nem történt SEMMI. A nyelvet mindenhol a `gL()` adja.
+    RPWWorkflow.ask({lang:gL(),tone:'danger',title:T('dlg_del_t'),
       subtitle:(_j.plate||_j.number||''),text:T('dlg_del_s'),
       cancelText:T('dlg_pastreaza'),confirmText:T('dlg_sterge'),
       onConfirm:function(){ _dJgo(id); }});

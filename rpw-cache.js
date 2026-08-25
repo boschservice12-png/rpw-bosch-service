@@ -30,9 +30,22 @@
   var TTL_MS   = 24*60*60*1000;     // 24 óra
   // Kijelentkezéskor ezek is törlődnek (a brief 10. pontja):
   // konfliktusban megőrzött helyi payload, offline sor, ideiglenes OCR.
-  var LEGACY   = ['rpw_job_','rpw_job_ts_','rpw_jobs_list','rpw_norme','rpw_config',
-                  'rpw_queue','rpw_offline','rpw_ocr','rpw_conflict','rpw_pending',
-                  'rpw_auth','rpw_last_who','rpw_admin'];
+  // ── RÉGI, TTL NÉLKÜLI GYORSÍTÓTÁR ────────────────────────────────
+  // Ezt takarítjuk induláskor is: munkaadat, ami TTL nélkül feküdt a
+  // gépen (közös gépen a következő belépő is látta volna).
+  var LEGACY_CACHE = ['rpw_job_','rpw_job_ts_','rpw_jobs_list','rpw_norme','rpw_config',
+                      'rpw_queue','rpw_offline','rpw_ocr','rpw_conflict','rpw_pending'];
+
+  // ── A MUNKAMENET — INDULÁSKOR NEM SZABAD BÁNTANI ─────────────────
+  // 2026-08-25: ez a három kulcs a fenti listában ült, a `migrateLegacy()`
+  // pedig MINDEN oldalbetöltéskor lefut. Következmény: a bejelentkezés és
+  // az admin-kapcsoló minden betöltésnél eltűnt — a felhasználó folyamatosan
+  // kiesett, és „nem tudok törölni"-t látott, mert az `isAdmin()` a
+  // munkamenetből dolgozik. KIZÁRÓLAG kijelentkezéskor (`wipe`) törlendők.
+  var LEGACY_SESSION = ['rpw_auth','rpw_last_who','rpw_admin'];
+
+  // A kijelentkezés mindent visz; az indulási takarítás csak a gyorsítótárat.
+  var LEGACY = LEGACY_CACHE.concat(LEGACY_SESSION);
 
   function store(){
     try{ return (typeof localStorage!=='undefined') ? localStorage : null; }catch(e){ return null; }
@@ -127,8 +140,8 @@
     try{
       for(i=0;i<st.length;i++){
         k=st.key(i); if(!k) continue;
-        for(j=0;j<LEGACY.length;j++){
-          if(k.indexOf(LEGACY[j])===0){ drop.push(k); break; }
+        for(j=0;j<LEGACY_CACHE.length;j++){       // CSAK a gyorsítótár
+          if(k.indexOf(LEGACY_CACHE[j])===0){ drop.push(k); break; }
         }
       }
       for(i=0;i<drop.length;i++) st.removeItem(drop[i]);
@@ -215,6 +228,7 @@
             migrateLegacy:migrateLegacy, minimal:minimal,
             setJob:setJob, getJob:getJob, scope:scope,
             TTL_MS:TTL_MS, PREFIX:PREFIX,
+            LEGACY_CACHE:LEGACY_CACHE, LEGACY_SESSION:LEGACY_SESSION,
             MIN_FIELDS:MIN_FIELDS, NEVER_CACHED:NEVER_CACHED };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWCache=API;

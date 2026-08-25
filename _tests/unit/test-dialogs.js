@@ -69,7 +69,12 @@ ok(/_stergeActaGo/.test(dos)&&/tone:'danger'/.test(dos),'fajltorles -> danger');
 ok(/dlgSay\(\{tone:'ok',title:T\('dlg_ov_t'\)/.test(dos),'override siker -> ok hangnem');
 
 console.log('\n6. Az index.html torlese is');
-ok(/RPWWorkflow\.ask\(\{lang:L\(\),tone:'danger'/.test(idx),'munka torlese -> danger parbeszed');
+// 2026-08-25: ez a sor a HIBAT rogzitette. Szo szerint az `L()` hivast varta el,
+// ami sehol nem volt definialva — a torles gombja ReferenceError-t dobott, ez a
+// teszt meg zolden jelentette, hogy „danger parbeszed". A szoveg egyezett, a
+// viselkedes nem: a parbeszed SOSEM nyilt meg. A valodi lefuttatast a
+// test-delete.js vegzi; itt a helyes, LETEZO nyelv-fuggvenyt kotjuk ki.
+ok(/RPWWorkflow\.ask\(\{lang:gL\(\),tone:'danger'/.test(idx),'munka torlese -> danger parbeszed');
 ok(/onConfirm:function\(\)\{ _dJgo\(id\); \}/.test(idx),'megerositesre torol');
 ok(/window\._dJgo=async function\(id\)/.test(idx),'a tenyleges torles kulon fuggveny');
 ok(/dlg_del_s:\{ro:'Trece în Coș/.test(idx),'megmondja, hogy visszahozhato');
