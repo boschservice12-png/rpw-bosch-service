@@ -540,7 +540,7 @@
   },
   {
    "id": "F-201",
-   "nev": "Avizare dauna FUL a foablakon (K-19) — itt nyilnak a biztosito-dossziek",
+   "nev": "Avizare dauna: a fejlec gombja EGYENESEN dossziet nyit + sajat FUL a listanak (K-19)",
    "fe": [
     [
      "index.html",
@@ -552,7 +552,7 @@
     ]
    ],
    "be": [],
-   "teszt": "_tests/unit/test-dosare.js",
+   "teszt": "_tests/frontend/test-fe-panou.js",
    "allapot": "csak-frontend"
   },
   {

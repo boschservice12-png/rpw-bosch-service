@@ -98,6 +98,29 @@ console.log('\n2. Az Avizare daună fül — valódi fülváltással');
   ok(!/markRatat/.test(row),'nincs Ratat a dosszié-soron');
 }
 
+console.log('\n2b. A fejléc Avizare daună gombja EGYENESEN dossziét nyit (Ferenc)');
+{
+  // A keres: "az avizare dauna ugyanugy mukodjon mint deschide dosar de dauna".
+  // A gomb tehat NEM fulet valt — LETREHOZZA a dossziet es odavisz.
+  const kek=[...w.document.querySelectorAll('.panou-hdr-actions button')]
+    .find(b=>/dosar_dauna|Avizare daun/.test(b.textContent));
+  ok(!!kek,'a kék Avizare daună gomb a fejlécben van');
+  ok(kek && (kek.getAttribute('onclick')||'')==='dosarTarziu()',
+     '  a gomb dossziét NYIT, nem fület vált — onclick: '+(kek?kek.getAttribute('onclick'):'?'));
+  const elotte=w.JOBS.length;
+  NAV=null;
+  const t0=Date.now();
+  if(kek) kek.click();
+  while(NAV===null && Date.now()-t0<8000) await sleep(50);
+  ok(w.JOBS.length===elotte+1,'a kattintás LÉTREHOZTA a kárdossziét ('+elotte+'→'+w.JOBS.length+')');
+  const uj=w.JOBS[w.JOBS.length-1];
+  ok(!/nj-box/.test(app()),'NEM nyílt űrlap');
+  ok(uj.flux==='doar_dosar','flux=doar_dosar — javítás nélküli dosszié');
+  ok(uj.damageType==='asig' && uj.dosarStatus==='deschid','biztosítós kár, MI nyitjuk a dossziét');
+  ok(NAV!==null && /navigation|not implemented/i.test(NAV),
+     'a kattintás NAVIGÁLT a dosszié-lapra (nem maradt a panelen)');
+}
+
 console.log('\n3. Lucrare nouă — VALÓDI kattintás, űrlap nélkül a recepcióra');
 {
   const back=[...w.document.querySelectorAll('.panou-tab')]
@@ -144,6 +167,8 @@ console.log('\n5. A célok a forrásban (amit jsdom nem tud megmutatni)');
   ok(!/S\.njMode='lucrare'|mode==='lucrare'/.test(src),'a lucrare űrlap-mód sehol nem maradt');
   ok(/var asig   = \(S\.njTip==='asig'\)/.test(src),
      'az űrlap AMIT BEKÉR, azt át is viszi (nincs adatvesztés)');
+  const dt=src.slice(src.indexOf('window.dosarTarziu'), src.indexOf('window.lucrareAcum'));
+  ok(/deschideDosar\(j\.id\)/.test(dt),'dosarTarziu → deschideDosar(<id>) → dosszié-lap');
 }
 
 console.log('\n'+(fail?'✗ ':'OK ')+pass+' pass / '+fail+' fail');

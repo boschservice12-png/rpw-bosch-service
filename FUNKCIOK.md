@@ -61,7 +61,7 @@ szám nélkül, azt is megmondja.
 
 | szám | mit csinál | frontend | backend | teszt | állapot |
 |---|---|---|---|---|---|
-| **F-201** | Avizare dauna FUL a foablakon (K-19) — itt nyilnak a biztosito-dossziek | `index.html` | — | `unit/test-dosare.js` | 🟦 csak frontend |
+| **F-201** | Avizare dauna: a fejlec gombja EGYENESEN dossziet nyit + sajat FUL a listanak (K-19) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-202** | Deschide dosar dauna - a dossziet MI nyitjuk (urlap nelkul, egybol a dosszie lapra) | `index.html` | — | `unit/test-entry.js` | 🟦 csak frontend |
 | **F-203** | Preluare dosar dauna - meglevo dosszie atvetele fajlbol | `index.html` | — | `unit/test-dosare.js` | 🟦 csak frontend |
 | **F-215** | Duplikatum-figyelmeztetes a dosszie lapon (ugyanaz a rendszam + biztosito + karszam) | `rpw-dosar.html` | `rpw_jobs_list` | `unit/test-dup-dosar.js` | ✅ él |
