@@ -97,6 +97,23 @@ console.log('\n5. A rajz — es amit Ferenc NEM kert (D-5)');
   ok(/pr-big/.test(P.html({flux:'doar_dosar'},{T,big:true})),'van nagy valtozat a munkalapokhoz');
 }
 
+console.log('\n5b. A FOLYAMAT NEVE a felirat elotagja (E-1 "A")');
+{
+  const pn=j=>P.chain(j,{T,acteCount:()=>({done:0,total:8})}).proc;
+  eq(pn({flux:'doar_dosar',damageType:'asig',dosarStatus:'deschid'}),'st_avizare','avizalt dosszie -> "Avizare dauna"');
+  eq(pn({flux:'doar_dosar',damageType:'asig',dosarStatus:'deschis'}),'st_dosar_deschis','nyitott dosszie -> "Dosar deschis"');
+  eq(pn({sosire:'programat',damageType:'asig',dosarStatus:'deschis',conditions:{}}),'st_dosar_deschis','biztositos javitas is kap elotagot');
+  eq(pn({sosire:'sosit',damageType:'asig',dosarStatus:'deschid',phases:{1:{status:'active'}}}),'st_avizare','futo javitas is');
+  eq(pn({sosire:'programat',damageType:'auto',conditions:{}}),'','magankaron NINCS elotag (E-3)');
+  eq(pn({sosire:'programat',conditions:{}}),'','tipus nelkul sincs');
+  // a rajzban is ott van, es a felolvaso is hallja
+  const h=P.html({flux:'doar_dosar',damageType:'asig',dosarStatus:'deschid'},{T,acteCount:()=>({done:0,total:8})});
+  ok(/pr-proc/.test(h),'a rajzban kiemelt elotag');
+  ok(/aria-label="st_avizare — /.test(h),'a felolvaso is az elotaggal kezdi');
+  ok(!/pr-proc/.test(P.html({sosire:'programat',damageType:'auto',conditions:{}},{T})),
+     'magankaron nincs elotag-elem sem');
+}
+
 console.log('\n6. A kozponti workflow a fazis-allapot forrasa (D-2)');
 {
   // Ha a RPWWorkflow betoltodott, ANNAK az allapota szamit — kulonben a

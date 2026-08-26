@@ -29,7 +29,11 @@ window.RPWDb={
 };
 window.RPWUtil={jobId:function(){return 'J'+(window.__db.length+1)+'-'+Math.floor(Math.random()*1e6)}};
 window.RPWWorkflow={migrateJob:function(){},phaseStatus:function(){return 'pending'}};
-</script>`;
+</script>
+<script>${fs.readFileSync('rpw-progres.js','utf8').replace(/<\/script>/g,'<\\/script>')}</script>`;
+// A folyamatjelzo a VALODI modul — nem bab. Ez a teszt igy azt is meri,
+// hogy a lista es a modul egyutt mukodik-e (Ferenc "A" osszevonasa).
+
 html=html.replace('</head>',STUB+'</head>');
 
 // A jsdom nem hajt vegre navigaciot, de JELZI. Ezt fogjuk el.
@@ -257,7 +261,9 @@ try{
   ok(/dosarFisier\(event\)/.test(h),'  és a Preluare (fájl) út');
   ok(/Deschide dosarul|deschideDosar/.test(h),'a dosszié-sor fő művelete a dosszié megnyitása');
   ok(/Groupama/.test(h),'a soron látszik a biztosító (melyik eset)');
-  ok(/acte/.test(h),'iratszámláló a soron');
+  // 2026-08-26 ("A"): az iratszam a folyamat-sav feliratában van, nem
+  // kulon chipben.
+  ok(/pr-lbl/.test(h)&&/acte|irat/.test(h),'iratszám a folyamat-sáv feliratában');
   const sorok=h.split('<tr').filter(s=>/MS-82-BBB/.test(s));
   ok(sorok.length===1,'megvan a dosszié sora');
   ok(sorok[0]&&!/markRatat/.test(sorok[0]),'  nincs rajta Ratat gomb');

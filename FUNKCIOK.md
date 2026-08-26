@@ -42,7 +42,7 @@ szám nélkül, azt is megmondja.
 | **F-122** | Kapcsolat oszlop a foablakon: a VALODI WhatsApp jel (zold=egyeztetve, sotet=meg nem, tompa=nincs telefon) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-123** | Sor-ikonok a foablakon (naptar/ora/mappa/ceruza/kuka) — vonalas SVG, mindegyiken title ES aria-label | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-124** | A soron a mappa CSAK ott, ahol van dosszie-munka (Avizare dauna); magankaron es mar nyitott dossziénal a RECEPCIO az ut | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
-| **F-125** | Folyamatjelzo: harom lanc egy savban (dosszie 3 lepes / varakozas 5 feltetel / javitas 7 fazis), kihagyott lepes jelolve, keses borostyan | `rpw-progres.js` `index.html` | — | `unit/test-progres.js` | 🟦 csak frontend |
+| **F-125** | Folyamatjelzo: harom lanc egy savban; a STATUSZ es a FOLYAMAT egy oszlopban (a folyamat neve a felirat elotagja), kihagyott lepes jelolve, keses borostyan | `rpw-progres.js` `index.html` | — | `unit/test-progres.js` | 🟦 csak frontend |
 | **F-103** | Kovetkezo munkalapszam kerese a szervertol | `index.html` | `rpw_next_job_number` `rpw_job_number` | `integration/test-int-workflow.js` | ✅ él |
 | **F-104** | Munkalapok listaja | `rpw-db.js` | `rpw_jobs_list` | `integration/test-int-workflow.js` | ✅ él |
 | **F-105** | Egy munkalap betoltese | `rpw-db.js` | `rpw_job_get` | `integration/test-int-workflow.js` | ✅ él |
@@ -65,7 +65,7 @@ szám nélkül, azt is megmondja.
 
 | szám | mit csinál | frontend | backend | teszt | állapot |
 |---|---|---|---|---|---|
-| **F-201** | Avizare dauna: a fejlec gombja EGYENESEN dossziet nyit; a dossziek a KOZOS listaban; a dosszie allapota (Avizare dauna / Dosar deschis) MINDEN biztositos soron latszik | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-201** | Avizare dauna: a fejlec gombja EGYENESEN dossziet nyit; a dossziek a KOZOS listaban; a dosszie allapota a folyamat-sav feliratanak elotagja | `index.html` `rpw-progres.js` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-202** | Deschide dosar dauna - a dossziet MI nyitjuk (urlap nelkul, egybol a dosszie lapra) | `index.html` | — | `unit/test-entry.js` | 🟦 csak frontend |
 | **F-203** | Preluare dosar dauna - meglevo dosszie atvetele fajlbol | `index.html` | — | `unit/test-dosare.js` | 🟦 csak frontend |
 | **F-215** | Duplikatum-figyelmeztetes a dosszie lapon (ugyanaz a rendszam + biztosito + karszam) | `rpw-dosar.html` | `rpw_jobs_list` | `unit/test-dup-dosar.js` | ✅ él |

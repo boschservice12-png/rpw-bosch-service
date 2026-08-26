@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-26T20:42:22.002Z",
+  "generated": "2026-08-26T20:59:53.549Z",
   "node": "v22.22.2",
   "npm": "10.9.7",
   "jsdom": "30.0.1",
@@ -10,8 +10,8 @@
     "files": 42,
     "nemIndult": 0,
     "bukott": 0,
-    "assertions": 2441,
-    "passed": 2441,
+    "assertions": 2451,
+    "passed": 2451,
     "failed": 0,
     "verdict": "PASS"
   },
@@ -30,8 +30,8 @@
     "files": 3,
     "nemIndult": 0,
     "bukott": 0,
-    "assertions": 296,
-    "passed": 296,
+    "assertions": 298,
+    "passed": 298,
     "failed": 0,
     "verdict": "PASS"
   },
@@ -49,7 +49,7 @@
     "verdict": "NOT VERIFIED",
     "note": "a MANUAL-STAGING-CHECKLIST.md nincs kitöltve"
   },
-  "duration_ms": 32022,
+  "duration_ms": 31428,
   "results": [
     {
       "cat": "unit",
@@ -58,7 +58,7 @@
       "status": "OK",
       "pass": 95,
       "fail": 0,
-      "ms": 2193
+      "ms": 2219
     },
     {
       "cat": "unit",
@@ -67,7 +67,7 @@
       "status": "OK",
       "pass": 50,
       "fail": 0,
-      "ms": 2132
+      "ms": 2114
     },
     {
       "cat": "unit",
@@ -76,7 +76,7 @@
       "status": "OK",
       "pass": 23,
       "fail": 0,
-      "ms": 749
+      "ms": 755
     },
     {
       "cat": "unit",
@@ -94,7 +94,7 @@
       "status": "OK",
       "pass": 105,
       "fail": 0,
-      "ms": 885
+      "ms": 884
     },
     {
       "cat": "unit",
@@ -103,7 +103,7 @@
       "status": "OK",
       "pass": 28,
       "fail": 0,
-      "ms": 726
+      "ms": 722
     },
     {
       "cat": "unit",
@@ -112,7 +112,7 @@
       "status": "OK",
       "pass": 24,
       "fail": 0,
-      "ms": 2421
+      "ms": 2437
     },
     {
       "cat": "unit",
@@ -121,7 +121,7 @@
       "status": "OK",
       "pass": 34,
       "fail": 0,
-      "ms": 41
+      "ms": 36
     },
     {
       "cat": "unit",
@@ -130,16 +130,16 @@
       "status": "OK",
       "pass": 39,
       "fail": 0,
-      "ms": 796
+      "ms": 731
     },
     {
       "cat": "unit",
       "file": "test-dosare.js",
       "full": "/home/user/rpw-bosch-service/_tests/unit/test-dosare.js",
       "status": "OK",
-      "pass": 27,
+      "pass": 28,
       "fail": 0,
-      "ms": 38
+      "ms": 35
     },
     {
       "cat": "unit",
@@ -157,7 +157,7 @@
       "status": "OK",
       "pass": 22,
       "fail": 0,
-      "ms": 38
+      "ms": 34
     },
     {
       "cat": "unit",
@@ -175,7 +175,7 @@
       "status": "OK",
       "pass": 54,
       "fail": 0,
-      "ms": 41
+      "ms": 35
     },
     {
       "cat": "unit",
@@ -184,7 +184,7 @@
       "status": "OK",
       "pass": 69,
       "fail": 0,
-      "ms": 2457
+      "ms": 2192
     },
     {
       "cat": "unit",
@@ -193,7 +193,7 @@
       "status": "OK",
       "pass": 39,
       "fail": 0,
-      "ms": 38
+      "ms": 35
     },
     {
       "cat": "unit",
@@ -202,7 +202,7 @@
       "status": "OK",
       "pass": 64,
       "fail": 0,
-      "ms": 39
+      "ms": 38
     },
     {
       "cat": "unit",
@@ -211,7 +211,7 @@
       "status": "OK",
       "pass": 15,
       "fail": 0,
-      "ms": 40
+      "ms": 36
     },
     {
       "cat": "unit",
@@ -220,7 +220,7 @@
       "status": "OK",
       "pass": 70,
       "fail": 0,
-      "ms": 41
+      "ms": 38
     },
     {
       "cat": "unit",
@@ -229,16 +229,16 @@
       "status": "OK",
       "pass": 19,
       "fail": 0,
-      "ms": 828
+      "ms": 781
     },
     {
       "cat": "unit",
       "file": "test-onelist.js",
       "full": "/home/user/rpw-bosch-service/_tests/unit/test-onelist.js",
       "status": "OK",
-      "pass": 22,
+      "pass": 21,
       "fail": 0,
-      "ms": 55
+      "ms": 36
     },
     {
       "cat": "unit",
@@ -247,7 +247,7 @@
       "status": "OK",
       "pass": 32,
       "fail": 0,
-      "ms": 39
+      "ms": 37
     },
     {
       "cat": "unit",
@@ -256,7 +256,7 @@
       "status": "OK",
       "pass": 88,
       "fail": 0,
-      "ms": 45
+      "ms": 41
     },
     {
       "cat": "unit",
@@ -274,7 +274,7 @@
       "status": "OK",
       "pass": 29,
       "fail": 0,
-      "ms": 56
+      "ms": 72
     },
     {
       "cat": "unit",
@@ -283,7 +283,7 @@
       "status": "OK",
       "pass": 24,
       "fail": 0,
-      "ms": 40
+      "ms": 37
     },
     {
       "cat": "unit",
@@ -292,7 +292,7 @@
       "status": "OK",
       "pass": 40,
       "fail": 0,
-      "ms": 43
+      "ms": 44
     },
     {
       "cat": "unit",
@@ -301,7 +301,7 @@
       "status": "OK",
       "pass": 24,
       "fail": 0,
-      "ms": 2656
+      "ms": 2686
     },
     {
       "cat": "unit",
@@ -317,9 +317,9 @@
       "file": "test-progres.js",
       "full": "/home/user/rpw-bosch-service/_tests/unit/test-progres.js",
       "status": "OK",
-      "pass": 39,
+      "pass": 48,
       "fail": 0,
-      "ms": 39
+      "ms": 40
     },
     {
       "cat": "unit",
@@ -328,16 +328,16 @@
       "status": "OK",
       "pass": 44,
       "fail": 0,
-      "ms": 220
+      "ms": 215
     },
     {
       "cat": "unit",
       "file": "test-registry.js",
       "full": "/home/user/rpw-bosch-service/_tests/unit/test-registry.js",
       "status": "OK",
-      "pass": 727,
+      "pass": 728,
       "fail": 0,
-      "ms": 59
+      "ms": 57
     },
     {
       "cat": "unit",
@@ -346,7 +346,7 @@
       "status": "OK",
       "pass": 26,
       "fail": 0,
-      "ms": 1736
+      "ms": 1593
     },
     {
       "cat": "unit",
@@ -355,7 +355,7 @@
       "status": "OK",
       "pass": 47,
       "fail": 0,
-      "ms": 946
+      "ms": 948
     },
     {
       "cat": "unit",
@@ -364,7 +364,7 @@
       "status": "OK",
       "pass": 54,
       "fail": 0,
-      "ms": 53
+      "ms": 52
     },
     {
       "cat": "unit",
@@ -373,7 +373,7 @@
       "status": "OK",
       "pass": 95,
       "fail": 0,
-      "ms": 43
+      "ms": 39
     },
     {
       "cat": "unit",
@@ -382,7 +382,7 @@
       "status": "OK",
       "pass": 50,
       "fail": 0,
-      "ms": 2824
+      "ms": 2748
     },
     {
       "cat": "unit",
@@ -391,7 +391,7 @@
       "status": "OK",
       "pass": 28,
       "fail": 0,
-      "ms": 37
+      "ms": 36
     },
     {
       "cat": "unit",
@@ -400,7 +400,7 @@
       "status": "OK",
       "pass": 12,
       "fail": 0,
-      "ms": 32
+      "ms": 37
     },
     {
       "cat": "unit",
@@ -409,7 +409,7 @@
       "status": "OK",
       "pass": 19,
       "fail": 0,
-      "ms": 38
+      "ms": 36
     },
     {
       "cat": "unit",
@@ -418,7 +418,7 @@
       "status": "OK",
       "pass": 17,
       "fail": 0,
-      "ms": 39
+      "ms": 38
     },
     {
       "cat": "unit",
@@ -427,7 +427,7 @@
       "status": "OK",
       "pass": 95,
       "fail": 0,
-      "ms": 717
+      "ms": 690
     },
     {
       "cat": "integration",
@@ -436,7 +436,7 @@
       "status": "OK",
       "pass": 46,
       "fail": 0,
-      "ms": 1055
+      "ms": 1248
     },
     {
       "cat": "integration",
@@ -445,7 +445,7 @@
       "status": "OK",
       "pass": 114,
       "fail": 0,
-      "ms": 1245
+      "ms": 1338
     },
     {
       "cat": "integration",
@@ -454,16 +454,16 @@
       "status": "OK",
       "pass": 102,
       "fail": 0,
-      "ms": 1091
+      "ms": 1151
     },
     {
       "cat": "frontend",
       "file": "test-fe-panou.js",
       "full": "/home/user/rpw-bosch-service/_tests/frontend/test-fe-panou.js",
       "status": "OK",
-      "pass": 97,
+      "pass": 99,
       "fail": 0,
-      "ms": 2890
+      "ms": 2758
     },
     {
       "cat": "frontend",
@@ -472,7 +472,7 @@
       "status": "OK",
       "pass": 176,
       "fail": 0,
-      "ms": 964
+      "ms": 812
     },
     {
       "cat": "frontend",
@@ -481,7 +481,7 @@
       "status": "OK",
       "pass": 23,
       "fail": 0,
-      "ms": 1299
+      "ms": 1262
     },
     {
       "cat": "static",
@@ -490,7 +490,7 @@
       "status": "OK",
       "pass": 2,
       "fail": 0,
-      "ms": 58
+      "ms": 57
     }
   ]
 }

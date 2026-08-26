@@ -41,6 +41,7 @@
    +'.pr-lbl{font-size:10.5px;font-weight:700;color:#555;line-height:1.25;white-space:nowrap;'
    +'font-variant-numeric:tabular-nums}'
    +'.pr-lbl .pr-cnt{color:#999;font-weight:600}'
+   +'.pr-proc{font-weight:800;color:#1a1a1a}'
    +'.pr-lbl.pr-l-late{color:#92400e}'
    /* nagy valtozat a munkalapokon */
    +'.pr-big .pr-seg{width:100%;height:10px;border-radius:3px}'
@@ -72,6 +73,17 @@
     });
   }
 
+  /* ── A FOLYAMAT NEVE (Ferenc, 2026-08-26 — "A" valtozat) ────────
+     A korabbi kulon szines jelveny (Avizare dauna / Dosar deschis)
+     szovege ATKOLTOZOTT ide, a sav feliratanak elejere. Igy a sor
+     EGY mondatot mond, nem hármat mas-mas nyelven:
+        "Avizare dauna · Colectare acte 0/17 irat"
+     Magankaron NINCS elotag (E-3): a hianya maga az informacio. */
+  function procName(j,T){
+    if(!j || j.damageType!=='asig') return '';
+    return (j.dosarStatus==='deschis') ? T('st_dosar_deschis') : T('st_avizare');
+  }
+
   /* ── A LANC — a modul szive ───────────────────────────────────── */
   /* opts: {T:fn, acteCount:fn, threshold:number, lateProg:bool} */
   function chain(job, opts){
@@ -96,7 +108,7 @@
         cnt=st+' / 3 '+T('pr_lepes');
       }
       return {kind:'dosar', steps:steps, label:steps[st-1].label,
-              counter:cnt, late:false, done:st-1, total:3};
+              proc:procName(j,T), counter:cnt, late:false, done:st-1, total:3};
     }
 
     /* ── 2. VARAKOZAS — az auto meg nem jott be ─────────────────── */
@@ -119,6 +131,7 @@
       var kapu=!!c.whatsapp;
       return {kind:'astept', steps:st2,
               label: kapu ? T('pr_gata') : T('pr_var_wa'),
+              proc:procName(j,T),
               counter:n+' / 5 '+T('pr_feltetel'),
               late: !!opts.lateProg, done:n, total:5};
     }
@@ -158,6 +171,7 @@
     var startedD=daysSince((phs[cur]||{}).started);
     var kesik=(!j.inchis && startedD>=TH);
     return {kind:'lucru', steps:st3, label:T(PH[cur-1]),
+            proc:procName(j,T),
             counter:cur+' / 7 '+T('pr_fazis'),
             late:kesik, days:startedD, done:doneN, total:7};
   }
@@ -168,7 +182,8 @@
     var ch=chain(job,opts);
     var big=opts.big?' pr-big':'';
     var h='<div class="pr-wrap'+big+'">';
-    h+='<div class="pr-segs" role="img" aria-label="'+esc(ch.label+' — '+ch.counter)+'">';
+    h+='<div class="pr-segs" role="img" aria-label="'
+      +esc((ch.proc?ch.proc+' — ':'')+ch.label+' — '+ch.counter)+'">';
     ch.steps.forEach(function(s){
       var cls=s.state==='done' ?'pr-done'
              :s.state==='now'  ?(ch.late?'pr-late':'pr-now')
@@ -177,7 +192,9 @@
       h+='<span class="pr-seg '+cls+'" title="'+esc(s.label)+'"></span>';
     });
     h+='</div>';
-    h+='<div class="pr-lbl'+(ch.late?' pr-l-late':'')+'">'+esc(ch.label)
+    h+='<div class="pr-lbl'+(ch.late?' pr-l-late':'')+'">'
+      +(ch.proc?'<span class="pr-proc">'+esc(ch.proc)+'</span> · ':'')
+      +esc(ch.label)
       +' <span class="pr-cnt">· '+esc(ch.counter)+'</span></div>';
     h+='</div>';
     return h;

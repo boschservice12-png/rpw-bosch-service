@@ -30,16 +30,17 @@ ok(/job\.sosire==='ratat'\) *return 'ratate'/.test(html),'a ratat tovabbra is me
 
 console.log('\n4. A SOR mondja meg, melyik melyik');
 const sorok=html.slice(html.indexOf('displayed.forEach'));
-ok(/tab==='viitoare'&&_dd\)\{[\s\S]{0,600}acteCount/.test(sorok),'dosszie-sor -> iratszamlalo');
+ok(/RPWProgres\.html/.test(sorok),'a sorok a KOZOS folyamat-fuggvenyt hasznaljak');
 ok(/st_predat|st_inchis/.test(html),'atadva / lezarva allapot is megjelenik');
-ok(/tab==='viitoare'\)\{[\s\S]{0,300}st_astept/.test(sorok),'javitas-sor -> "varjuk az autot"');
+ok(/pr_var_wa|pr_gata/.test(html),'a "varjuk az autot" allapot a sav feliratabol jon');
 ok(/_ddRow\?' row-dd':''/.test(sorok),'a dosszie-sor sajat jelolest kap');
 ok(/\.panou-row\.row-dd/.test(html),'  es van hozza CSS');
 
 console.log('\n5. Biztositos javitas KET allapota a soron');
-ok(/damageType==='asig'/.test(html) && /dd2-open/.test(html) && /dd2-aviz/.test(html),'ketallapotu jelveny letezik');
-ok(/dosarStatus==='deschis'/.test(html),'  a dosarStatus dont');
-ok(/st_dosar_deschis/.test(html) && /st_avizare/.test(html),'  mindket felirat megvan');
+// 2026-08-26 ("A"): a ketallapotu JELVENY kivezetve — a szavai a
+// folyamat-sav feliratanak elotagjai lettek (rpw-progres.js: procName).
+ok(!/dd2-open|dd2-aviz|function ddBadge/.test(html),'a kulon jelveny kivezetve');
+ok(/st_dosar_deschis/.test(html) && /st_avizare/.test(html),'  a ket felirat megmaradt (a sav elotagjakent)');
 
 console.log('\n6. Muveletek soronkent');
 ok(/tab==='viitoare'&&_dd\)\{[\s\S]{0,300}deschideDosar/.test(sorok),'dosszie-soron Deschide dosarul');

@@ -87,28 +87,28 @@ console.log('\n1. Viitoare fül — a kétállapotú jelvény (K-19)');
   const v1=h.split('<tr').filter(s=>/MS-22-BBB/.test(s))[0]||'';
   const v2=h.split('<tr').filter(s=>/MS-33-CCC/.test(s))[0]||'';
   const v3=h.split('<tr').filter(s=>/MS-44-DDD/.test(s))[0]||'';
-  ok(/dd2-open/.test(v1)&&/Dosar deschis/.test(v1),'deschis → zöld „Dosar deschis" jelvény');
-  ok(/dd2-aviz/.test(v2)&&/Avizare daun/.test(v2),'deschid → kék „Avizare daună" jelvény');
-  ok(!/dd2-/.test(v3),'magánkáron NINCS jelvény');
+  // 2026-08-26 ("A" valtozat): a kulon jelveny KIVEZETVE — a szavai a
+  // folyamat-sav feliratanak elotagjai lettek.
+  ok(/Dosar deschis/.test(v1),'deschis → a felirat „Dosar deschis"-sel kezdődik');
+  ok(/Avizare daun/.test(v2),'deschid → a felirat „Avizare daună"-val kezdődik');
+  ok(!/pr-proc/.test(v3),'magánkáron NINCS előtag (E-3)');
+  ok(!/dd2-/.test(v1+v2+v3),'a külön színes jelvény sehol nem maradt');
   ok(/MS-11-AAA/.test(h),'a kárdosszié IS a közös listában van (Ferenc: egy ablak)');
   ok(!/prog-modal/.test(h),'a felugró kék modal nem renderelődik');
 }
 
-console.log('\n1f. A dosszié állapota MINDEN biztosítós soron látszik (Ferenc)');
+console.log('\n1f. A folyamat NEVE a felirat előtagja (Ferenc „A", 2026-08-26)');
 {
   const rows=[...w.document.querySelectorAll('tr.panou-row')];
   const R=p=>rows.find(r=>r.textContent.indexOf(p)>=0);
-  const dNyit=R('MS-20-HHH');   // kardosszie-sor, a dosszie MAR nyitva
-  const dAviz=R('MS-11-AAA');   // kardosszie-sor, meg csak avizaljuk
-  ok(dNyit && /dd2-open/.test(dNyit.innerHTML),
-     'kárdosszié-soron is ott a 🟢 „Dosar deschis" — eddig hiányzott');
-  ok(dNyit && /Dosar deschis/.test(dNyit.textContent),'  olvashatóan is kiírja');
-  ok(dAviz && /dd2-aviz/.test(dAviz.innerHTML),'a még avizált dosszié 🔵 jelvényt kap');
-  ok(dNyit && /ac-b/.test(dNyit.innerHTML),'  az iratszámláló megmarad mellette');
-  // ugyanaz a szabaly a javitas-sorokon (regota)
-  ok(R('MS-22-BBB') && /dd2-open/.test(R('MS-22-BBB').innerHTML),'javítás-soron változatlanul látszik');
-  // magankaron nincs jelveny
-  ok(R('MS-44-DDD') && !/dd2-/.test(R('MS-44-DDD').innerHTML),'magánkáron továbbra sincs jelvény');
+  const L=p=>{const r=R(p); const e=r&&r.querySelector('.pr-lbl'); return e?e.textContent.replace(/\s+/g,' ').trim():''};
+  ok(/^Dosar deschis ·/.test(L('MS-20-HHH')),'nyitott kárdosszié: „Dosar deschis · …" — '+L('MS-20-HHH'));
+  ok(/^Avizare daun\u0103 ·/.test(L('MS-11-AAA')),'avizált kárdosszié: „Avizare daună · …" — '+L('MS-11-AAA'));
+  ok(/^Dosar deschis ·/.test(L('MS-22-BBB')),'biztosítós javítás is kap előtagot');
+  ok(!/Dosar|Avizare/.test(L('MS-44-DDD')),'magánkáron nincs előtag — '+L('MS-44-DDD'));
+  const src=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
+  ok(!/function ddBadge/.test(src),'a külön jelvény-függvény kivezetve (nincs halott kód)');
+  ok(!/dd2-b\{/.test(src),'  a CSS-e sem maradt');
 }
 
 console.log('\n1g. Folyamatjelző oszlop a listán (Ferenc: A · mindkettő)');
@@ -217,12 +217,12 @@ console.log('\n1e. A mappa CSAK ott, ahol van dosszié-munka (Ferenc, 2026-08-26
   ok(nyitva && !/deschideDosar/.test(nyitva.innerHTML),
      '„Dosar daună deschis" soron sincs mappa — a dosszié már nyitva');
   ok(nyitva && /deschideLucrare/.test(nyitva.innerHTML),'  ott is a recepció útja');
-  ok(nyitva && /dd2-open/.test(nyitva.innerHTML),'  és a zöld „Dosar deschis" jelvény jelzi, miért');
+  ok(nyitva && /Dosar deschis/.test(nyitva.textContent),'  és a felirat előtagja mondja meg, miért');
   const kesz2=R('MS-22-BBB');    // asig + 'deschis' + mar egyeztetve
   ok(kesz2 && !/deschideDosar/.test(kesz2.innerHTML),'  kész állapotban sem jön vissza a mappa');
 
   // Aki MEG gyujti az iratokat, annal marad a mappa.
-  ok(asig && /dd2-aviz/.test(asig.innerHTML),'„Avizare daună" soron viszont MARAD — ott mi gyűjtjük az iratokat');
+  ok(asig && /Avizare daun/.test(asig.textContent),'„Avizare daună" soron a mappa MARAD — ott mi gyűjtjük az iratokat');
 }
 
 console.log('\n1d. Ratate fül — a kuka is rajz, nem emoji');
@@ -254,8 +254,11 @@ console.log('\n2. EGY KÖZÖS LISTA — a dosszié-sor mégis felismerhető (Fer
   ok(!!dd&&!!rep,'a dosszié és a javítás EGY listában van');
   ok(dd && dd.classList.contains('row-dd'),'a dosszié-sor kék jelölést kap');
   ok(rep && !rep.classList.contains('row-dd'),'a javítás-sor NEM kap ilyet');
-  ok(dd && /ac-b/.test(dd.innerHTML),'a dosszié-soron IRATSZÁMLÁLÓ van');
-  ok(rep && /panou-pill/.test(rep.innerHTML),'a javítás-soron állapot-pill van');
+  // 2026-08-26 ("A"): a kulon iratszamlalo-chip es a statusz-pill
+  // KIVEZETVE — mindkettot a sav felirata mondja el, egyszer.
+  ok(dd && /irat|acte/.test(dd.textContent),'a dosszié-soron az IRATSZÁM a sáv feliratában van');
+  ok(rep && /feltétel|conditii|conditions/.test(rep.textContent),'a javítás-soron a feltétel-szám ugyanott');
+  ok(dd && !/ac-b/.test(dd.innerHTML) && !/panou-pill/.test(dd.innerHTML),'  nincs többé külön chip/pill');
   ok(dd && /deschideDosar/.test(dd.innerHTML),'a dosszié fő művelete: Deschide dosarul');
   ok(dd && !/markRatat/.test(dd.innerHTML),'a dossziéra nincs Ratat');
   ok(rep && /markRatat/.test(rep.innerHTML),'a javításra van Ratat');

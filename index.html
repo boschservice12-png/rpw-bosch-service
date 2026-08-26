@@ -136,9 +136,6 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .edit-btn.eb-del:hover{background:var(--r100,#fee2e2)}
 .edit-btn.eb-ratat{background:var(--yl,#fef9c3);color:var(--y,#ca8a04);border:1px solid #fde68a}
 /* K-19: biztositos javitas ket allapota a Viitoare soron */
-.dd2-b{display:inline-block;margin-top:4px;font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;letter-spacing:.02em}
-.dd2-open{background:#e3f5e6;color:#1a6b2a}
-.dd2-aviz{background:#e5eefc;color:#17457f}
 .edit-btn.eb-ratat:hover{background:#fde68a}
 .edit-btn.eb-react{background:var(--gl,#dcfce7);color:var(--g,#16a34a);border:1px solid #bbf7d0}
 .edit-btn.eb-react:hover{background:#bbf7d0}
@@ -918,7 +915,6 @@ stat_thresholdDays:{ro:'Prag (zile)',en:'Threshold (days)',hu:'Hatar (nap)'},
 };
 var PK=['ph1','ph2','ph3','ph4','ph5','ph6','ph7'];
 // Status color: red=active, yellow=waiting(reconstatare), green=done
-function phBadge(phase){if(phase===7)return 'badge-g';if(phase===3)return 'badge-y';return 'badge-r'}
 function gL(){return localStorage.getItem('rpw_lang')||'ro'}
 function sL(l){localStorage.setItem('rpw_lang',l);render()}
 function T(k){var e=i[k];return e?e[gL()]||e.ro||k:k}
@@ -1045,7 +1041,11 @@ function render(){
   h+='<div class="tbl-wrap">';
   if(!jobs.length){h+='<div class="empty"><div style="font-size:16px;font-weight:700;margin-bottom:6px">'+T('noJobs')+'</div><div style="font-size:12px">'+T('addFirst')+'</div></div>'}
   else{
-    h+='<table class="tbl"><thead><tr><th>'+T('nr')+'</th><th>'+T('auto')+'</th><th>'+T('client')+'</th><th>'+T('phase')+'</th><th>'+T('progress')+'</th><th>'+T('th_conditii')+'</th><th>'+T('date')+'</th><th class="c">'+T('actions')+'</th></tr></thead><tbody>';
+    // ── E-5: a "Faza" jelveny-oszlop OSSZEVONVA a savval ─────────────
+    // A jelveny ugyanazt a fazisnevet irta ki, amit a sav felirata —
+    // ket oszlop, egy igazsag. A feltetel-ikonok maradnak: azok MAS
+    // informacio (a fogadasi feltetelek), nem a fazis.
+    h+='<table class="tbl"><thead><tr><th>'+T('nr')+'</th><th>'+T('auto')+'</th><th>'+T('client')+'</th><th>'+T('pr_proces')+'</th><th>'+T('th_conditii')+'</th><th>'+T('date')+'</th><th class="c">'+T('actions')+'</th></tr></thead><tbody>';
     var sorted=jobs.slice().sort(function(a,b){return(a.phase===7?1:0)-(b.phase===7?1:0)||new Date(b.created)-new Date(a.created)});
     sorted.forEach(function(j){
       var ed=(S.editJobId===j.id);
@@ -1053,7 +1053,6 @@ function render(){
       h+='<tr><td class="mono" style="font-weight:800">'+(ed?inp('number',j.number,'Nr'):escH(j.number||j.id))+'</td>';
       h+='<td>'+(ed?inp('auto',j.auto,'Auto')+inp('plate',j.plate,'Nr. inmatr.')+inp('vin',j.vin,'VIN'):(escH(j.auto||'—')+'<br><span class="mono" style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.4px">'+escH(j.plate||'')+'</span>'+(j.vin?'<span class="mono" style="font-size:10px;color:var(--t3)"> · '+escH(j.vin.slice(-6))+'</span>':'')))+'</td>';
       h+='<td>'+(ed?inp('client',j.client,'Client')+inp('phone',j.phone,'Telefon'):(escH(j.client||'—')+'<br><span style="font-size:10px;color:var(--t3)">'+escH(j.phone||'')+'</span>'))+'</td>';
-      h+='<td><span class="badge '+phBadge(j.phase)+'">'+T(PK[j.phase-1])+'</span></td>';
       // ── FOLYAMATJELZO (Ferenc, 2026-08-26) ──────────────────────────
       // Itt korabban egy KEZZEL IRT sav allt, ami minden korabbi fazist
       // zoldre festett — a KIHAGYOTT Reconstatare-t is kesznek mutatta.
@@ -1217,7 +1216,7 @@ function renderPanou(){
   } else {
     h+='<table class="panou-tbl"><thead><tr><th>'+T('client')+'</th><th>'+T('plate')+'</th><th>'+T('col_data')+'</th>'
       + ((tab==='viitoare')
-          ? '<th>'+T('pr_proces')+'</th><th>'+T('col_status')+'</th>'
+          ? '<th>'+T('pr_proces')+'</th>'
           : '<th>'+T('phase')+'</th><th>'+T('status_cond')+'</th>')
       + '<th>'+T('contact')+'</th><th>'+T('actions')+'</th></tr></thead><tbody>';
     displayed.forEach(function(j){
@@ -1256,7 +1255,15 @@ function renderPanou(){
       // 2026-08-25: a rendszám mellől kikerült a 📁/📅 jelvény. A két sáv
       // megkülönböztetése enélkül is egyértelmű: a dosszié-sor kiemelt,
       // iratszámlálót mutat, és „Deschide dosarul" a fő művelete.
-      h+='<td class="mono" style="font-weight:700;letter-spacing:.4px">'+escH(j.plate||'—')+'</td>';
+      // ── AZ AZONOSITOK EGY HELYEN (Ferenc E-2, 2026-08-26) ────────
+      // A "Groupama · k212500125" nem allapot, hanem AZONOSITO: melyik
+      // karugy ez. Ezert a rendszam ala kerult, a tobbi azonosito melle
+      // — nem a folyamat-oszlopba, ahol allapotnak latszott.
+      h+='<td class="mono" style="font-weight:700;letter-spacing:.4px">'+escH(j.plate||'—')
+        +(j.damageType==='asig'
+           ? '<div style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:var(--t3);font-weight:600;letter-spacing:0;margin-top:2px">'+escH(njCaseLabel(j))+'</div>'
+           : '')
+        +'</td>';
       h+='<td class="pg-cell">'+progCell(j)+'</td>';
       if(tab==='viitoare'){
         // ── FOLYAMATJELZO (Ferenc, 2026-08-26) ───────────────────────
@@ -1267,19 +1274,14 @@ function renderPanou(){
                                lateProg:(progInfo(j).state==='late')})
           : '')+'</td>';
       }
-      if(tab==='viitoare'&&_dd){
-        // Kardosszie a kozos listaban: a lenyeg, hany irat van meg.
-        var ac=acteCount(j);
-        var acCls=(ac.done>=ac.total)?'ac-ok':(ac.done?'ac-part':'ac-none');
-        var acTxt=j.inchis?T('st_inchis'):(j.dosarPredat?T('st_predat'):(ac.done+'/'+ac.total+' '+T('st_acte')));
-        h+='<td><span class="ac-b '+(j.inchis?'ac-ok':acCls)+'">'+escH(acTxt)+'</span>'
-          + ddBadge(j)
-          +'<div style="font-size:10px;color:var(--t3);font-weight:600;margin-top:3px">'+escH(njCaseLabel(j))+'</div></td>';
-      } else if(tab==='viitoare'){
-        h+='<td><span class="panou-pill '+pillCls+'" title="'+tt+'">'+(canOpen?T('pill_ready'):T('st_astept'))+'</span>';
-        h+=ddBadge(j);
-        h+='</td>';
-      } else {
+      // ── STATUSZ ES FOLYAMAT OSSZEVONVA (Ferenc "A", 2026-08-26) ──
+      // A viitoare lapon a Status oszlop MEGSZUNT: mindent, amit mondott,
+      // a Proces sav felirata mond el — egy nyelven, egyszer:
+      //   iratszamlalo   -> a sav szamlaloja  (0/17 irat)
+      //   "Asteptam masina" -> a sav lepese   (Var a WhatsApp-ra)
+      //   Avizare/Deschis jelveny -> a felirat ELOTAGJA
+      //   biztosito+karszam -> a rendszam ala (azonosito, nem allapot)
+      if(tab!=='viitoare'){
         h+='<td><span class="panou-pill '+pillCls+'" title="'+phName+'">'+pillText+'</span></td>';
         h+='<td><div class="cond-row" title="'+tt+'">'+renderCondIcon(cnd.programare)+renderCondIcon(cnd.loc)+renderCondIcon(cnd.om)+renderCondIcon(cnd.piese,'piese')+renderCondIcon(cnd.whatsapp)+'</div></td>';
       }
@@ -1627,17 +1629,10 @@ var RPW_ICO={
 };
 function ico(n){return RPW_ICO[n]||''}
 
-// ── A DOSSZIE ALLAPOTA MINDEN BIZTOSITOS ESETEN LATSZIK ──────────────
-// (Ferenc, 2026-08-26) Eddig ez a jelveny CSAK a javitas-sorokon jelent
-// meg; a kardosszie-sorokon nem, pedig ott a legfontosabb: a pultnal
-// azonnal latni kell, hogy a biztositoi dosszie MAR NYITVA van-e, vagy
-// meg csak most avizaljuk. Egy szabaly, minden soron ugyanaz.
-function ddBadge(j){
-  if(!j || j.damageType!=='asig') return '';
-  var nyitva=(j.dosarStatus==='deschis');
-  return '<div class="dd2-b '+(nyitva?'dd2-open':'dd2-aviz')+'">'
-       + (nyitva?T('st_dosar_deschis'):T('st_avizare'))+'</div>';
-}
+// ── A DOSSZIE ALLAPOTA A SAV FELIRATABAN (Ferenc "A", 2026-08-26) ───
+// A kulon szines jelveny (ddBadge) KIVEZETVE: a szavai — "Avizare
+// dauna" / "Dosar deschis" — a folyamat-sav feliratanak elotagjai
+// lettek (rpw-progres.js: procName). Egy sor, egy mondat, egy nyelv.
 
 // === Programare modal ===
 function newJobModalHtml(){

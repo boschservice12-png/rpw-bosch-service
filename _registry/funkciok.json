@@ -364,11 +364,15 @@
   },
   {
    "id": "F-125",
-   "nev": "Folyamatjelzo: harom lanc egy savban (dosszie 3 lepes / varakozas 5 feltetel / javitas 7 fazis), kihagyott lepes jelolve, keses borostyan",
+   "nev": "Folyamatjelzo: harom lanc egy savban; a STATUSZ es a FOLYAMAT egy oszlopban (a folyamat neve a felirat elotagja), kihagyott lepes jelolve, keses borostyan",
    "fe": [
     [
      "rpw-progres.js",
      "function chain"
+    ],
+    [
+     "rpw-progres.js",
+     "function procName"
     ],
     [
      "rpw-progres.js",
@@ -628,7 +632,7 @@
   },
   {
    "id": "F-201",
-   "nev": "Avizare dauna: a fejlec gombja EGYENESEN dossziet nyit; a dossziek a KOZOS listaban; a dosszie allapota (Avizare dauna / Dosar deschis) MINDEN biztositos soron latszik",
+   "nev": "Avizare dauna: a fejlec gombja EGYENESEN dossziet nyit; a dossziek a KOZOS listaban; a dosszie allapota a folyamat-sav feliratanak elotagja",
    "fe": [
     [
      "index.html",
@@ -639,8 +643,8 @@
      "row-dd"
     ],
     [
-     "index.html",
-     "function ddBadge"
+     "rpw-progres.js",
+     "function procName"
     ]
    ],
    "be": [],

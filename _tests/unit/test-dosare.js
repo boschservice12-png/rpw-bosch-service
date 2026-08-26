@@ -38,9 +38,13 @@ console.log('\n3. Nem hasal el');
 });
 
 console.log('\n4. EGY KOZOS LISTA — a dosszie-sor sajat oszlopai (Ferenc, 2026-08-26)');
-ok(html.indexOf("T('col_status')")>0,'STATUS oszlop a kozos listan');
+// 2026-08-26 ("A"): a Status oszlop OSSZEVONVA a Proces oszloppal.
+ok(html.indexOf("T('pr_proces')")>0,'PROCES oszlop a kozos listan');
+ok(!/tab==='viitoare'\)\s*\?\s*'<th>'\+T\('pr_proces'\)\+'<\/th><th>'\+T\('col_status'\)/.test(html),
+   '  a kulon Status oszlop megszunt');
 ok(html.indexOf("setPanouTab(\\'dosare\\')")<0,'kulon Avizare dauna ful mar NINCS');
-ok(/tab==='viitoare'&&_dd\)\{[\s\S]{0,600}acteCount/.test(html),'a dosszie-sor iratszamlalot mutat');
+ok(/RPWProgres\.html\(j,\{T:T, acteCount:window\.acteCount/.test(html),
+   'a dosszie-sor iratszamat a KOZOS folyamat-fuggveny adja');
 ok(/tab==='viitoare'&&_dd\)\{[\s\S]{0,300}deschideDosar/.test(html.slice(html.indexOf('displayed.forEach'))),'  -> Deschide dosarul a fo muvelet');
 ok(!/fx-b/.test(html),'a rendszam mellett tovabbra sincs jelveny');
 ok(/if\(job\.flux==='doar_dosar'\) *return 'viitoare'/.test(html),'az ADATMODELL: a flux dont, a lista kozos');
