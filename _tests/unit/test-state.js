@@ -42,14 +42,17 @@ eq(categorizeJob(j),'viitoare','phase 1 + viitor -> egyertelmuen viitoare');
 eq(j.programare.status,'viitor','  a tukor is konzisztens');
 // MS-26-005: doarDosar + phase 1
 j=migrateState({phase:1,doarDosar:true,programare:{status:'in_lucru'}});
-eq(categorizeJob(j),'dosare','csak-dosszie -> a Dosare fulre, NEM a javitasi csobe');
+// 2026-08-26 (Ferenc): EGY kozos lista — a dosszie is a 'viitoare'-ba
+// kerul. A megkulonboztetes a SORON tortenik (iratszamlalo, kek jeloles,
+// "Deschide dosarul" fo muvelet), nem kulon kategoriaval.
+eq(categorizeJob(j),'viitoare','csak-dosszie -> a KOZOS listaba');
 
 console.log('\n3. categorizeJob — egyetlen lanc, determinisztikus');
 const C=o=>categorizeJob(migrateState(o));
 eq(C({separat:true,phase:1,programare:{}}),'separat','separat mindent megelozi');
 eq(C({inchis:true,phase:7,programare:{}}),'arhivate','inchis -> arhivate');
-eq(C({sosire:'ratat',flux:'doar_dosar',inchis:false,phase:1}),'ratate','ratat megelozi a dosare-t');
-eq(C({sosire:'sosit',flux:'doar_dosar',inchis:false,phase:1}),'dosare','sosit + doar_dosar -> dosare');
+eq(C({sosire:'ratat',flux:'doar_dosar',inchis:false,phase:1}),'ratate','ratat megelozi a dossziet is');
+eq(C({sosire:'sosit',flux:'doar_dosar',inchis:false,phase:1}),'viitoare','sosit + doar_dosar -> a kozos lista (a flux dont, nem az erkezes)');
 eq(C({sosire:'programat',flux:'reparatie',inchis:false,phase:1}),'viitoare','programat -> viitoare');
 eq(C({sosire:'sosit',flux:'reparatie',inchis:false,phase:3}),'lucrari','sosit + reparatie -> lucrari');
 

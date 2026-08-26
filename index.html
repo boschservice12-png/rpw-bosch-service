@@ -126,6 +126,7 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .panou-row.row-ok:hover td{background-color:#bbf7d0}
 .panou-row.row-warn:hover td{background-color:#fef08a}
 .panou-hint{font-size:11px;color:var(--t3);padding:6px 24px;background:var(--w);border-bottom:1px solid var(--b);text-align:center;font-style:italic}
+.panou-row.row-dd td:first-child{box-shadow:inset 3px 0 0 var(--bl,#2563eb)}
 .edit-btn.eb-ico{padding:0;width:32px;height:32px;justify-content:center}
 .edit-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .edit-btn{padding:7px 16px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
@@ -1095,7 +1096,12 @@ function categorizeJob(job){
   if(job.separat)               return 'separat';
   if(job.inchis===true)         return 'arhivate';
   if(job.sosire==='ratat')      return 'ratate';
-  if(job.flux==='doar_dosar')   return 'dosare';
+  // ── EGY KOZOS LISTA (Ferenc, 2026-08-26) ──────────────────────────
+  // A K-19-es kulon "Avizare dauna" ful visszavonva: a kardosszie es a
+  // jovobeli javitas UGYANABBAN a listaban el. A soron latszik, melyik
+  // melyik (iratszamlalo + eset-cimke vs. allapot-pill + jelveny), es a
+  // fo muvelet is mas ("Deschide dosarul" vs. "Recepție auto").
+  if(job.flux==='doar_dosar')   return 'viitoare';
   if(job.sosire==='programat')  return 'viitoare';
   return 'lucrari';
 }
@@ -1153,25 +1159,23 @@ function renderPanou(){
   var ratate=jobs.filter(function(j){return categorizeJob(j)==='ratate'});
   var arhivate=jobs.filter(function(j){return categorizeJob(j)==='arhivate'});
   var separat=jobs.filter(function(j){return categorizeJob(j)==='separat'});
-  var dosare=jobs.filter(function(j){return categorizeJob(j)==='dosare'});
 
+  // ── EGY KOZOS LISTA (Ferenc, 2026-08-26) ──────────────────────────
+  // Datum szerint elol a programalt javitasok; a dossziek (nincs datum)
+  // a lista vegen, LEGUJABB ELOL — igy a ma felvett dosszie kezre esik.
   viitoare.sort(function(a,b){
     var pa=((a.programare||{}).date)||'9999-12-31', pb=((b.programare||{}).date)||'9999-12-31';
     if(pa!==pb)return pa<pb?-1:1;
     var ta=((a.programare||{}).time)||'99:99', tb=((b.programare||{}).time)||'99:99';
-    return ta<tb?-1:(ta>tb?1:0);
+    if(ta!==tb)return ta<tb?-1:1;
+    var ca=(a.created||''), cb=(b.created||'');
+    return ca<cb?1:(ca>cb?-1:0);
   });
 
   var tab=S.panouTab||'viitoare';
-  // ── K-19 (Ferenc, 2026-08-25): az Avizare dauna SAJAT FULET kap ────
-  // A 2026-08-25-i "egy lista" osszevonas visszafordult: a biztositos
-  // karugyek (doar_dosar) a sajat fulukon elnek es OTT is nyilnak.
-  dosare.sort(function(a,b){
-    var pa=(a.created||''), pb=(b.created||'');
-    return pa<pb?1:(pa>pb?-1:0);              // legujabb elol
-  });
+  if(tab==='dosare')tab='viitoare';   // regi, elmentett fulnev -> a kozos lista
   var deAzi=viitoare;
-  var displayed=tab==='ratate'?ratate:tab==='arhivate'?arhivate:tab==='separat'?separat:tab==='dosare'?dosare:deAzi;
+  var displayed=tab==='ratate'?ratate:tab==='arhivate'?arhivate:tab==='separat'?separat:deAzi;
 
   // Sidebar
   var h=sbNav('panou');
@@ -1180,25 +1184,15 @@ function renderPanou(){
   h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
 
   // Header + Programare noua gomb
-  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn" style="background:#15181C;color:#fff;border-color:#15181C" onclick="azOpen()">'+T('az_q')+'</button>'+'<button class="btn-prog-new" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="background:var(--bl,#2563eb)" onclick="dosarTarziu()">🛡 '+T('dosar_dauna')+'</button><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="lucrareAcum()">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
+  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn" style="background:#15181C;color:#fff;border-color:#15181C" onclick="azOpen()">'+T('az_q')+'</button>'+'<button class="btn-prog-new" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="background:var(--bl,#2563eb)" onclick="dosarTarziu()">🛡 '+T('dosar_dauna')+'</button><label class="btn-prog-new" style="background:#F3F4F6;color:#374151;position:relative;display:inline-flex;cursor:pointer;box-sizing:border-box" title="'+T('dosar_fisier')+'">📄 '+T('dosar_fisier')+'<input type="file" accept="image/*,.pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0" onchange="dosarFisier(event)"/></label><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="lucrareAcum()">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
 
   // Tabs
   h+='<div class="panou-tabs">';
   h+='<button class="panou-tab '+(tab==='viitoare'?'on':'')+'" onclick="setPanouTab(\'viitoare\')">'+T('panou_viitoare')+'<span class="tab-count">'+deAzi.length+'</span></button>';
-  h+='<button class="panou-tab '+(tab==='dosare'?'on':'')+'" onclick="setPanouTab(\'dosare\')">🛡 '+T('dosar_dauna')+'<span class="tab-count">'+dosare.length+'</span></button>';
   h+='<button class="panou-tab '+(tab==='ratate'?'on':'')+'" onclick="setPanouTab(\'ratate\')">'+T('panou_ratate')+'<span class="tab-count">'+ratate.length+'</span></button>';
   h+='<button class="panou-tab '+(tab==='arhivate'?'on':'')+'" onclick="setPanouTab(\'arhivate\')">'+T('panou_arhivate')+'<span class="tab-count">'+arhivate.length+'</span></button>';
   h+='<button class="panou-tab '+(tab==='separat'?'on':'')+'" onclick="setPanouTab(\'separat\')">📂 Separat<span class="tab-count">'+separat.length+'</span></button>';
   h+='</div>';
-
-  // ── AVIZARE DAUNA ful: a ket letrehozasi ut ITT el (K-19) ──────────
-  // A korabbi felugro kek ablak kivezetve — ugyanaz a ket fuggveny fut.
-  if(tab==='dosare'){
-    h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">';
-    h+='<button class="btn-prog-new" style="background:var(--bl,#2563eb);justify-content:center" onclick="dosarTarziu()">🛡 '+T('dosar_tarziu')+'</button>';
-    h+='<label class="btn-prog-new" style="background:#F3F4F6;color:#374151;justify-content:center;position:relative;display:inline-flex;cursor:pointer;box-sizing:border-box">📄 '+T('dosar_fisier')+'<input type="file" accept="image/*,.pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0" onchange="dosarFisier(event)"/></label>';
-    h+='</div>';
-  }
 
   // Restante figyelmezteto
   if(tab==='viitoare'){
@@ -1215,7 +1209,7 @@ function renderPanou(){
     h+='<div class="empty" style="background:var(--w);border-radius:var(--rd);padding:60px 20px;text-align:center;color:var(--t3)"><div style="font-size:14px;font-weight:600">'+T('noJobs')+'</div></div>';
   } else {
     h+='<table class="panou-tbl"><thead><tr><th>'+T('client')+'</th><th>'+T('plate')+'</th><th>'+T('col_data')+'</th>'
-      + ((tab==='viitoare'||tab==='dosare')
+      + ((tab==='viitoare')
           ? '<th>'+T('col_status')+'</th>'
           : '<th>'+T('phase')+'</th><th>'+T('status_cond')+'</th>')
       + '<th>'+T('contact')+'</th><th>'+T('actions')+'</th></tr></thead><tbody>';
@@ -1242,7 +1236,8 @@ function renderPanou(){
       var waOnclick=phoneClean?'onclick="event.stopPropagation();clickWhatsApp(\''+j.id+'\',\''+phoneClean.replace(/^\+/,'')+'\')"':'';
       var waTitle=phoneClean?(cnd.whatsapp?T('cond_whatsapp'):T('no_wa_yet')):T('wa_no_phone');
 
-      h+='<tr class="panou-row '+rowCls+'" ondblclick="openCondModal(\''+j.id+'\')">';
+      var _ddRow=(j.flux==='doar_dosar')||(j.flux==null&&j.doarDosar===true);
+      h+='<tr class="panou-row '+rowCls+(_ddRow?' row-dd':'')+'" ondblclick="openCondModal(\''+j.id+'\')">';
       h+='<td><div style="font-weight:700">'+escH(j.client||j.proprietar||'—')+'</div><div style="font-size:10px;color:var(--t3)">'+escH(j.number||j.id||'')+'</div></td>';
       var _dd=(j.flux==='doar_dosar')||(j.flux==null&&j.doarDosar===true);
       // 2026-08-25: a rendszám mellől kikerült a 📁/📅 jelvény. A két sáv
@@ -1250,8 +1245,8 @@ function renderPanou(){
       // iratszámlálót mutat, és „Deschide dosarul" a fő művelete.
       h+='<td class="mono" style="font-weight:700;letter-spacing:.4px">'+escH(j.plate||'—')+'</td>';
       h+='<td class="pg-cell">'+progCell(j)+'</td>';
-      if(tab==='dosare'){
-        // Az Avizare dauna fulon a lenyeg: hany irat van meg.
+      if(tab==='viitoare'&&_dd){
+        // Kardosszie a kozos listaban: a lenyeg, hany irat van meg.
         var ac=acteCount(j);
         var acCls=(ac.done>=ac.total)?'ac-ok':(ac.done?'ac-part':'ac-none');
         var acTxt=j.inchis?T('st_inchis'):(j.dosarPredat?T('st_predat'):(ac.done+'/'+ac.total+' '+T('st_acte')));
@@ -1278,7 +1273,7 @@ function renderPanou(){
       h+='<td>'+(phoneClean
         ? '<button class="wa-btn '+waCls+'" '+waOnclick+' title="'+waTitle+'">'+waMark+'</button>'
         : '<button class="wa-btn nofon" onclick="event.stopPropagation();openCondModal(\''+j.id+'\')" title="'+T('wa_no_phone')+' — '+T('need_wa_tip')+'">'+waMark+'</button>')+'</td>';
-      if(tab==='dosare'){
+      if(tab==='viitoare'&&_dd){
         h+='<td><button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')">'+ico('folder')+' '+T('open_dosar_btn')+'</button> <button class="edit-btn eb-edit2 eb-ico" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'" aria-label="'+T('edit_btn')+'">'+ico('pencil')+'</button> <button class="edit-btn eb-repro eb-ico" onclick="event.stopPropagation();openRepro(\''+j.id+'\')" title="'+T('repro_btn')+'" aria-label="'+T('repro_btn')+'">'+ico('calendar')+'</button></td>';
       } else if(tab==='viitoare'){
         // A "Contacteaza clientul" szoveges gomb KIVEZETVE (Ferenc):
@@ -2432,7 +2427,10 @@ function azBuild(){
   var ragadt=JOBS.filter(function(j){return j.sosire==='ratat'});
   var itt=JOBS.filter(function(j){return categorizeJob(j)==='lucrari'});
   var chk=azCheckList();
-  var dos=JOBS.filter(function(j){return categorizeJob(j)==='dosare'});
+  // A kozos lista ota a 'dosare' kategoria nem letezik — a FLUX dont.
+  var dos=JOBS.filter(function(j){
+    return ((j.flux==='doar_dosar')||(j.flux==null&&j.doarDosar===true))&&!j.inchis&&j.sosire!=='ratat'&&!j.separat;
+  });
   var gond=JOBS.filter(function(j){
     if(j.damageType!=='asig')return false;
     return (!String(j.asigurator||'').trim()&&!String(j.nrDosar||'').trim())||!String(j.client||'').trim();

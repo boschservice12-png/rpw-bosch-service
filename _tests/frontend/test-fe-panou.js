@@ -81,7 +81,7 @@ console.log('\n1. Viitoare fül — a kétállapotú jelvény (K-19)');
   ok(/dd2-open/.test(v1)&&/Dosar deschis/.test(v1),'deschis → zöld „Dosar deschis" jelvény');
   ok(/dd2-aviz/.test(v2)&&/Avizare daun/.test(v2),'deschid → kék „Avizare daună" jelvény');
   ok(!/dd2-/.test(v3),'magánkáron NINCS jelvény');
-  ok(!/MS-11-AAA/.test(h),'a kárdosszié nincs a Viitoare listán');
+  ok(/MS-11-AAA/.test(h),'a kárdosszié IS a közös listában van (Ferenc: egy ablak)');
   ok(!/prog-modal/.test(h),'a felugró kék modal nem renderelődik');
 }
 
@@ -153,22 +153,28 @@ console.log('\n1d. Ratate fül — a kuka is rajz, nem emoji');
   if(back) back.click(); await sleep(30);
 }
 
-console.log('\n2. Az Avizare daună fül — valódi fülváltással');
+console.log('\n2. EGY KÖZÖS LISTA — a dosszié-sor mégis felismerhető (Ferenc)');
 {
-  const tabBtn=[...w.document.querySelectorAll('.panou-tab')]
-    .find(b=>(b.getAttribute('onclick')||'').indexOf("'dosare'")>=0);
-  ok(!!tabBtn,'a fül GOMBJA a kirajzolt DOM-ban van');
-  if(tabBtn) tabBtn.click(); else w.setPanouTab('dosare');
-  await sleep(30);
-  const h=app();
-  ok(/MS-11-AAA/.test(h),'a kárdosszié a saját fülén van');
-  const btn=[...w.document.querySelectorAll('button')].find(b=>(b.getAttribute('onclick')||'')==='dosarTarziu()');
-  ok(!!btn,'a „Deschide dosar daună" gomb VALÓDI elem a fülön');
-  ok(!!w.document.querySelector('input[type=file]'),'a Preluare fájl-bemenet valódi elem');
-  const row=h.split('<tr').filter(s=>/MS-11-AAA/.test(s))[0]||'';
-  ok(/deschideDosar/.test(row),'a sor fő művelete: Deschide dosarul');
-  ok(/ac-b/.test(row),'iratszámláló a soron');
-  ok(!/markRatat/.test(row),'nincs Ratat a dosszié-soron');
+  ok(![...w.document.querySelectorAll('.panou-tab')]
+      .some(b=>(b.getAttribute('onclick')||'').indexOf("'dosare'")>=0),
+     'külön „Avizare daună" FÜL már nincs');
+  const rows=[...w.document.querySelectorAll('tr.panou-row')];
+  const dd=rows.find(r=>r.textContent.indexOf('MS-11-AAA')>=0);   // kárdosszié
+  const rep=rows.find(r=>r.textContent.indexOf('MS-22-BBB')>=0);  // javítás
+  ok(!!dd&&!!rep,'a dosszié és a javítás EGY listában van');
+  ok(dd && dd.classList.contains('row-dd'),'a dosszié-sor kék jelölést kap');
+  ok(rep && !rep.classList.contains('row-dd'),'a javítás-sor NEM kap ilyet');
+  ok(dd && /ac-b/.test(dd.innerHTML),'a dosszié-soron IRATSZÁMLÁLÓ van');
+  ok(rep && /panou-pill/.test(rep.innerHTML),'a javítás-soron állapot-pill van');
+  ok(dd && /deschideDosar/.test(dd.innerHTML),'a dosszié fő művelete: Deschide dosarul');
+  ok(dd && !/markRatat/.test(dd.innerHTML),'a dossziéra nincs Ratat');
+  ok(rep && /markRatat/.test(rep.innerHTML),'a javításra van Ratat');
+  // a fajl/OCR ut a fejlecben talalt uj helyet
+  ok(!!w.document.querySelector('.panou-hdr-actions input[type=file]'),
+     'a „Preluare dosar daună" (fájl/OCR) út a fejlécben él tovább');
+  // a dossziek a lista VEGEN, legujabb elol
+  const idx=p=>rows.findIndex(r=>r.textContent.indexOf(p)>=0);
+  ok(idx('MS-11-AAA')>idx('MS-22-BBB'),'a dátum nélküli dosszié a programált munkák UTÁN áll');
 }
 
 console.log('\n2b. A fejléc Avizare daună gombja EGYENESEN dossziét nyit (Ferenc)');
@@ -227,7 +233,9 @@ console.log('\n3. Lucrare nouă — VALÓDI kattintás, űrlap nélkül a recepc
 
 console.log('\n4. A fül-gomb kattintása tényleg vált (oda-vissza)');
 {
-  ok(/MS-22-BBB/.test(app())&&!/MS-11-AAA/.test(app()),'a Viitoare-fül a helyén');
+  const h=app();
+  ok(/MS-22-BBB/.test(h)&&/MS-11-AAA/.test(h),'a közös lista a helyén');
+  ok(!/MS-77-EEE/.test(h),'a ratat munka NEM szivárog be ide');
 }
 
 console.log('\n5. A célok a forrásban (amit jsdom nem tud megmutatni)');

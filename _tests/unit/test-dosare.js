@@ -1,4 +1,4 @@
-// L1-I: a Dosare dauna ful sajat oszlopai es muveletei
+// L1-I: a kardosszie-sor sajat oszlopai es muveletei a KOZOS listaban
 const fs=require('fs');const path=require('path');const ROOT=path.join(__dirname,'..','..');
 const _rd=fs.readFileSync; fs.readFileSync=function(p,e){try{return _rd(p,e)}catch(_){return _rd(path.join(ROOT,String(p).replace(/^.*\//,'')),e)}};
 const html=fs.readFileSync('index.html','utf8');
@@ -37,24 +37,20 @@ console.log('\n3. Nem hasal el');
   try{acteCount(v);ok(true,'bemenet #'+i)}catch(e){ok(false,'#'+i+' KIVETEL: '+e.message)}
 });
 
-console.log('\n4. Az Avizare dauna FUL (K-19) — az osszevonas visszafordult');
-ok(html.indexOf("T('col_status')")>0,'STATUS oszlop a viitoare es a dosare fulon');
-ok(!/var deAzi=viitoare\.concat\(dosare\)/.test(html),'nincs tobbe osszevont lista');
-ok(html.indexOf("setPanouTab(\\'dosare\\')")>=0,'a kulon Avizare dauna ful LETEZIK');
-ok(/tab==='dosare'\)\{[\s\S]{0,600}acteCount/.test(html),'a dosar sor iratszamlalot mutat');
-ok(/tab==='dosare'\)\{[\s\S]{0,300}deschideDosar/.test(html.slice(html.indexOf('displayed.forEach'))),'  -> Deschide dosarul a fo muvelet');
+console.log('\n4. EGY KOZOS LISTA — a dosszie-sor sajat oszlopai (Ferenc, 2026-08-26)');
+ok(html.indexOf("T('col_status')")>0,'STATUS oszlop a kozos listan');
+ok(html.indexOf("setPanouTab(\\'dosare\\')")<0,'kulon Avizare dauna ful mar NINCS');
+ok(/tab==='viitoare'&&_dd\)\{[\s\S]{0,600}acteCount/.test(html),'a dosszie-sor iratszamlalot mutat');
+ok(/tab==='viitoare'&&_dd\)\{[\s\S]{0,300}deschideDosar/.test(html.slice(html.indexOf('displayed.forEach'))),'  -> Deschide dosarul a fo muvelet');
 ok(!/fx-b/.test(html),'a rendszam mellett tovabbra sincs jelveny');
-ok(/if\(job\.flux==='doar_dosar'\) *return 'dosare'/.test(html),'az ADATMODELL valtozatlan');
+ok(/if\(job\.flux==='doar_dosar'\) *return 'viitoare'/.test(html),'az ADATMODELL: a flux dont, a lista kozos');
 
-console.log('\n5. Az Avizare dauna letrehozas KET utja — a FULON (K-19)');
+console.log('\n5. Az Avizare dauna letrehozas KET utja — a FEJLECBEN');
 {
-  // A felugro kek ablak kivezetve: a ket ut a ful muvelet-savjaban el.
-  const _fb = html.indexOf("if(tab==='dosare'){");
-  const ful = html.slice(_fb, html.indexOf('// Restante figyelmezteto', _fb));
-  ok(/onclick="dosarTarziu\(\)"/.test(ful), '  Deschide dosar dauna -> dosarTarziu');
-  ok(/onchange="dosarFisier\(event\)"/.test(ful), '  Preluare dosar dauna -> fajlbol');
-  const gombok=(ful.match(/btn-prog-new/g)||[]).length;
-  ok(gombok===2,'pontosan ket ut van a fulon ('+gombok+')');
+  const _fb = html.indexOf('panou-hdr-actions');
+  const fej = html.slice(_fb, html.indexOf('// Tabs', _fb));
+  ok(/onclick="dosarTarziu\(\)"/.test(fej), '  Deschide dosar dauna -> dosarTarziu');
+  ok(/onchange="dosarFisier\(event\)"/.test(fej), '  Preluare dosar dauna -> fajlbol');
   ok(!/showDosar|openDosarModal/.test(html),'a felugro ablak minden nyoma eltunt');
   ok(!/dosarAici/.test(html), 'a kivezetett harmadik ut sehol nem maradt (halott kod sem)');
   ok(!/dosar_aici/.test(html), '  a felirata sem');

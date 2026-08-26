@@ -20,10 +20,11 @@ setTimeout(()=>{try{
 
   w.setScreen('panou');let h=app.innerHTML;
   ok(/onclick="openNewJob\('prog'\)"/.test(h),'Panou: Programare noua gomb');
-  // 2026-08-25: a felso kek gomb a DOSSZIE-ablakot nyitja (openDosarModal),
-  // nem kozvetlenul az uj-munka modalt.
-  ok(/setPanouTab\('dosare'\)/.test(h) && /Avizare daun/.test(h),'Panou: Avizare dauna ful-gomb');
-  ok(typeof w.dosarTarziu==='function','dosarTarziu (a ful letrehozo utja) letezik');
+  // 2026-08-26 (Ferenc): a felso kek gomb EGYENESEN dossziet nyit, es a
+  // kulon "Avizare dauna" ful visszavonva — egy kozos lista van.
+  ok(/onclick="dosarTarziu\(\)"/.test(h) && /Avizare daun/.test(h),'Panou: Avizare dauna gomb (kozvetlen ut)');
+  ok(!/setPanouTab\('dosare'\)/.test(h),'Panou: kulon dosszie-ful mar nincs');
+  ok(typeof w.dosarTarziu==='function','dosarTarziu letezik');
   ok(/onclick="lucrareAcum\(\)"/.test(h),'Panou: Lucrare noua gomb (kozvetlen ut)');
   ok(!/startReceptie\(false\)/.test(h),'Panou: regi "Receptie auto" gomb eltunt');
 

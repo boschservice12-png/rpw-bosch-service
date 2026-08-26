@@ -105,7 +105,7 @@ try{
   eq(j.damageType,'asig','asig');
   eq(j.dosarStatus,'deschid','automatikusan "mi nyitjuk"');
   eq(j.phases[1].status,'pending','a javítás NEM indul el');
-  eq(w.categorizeJob(j),'dosare','külön kategória');
+  eq(w.categorizeJob(j),'viitoare','EGY közös listába kerül (Ferenc, 2026-08-26)');
   eq(j.plate,'','üres rendszám — a dosszié lapján töltik ki');
   // jsdom nem enged valodi navigaciot: itt csak azt latjuk, hogy TORTENT.
   // Hogy a cel tenyleg rpw-dosar.html?job=..., azt a test-entry.js orzi.
@@ -239,20 +239,18 @@ try{
   const _dsz=w.JOBS[w.JOBS.length-1];
   _dsz.plate='MS-82-BBB'; _dsz.phone='0740822222'; _dsz.asigurator='Groupama'; _dsz.client='B';
   await w.saveJob(_dsz);
-  // K-19 (2026-08-25): a kárdossziék SAJÁT fülre költöztek.
+  // 2026-08-26 (Ferenc): a K-19-es külön fül visszavonva — EGY közös lista.
   w.S.screen='panou'; w.S.panouTab='viitoare'; w.render();
   let h=app();
-  ok(/MS-81-AAA/.test(h),'az előjegyzés a Viitoare listán');
-  ok(!/MS-82-BBB/.test(h),'a kárdosszié NINCS a Viitoare listán (saját fülön él)');
+  ok(/MS-81-AAA/.test(h),'az előjegyzés a közös listán');
+  ok(/MS-82-BBB/.test(h),'a kárdosszié UGYANEZEN a listán');
   ok(!/fx-b/.test(h),'nincs jelvény a rendszám mellett');
-  ok(/setPanouTab\(.dosare.\)/.test(h),'az Avizare daună fül gombja látszik');
+  ok(!/setPanouTab\(.dosare.\)/.test(h),'külön Avizare daună fül már nincs');
   const psor0=h.split('<tr').filter(s=>/MS-81-AAA/.test(s));
   ok(psor0[0]&&/markRatat/.test(psor0[0]),'az előjegyzésen VAN Ratat gomb');
 
-  grp('14 · AZ AVIZARE DAUNĂ FÜL (K-19)');
-  w.setPanouTab('dosare'); h=app();
-  ok(/MS-82-BBB/.test(h),'a kárdosszié a saját fülén van');
-  ok(/onclick="dosarTarziu\(\)"/.test(h),'a fülön ott a Deschide dosar daună gomb');
+  grp('14 · A KÁRDOSSZIÉ A KÖZÖS LISTÁBAN (Ferenc, 2026-08-26)');
+  ok(/onclick="dosarTarziu\(\)"/.test(h),'a fejlécben ott a Deschide dosar daună gomb');
   ok(/dosarFisier\(event\)/.test(h),'  és a Preluare (fájl) út');
   ok(/Deschide dosarul|deschideDosar/.test(h),'a dosszié-sor fő művelete a dosszié megnyitása');
   ok(/Groupama/.test(h),'a soron látszik a biztosító (melyik eset)');
@@ -260,7 +258,9 @@ try{
   const sorok=h.split('<tr').filter(s=>/MS-82-BBB/.test(s));
   ok(sorok.length===1,'megvan a dosszié sora');
   ok(sorok[0]&&!/markRatat/.test(sorok[0]),'  nincs rajta Ratat gomb');
-  w.setPanouTab('viitoare'); h=app();
+  ok(sorok[0]&&/row-dd/.test(sorok[0]),'  és kék jelöléssel különül el a javításoktól');
+  const psor1=h.split('<tr').filter(s=>/MS-81-AAA/.test(s));
+  ok(psor1[0]&&!/row-dd/.test(psor1[0]),'  a javítás-sor NEM kap kék jelölést');
 
   grp('15 · MUNKASZÁM — nincs ütközés');
   const szamok=w.JOBS.map(x=>x.number);
