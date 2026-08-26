@@ -642,6 +642,7 @@ pr_feltetel:{ro:'conditii',en:'conditions',hu:'feltetel'},
 pr_gata:{ro:'Gata de receptie',en:'Ready for reception',hu:'Fogadasra kesz'},
 pr_var_wa:{ro:'Asteapta WhatsApp',en:'Waiting for WhatsApp',hu:'WhatsAppra var'},
 pr_ratat:{ro:'Nu a venit',en:'Did not arrive',hu:'Nem jott el'},
+wa_go_dosar:{ro:'Scrie telefonul in dosar',en:'Enter the phone in the file',hu:'Ird be a telefont a dossziéba'},
 dd_s1:{ro:'Colectare acte',en:'Collecting documents',hu:'Iratgyujtes'},
 dd_s2:{ro:'Predat la asigurator',en:'Handed to insurer',hu:'Atadva a biztositonak'},
 dd_s3:{ro:'Inchis',en:'Closed',hu:'Lezarva'},
@@ -1281,7 +1282,12 @@ function renderPanou(){
       var waMark='<svg viewBox=\'0 0 24 24\' aria-hidden=\'true\'><path d=\'M17.5 14.4c-.3-.2-1.8-.9-2-1-.3-.1-.5-.2-.7.1-.2.3-.7 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5s-.7-1.6-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.5.3-.7.3-1.4.2-1.5-.1-.1-.3-.2-.6-.3zM12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.3c1.4.8 3 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.6 0-3-.4-4.3-1.2l-.3-.2-3.1.8.8-3-.2-.3c-.8-1.3-1.3-2.8-1.3-4.3C3.6 7.4 7.4 3.6 12 3.6S20.4 7.4 20.4 12 16.6 20.2 12 20.2z\'/></svg>';
       h+='<td>'+(phoneClean
         ? '<button class="wa-btn '+waCls+'" '+waOnclick+' title="'+waTitle+'">'+waMark+'</button>'
-        : '<button class="wa-btn nofon" onclick="event.stopPropagation();openCondModal(\''+j.id+'\')" title="'+T('wa_no_phone')+' — '+T('need_wa_tip')+'">'+waMark+'</button>')+'</td>';
+        : '<button class="wa-btn nofon" onclick="event.stopPropagation();'
+            // ── F-4 (Ferenc, 2026-08-26): oda vigyen, ahol MEGOLDHATO.
+            // Dossziénál a telefont a dosszié-lapon írod be (ott derül ki
+            // a papírokból); javításnál a feltétel-ablak a hely.
+            + (_dd ? 'deschideDosar(\''+j.id+'\')' : 'openCondModal(\''+j.id+'\')')
+            + '" title="'+T('wa_no_phone')+' — '+(_dd?T('wa_go_dosar'):T('need_wa_tip'))+'">'+waMark+'</button>')+'</td>';
       if(tab==='viitoare'&&_dd){
         h+='<td><button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')">'+ico('folder')+' '+T('open_dosar_btn')+'</button> <button class="edit-btn eb-edit2 eb-ico" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'" aria-label="'+T('edit_btn')+'">'+ico('pencil')+'</button> <button class="edit-btn eb-repro eb-ico" onclick="event.stopPropagation();openRepro(\''+j.id+'\')" title="'+T('repro_btn')+'" aria-label="'+T('repro_btn')+'">'+ico('calendar')+'</button></td>';
       } else if(tab==='viitoare'){

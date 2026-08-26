@@ -11,8 +11,12 @@ const ok=(c,m)=>{c?pass++:(fail++,console.log('  x '+m))};
 console.log('\n1. A tiltott gomb helyett beszelo WhatsApp jel');
 ok(!/disabled title="'\+T\('no_wa_yet'\)/.test(html),'a nema disabled gomb eltunt');
 ok(!/need_wa_btn/.test(html),'a "Contacteaza clientul" szoveges gomb kivezetve (nem maradt halott felirat)');
-ok(/wa-btn nofon/.test(html)&&/nofon[\s\S]{0,200}openCondModal/.test(html),
-   'telefon nelkul sem zsakutca: a jel a kezi bejeloles modaljat nyitja');
+// F-4 (Ferenc, 2026-08-26): telefon nelkul a jel oda visz, ahol
+// MEGOLDHATO — dossziénal a dosszie-lapra (ott irod be a szamot),
+// javitasnal a kezi bejeloles ablakaba. Egyik esetben sem zsakutca.
+ok(/wa-btn nofon/.test(html),'telefon nelkul sajat, tompa jel');
+ok(/nofon[\s\S]{0,400}deschideDosar/.test(html),'  dossziénal a dosszie-lapra visz');
+ok(/nofon[\s\S]{0,400}openCondModal/.test(html),'  javitasnal a kezi bejeloles ablakaba');
 ok(/\.wa-btn svg\{/.test(html),'a jel valodi SVG (nem emoji)');
 ok(!/>💬<\/button>/.test(html),'a 💬 emoji nem maradt gombfeliratkent');
 

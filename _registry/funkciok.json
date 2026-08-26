@@ -842,6 +842,31 @@
    "allapot": "csak-frontend"
   },
   {
+   "id": "F-126",
+   "nev": "Ugyfel-mezok a dosszie-lapon (nev / telefon / megjegyzes) — kesleltetett szeletes mentes; a WhatsApp gomb telefon nelkul tiltott",
+   "fe": [
+    [
+     "rpw-dosar.html",
+     "window.setDosarClient"
+    ],
+    [
+     "rpw-dosar.html",
+     "id=\"clTel\""
+    ],
+    [
+     "rpw-dosar.html",
+     "wa_need_ph"
+    ],
+    [
+     "index.html",
+     "wa_go_dosar"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/frontend/test-fe-dosar.js",
+   "allapot": "csak-frontend"
+  },
+  {
    "id": "F-213",
    "nev": "Fotok kezelese (tomorites, tarolas)",
    "fe": [
