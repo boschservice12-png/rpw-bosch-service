@@ -36,6 +36,9 @@ const JOBS=[
  {id:'V3',number:'MS-26-063',plate:'MS-44-DDD',client:'Sajat Csaba',flux:'reparatie',damageType:'auto',
   sosire:'programat',phase:1,phases:{},inchis:false,
   programare:{date:'2026-08-29',time:'11:00'},conditions:{}},
+ {id:'R1',number:'MS-26-064',plate:'MS-77-EEE',client:'Ratat Dezso',flux:'reparatie',damageType:'auto',
+  sosire:'ratat',phase:1,phases:{},inchis:false,phone:'0740555666',
+  programare:{date:'2026-08-20',time:'08:00'},conditions:{}},
 ];
 
 (async()=>{
@@ -62,7 +65,7 @@ const dom=new JSDOM(inline(raw),{virtualConsole:vc, url:'https://rpw.teszt/index
   w.Chart=function(){this.destroy=()=>{}};
  }});
 const w=dom.window;
-for(let i=0;i<60 && !(w.JOBS&&w.JOBS.length===4);i++) await sleep(25);
+for(let i=0;i<60 && !(w.JOBS&&w.JOBS.length===5);i++) await sleep(25);
 w.S.screen='panou'; w.S.panouTab='viitoare';
 try{ w.localStorage.setItem('rpw_az_seen', new Date().toISOString().slice(0,10)); }catch(e){}
 w.render();
@@ -71,7 +74,7 @@ const app=()=>w.document.getElementById('app').innerHTML;
 console.log('\n1. Viitoare fül — a kétállapotú jelvény (K-19)');
 {
   const h=app();
-  ok(w.JOBS.length===4,'a 4 teszt-munka betöltődött');
+  ok(w.JOBS.length===5,'az 5 teszt-munka betöltődött');
   const v1=h.split('<tr').filter(s=>/MS-22-BBB/.test(s))[0]||'';
   const v2=h.split('<tr').filter(s=>/MS-33-CCC/.test(s))[0]||'';
   const v3=h.split('<tr').filter(s=>/MS-44-DDD/.test(s))[0]||'';
@@ -106,6 +109,48 @@ console.log('\n1b. Kapcsolat = a VALÓDI WhatsApp jel (Ferenc, 2026-08-26)');
   ok(b3 && !b3.disabled,'  nem néma tiltott gomb');
   ok(b2 && /clickWhatsApp/.test(b2.getAttribute('onclick')||''),
      'a sötét jel kattintásra ÍR az ügyfélnek és be is jelöli');
+}
+
+console.log('\n1c. Sor-ikonok: rajz IGEN, néma gomb NEM');
+{
+  const h=app();
+  const icoBtns=[...w.document.querySelectorAll('.edit-btn.eb-ico')];
+  ok(icoBtns.length>0,'vannak ikonos gombok ('+icoBtns.length+')');
+  ok(icoBtns.every(b=>!!b.querySelector('svg')),'mindegyikben valódi SVG rajz van');
+  ok(icoBtns.every(b=>(b.getAttribute('title')||'').trim().length>2),
+     'MINDEGYIKEN van egérmutató-címke (title)');
+  ok(icoBtns.every(b=>(b.getAttribute('aria-label')||'').trim().length>2),
+     'MINDEGYIKEN van felolvasó-címke (aria-label)');
+  ok(icoBtns.every(b=>!b.textContent.trim()),'ikon-gomb: nincs benne szöveg');
+  ok(!/📁|✎|🗑|&#128193;|&#9998;/.test(h),'a régi emojik eltűntek a sorokból');
+
+  // Az ELSODLEGES muveletek szovegesek maradnak — azokat olvasni kell.
+  const btnTxt=[...w.document.querySelectorAll('.edit-btn')].map(b=>b.textContent.trim()).filter(Boolean);
+  ok(btnTxt.some(t=>/Recep[țt]ie auto|Deschide/.test(t)),
+     'a fő művelet („Recepție auto" / „Deschide dosarul") SZÖVEGES maradt');
+
+  // Reprogramare / Ratat mostantol ikon — de a jelentesuk a cimken ott van.
+  const titles=icoBtns.map(b=>b.getAttribute('title'));
+  ok(titles.some(t=>/Reprogram/i.test(t)),'a Reprogramare ikon címkéje beszél');
+  ok(titles.some(t=>/Ratat/i.test(t)),'a Ratat ikon címkéje beszél');
+}
+
+console.log('\n1d. Ratate fül — a kuka is rajz, nem emoji');
+{
+  const rt=[...w.document.querySelectorAll('.panou-tab')]
+    .find(b=>(b.getAttribute('onclick')||'').indexOf("'ratate'")>=0);
+  ok(!!rt,'a Ratate fül gombja a DOM-ban van');
+  if(rt) rt.click(); else w.setPanouTab('ratate');
+  await sleep(30);
+  const h=app();
+  ok(/MS-77-EEE/.test(h),'a ratat munka a saját fülén van');
+  const del=w.document.querySelector('.edit-btn.eb-del');
+  ok(!!del && !!del.querySelector('svg'),'a törlés gombon valódi SVG kuka van');
+  ok(del && (del.getAttribute('aria-label')||'').length>2,'  felolvasó-címkével');
+  ok(!/🗑/.test(h),'a 🗑 emoji eltűnt');
+  const back=[...w.document.querySelectorAll('.panou-tab')]
+    .find(b=>(b.getAttribute('onclick')||'').indexOf("'viitoare'")>=0);
+  if(back) back.click(); await sleep(30);
 }
 
 console.log('\n2. Az Avizare daună fül — valódi fülváltással');

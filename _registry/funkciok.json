@@ -317,6 +317,27 @@
    "allapot": "csak-frontend"
   },
   {
+   "id": "F-123",
+   "nev": "Sor-ikonok a foablakon (naptar/ora/mappa/ceruza/kuka) — vonalas SVG, mindegyiken title ES aria-label",
+   "fe": [
+    [
+     "index.html",
+     "var RPW_ICO"
+    ],
+    [
+     "index.html",
+     "function ico(n)"
+    ],
+    [
+     "index.html",
+     "eb-ico"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/frontend/test-fe-panou.js",
+   "allapot": "csak-frontend"
+  },
+  {
    "id": "F-103",
    "nev": "Kovetkezo munkalapszam kerese a szervertol",
    "fe": [
