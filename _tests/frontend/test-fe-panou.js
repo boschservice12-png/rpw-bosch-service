@@ -126,6 +126,21 @@ console.log('\n1g. Folyamatjelző oszlop a listán (Ferenc: A · mindkettő)');
   ok(!!w.document.getElementById('rpw-progres-css'),'a modul betette a saját stílusát');
 }
 
+console.log('\n1h. Nincs sárga sor-tónus (Ferenc, 2026-08-26)');
+{
+  const rows=[...w.document.querySelectorAll('tr.panou-row')];
+  ok(rows.every(r=>!r.classList.contains('row-warn')),'egy soron sincs „row-warn" osztály');
+  const src=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
+  ok(!/row-warn/.test(src),'a forrásból is kivezetve (nem maradt halott CSS)');
+  // A sarga TOKEN (--yl) marad — a Ratat gomb es a jelvenyek hasznaljak.
+  // Csak a SOR hattereként tiltjuk.
+  ok(!/\.panou-row[^{]*\{[^}]*background:\s*(#fef9c3|var\(--yl)/.test(src),
+     'a sárga nem sor-háttérként tér vissza');
+  ok(/--yl:#fef9c3/.test(src),'  a sárga token megmarad (Ratat gomb, jelvények)');
+  // A ZOLD marad: az azt jelenti, hogy MINDEN feltetel megvan.
+  ok(/\.panou-row\.row-ok td\{background:#dcfce7/.test(src),'a zöld „minden feltétel megvan" tónus MEGMARAD');
+}
+
 console.log('\n1b. Kapcsolat = a VALÓDI WhatsApp jel (Ferenc, 2026-08-26)');
 {
   const h=app();

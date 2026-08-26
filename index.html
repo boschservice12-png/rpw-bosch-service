@@ -93,8 +93,6 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .panou-tbl td:last-child{border-right:1px solid var(--b);border-radius:0 8px 8px 0}
 .panou-row.row-ok td{background:#dcfce7;border-color:#86efac}
 .panou-row.row-ok td:first-child{border-left:3px solid var(--g)}
-.panou-row.row-warn td{background:#fef9c3;border-color:#fde047}
-.panou-row.row-warn td:first-child{border-left:3px solid var(--y)}
 .panou-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:14px;font-size:10px;font-weight:700;white-space:nowrap}
 .pill-ready{background:var(--g);color:#fff}
 .pill-wait{background:var(--y);color:#fff}
@@ -125,7 +123,6 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .panou-row{cursor:pointer}
 .panou-row:hover td{background-color:rgba(220,38,38,.04)}
 .panou-row.row-ok:hover td{background-color:#bbf7d0}
-.panou-row.row-warn:hover td{background-color:#fef08a}
 .panou-hint{font-size:11px;color:var(--t3);padding:6px 24px;background:var(--w);border-bottom:1px solid var(--b);text-align:center;font-style:italic}
 .panou-row.row-dd td:first-child{box-shadow:inset 3px 0 0 var(--bl,#2563eb)}
 .nj-opt-t{font-weight:400;color:var(--t3)}
@@ -1226,7 +1223,13 @@ function renderPanou(){
     displayed.forEach(function(j){
       var cnd=computeConditions(j);
       var canOpen=cnd.whatsapp; // CSAK a WhatsApp kotelezo!
-      var rowCls=cnd.all?'row-ok':(cnd.count>=3?'row-warn':'');
+      // ── A SARGA SOR-TONUS KIVEZETVE (Ferenc, 2026-08-26) ─────────
+      // A "3-bol 4 feltetel megvan" allapotot eddig sarga hatter jelezte
+      // az egesz soron. Ezt most a Proces oszlop sava mondja el
+      // pontosabban (hany feltetel van meg, es melyik a kapu) — a
+      // hatterszinezes csak zajt adott hozza.
+      // A ZOLD marad: az azt jelenti, hogy MINDEN feltetel megvan.
+      var rowCls=cnd.all?'row-ok':'';
       var pillCls=canOpen?'pill-ready':(cnd.count>=2?'pill-wait':'pill-prog');
       var pillText=canOpen?T('pill_ready'):(cnd.count>=2?T('pill_wait'):T('pill_prog'));
       var editCls=canOpen?'eb-go':'eb-no';
