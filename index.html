@@ -1248,14 +1248,11 @@ function renderPanou(){
         var acCls=(ac.done>=ac.total)?'ac-ok':(ac.done?'ac-part':'ac-none');
         var acTxt=j.inchis?T('st_inchis'):(j.dosarPredat?T('st_predat'):(ac.done+'/'+ac.total+' '+T('st_acte')));
         h+='<td><span class="ac-b '+(j.inchis?'ac-ok':acCls)+'">'+escH(acTxt)+'</span>'
+          + ddBadge(j)
           +'<div style="font-size:10px;color:var(--t3);font-weight:600;margin-top:3px">'+escH(njCaseLabel(j))+'</div></td>';
       } else if(tab==='viitoare'){
         h+='<td><span class="panou-pill '+pillCls+'" title="'+tt+'">'+(canOpen?T('pill_ready'):T('st_astept'))+'</span>';
-        // ── K-19: biztositos JAVITASNAL ket allapot latszik ───────────
-        if(j.damageType==='asig'){
-          var _ds=(j.dosarStatus==='deschis');
-          h+='<div class="dd2-b '+(_ds?'dd2-open':'dd2-aviz')+'">'+(_ds?T('st_dosar_deschis'):T('st_avizare'))+'</div>';
-        }
+        h+=ddBadge(j);
         h+='</td>';
       } else {
         h+='<td><span class="panou-pill '+pillCls+'" title="'+phName+'">'+pillText+'</span></td>';
@@ -1604,6 +1601,18 @@ var RPW_ICO={
   wrench:'<svg viewBox="0 0 24 24"><path d="M15.5 3.5a5 5 0 0 0-6.1 6.4L3.6 15.7a2 2 0 0 0 2.8 2.8l5.8-5.8a5 5 0 0 0 6.4-6.1l-2.8 2.8-2.3-2.3z"/></svg>'
 };
 function ico(n){return RPW_ICO[n]||''}
+
+// ── A DOSSZIE ALLAPOTA MINDEN BIZTOSITOS ESETEN LATSZIK ──────────────
+// (Ferenc, 2026-08-26) Eddig ez a jelveny CSAK a javitas-sorokon jelent
+// meg; a kardosszie-sorokon nem, pedig ott a legfontosabb: a pultnal
+// azonnal latni kell, hogy a biztositoi dosszie MAR NYITVA van-e, vagy
+// meg csak most avizaljuk. Egy szabaly, minden soron ugyanaz.
+function ddBadge(j){
+  if(!j || j.damageType!=='asig') return '';
+  var nyitva=(j.dosarStatus==='deschis');
+  return '<div class="dd2-b '+(nyitva?'dd2-open':'dd2-aviz')+'">'
+       + (nyitva?T('st_dosar_deschis'):T('st_avizare'))+'</div>';
+}
 
 // === Programare modal ===
 function newJobModalHtml(){

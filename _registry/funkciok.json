@@ -607,7 +607,7 @@
   },
   {
    "id": "F-201",
-   "nev": "Avizare dauna: a fejlec gombja EGYENESEN dossziet nyit; a dossziek a KOZOS listaban elnek (soronkent megkulonboztetve)",
+   "nev": "Avizare dauna: a fejlec gombja EGYENESEN dossziet nyit; a dossziek a KOZOS listaban; a dosszie allapota (Avizare dauna / Dosar deschis) MINDEN biztositos soron latszik",
    "fe": [
     [
      "index.html",
@@ -619,7 +619,7 @@
     ],
     [
      "index.html",
-     "tab==='viitoare'&&_dd"
+     "function ddBadge"
     ]
    ],
    "be": [],

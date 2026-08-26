@@ -25,6 +25,9 @@ const JOBS=[
  {id:'D1',number:'MS-26-060',plate:'MS-11-AAA',client:'Dosar Elek',flux:'doar_dosar',doarDosar:true,
   damageType:'asig',dosarStatus:'deschid',dosarActe:{},phase:1,phases:{},inchis:false,
   created:'2026-08-25',programare:{}},
+ {id:'D2',number:'MS-26-067',plate:'MS-20-HHH',client:'Nyitott Dosszie Dora',flux:'doar_dosar',doarDosar:true,
+  damageType:'asig',dosarStatus:'deschis',nrDosar:'KAR-888',asigurator:'Omniasig',dosarActe:{},
+  phase:1,phases:{},inchis:false,created:'2026-08-24',programare:{}},
  {id:'V1',number:'MS-26-061',plate:'MS-22-BBB',client:'Prog Anna',flux:'reparatie',damageType:'asig',
   dosarStatus:'deschis',sosire:'programat',phase:1,phases:{},inchis:false,
   phone:'0740111222',
@@ -71,7 +74,7 @@ const dom=new JSDOM(inline(raw),{virtualConsole:vc, url:'https://rpw.teszt/index
   w.Chart=function(){this.destroy=()=>{}};
  }});
 const w=dom.window;
-for(let i=0;i<60 && !(w.JOBS&&w.JOBS.length===7);i++) await sleep(25);
+for(let i=0;i<60 && !(w.JOBS&&w.JOBS.length===8);i++) await sleep(25);
 w.S.screen='panou'; w.S.panouTab='viitoare';
 try{ w.localStorage.setItem('rpw_az_seen', new Date().toISOString().slice(0,10)); }catch(e){}
 w.render();
@@ -80,7 +83,7 @@ const app=()=>w.document.getElementById('app').innerHTML;
 console.log('\n1. Viitoare fül — a kétállapotú jelvény (K-19)');
 {
   const h=app();
-  ok(w.JOBS.length===7,'a 7 teszt-munka betöltődött');
+  ok(w.JOBS.length===8,'a 8 teszt-munka betöltődött');
   const v1=h.split('<tr').filter(s=>/MS-22-BBB/.test(s))[0]||'';
   const v2=h.split('<tr').filter(s=>/MS-33-CCC/.test(s))[0]||'';
   const v3=h.split('<tr').filter(s=>/MS-44-DDD/.test(s))[0]||'';
@@ -89,6 +92,23 @@ console.log('\n1. Viitoare fül — a kétállapotú jelvény (K-19)');
   ok(!/dd2-/.test(v3),'magánkáron NINCS jelvény');
   ok(/MS-11-AAA/.test(h),'a kárdosszié IS a közös listában van (Ferenc: egy ablak)');
   ok(!/prog-modal/.test(h),'a felugró kék modal nem renderelődik');
+}
+
+console.log('\n1f. A dosszié állapota MINDEN biztosítós soron látszik (Ferenc)');
+{
+  const rows=[...w.document.querySelectorAll('tr.panou-row')];
+  const R=p=>rows.find(r=>r.textContent.indexOf(p)>=0);
+  const dNyit=R('MS-20-HHH');   // kardosszie-sor, a dosszie MAR nyitva
+  const dAviz=R('MS-11-AAA');   // kardosszie-sor, meg csak avizaljuk
+  ok(dNyit && /dd2-open/.test(dNyit.innerHTML),
+     'kárdosszié-soron is ott a 🟢 „Dosar deschis" — eddig hiányzott');
+  ok(dNyit && /Dosar deschis/.test(dNyit.textContent),'  olvashatóan is kiírja');
+  ok(dAviz && /dd2-aviz/.test(dAviz.innerHTML),'a még avizált dosszié 🔵 jelvényt kap');
+  ok(dNyit && /ac-b/.test(dNyit.innerHTML),'  az iratszámláló megmarad mellette');
+  // ugyanaz a szabaly a javitas-sorokon (regota)
+  ok(R('MS-22-BBB') && /dd2-open/.test(R('MS-22-BBB').innerHTML),'javítás-soron változatlanul látszik');
+  // magankaron nincs jelveny
+  ok(R('MS-44-DDD') && !/dd2-/.test(R('MS-44-DDD').innerHTML),'magánkáron továbbra sincs jelvény');
 }
 
 console.log('\n1b. Kapcsolat = a VALÓDI WhatsApp jel (Ferenc, 2026-08-26)');
