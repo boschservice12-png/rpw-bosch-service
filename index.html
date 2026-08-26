@@ -432,7 +432,11 @@ if(typeof saveJ==='function'){var _saveJ_orig=saveJ;saveJ=function(){if(typeof J
 if(typeof saveJob==='function'){var _saveJob_orig=saveJob;saveJob=function(job){if(!job)return Promise.resolve();return SAVER?SAVER.save(job):_saveJob_orig(job);};}
 
 var JOBS=[];
-var S={ts:null,screen:'lucrari',statPeriod:'month',statThreshold:5,panouTab:'viitoare',showProg:0,progPlate:'',progPhone:'',showRepro:null,reproDate:'',reproTime:'',showNew:0,njMode:null,njEditId:null,njPlate:'',njPhone:'',njTip:null,njPay:null,njDate:'',njTime:'08:00',njClient:'',njAuto:'',njAsig:'',njDosar:'',showCondModal:0,condDraft:null,editJobId:null};
+// ── INDULASKOR A PROGRAMARI LAP NYILIK (Ferenc, 2026-08-26) ────────
+// Reggel a pultnal az a kerdes, hogy MA mi van: kit varunk, mi akadt el,
+// mit kell avizalni. Ez a Centru de Control Operational — ezert az app
+// ITT indul, nem a teljes munka-listan.
+var S={ts:null,screen:'panou',statPeriod:'month',statThreshold:5,panouTab:'viitoare',showProg:0,progPlate:'',progPhone:'',showRepro:null,reproDate:'',reproTime:'',showNew:0,njMode:null,njEditId:null,njPlate:'',njPhone:'',njTip:null,njPay:null,njDate:'',njTime:'08:00',njClient:'',njAuto:'',njAsig:'',njDosar:'',showCondModal:0,condDraft:null,editJobId:null};
 
 // ====== PARAMETRI — single source of truth (rpw_config, megosztva az evaluare/deviz oldalakkal) ======
 var CONFIG={

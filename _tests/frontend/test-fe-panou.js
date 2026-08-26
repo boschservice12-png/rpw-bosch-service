@@ -75,6 +75,10 @@ const dom=new JSDOM(inline(raw),{virtualConsole:vc, url:'https://rpw.teszt/index
  }});
 const w=dom.window;
 for(let i=0;i<60 && !(w.JOBS&&w.JOBS.length===8);i++) await sleep(25);
+// ── Ferenc, 2026-08-26: az app a PROGRAMARI lapon indul ─────────────
+ok(w.S.screen==='panou','indulaskor a Programari lap nyilik (nem a Lucrari)');
+ok(/panou-tbl|panou-hdr-actions/.test(w.document.getElementById('app').innerHTML),
+   '  es tenyleg az van kirajzolva');
 w.S.screen='panou'; w.S.panouTab='viitoare';
 try{ w.localStorage.setItem('rpw_az_seen', new Date().toISOString().slice(0,10)); }catch(e){}
 w.render();
