@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 81 | 26 | 46 | 3 | 6 | 7 |
+| 88 | 27 | 52 | 3 | 6 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -36,8 +36,13 @@ szám nélkül, azt is megmondja.
 
 | szám | mit csinál | frontend | backend | teszt | állapot |
 |---|---|---|---|---|---|
-| **F-101** | Uj munkalap ablak megnyitasa | `index.html` | — | `unit/test-entry.js` | 🟦 csak frontend |
+| **F-101** | Uj munkalap: Lucrare noua (urlap nelkul, egyenesen a recepciora) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-102** | Rendszam bevitel es normalizalas | `index.html` | — | `unit/test-case.js` | 🟦 csak frontend |
+| **F-121** | Elojegyzes urlap (Programare noua): ket tipus (Dauna asigurare / Dauna auto), a biztositosnal ket dosszie-ag (Avizare dauna / Dosar dauna deschis); a nev es az auto LATSZIK, de nem kotelezo | `index.html` | — | `frontend/test-fe-urlap.js` | 🟦 csak frontend |
+| **F-122** | Kapcsolat oszlop a foablakon: a VALODI WhatsApp jel (zold=egyeztetve, sotet=meg nem, tompa=nincs telefon) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-123** | Sor-ikonok a foablakon (naptar/ora/mappa/ceruza/kuka) — vonalas SVG, mindegyiken title ES aria-label | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-124** | A soron a mappa CSAK ott, ahol van dosszie-munka (Avizare dauna); magankaron es mar nyitott dossziénal a RECEPCIO az ut | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-125** | Folyamatjelzo: negy lanc egy savban (dosszie / varakozas / ratat / javitas); a statusz es a folyamat EGY oszlopban, minden fulon egyforma logikaval | `rpw-progres.js` `index.html` | — | `unit/test-progres.js` | 🟦 csak frontend |
 | **F-103** | Kovetkezo munkalapszam kerese a szervertol | `index.html` | `rpw_next_job_number` `rpw_job_number` | `integration/test-int-workflow.js` | ✅ él |
 | **F-104** | Munkalapok listaja | `rpw-db.js` | `rpw_jobs_list` | `integration/test-int-workflow.js` | ✅ él |
 | **F-105** | Egy munkalap betoltese | `rpw-db.js` | `rpw_job_get` | `integration/test-int-workflow.js` | ✅ él |
@@ -55,14 +60,16 @@ szám nélkül, azt is megmondja.
 | **F-117** | Meglevo munkalap szerkesztese | `index.html` | — | `unit/test-edit.js` | 🟦 csak frontend |
 | **F-118** | Idopont (programare) ablak | `index.html` | — | `unit/test-prog.js` | 🟦 csak frontend |
 | **F-119** | Idopont-athelyezes (reprogramare) | `index.html` | — | `unit/test-acceptance.js` | 🟦 csak frontend |
+| **F-126** | Ugyfel-mezok a dosszie-lapon (nev / telefon / megjegyzes) — kesleltetett szeletes mentes; a gepelt ertek TULELI a keson erkezo szerver-valaszt; a WhatsApp gomb telefon nelkul tiltott | `rpw-dosar.html` `index.html` | — | `frontend/test-fe-dosar.js` | 🟦 csak frontend |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 
 | szám | mit csinál | frontend | backend | teszt | állapot |
 |---|---|---|---|---|---|
-| **F-201** | Avizare dauna ablak megnyitasa | `index.html` | — | `unit/test-dosare.js` | 🟦 csak frontend |
-| **F-202** | Deschide dosar dauna - MI nyitjuk a kardossziet | `index.html` | — | `unit/test-dosare.js` | 🟦 csak frontend |
+| **F-201** | Avizare dauna: a fejlec gombja EGYENESEN dossziet nyit; a dossziek a KOZOS listaban; a dosszie allapota a folyamat-sav feliratanak elotagja | `index.html` `rpw-progres.js` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-202** | Deschide dosar dauna - a dossziet MI nyitjuk (urlap nelkul, egybol a dosszie lapra) | `index.html` | — | `unit/test-entry.js` | 🟦 csak frontend |
 | **F-203** | Preluare dosar dauna - meglevo dosszie atvetele fajlbol | `index.html` | — | `unit/test-dosare.js` | 🟦 csak frontend |
+| **F-215** | Duplikatum-figyelmeztetes a dosszie lapon (ugyanaz a rendszam + biztosito + karszam) | `rpw-dosar.html` | `rpw_jobs_list` | `unit/test-dup-dosar.js` | ✅ él |
 | **F-204** | Dosszie oldal iratrekeszekkel | `rpw-dosar.html` | — | `unit/test-dosarflux.js` | 🟦 csak frontend |
 | **F-205** | Irat feltoltese egy rekeszbe | `rpw-dosar.html` | — | `unit/test-classify.js` | 🟦 csak frontend |
 | **F-206** | Irat torlese a rekeszbol | `rpw-dosar.html` | — | `unit/test-dialogs.js` | 🟦 csak frontend |

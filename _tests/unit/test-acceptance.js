@@ -29,7 +29,11 @@ window.RPWDb={
 };
 window.RPWUtil={jobId:function(){return 'J'+(window.__db.length+1)+'-'+Math.floor(Math.random()*1e6)}};
 window.RPWWorkflow={migrateJob:function(){},phaseStatus:function(){return 'pending'}};
-</script>`;
+</script>
+<script>${fs.readFileSync('rpw-progres.js','utf8').replace(/<\/script>/g,'<\\/script>')}</script>`;
+// A folyamatjelzo a VALODI modul — nem bab. Ez a teszt igy azt is meri,
+// hogy a lista es a modul egyutt mukodik-e (Ferenc "A" osszevonasa).
+
 html=html.replace('</head>',STUB+'</head>');
 
 // A jsdom nem hajt vegre navigaciot, de JELZI. Ezt fogjuk el.
@@ -93,27 +97,42 @@ try{
   eq(w.categorizeJob(j),'viitoare','→ Lucrări viitoare');
   ok(NAV===null,'nem navigál el');
 
-  grp('2 · DESCHIDE DOSAR DAUNĂ — csak ügyintézés');
+  grp('2 · AVIZARE DAUNĂ — a gomb átvette a "Deschide dosarul" műveletét');
+  // 2026-08-25: nincs többé űrlap. A gomb létrehozza a dossziét és egyből
+  // a dosszié lapjára visz — a rendszámot, biztosítót, kárszámot OTT
+  // töltik ki, ott, ahol amúgy is látszanak. Nincs kétszeri adatbevitel.
   NAV=null;
-  j=await nyit('dosar',{njPlate:'MS-20-BBB',njPhone:'0740222222',njAsig:'Groupama',njClient:'Nagy Z.'});
+  await w.dosarTarziu();
+  j=w.JOBS[w.JOBS.length-1];
   ok(!!j,'létrejött');
   eq(j.flux,'doar_dosar','flux=doar_dosar');
   eq(j.damageType,'asig','asig');
   eq(j.dosarStatus,'deschid','automatikusan "mi nyitjuk"');
   eq(j.phases[1].status,'pending','a javítás NEM indul el');
-  eq(w.categorizeJob(j),'dosare','külön kategória');
-  // 2026-08-25: az alkalmi dossziénál a MUNKA a biztosítói iratokkal van,
-  // ezért a mentés a dosszié lapjára visz. (Cél URL: test-entry.js)
-  ok(NAV!==null,'a dosszié lapjára navigál');
+  eq(w.categorizeJob(j),'viitoare','EGY közös listába kerül (Ferenc, 2026-08-26)');
+  eq(j.plate,'','üres rendszám — a dosszié lapján töltik ki');
+  // jsdom nem enged valodi navigaciot: itt csak azt latjuk, hogy TORTENT.
+  // Hogy a cel tenyleg rpw-dosar.html?job=..., azt a test-entry.js orzi.
+  ok(NAV!==null,'a dosszié lapjára navigál (cél URL: test-entry.js)');
+  // Amit a felhasználó a dosszié lapon beír — innentől a lista is ezt látja.
+  j.plate='MS-20-BBB'; j.client='Nagy Z.'; j.asigurator='Groupama';
+  await w.saveJob(j);
 
-  grp('3 · LUCRARE NOUĂ — az autó itt van');
+  grp('3 · LUCRARE NOUĂ — az autó itt van (2026-08-25: űrlap nélkül)');
+  // A zöld gomb létrehozza a munkalapot és EGYBŐL a recepcióra visz;
+  // a rendszámot/ügyfelet/kártípust OTT veszik fel (talon + OCR).
   NAV=null;
-  j=await nyit('lucrare',{njPlate:'MS-30-CCC',njPhone:'0740333333',njTip:'auto',njDate:today()});
+  await w.lucrareAcum();
+  j=w.JOBS[w.JOBS.length-1];
+  ok(!!j,'létrejött');
   eq(j.sosire,'sosit','sosire=sosit');
   eq(j.phases[1].status,'active','a recepció ELINDUL');
   eq(j.conditions.whatsapp,true,'a feltételek beállnak');
+  eq(j.damageType,null,'a kártípust a recepció dönti el');
+  eq(j.plate,'','üres rendszám — a talonból jön');
   eq(w.categorizeJob(j),'lucrari','→ Lucrări képernyő');
   ok(NAV!==null,'átvisz a recepcióra (cél URL: test-entry.js)');
+  j.plate='MS-30-CCC'; j.phone='0740333333'; await w.saveJob(j);
 
   // ══════════════════════════════════════════════════════════
   grp('4 · A KAPUK — nem enged hiányos adatot');
@@ -124,8 +143,11 @@ try{
   ok(probe('prog',{njPlate:'MS-10-AAA',njPhone:'0740111111',njDate:today()}).length>0,'típus nélkül → blokkol');
   ok(probe('prog',{njPlate:'MS-10-AAA',njPhone:'0740111111',njTip:'auto'}).length>0,'dátum nélkül → blokkol');
   ok(probe('lucrare',{njPlate:'MS-40-DDD',njPhone:'0740444444',njTip:'asig',njPay:'deschis',njClient:'X',njDate:today()}).length>0,'"már nyitva" kárszám nélkül → blokkol');
-  ok(probe('lucrare',{njPlate:'MS-40-DDD',njPhone:'0740444444',njTip:'asig',njPay:'deschid',njDate:today()}).length>0,'dosszié ügyfélnév nélkül → blokkol');
-  eq(probe('lucrare',{njPlate:'MS-40-DDD',njPhone:'0740444444',njTip:'asig',njPay:'deschid',njClient:'Kiss',njDate:today()}),[],'minden megvan → mehet');
+  // 2026-08-26 (Ferenc): a név és az autó NEM kötelező — kitölthető, de
+  // nem állítja meg a mentést. Amit a biztosító kér, azt a dosszié-lapon
+  // veszik fel; a pultnál gyakran csak a rendszám és a telefon van meg.
+  eq(probe('lucrare',{njPlate:'MS-40-DDD',njPhone:'0740444444',njTip:'asig',njPay:'deschid',njDate:today()}),[],'dosszié ügyfélnév NÉLKÜL is mehet');
+  eq(probe('lucrare',{njPlate:'MS-40-DDD',njPhone:'0740444444',njTip:'asig',njPay:'deschid',njClient:'Kiss',njDate:today()}),[],'névvel együtt is mehet');
 
   grp('5 · RENDSZÁM-NORMALIZÁLÁS');
   eq(w.njPlate('ms10aaa'),'MS-10-AAA','ms10aaa → MS-10-AAA');
@@ -218,27 +240,36 @@ try{
   grp('13 · A LISTA MEGJELENÍTÉSE');
   w.JOBS.length=0; w.__db.length=0;
   await nyit('prog',{njPlate:'MS-81-AAA',njPhone:'0740811111',njTip:'auto',njDate:w.njDay(1)});
-  await nyit('dosar',{njPlate:'MS-82-BBB',njPhone:'0740822222',njAsig:'Groupama',njClient:'B'});
+  // 2026-08-25: a kardosszie az Avizare dauna gombbal jon letre, uresen,
+  // es az adatokat a dosszie lapjan toltik ki. Itt ugyanezt jatsszuk le.
+  await w.dosarTarziu();
+  const _dsz=w.JOBS[w.JOBS.length-1];
+  _dsz.plate='MS-82-BBB'; _dsz.phone='0740822222'; _dsz.asigurator='Groupama'; _dsz.client='B';
+  await w.saveJob(_dsz);
+  // 2026-08-26 (Ferenc): a K-19-es külön fül visszavonva — EGY közös lista.
   w.S.screen='panou'; w.S.panouTab='viitoare'; w.render();
   let h=app();
-  ok(/MS-81-AAA/.test(h),'az előjegyzés a listán');
-  ok(/MS-82-BBB/.test(h),'a kárdosszié IS ugyanazon a listán');
-  // 2026-08-25: a rendszám melletti jelvény kikerült (felesleges volt).
-  // A két sáv megkülönböztetése a SORON látszik, nem egy ikonon:
+  ok(/MS-81-AAA/.test(h),'az előjegyzés a közös listán');
+  ok(/MS-82-BBB/.test(h),'a kárdosszié UGYANEZEN a listán');
   ok(!/fx-b/.test(h),'nincs jelvény a rendszám mellett');
-  ok(/Deschide dosarul|deschideDosar/.test(h),'a dosszié-sor fő művelete a dosszié megnyitása');
-  ok(/Groupama/.test(h),'a dosszié soron látszik a biztosító (melyik eset)');
-  ok(/acte/.test(h),'iratszámláló a dosszié soron');
-  ok(/openEditJob/.test(h),'✎ gomb');
-  ok(/openRepro/.test(h),'Reprogramare gomb');
-  ok(!/setPanouTab\(.dosare.\)/.test(h),'nincs külön Dosare fül');
+  ok(!/setPanouTab\(.dosare.\)/.test(h),'külön Avizare daună fül már nincs');
+  const psor0=h.split('<tr').filter(s=>/MS-81-AAA/.test(s));
+  ok(psor0[0]&&/markRatat/.test(psor0[0]),'az előjegyzésen VAN Ratat gomb');
 
-  grp('14 · A DOSSZIÉ SORON NINCS "RATAT"');
+  grp('14 · A KÁRDOSSZIÉ A KÖZÖS LISTÁBAN (Ferenc, 2026-08-26)');
+  ok(/onclick="dosarTarziu\(\)"/.test(h),'a fejlécben ott a Deschide dosar daună gomb');
+  ok(/dosarFisier\(event\)/.test(h),'  és a Preluare (fájl) út');
+  ok(/Deschide dosarul|deschideDosar/.test(h),'a dosszié-sor fő művelete a dosszié megnyitása');
+  ok(/Groupama/.test(h),'a soron látszik a biztosító (melyik eset)');
+  // 2026-08-26 ("A"): az iratszam a folyamat-sav feliratában van, nem
+  // kulon chipben.
+  ok(/pr-lbl/.test(h)&&/acte|irat/.test(h),'iratszám a folyamat-sáv feliratában');
   const sorok=h.split('<tr').filter(s=>/MS-82-BBB/.test(s));
   ok(sorok.length===1,'megvan a dosszié sora');
   ok(sorok[0]&&!/markRatat/.test(sorok[0]),'  nincs rajta Ratat gomb');
-  const psor=h.split('<tr').filter(s=>/MS-81-AAA/.test(s));
-  ok(psor[0]&&/markRatat/.test(psor[0]),'az előjegyzésen VAN Ratat gomb');
+  ok(sorok[0]&&/row-dd/.test(sorok[0]),'  és kék jelöléssel különül el a javításoktól');
+  const psor1=h.split('<tr').filter(s=>/MS-81-AAA/.test(s));
+  ok(psor1[0]&&!/row-dd/.test(psor1[0]),'  a javítás-sor NEM kap kék jelölést');
 
   grp('15 · MUNKASZÁM — nincs ütközés');
   const szamok=w.JOBS.map(x=>x.number);
@@ -249,9 +280,13 @@ try{
   ok(/nj-box/.test(h),'modál megnyílik');
   ok(/m_tip|Dau/.test(h),'típusválasztó ott van (prog módban is)');
   ok(/type="date"/.test(h),'dátum ott van');
+  // 2026-08-25: az űrlapnak nincs többé 'dosar' módja — ismeretlen mód
+  // esetén a biztonságos 'prog'-ra esik, nem valami más ágra csendben.
   w.openNewJob('dosar'); h=app();
-  ok(!/type="date"/.test(h),'dosar módban NINCS dátum');
-  ok(/Groupama/.test(h),'dosar módban van biztosító-lista');
+  eq(w.S.njMode,'prog','ismeretlen mód → prog');
+  ok(/type="date"/.test(h),'  a prog űrlap dátumot kér');
+  w.openNewJob('prog'); w.njSetTip('asig'); h=app();
+  ok(/Groupama/.test(h),'asig típusnál ott a biztosító-lista');
   w.njSet('njPlate','MS-82-BBB'); w.njSync();
   const dupdiv=w.document.getElementById('njDup');
   ok(dupdiv&&dupdiv.style.display!=='none','ismert rendszámnál jelez');

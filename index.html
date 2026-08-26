@@ -35,6 +35,7 @@ if('serviceWorker' in navigator && location.protocol==='https:'){window.addEvent
    is átengedne mindenkit. Korábban a config ELŐTT futott — néma rés volt. */
 try{ if(window.RPWAuth) RPWAuth.guard(); }catch(e){}</script>
 <script src="rpw-workflow.js"></script>
+<script src="rpw-progres.js"></script><!-- 2026-08-26: folyamatjelzo -->
 <script src="rpw-save.js"></script>
 <script src="rpw-queue.js"></script><!-- 2026-08-25: tartos offline sor -->
 <script src="rpw-data.js"></script><!-- v4: szerveroldali átmenetek -->
@@ -92,12 +93,6 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .panou-tbl td:last-child{border-right:1px solid var(--b);border-radius:0 8px 8px 0}
 .panou-row.row-ok td{background:#dcfce7;border-color:#86efac}
 .panou-row.row-ok td:first-child{border-left:3px solid var(--g)}
-.panou-row.row-warn td{background:#fef9c3;border-color:#fde047}
-.panou-row.row-warn td:first-child{border-left:3px solid var(--y)}
-.panou-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:14px;font-size:10px;font-weight:700;white-space:nowrap}
-.pill-ready{background:var(--g);color:#fff}
-.pill-wait{background:var(--y);color:#fff}
-.pill-prog{background:var(--t3);color:#fff}
 .cond-row{display:inline-flex;gap:4px;align-items:center;cursor:help}
 .cond-ic{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
 .cond-ic.ok{background:var(--g)}
@@ -124,8 +119,11 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .panou-row{cursor:pointer}
 .panou-row:hover td{background-color:rgba(220,38,38,.04)}
 .panou-row.row-ok:hover td{background-color:#bbf7d0}
-.panou-row.row-warn:hover td{background-color:#fef08a}
 .panou-hint{font-size:11px;color:var(--t3);padding:6px 24px;background:var(--w);border-bottom:1px solid var(--b);text-align:center;font-style:italic}
+.panou-row.row-dd td:first-child{box-shadow:inset 3px 0 0 var(--bl,#2563eb)}
+.nj-opt-t{font-weight:400;color:var(--t3)}
+.edit-btn.eb-ico{padding:0;width:32px;height:32px;justify-content:center}
+.edit-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .edit-btn{padding:7px 16px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
 .edit-btn.eb-go{background:var(--g);color:#fff}
 .edit-btn.eb-no{background:var(--b2);color:var(--t3);cursor:not-allowed}
@@ -133,12 +131,13 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .edit-btn.eb-del{background:var(--r50,#fef2f2);color:var(--r);border:1px solid var(--r100,#fee2e2);padding:7px 10px}
 .edit-btn.eb-del:hover{background:var(--r100,#fee2e2)}
 .edit-btn.eb-ratat{background:var(--yl,#fef9c3);color:var(--y,#ca8a04);border:1px solid #fde68a}
+/* K-19: biztositos javitas ket allapota a Viitoare soron */
 .edit-btn.eb-ratat:hover{background:#fde68a}
 .edit-btn.eb-react{background:var(--gl,#dcfce7);color:var(--g,#16a34a);border:1px solid #bbf7d0}
 .edit-btn.eb-react:hover{background:#bbf7d0}
 .wa-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#25d366;text-decoration:none;font-size:16px;cursor:pointer;border:none;color:#fff}
 .wa-btn.dark{background:#1a1a1a}
-.wa-btn.dis{background:var(--b);cursor:not-allowed;opacity:.5}
+.wa-btn.nofon{background:var(--b3,#9ca3af)}
 .wa-btn svg{width:16px;height:16px;fill:#fff}
 
 /* Programare modal */
@@ -207,10 +206,6 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .tbl td{padding:12px 16px;font-size:13px;vertical-align:middle}.tbl td.c{text-align:center}
 .badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:10px;font-weight:700}
 .badge-r{background:var(--r100);color:var(--r700)}.badge-g{background:var(--gl);color:var(--g)}.badge-y{background:var(--yl);color:var(--y)}.badge-bl{background:var(--bll);color:var(--bl)}.badge-p{background:var(--pl);color:var(--p)}.badge-or{background:var(--orl);color:var(--or)}.badge-tl{background:var(--tll);color:var(--tl)}
-.prog{height:4px;background:var(--bg);border-radius:2px;display:flex;gap:1px;overflow:hidden;width:100px}
-.prog-s{height:100%;border-radius:1px;flex:1}
-.ps1{background:var(--r)}.ps2{background:var(--or)}.ps3{background:var(--y)}.ps4{background:var(--bl)}.ps5{background:var(--p)}.ps6{background:var(--tl)}.ps7{background:var(--g)}.pse{background:var(--b)}
-.psr{background:var(--r)}.psy{background:var(--y)}.psg{background:var(--g)}
 .act-btn{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:none}
 .cell-inp{display:block;width:100%;min-width:90px;border:1px solid var(--b2);border-radius:6px;padding:4px 6px;font-size:11px;font-family:inherit;margin:2px 0;outline:none;background:#fffbeb}
 .cell-inp:focus{border-color:var(--r)}
@@ -247,8 +242,6 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .nj-dup{background:#fef3c7;border:1px solid #fcd34d;color:#7c4a03;border-radius:8px;padding:9px 11px;font-size:12px;margin-bottom:10px;line-height:1.4}
 .nj-why{font-size:11px;color:var(--r);font-weight:700;min-height:14px;margin-bottom:6px}
 .nj-note{font-size:11px;color:var(--t3);margin:-6px 0 12px}
-.nj-more{margin-bottom:14px}
-.nj-more summary{font-size:10px;font-weight:700;color:var(--t3);cursor:pointer;text-transform:uppercase;letter-spacing:1px;padding:4px 0}
 .nj-badge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.5px;background:#e0e7ff;color:#3730a3;border-radius:10px;padding:2px 6px;vertical-align:middle;margin-left:5px}
 @media(max-width:560px){.nj-pick{grid-template-columns:1fr}}
 .pg-cell{font-size:12px;white-space:nowrap}
@@ -261,8 +254,6 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .pg-banner{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .eb-repro{background:#e0e7ff;color:#3730a3;border:1px solid #c7d2fe}
 .eb-repro:hover{background:#c7d2fe}
-.eb-need{background:#fff7ed;color:#9a3412;border:1px solid #fdba74;font-weight:800}
-.eb-need:hover{background:#ffedd5}
 .ac-b{display:inline-block;font-size:12px;font-weight:800;border-radius:10px;padding:3px 9px;font-variant-numeric:tabular-nums}
 .ac-b.ac-ok{background:#dcfce7;color:#15803d}
 .ac-b.ac-part{background:#fef3c7;color:#92400e}
@@ -441,7 +432,11 @@ if(typeof saveJ==='function'){var _saveJ_orig=saveJ;saveJ=function(){if(typeof J
 if(typeof saveJob==='function'){var _saveJob_orig=saveJob;saveJob=function(job){if(!job)return Promise.resolve();return SAVER?SAVER.save(job):_saveJob_orig(job);};}
 
 var JOBS=[];
-var S={ts:null,screen:'lucrari',statPeriod:'month',statThreshold:5,panouTab:'viitoare',showProg:0,progPlate:'',progPhone:'',showRepro:null,reproDate:'',reproTime:'',showNew:0,njMode:null,njEditId:null,njPlate:'',njPhone:'',njTip:null,njPay:null,njDate:'',njTime:'08:00',njClient:'',njAuto:'',njAsig:'',njDosar:'',showCondModal:0,condDraft:null,editJobId:null};
+// ── INDULASKOR A PROGRAMARI LAP NYILIK (Ferenc, 2026-08-26) ────────
+// Reggel a pultnal az a kerdes, hogy MA mi van: kit varunk, mi akadt el,
+// mit kell avizalni. Ez a Centru de Control Operational — ezert az app
+// ITT indul, nem a teljes munka-listan.
+var S={ts:null,screen:'panou',statPeriod:'month',statThreshold:5,panouTab:'viitoare',showProg:0,progPlate:'',progPhone:'',showRepro:null,reproDate:'',reproTime:'',showNew:0,njMode:null,njEditId:null,njPlate:'',njPhone:'',njTip:null,njPay:null,njDate:'',njTime:'08:00',njClient:'',njAuto:'',njAsig:'',njDosar:'',showCondModal:0,condDraft:null,editJobId:null};
 
 // ====== PARAMETRI — single source of truth (rpw_config, megosztva az evaluare/deviz oldalakkal) ======
 var CONFIG={
@@ -587,8 +582,6 @@ moved_ratat:{ro:'Mutat la lucrari ratate',en:'Moved to missed',hu:'Athelyezve a 
 reactiveaza_btn:{ro:'Reactiveaza',en:'Reactivate',hu:'Visszaallitas'},
 reactivat:{ro:'Reactivat',en:'Reactivated',hu:'Visszaallitva'},
 pill_ready:{ro:'Gata de lucru',en:'Ready to work',hu:'Munkara kesz'},
-pill_wait:{ro:'In Asteptare',en:'Waiting',hu:'Varakozik'},
-pill_prog:{ro:'Programat',en:'Scheduled',hu:'Programalva'},
 cond_programare:{ro:'Programare',en:'Schedule',hu:'Idopont'},
 cond_loc:{ro:'Loc',en:'Place',hu:'Hely'},
 cond_om:{ro:'Om',en:'Person',hu:'Ember'},
@@ -604,7 +597,8 @@ new_programare:{ro:'+ Programare noua',en:'+ New schedule',hu:'+ Uj programalas'
 prog_dauna:{ro:'Dosar daună (asigurare) — deschide dosarul',en:'Damage file (insurance) — open dossier',hu:'Kárdosszié (biztosítás) — nyisd meg a dossziét'},
 receptie_auto:{ro:'Receptie auto',en:'Car reception',hu:'Auto atvetel'},
 dosar_dauna:{ro:'Avizare daună',en:'Damage notification',hu:'Karbejelentes'},
-dosar_q:{ro:'Deschidem noi dosarul, sau preluăm unul existent?',en:'Do we open the file, or take over an existing one?',hu:'Mi nyitjuk a dossziet, vagy meglevot veszunk at?'},
+st_dosar_deschis:{ro:'Dosar deschis',en:'Claim file open',hu:'Dosszie nyitva'},
+st_avizare:{ro:'Avizare daună',en:'Damage notice',hu:'Karbejelentes'},
 dosar_tarziu:{ro:'Deschide dosar daună',en:'Open claim file',hu:'Kardosszie nyitasa'},
 dosar_fisier:{ro:'Preluare dosar daună',en:'Take over claim file',hu:'Dosszie atvetele'},
 dosar_citire:{ro:'Se citeste documentul...',en:'Reading document...',hu:'Dokumentum beolvasasa...'},
@@ -631,9 +625,9 @@ nj_t_rep_s:{ro:'Reparam la noi',en:'We repair it',hu:'Nalunk javitjuk'},
 nj_t_dos:{ro:'Dosar',en:'File',hu:'Dosszie'},
 nj_t_dos_s:{ro:'Colectare date pt. asigurator',en:'Data collection for insurer',hu:'Adatgyujtes a biztositohoz'},
 nj_pay:{ro:'Plata / dosar',en:'Payment / file',hu:'Fizetes / dosszie'},
-nj_pay_a:{ro:'Dosar de deschis',en:'File to be opened',hu:'Dossziet nyitunk'},
+nj_pay_a:{ro:'Avizare daună',en:'Damage notification',hu:'Karbejelentes'},
 nj_pay_a_s:{ro:'Noi colectam actele si deschidem',en:'We collect docs and open it',hu:'Mi gyujtjuk az iratokat'},
-nj_pay_b:{ro:'Dosar deja deschis',en:'File already open',hu:'Dosszie mar nyitva'},
+nj_pay_b:{ro:'Dosar daună deschis',en:'Claim file already open',hu:'Kardosszie mar nyitva'},
 nj_pay_b_s:{ro:'Lucram pe baza constatarii',en:'We work from the assessment',hu:'Constatare alapjan dolgozunk'},
 nj_pay_c:{ro:'Plateste clientul',en:'Client pays',hu:'Ugyfel fizet'},
 nj_pay_c_s:{ro:'Fara asigurare',en:'No insurance',hu:'Sajat zsebre'},
@@ -644,12 +638,24 @@ nj_tomorrow:{ro:'Maine',en:'Tomorrow',hu:'Holnap'},
 nj_after:{ro:'Poimaine',en:'In 2 days',hu:'Holnaputan'},
 nj_asigurator:{ro:'Asigurator',en:'Insurer',hu:'Biztosito'},
 nj_nrdosar:{ro:'Nr. dosar asigurator',en:'Claim number',hu:'Karszam'},
-nj_more:{ro:'Date optionale (client, masina)',en:'Optional (client, car)',hu:'Opcionalis (ugyfel, auto)'},
+pr_proces:{ro:'Proces',en:'Process',hu:'Folyamat'},
+pr_acte:{ro:'acte',en:'docs',hu:'irat'},
+pr_lepes:{ro:'pasi',en:'steps',hu:'lepes'},
+pr_fazis:{ro:'faze',en:'phases',hu:'fazis'},
+pr_feltetel:{ro:'conditii',en:'conditions',hu:'feltetel'},
+pr_gata:{ro:'Gata de receptie',en:'Ready for reception',hu:'Fogadasra kesz'},
+pr_var_wa:{ro:'Asteapta WhatsApp',en:'Waiting for WhatsApp',hu:'WhatsAppra var'},
+pr_ratat:{ro:'Nu a venit',en:'Did not arrive',hu:'Nem jott el'},
+wa_go_dosar:{ro:'Scrie telefonul in dosar',en:'Enter the phone in the file',hu:'Ird be a telefont a dossziéba'},
+dd_s1:{ro:'Colectare acte',en:'Collecting documents',hu:'Iratgyujtes'},
+dd_s2:{ro:'Predat la asigurator',en:'Handed to insurer',hu:'Atadva a biztositonak'},
+dd_s3:{ro:'Inchis',en:'Closed',hu:'Lezarva'},
+nj_optional:{ro:'opțional',en:'optional',hu:'opcionalis'},
 nj_client:{ro:'Client',en:'Client',hu:'Ugyfel'},
+nj_client_ph:{ro:'Numele pagubitului',en:'Claimant name',hu:'A karosult neve'},
 nj_auto:{ro:'Marca / model',en:'Make / model',hu:'Marka / modell'},
 nj_missing:{ro:'Lipseste',en:'Missing',hu:'Hianyzik'},
 nj_m_plate:{ro:'nr. inmatriculare',en:'plate',hu:'rendszam'},
-nj_optional:{ro:'optional',en:'optional',hu:'nem kötelező'},
 nj_m_phone:{ro:'telefon valid',en:'valid phone',hu:'ervenyes telefon'},
 nj_m_do:{ro:'ce facem (min. 1)',en:'what we do (min. 1)',hu:'mit csinalunk (min. 1)'},
 nj_m_pay:{ro:'plata / dosar',en:'payment / file',hu:'fizetes / dosszie'},
@@ -661,13 +667,10 @@ nj_dup_real:{ro:'Acest caz există deja',en:'This case already exists',hu:'Ez az
 nj_dup_real_s:{ro:'Același asigurător și același nr. dosar. Deschide dosarul existent.',en:'Same insurer and same claim number. Open the existing file.',hu:'Ugyanaz a biztosító és ugyanaz a kárszám. Nyisd meg a meglévőt.'},
 nj_dup_auto:{ro:'Există deja o reparație pe cont propriu',en:'A self-paid repair already exists',hu:'Már fut egy saját zsebes javítás'},
 nj_case_auto:{ro:'cont propriu',en:'self-paid',hu:'saját zseb'},
-nj_m_client:{ro:'numele clientului',en:'client name',hu:'az ügyfél neve'},
 nj_date_past:{ro:'Data aleasă e în trecut',en:'The chosen date is in the past',hu:'A választott dátum a múltban van'},
 nj_dup:{ro:'Exista deja o lucrare activa pe acest numar',en:'An active job already exists for this plate',hu:'Erre a rendszamra mar van elo munka'},
 nj_open:{ro:'Salveaza',en:'Save',hu:'Mentes'},
 nj_open_prog:{ro:'Programeaza',en:'Schedule',hu:'Elojegyzes'},
-nj_open_dosar:{ro:'Deschide dosarul',en:'Open the file',hu:'Dosszie megnyitasa'},
-nj_open_lucrare:{ro:'Recepție auto',en:'Car reception',hu:'Auto atvetel'},
 nj_open_edit:{ro:'Salvează modificările',en:'Save changes',hu:'Modositasok mentese'},
 m_edit_t:{ro:'Editează datele',en:'Edit details',hu:'Adatok javitasa'},
 m_edit_s:{ro:'Data se schimbă doar prin Reprogramare',en:'Date changes only via Reschedule',hu:'A datum csak Atutemezessel valtozik'},
@@ -830,25 +833,18 @@ repro_count:{ro:'reprogramari pana acum',en:'reschedules so far',hu:'atutemezes 
 repro_save:{ro:'Salveaza data noua',en:'Save new date',hu:'Uj datum mentese'},
 repro_ok:{ro:'Reprogramat',en:'Rescheduled',hu:'Atutemezve'},
 repro_need:{ro:'Alege o data',en:'Pick a date',hu:'Valassz datumot'},
-need_wa_btn:{ro:'Contacteaza clientul',en:'Contact the client',hu:'Ertesitsd az ugyfelet'},
 btn_prog_nou:{ro:'Programare noua',en:'New appointment',hu:'Uj elojegyzes'},
-btn_dosar_nou:{ro:'Avizare daună',en:'Damage notification',hu:'Karbejelentes'},
 btn_lucrare_noua:{ro:'Lucrare noua',en:'New job',hu:'Uj munka'},
 panou_dosare:{ro:'Dosare daună',en:'Claim files',hu:'Kárdossziék'},
 col_asig:{ro:'Asigurator',en:'Insurer',hu:'Biztosito'},
 col_acte:{ro:'Acte',en:'Docs',hu:'Iratok'},
 col_status:{ro:'Status',en:'Status',hu:'Allapot'},
-st_astept:{ro:'Asteptam masina',en:'Waiting for the car',hu:'Varjuk az autot'},
 st_acte:{ro:'acte',en:'docs',hu:'irat'},
 st_predat:{ro:'Predat asiguratorului',en:'Handed to insurer',hu:'Atadva a biztositonak'},
 st_inchis:{ro:'Inchis',en:'Closed',hu:'Lezarva'},
 open_dosar_btn:{ro:'Deschide dosarul',en:'Open the file',hu:'Dosszie megnyitasa'},
 m_prog_t:{ro:'Programare noua',en:'New appointment',hu:'Uj elojegyzes'},
 m_prog_s:{ro:'Masina vine mai tarziu — rezervam ora',en:'Car comes later — we book the slot',hu:'Az auto kesobb jon — idopontot foglalunk'},
-m_dosar_t:{ro:'Avizare daună',en:'Damage notification',hu:'Karbejelentes'},
-m_dosar_s:{ro:'Colectare acte pentru asigurator — fara reparatie',en:'Document collection for the insurer — no repair',hu:'Iratgyujtes a biztositohoz — javitas nelkul'},
-m_lucrare_t:{ro:'Lucrare noua',en:'New job',hu:'Uj munka'},
-m_lucrare_s:{ro:'Masina e aici — incepe lucrarea',en:'Car is here — work starts',hu:'Az auto itt van — indul a munka'},
 m_tip:{ro:'Tipul lucrarii',en:'Job type',hu:'A munka tipusa'},
 m_tip_asig:{ro:'Dauna asigurare',en:'Insurance claim',hu:'Biztositoi kar'},
 m_tip_asig_s:{ro:'Deconteaza asiguratorul',en:'Insurer settles',hu:'A biztosito fizet'},
@@ -856,7 +852,6 @@ m_tip_auto:{ro:'Dauna auto',en:'Direct repair',hu:'Sajat zsebre'},
 m_tip_auto_s:{ro:'Plateste clientul',en:'Client pays',hu:'Az ugyfel fizet'},
 m_m_tip:{ro:'tipul lucrarii',en:'job type',hu:'a munka tipusa'},
 m_ok_prog:{ro:'Programare creata',en:'Appointment created',hu:'Elojegyzes letrejott'},
-m_ok_dosar:{ro:'Dosar deschis',en:'Claim file opened',hu:'Dosszie megnyitva'},
 need_wa_tip:{ro:'Masina nu intra in atelier pana nu vorbesti cu clientul. Click: marcheaza contactul (sau bifeaza manual, daca ai vorbit la telefon).',en:'The car does not enter the workshop until the client is contacted. Click to mark it (or tick manually if you spoke by phone).',hu:'Az auto nem all be, amig nem beszeltel az ugyfellel. Kattints a jelolesehez (vagy pipald be kezzel, ha telefonon egyeztettel).'},
 wa_sent_marked:{ro:'WhatsApp marcat ca trimis',en:'WhatsApp marked as sent',hu:'WhatsApp jeloltve'},
 wa_no_phone:{ro:'Lipseste telefon',en:'No phone',hu:'Nincs telefon'},
@@ -919,8 +914,6 @@ stat_thresholdDays:{ro:'Prag (zile)',en:'Threshold (days)',hu:'Hatar (nap)'},
 };
 var PK=['ph1','ph2','ph3','ph4','ph5','ph6','ph7'];
 // Status color: red=active, yellow=waiting(reconstatare), green=done
-function phBadge(phase){if(phase===7)return 'badge-g';if(phase===3)return 'badge-y';return 'badge-r'}
-var PS=['ps1','ps2','ps3','ps4','ps5','ps6','ps7'];
 function gL(){return localStorage.getItem('rpw_lang')||'ro'}
 function sL(l){localStorage.setItem('rpw_lang',l);render()}
 function T(k){var e=i[k];return e?e[gL()]||e.ro||k:k}
@@ -1047,7 +1040,11 @@ function render(){
   h+='<div class="tbl-wrap">';
   if(!jobs.length){h+='<div class="empty"><div style="font-size:16px;font-weight:700;margin-bottom:6px">'+T('noJobs')+'</div><div style="font-size:12px">'+T('addFirst')+'</div></div>'}
   else{
-    h+='<table class="tbl"><thead><tr><th>'+T('nr')+'</th><th>'+T('auto')+'</th><th>'+T('client')+'</th><th>'+T('phase')+'</th><th>'+T('progress')+'</th><th>'+T('th_conditii')+'</th><th>'+T('date')+'</th><th class="c">'+T('actions')+'</th></tr></thead><tbody>';
+    // ── E-5: a "Faza" jelveny-oszlop OSSZEVONVA a savval ─────────────
+    // A jelveny ugyanazt a fazisnevet irta ki, amit a sav felirata —
+    // ket oszlop, egy igazsag. A feltetel-ikonok maradnak: azok MAS
+    // informacio (a fogadasi feltetelek), nem a fazis.
+    h+='<table class="tbl"><thead><tr><th>'+T('nr')+'</th><th>'+T('auto')+'</th><th>'+T('client')+'</th><th>'+T('pr_proces')+'</th><th>'+T('th_conditii')+'</th><th>'+T('date')+'</th><th class="c">'+T('actions')+'</th></tr></thead><tbody>';
     var sorted=jobs.slice().sort(function(a,b){return(a.phase===7?1:0)-(b.phase===7?1:0)||new Date(b.created)-new Date(a.created)});
     sorted.forEach(function(j){
       var ed=(S.editJobId===j.id);
@@ -1055,8 +1052,14 @@ function render(){
       h+='<tr><td class="mono" style="font-weight:800">'+(ed?inp('number',j.number,'Nr'):escH(j.number||j.id))+'</td>';
       h+='<td>'+(ed?inp('auto',j.auto,'Auto')+inp('plate',j.plate,'Nr. inmatr.')+inp('vin',j.vin,'VIN'):(escH(j.auto||'—')+'<br><span class="mono" style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.4px">'+escH(j.plate||'')+'</span>'+(j.vin?'<span class="mono" style="font-size:10px;color:var(--t3)"> · '+escH(j.vin.slice(-6))+'</span>':'')))+'</td>';
       h+='<td>'+(ed?inp('client',j.client,'Client')+inp('phone',j.phone,'Telefon'):(escH(j.client||'—')+'<br><span style="font-size:10px;color:var(--t3)">'+escH(j.phone||'')+'</span>'))+'</td>';
-      h+='<td><span class="badge '+phBadge(j.phase)+'">'+T(PK[j.phase-1])+'</span></td>';
-      h+='<td><div class="prog">';for(var p=1;p<=7;p++){var pc2=p<j.phase?'psg':p===j.phase?(p===3?'psy':'psr'):'pse';h+='<div class="prog-s '+pc2+'"></div>'}h+='</div></td>';
+      // ── FOLYAMATJELZO (Ferenc, 2026-08-26) ──────────────────────────
+      // Itt korabban egy KEZZEL IRT sav allt, ami minden korabbi fazist
+      // zoldre festett — a KIHAGYOTT Reconstatare-t is kesznek mutatta.
+      // Mostantol ugyanaz a fuggveny rajzol, mint a panelen es a
+      // munkalapokon: a kihagyott lepes atlos, a keso fazis borostyan.
+      h+='<td>'+(window.RPWProgres
+        ? RPWProgres.html(j,{T:T, acteCount:window.acteCount, threshold:S.statThreshold})
+        : '')+'</td>';
       var cnd=computeConditions(j);
       h+='<td><div class="cond-row" style="cursor:pointer" title="'+T('cond_modal_title')+'" onclick="openCondModal(\''+j.id+'\')">'+renderCondIcon(cnd.programare)+renderCondIcon(cnd.loc)+renderCondIcon(cnd.om)+renderCondIcon(cnd.piese,'piese')+renderCondIcon(cnd.whatsapp)+'</div></td>';
       h+='<td style="font-size:12px;color:var(--t3)">'+(j.created?new Date(j.created).toLocaleDateString(loc,{day:'2-digit',month:'2-digit',year:'numeric'}):'')+'</td>';
@@ -1098,7 +1101,12 @@ function categorizeJob(job){
   if(job.separat)               return 'separat';
   if(job.inchis===true)         return 'arhivate';
   if(job.sosire==='ratat')      return 'ratate';
-  if(job.flux==='doar_dosar')   return 'dosare';
+  // ── EGY KOZOS LISTA (Ferenc, 2026-08-26) ──────────────────────────
+  // A K-19-es kulon "Avizare dauna" ful visszavonva: a kardosszie es a
+  // jovobeli javitas UGYANABBAN a listaban el. A soron latszik, melyik
+  // melyik (iratszamlalo + eset-cimke vs. allapot-pill + jelveny), es a
+  // fo muvelet is mas ("Deschide dosarul" vs. "Recepție auto").
+  if(job.flux==='doar_dosar')   return 'viitoare';
   if(job.sosire==='programat')  return 'viitoare';
   return 'lucrari';
 }
@@ -1156,25 +1164,22 @@ function renderPanou(){
   var ratate=jobs.filter(function(j){return categorizeJob(j)==='ratate'});
   var arhivate=jobs.filter(function(j){return categorizeJob(j)==='arhivate'});
   var separat=jobs.filter(function(j){return categorizeJob(j)==='separat'});
-  var dosare=jobs.filter(function(j){return categorizeJob(j)==='dosare'});
 
+  // ── EGY KOZOS LISTA (Ferenc, 2026-08-26) ──────────────────────────
+  // Datum szerint elol a programalt javitasok; a dossziek (nincs datum)
+  // a lista vegen, LEGUJABB ELOL — igy a ma felvett dosszie kezre esik.
   viitoare.sort(function(a,b){
     var pa=((a.programare||{}).date)||'9999-12-31', pb=((b.programare||{}).date)||'9999-12-31';
     if(pa!==pb)return pa<pb?-1:1;
     var ta=((a.programare||{}).time)||'99:99', tb=((b.programare||{}).time)||'99:99';
-    return ta<tb?-1:(ta>tb?1:0);
+    if(ta!==tb)return ta<tb?-1:1;
+    var ca=(a.created||''), cb=(b.created||'');
+    return ca<cb?1:(ca>cb?-1:0);
   });
 
   var tab=S.panouTab||'viitoare';
-  if(tab==='dosare')tab='viitoare';            // a kulon ful megszunt
-  // EGY LISTA: programare + dosar egyutt. A categorizeJob tovabbra is
-  // kulon kezeli oket (az allapotmodell erintetlen) — csak a NEZET kozos.
-  var deAzi=viitoare.concat(dosare).sort(function(a,b){
-    var pa=((a.programare||{}).date)||'9999-12-31', pb=((b.programare||{}).date)||'9999-12-31';
-    if(pa!==pb)return pa<pb?-1:1;
-    var ta=((a.programare||{}).time)||'99:99', tb=((b.programare||{}).time)||'99:99';
-    return ta<tb?-1:(ta>tb?1:0);
-  });
+  if(tab==='dosare')tab='viitoare';   // regi, elmentett fulnev -> a kozos lista
+  var deAzi=viitoare;
   var displayed=tab==='ratate'?ratate:tab==='arhivate'?arhivate:tab==='separat'?separat:deAzi;
 
   // Sidebar
@@ -1184,7 +1189,7 @@ function renderPanou(){
   h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
 
   // Header + Programare noua gomb
-  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn" style="background:#15181C;color:#fff;border-color:#15181C" onclick="azOpen()">'+T('az_q')+'</button>'+'<button class="btn-prog-new" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="background:var(--bl,#2563eb)" onclick="openDosarModal()">&#128193; '+T('btn_dosar_nou')+'</button><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="openNewJob(\'lucrare\')">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
+  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn" style="background:#15181C;color:#fff;border-color:#15181C" onclick="azOpen()">'+T('az_q')+'</button>'+'<button class="btn-prog-new" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="background:var(--bl,#2563eb)" onclick="dosarTarziu()">🛡 '+T('dosar_dauna')+'</button><label class="btn-prog-new" style="background:#F3F4F6;color:#374151;position:relative;display:inline-flex;cursor:pointer;box-sizing:border-box" title="'+T('dosar_fisier')+'">📄 '+T('dosar_fisier')+'<input type="file" accept="image/*,.pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0" onchange="dosarFisier(event)"/></label><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="lucrareAcum()">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
 
   // Tabs
   h+='<div class="panou-tabs">';
@@ -1209,16 +1214,23 @@ function renderPanou(){
     h+='<div class="empty" style="background:var(--w);border-radius:var(--rd);padding:60px 20px;text-align:center;color:var(--t3)"><div style="font-size:14px;font-weight:600">'+T('noJobs')+'</div></div>';
   } else {
     h+='<table class="panou-tbl"><thead><tr><th>'+T('client')+'</th><th>'+T('plate')+'</th><th>'+T('col_data')+'</th>'
-      + (tab==='viitoare'
-          ? '<th>'+T('col_status')+'</th>'
-          : '<th>'+T('phase')+'</th><th>'+T('status_cond')+'</th>')
+      // ── EGYFORMA LOGIKA MINDEN FULON (Ferenc, 2026-08-26) ────────
+      // A Viitoare es a Ratate (es a tobbi ful) UGYANAZT az oszlopot
+      // kapja: egy Proces sav. Eddig a Ratate meg a regi ket oszlopot
+      // hasznalta (fazis-jelveny + feltetel-ikonok) — ket kulonbozo
+      // nyelv ugyanarra a listara.
+      + '<th>'+T('pr_proces')+'</th>'
       + '<th>'+T('contact')+'</th><th>'+T('actions')+'</th></tr></thead><tbody>';
     displayed.forEach(function(j){
       var cnd=computeConditions(j);
       var canOpen=cnd.whatsapp; // CSAK a WhatsApp kotelezo!
-      var rowCls=cnd.all?'row-ok':(cnd.count>=3?'row-warn':'');
-      var pillCls=canOpen?'pill-ready':(cnd.count>=2?'pill-wait':'pill-prog');
-      var pillText=canOpen?T('pill_ready'):(cnd.count>=2?T('pill_wait'):T('pill_prog'));
+      // ── A SARGA SOR-TONUS KIVEZETVE (Ferenc, 2026-08-26) ─────────
+      // A "3-bol 4 feltetel megvan" allapotot eddig sarga hatter jelezte
+      // az egesz soron. Ezt most a Proces oszlop sava mondja el
+      // pontosabban (hany feltetel van meg, es melyik a kapu) — a
+      // hatterszinezes csak zajt adott hozza.
+      // A ZOLD marad: az azt jelenti, hogy MINDEN feltetel megvan.
+      var rowCls=cnd.all?'row-ok':'';
       var editCls=canOpen?'eb-go':'eb-no';
 
       var missing=[];
@@ -1229,45 +1241,87 @@ function renderPanou(){
       if(!cnd.whatsapp)missing.push(T('cond_whatsapp'));
       var tt=missing.length?T('cond_blocked_by')+': '+missing.join(' + '):T('pill_ready');
 
-      var phName=T(PK[(j.phase||1)-1]);
       var phoneClean=(j.phone||'').replace(/[^0-9+]/g,'');
       var waText='Buna ziua! Va contactam de la SC Szkaliczki Service.';
       var waCls=cnd.whatsapp?'':'dark';
       var waOnclick=phoneClean?'onclick="event.stopPropagation();clickWhatsApp(\''+j.id+'\',\''+phoneClean.replace(/^\+/,'')+'\')"':'';
       var waTitle=phoneClean?(cnd.whatsapp?T('cond_whatsapp'):T('no_wa_yet')):T('wa_no_phone');
 
-      h+='<tr class="panou-row '+rowCls+'" ondblclick="openCondModal(\''+j.id+'\')">';
+      var _ddRow=(j.flux==='doar_dosar')||(j.flux==null&&j.doarDosar===true);
+      h+='<tr class="panou-row '+rowCls+(_ddRow?' row-dd':'')+'" ondblclick="openCondModal(\''+j.id+'\')">';
       h+='<td><div style="font-weight:700">'+escH(j.client||j.proprietar||'—')+'</div><div style="font-size:10px;color:var(--t3)">'+escH(j.number||j.id||'')+'</div></td>';
       var _dd=(j.flux==='doar_dosar')||(j.flux==null&&j.doarDosar===true);
       // 2026-08-25: a rendszám mellől kikerült a 📁/📅 jelvény. A két sáv
       // megkülönböztetése enélkül is egyértelmű: a dosszié-sor kiemelt,
       // iratszámlálót mutat, és „Deschide dosarul" a fő művelete.
-      h+='<td class="mono" style="font-weight:700;letter-spacing:.4px">'+escH(j.plate||'—')+'</td>';
+      // ── AZ AZONOSITOK EGY HELYEN (Ferenc E-2, 2026-08-26) ────────
+      // A "Groupama · k212500125" nem allapot, hanem AZONOSITO: melyik
+      // karugy ez. Ezert a rendszam ala kerult, a tobbi azonosito melle
+      // — nem a folyamat-oszlopba, ahol allapotnak latszott.
+      h+='<td class="mono" style="font-weight:700;letter-spacing:.4px">'+escH(j.plate||'—')
+        +(j.damageType==='asig'
+           ? '<div style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:var(--t3);font-weight:600;letter-spacing:0;margin-top:2px">'+escH(njCaseLabel(j))+'</div>'
+           : '')
+        +'</td>';
       h+='<td class="pg-cell">'+progCell(j)+'</td>';
-      if(tab==='viitoare'){
-        // A status SAVONKENT mast mond, mert mas a lenyeg.
-        if(_dd){
-          var ac=acteCount(j);
-          var acCls=(ac.done>=ac.total)?'ac-ok':(ac.done?'ac-part':'ac-none');
-          var acTxt=j.inchis?T('st_inchis'):(j.dosarPredat?T('st_predat'):(ac.done+'/'+ac.total+' '+T('st_acte')));
-          h+='<td><span class="ac-b '+(j.inchis?'ac-ok':acCls)+'">'+escH(acTxt)+'</span>'
-            +'<div style="font-size:10px;color:var(--t3);font-weight:600;margin-top:3px">'+escH(njCaseLabel(j))+'</div></td>';
-        } else {
-          h+='<td><span class="panou-pill '+pillCls+'" title="'+tt+'">'+(canOpen?T('pill_ready'):T('st_astept'))+'</span></td>';
-        }
-      } else {
-        h+='<td><span class="panou-pill '+pillCls+'" title="'+phName+'">'+pillText+'</span></td>';
-        h+='<td><div class="cond-row" title="'+tt+'">'+renderCondIcon(cnd.programare)+renderCondIcon(cnd.loc)+renderCondIcon(cnd.om)+renderCondIcon(cnd.piese,'piese')+renderCondIcon(cnd.whatsapp)+'</div></td>';
+      {
+        // ── STATUSZ ES FOLYAMAT EGY OSZLOPBAN, MINDEN FULON ──────────
+        // Amit a regi Status oszlop mondott, azt a sav felirata mondja:
+        //   iratszamlalo      -> a sav szamlaloja  (0/17 irat)
+        //   "Asteptam masina" -> a sav lepese      (Var a WhatsApp-ra)
+        //   Avizare/Deschis   -> a felirat ELOTAGJA
+        //   biztosito+karszam -> a rendszam ala (azonosito, nem allapot)
+        // A rajzot a rpw-progres.js adja — UGYANAZ a fuggveny, mint a
+        // munkalapokon es a Lucrari listan.
+        h+='<td>'+(window.RPWProgres
+          ? RPWProgres.html(j,{T:T, acteCount:window.acteCount, threshold:S.statThreshold,
+                               lateProg:(progInfo(j).state==='late')})
+          : '')+'</td>';
       }
-      h+='<td>'+(phoneClean?'<button class="wa-btn '+waCls+'" '+waOnclick+' title="'+waTitle+'">💬</button>':'<button class="wa-btn dis" title="'+T('wa_no_phone')+'" disabled>💬</button>')+'</td>';
-      if(tab==='viitoare' && _dd){
-        h+='<td><button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')">&#128193; '+T('open_dosar_btn')+'</button> <button class="edit-btn eb-edit2" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'">&#9998;</button> <button class="edit-btn eb-repro" onclick="event.stopPropagation();openRepro(\''+j.id+'\')">'+T('repro_btn')+'</button></td>';
+      // ── A KAPCSOLAT A WHATSAPP JELE (Ferenc, 2026-08-26) ─────────────
+      // Emoji helyett a VALODI WhatsApp jel: zold, ha mar egyeztettunk;
+      // sotet, ha meg nem. Telefon nelkul NEM nema tiltott gomb — a
+      // kezi bejeloles utja nyilik meg, kulonben az ilyen munka
+      // zsakutca lenne (sosem lehetne megnyitni).
+      var waMark='<svg viewBox=\'0 0 24 24\' aria-hidden=\'true\'><path d=\'M17.5 14.4c-.3-.2-1.8-.9-2-1-.3-.1-.5-.2-.7.1-.2.3-.7 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5s-.7-1.6-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.5.3-.7.3-1.4.2-1.5-.1-.1-.3-.2-.6-.3zM12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.3c1.4.8 3 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.6 0-3-.4-4.3-1.2l-.3-.2-3.1.8.8-3-.2-.3c-.8-1.3-1.3-2.8-1.3-4.3C3.6 7.4 7.4 3.6 12 3.6S20.4 7.4 20.4 12 16.6 20.2 12 20.2z\'/></svg>';
+      h+='<td>'+(phoneClean
+        ? '<button class="wa-btn '+waCls+'" '+waOnclick+' title="'+waTitle+'">'+waMark+'</button>'
+        : '<button class="wa-btn nofon" onclick="event.stopPropagation();'
+            // ── F-4 (Ferenc, 2026-08-26): oda vigyen, ahol MEGOLDHATO.
+            // Dossziénál a telefont a dosszié-lapon írod be (ott derül ki
+            // a papírokból); javításnál a feltétel-ablak a hely.
+            + (_dd ? 'deschideDosar(\''+j.id+'\')' : 'openCondModal(\''+j.id+'\')')
+            + '" title="'+T('wa_no_phone')+' — '+(_dd?T('wa_go_dosar'):T('need_wa_tip'))+'">'+waMark+'</button>')+'</td>';
+      if(tab==='viitoare'&&_dd){
+        h+='<td><button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')">'+ico('folder')+' '+T('open_dosar_btn')+'</button> <button class="edit-btn eb-edit2 eb-ico" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'" aria-label="'+T('edit_btn')+'">'+ico('pencil')+'</button> <button class="edit-btn eb-repro eb-ico" onclick="event.stopPropagation();openRepro(\''+j.id+'\')" title="'+T('repro_btn')+'" aria-label="'+T('repro_btn')+'">'+ico('calendar')+'</button></td>';
       } else if(tab==='viitoare'){
+        // A "Contacteaza clientul" szoveges gomb KIVEZETVE (Ferenc):
+        // ugyanazt mondta, amit a pill ("Asteptam masina") mar kiirt, es
+        // egy MASODIK WhatsApp-vezerlo volt a soron. Az ut a Kapcsolat
+        // oszlop WhatsApp jele: sotet, amig nem egyeztettunk, zold utana.
+        // ── A MAPPA CSAK OTT, AHOL VAN DOSSZIE-MUNKA (Ferenc, 2026-08-26)
+        // A "Deschide dosarul" a biztositoi iratok GYUJTESERE valo. Ket
+        // esetben nincs mit gyujteni, ott a RECEPCIO az ut:
+        //   · Dauna auto            — nincs biztosito, nincs dosszie
+        //   · Dosar dauna deschis   — a dosszie MAR nyitva, constatare
+        //                             alapjan dolgozunk; az auto johet
+        // Marad a mappa: Avizare dauna (dosarStatus='deschid') — ott MI
+        // gyujtjuk az iratokat es MI nyitjuk a dossziet.
+        //
+        // Nem zsakutca: a dosszie-lap a recepcio utan magatol jon, es
+        // minden munkalapon ott a visszanyil ra.
+        // Nem duplikalunk: ha a zold szoveges gomb mar ott van (canOpen),
+        // az ikon nem jelenik meg melle.
+        var _dosszieMunka = (j.damageType==='asig' && j.dosarStatus!=='deschis');
+        var _slot = _dosszieMunka
+          ? '<button class="edit-btn eb-ico" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')" title="'+T('open_dosar_btn')+'" aria-label="'+T('open_dosar_btn')+'">'+ico('folder')+'</button>'
+          : (canOpen ? ''
+             : '<button class="edit-btn eb-ico eb-no" onclick="event.stopPropagation();deschideLucrare(\''+j.id+'\')" title="'+T('deschide_lucrarea')+'" aria-label="'+T('deschide_lucrarea')+'">'+ico('wrench')+'</button>');
         h+='<td>'+(canOpen
         ? '<button class="edit-btn '+editCls+'" onclick="event.stopPropagation();deschideLucrare(\''+j.id+'\')">'+T('deschide_lucrarea')+'</button>'
-        : '<button class="edit-btn eb-need" title="'+T('need_wa_tip')+'" onclick="event.stopPropagation();openCondModal(\''+j.id+'\')">&#128172; '+T('need_wa_btn')+'</button>')+' <button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')" title="'+T('open_dosar_btn')+'">📁</button> <button class="edit-btn eb-edit2" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'">&#9998;</button> <button class="edit-btn eb-repro" onclick="event.stopPropagation();openRepro(\''+j.id+'\')">'+T('repro_btn')+'</button> <button class="edit-btn eb-ratat" onclick="event.stopPropagation();markRatat(\''+j.id+'\')">'+T('ratat_btn')+'</button></td>';
+        : '')+' '+_slot+' <button class="edit-btn eb-edit2 eb-ico" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'" aria-label="'+T('edit_btn')+'">'+ico('pencil')+'</button> <button class="edit-btn eb-repro eb-ico" onclick="event.stopPropagation();openRepro(\''+j.id+'\')" title="'+T('repro_btn')+'" aria-label="'+T('repro_btn')+'">'+ico('calendar')+'</button> <button class="edit-btn eb-ratat eb-ico" onclick="event.stopPropagation();markRatat(\''+j.id+'\')" title="'+T('ratat_btn')+'" aria-label="'+T('ratat_btn')+'">'+ico('clock')+'</button></td>';
       } else {
-        h+='<td><button class="edit-btn eb-r" onclick="event.stopPropagation();oP(\''+j.id+'\','+(j.phase||1)+')">'+T('edit')+'</button> '+(tab==='ratate'?'<button class="edit-btn eb-react" onclick="event.stopPropagation();reactiveaza(\''+j.id+'\')">'+T('reactiveaza_btn')+'</button> ':'')+'<button class="edit-btn eb-del" onclick="event.stopPropagation();dJ(\''+j.id+'\')" title="'+T('sterge')+'">🗑</button></td>';
+        h+='<td><button class="edit-btn eb-r" onclick="event.stopPropagation();oP(\''+j.id+'\','+(j.phase||1)+')">'+T('edit')+'</button> '+(tab==='ratate'?'<button class="edit-btn eb-react" onclick="event.stopPropagation();reactiveaza(\''+j.id+'\')">'+T('reactiveaza_btn')+'</button> ':'')+'<button class="edit-btn eb-del eb-ico" onclick="event.stopPropagation();dJ(\''+j.id+'\')" title="'+T('sterge')+'" aria-label="'+T('sterge')+'">'+ico('trash')+'</button></td>';
       }
       h+='</tr>';
     });
@@ -1277,19 +1331,6 @@ function renderPanou(){
   h+='<div class="panou-footer"><span class="ft-brand">© RedAssistance</span><a onclick="return false">Politica de confidentialitate</a><span style="color:var(--b2)">|</span><a onclick="return false">Termeni si conditii</a></div>';
   h+='</div>';
 
-  // Programare Modal
-  if(S.showDosar){
-    h+='<div class="prog-modal" onclick="closeDosarModal()"><div class="prog-box" onclick="event.stopPropagation()">';
-    h+='<div class="prog-t">'+T('dosar_dauna')+'</div>';
-    h+='<div class="prog-s">'+T('dosar_q')+'</div>';
-    // ── HIÁNYZÓ HARMADIK ÚT (2026-08-24) ────────────────────────
-    // A `dosarTarziu()` a kódban MEGVOLT, de gomb NEM hívta —
-    // halott kód. Ez az az eset, amikor a kárbejelentés megvan,
-    // de az autót csak később hozzák be.
-    h+='<button class="btn-prog-new" style="width:100%;margin-bottom:8px;justify-content:center;background:#F3F4F6;color:#374151" onclick="dosarTarziu()">'+T('dosar_tarziu')+'</button>';
-    h+='<label class="btn-prog-new" style="width:100%;background:var(--bl,#2563eb);justify-content:center;position:relative;display:flex;cursor:pointer;box-sizing:border-box">'+T('dosar_fisier')+'<input type="file" accept="image/*,.pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0" onchange="dosarFisier(event)"/></label>';
-    h+='</div></div>';
-  }
   h+=newJobModalHtml();
   h+=reproModalHtml();
 
@@ -1565,38 +1606,61 @@ window.setStatPeriod=function(p){S.statPeriod=p;render()};
 window.setStuckThreshold=function(v){var n=parseInt(v,10);if(n>=1&&n<=60){S.statThreshold=n;render()}};
 window.setPanouTab=function(t){S.panouTab=t;render()};
 
+// ── SOR-IKONOK (Ferenc, 2026-08-26) ─────────────────────────────────
+// A masodlagos sor-muveletek szoveg helyett IKONT kapnak, mint a
+// RedAssistance-panelen. Vonalas SVG, "currentColor"-ral: minden
+// ikon a gomb sajat szinet orokli, igy egy rajz mind a hat
+// gombvaltozatban helyes marad.
+//
+// AMIT NEM ADUNK FEL: az ikon nem nemithatja el a jelentest. Minden
+// ikonos gomb kap title-t (egermutato) ES aria-label-t (felolvaso).
+// Az ELSODLEGES muveletek — "Deschide lucrarea", "Deschide dosarul",
+// "Reactiveaza" — SZOVEGESEK maradnak: azokat olvasni kell, nem
+// kitalalni.
+var RPW_ICO={
+  calendar:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  folder:'<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  pencil:'<svg viewBox="0 0 24 24"><path d="M4 20h4L20 8a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M14 6l4 4"/></svg>',
+  trash:'<svg viewBox="0 0 24 24"><path d="M4 7h16M10 4h4M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>',
+  wrench:'<svg viewBox="0 0 24 24"><path d="M15.5 3.5a5 5 0 0 0-6.1 6.4L3.6 15.7a2 2 0 0 0 2.8 2.8l5.8-5.8a5 5 0 0 0 6.4-6.1l-2.8 2.8-2.3-2.3z"/></svg>'
+};
+function ico(n){return RPW_ICO[n]||''}
+
+// ── A DOSSZIE ALLAPOTA A SAV FELIRATABAN (Ferenc "A", 2026-08-26) ───
+// A kulon szines jelveny (ddBadge) KIVEZETVE: a szavai — "Avizare
+// dauna" / "Dosar deschis" — a folyamat-sav feliratanak elotagjai
+// lettek (rpw-progres.js: procName). Egy sor, egy mondat, egy nyelv.
+
 // === Programare modal ===
 function newJobModalHtml(){
   if(!S.showNew) return '';
   var mode=S.njMode||'prog';
-  var TT={prog:['m_prog_t','m_prog_s'],dosar:['m_dosar_t','m_dosar_s'],lucrare:['m_lucrare_t','m_lucrare_s'],edit:['m_edit_t','m_edit_s']}[mode];
+  var TT={prog:['m_prog_t','m_prog_s'],edit:['m_edit_t','m_edit_s']}[mode];
   var h='';
   h+='<div class="prog-modal"><div class="prog-box nj-box">';
   h+='<div class="prog-t">'+T(TT[0])+'</div>';
   h+='<div class="nj-sub">'+T(TT[1])+'</div>';
   h+='<div class="prog-field"><label>'+T('plate_label')+' *</label><input id="iPlate" type="text" value="'+escH(S.njPlate||'')+'" placeholder="'+T('plate_ph')+'" oninput="S.njPlate=njPlate(this.value);this.value=S.njPlate;njSync()"/></div>';
   // A csillag csak ott, ahol tényleg kötelező: alkalmi dossziénál nem az.
-  h+='<div class="prog-field"><label>'+T('phone_label')+((S.njMode==='dosar')?' <span style="font-weight:400;color:var(--t3)">('+T('nj_optional')+')</span>':' *')+'</label><input id="iPhone" type="tel" value="'+escH(S.njPhone||'')+'" placeholder="'+T('phone_ph')+'" oninput="S.njPhone=this.value;njSync()"/></div>';
+  h+='<div class="prog-field"><label>'+T('phone_label')+' *'+'</label><input id="iPhone" type="tel" value="'+escH(S.njPhone||'')+'" placeholder="'+T('phone_ph')+'" oninput="S.njPhone=this.value;njSync()"/></div>';
 
-  // TIPUS — csak a "Lucrare noua"-nal kerdes. A dosar mindig asig.
-  if(mode==='lucrare'||mode==='prog'||mode==='edit'){
+  // TIPUS — az elojegyzesnel es adatjavitasnal kerdes.
+  if(mode==='prog'||mode==='edit'){
     h+='<div class="prog-field"><label>'+T('m_tip')+' *</label><div class="nj-pick">';
     h+='<button class="nj-opt'+(S.njTip==='asig'?' on':'')+'" onclick="njSetTip(\'asig\')"><b>&#128737; '+T('m_tip_asig')+'</b><i>'+T('m_tip_asig_s')+'</i></button>';
     h+='<button class="nj-opt'+(S.njTip==='auto'?' on':'')+'" onclick="njSetTip(\'auto\')"><b>&#128176; '+T('m_tip_auto')+'</b><i>'+T('m_tip_auto_s')+'</i></button>';
     h+='</div></div>';
   }
 
-  // DOSSZIE-ALLAPOT — dosar modban mindig, lucrare modban csak asig eseten
-  var kellDosar = (mode==='dosar') || ((mode==='lucrare'||mode==='prog'||mode==='edit') && S.njTip==='asig');
+  // DOSSZIE-ALLAPOT — csak biztositos esetben. A kulon 'dosar' urlap-mod
+  // 2026-08-25-en kikerult: az Avizare dauna gomb egybol a dosszie lapra visz.
+  var kellDosar = (mode==='prog'||mode==='edit') && S.njTip==='asig';
   if(kellDosar){
-    // "Deschide dosar dauna" = MI nyitjuk -> nincs ket varians, nem kerdes.
-    // A "mar nyitva" eset a Lucrare noua (asig) again jon elo.
-    if(mode!=='dosar'){
-      h+='<div class="prog-field"><label>'+T('nj_pay')+' *</label><div class="nj-pick">';
-      h+='<button class="nj-opt'+(S.njPay==='deschid'?' on':'')+'" onclick="njSet(\'njPay\',\'deschid\')"><b>&#128737; '+T('nj_pay_a')+'</b><i>'+T('nj_pay_a_s')+'</i></button>';
-      h+='<button class="nj-opt'+(S.njPay==='deschis'?' on':'')+'" onclick="njSet(\'njPay\',\'deschis\')"><b>&#128196; '+T('nj_pay_b')+'</b><i>'+T('nj_pay_b_s')+'</i></button>';
-      h+='</div></div>';
-    }
+    h+='<div class="prog-field"><label>'+T('nj_pay')+' *</label><div class="nj-pick">';
+    h+='<button class="nj-opt'+(S.njPay==='deschid'?' on':'')+'" onclick="njSet(\'njPay\',\'deschid\')"><b>&#128737; '+T('nj_pay_a')+'</b><i>'+T('nj_pay_a_s')+'</i></button>';
+    h+='<button class="nj-opt'+(S.njPay==='deschis'?' on':'')+'" onclick="njSet(\'njPay\',\'deschis\')"><b>&#128196; '+T('nj_pay_b')+'</b><i>'+T('nj_pay_b_s')+'</i></button>';
+    h+='</div></div>';
     h+='<div class="prog-field"><label>'+T('nj_asigurator')+'</label><select class="nj-in" onchange="S.njAsig=this.value">';
     var _AS=['','Allianz Tiriac','Groupama','Omniasig','Euroins','Asirom','Generali','Altul'];
     _AS.forEach(function(a){h+='<option value="'+escH(a)+'"'+(S.njAsig===a?' selected':'')+'>'+(a||'—')+'</option>'});
@@ -1609,7 +1673,7 @@ function newJobModalHtml(){
   }
 
   // DATUM — programare-nal es lucrare-nal (Ferenc dontese: a lucrare is kap datumot)
-  if(mode==='prog'||mode==='lucrare'){   // edit modban NINCS datum — az a Reprogramare dolga
+  if(mode==='prog'){   // edit modban NINCS datum — az a Reprogramare dolga
     h+='<div class="prog-field"><label>'+T('nj_date')+' *</label><div class="nj-chips">';
     h+='<button class="nj-chip'+(S.njDate===njDay(0)?' on':'')+'" onclick="njQuick(0)">'+T('nj_today')+'</button>';
     h+='<button class="nj-chip'+(S.njDate===njDay(1)?' on':'')+'" onclick="njQuick(1)">'+T('nj_tomorrow')+'</button>';
@@ -1619,10 +1683,19 @@ function newJobModalHtml(){
     h+='</div>';
   }
 
-  h+='<details class="nj-more"><summary>'+T('nj_more')+'</summary>';
-  h+='<div class="prog-field" style="margin-top:8px"><label>'+T('nj_client')+'</label><input type="text" value="'+escH(S.njClient||'')+'" oninput="S.njClient=this.value"/></div>';
-  h+='<div class="prog-field"><label>'+T('nj_auto')+'</label><input type="text" value="'+escH(S.njAuto||'')+'" oninput="S.njAuto=this.value"/></div>';
-  h+='</details>';
+  // ── NEV + AUTO: LATSZIK, de NEM kotelezo (Ferenc, 2026-08-26) ────────
+  // Ket lepesben jutottunk ide, es mindketto egy-egy hibat zart le:
+  //  1. A mentes kovetelte az ugyfel nevet, a mezo viszont egy
+  //     osszecsukott "Date optionale" fiokban ult, csillag nelkul.
+  //     Aki nem nyitotta ki: megnyomta a gombot es NEM TORTENT SEMMI.
+  //     A felirat maga hazudott: "optionale" — kozben kotelezo volt.
+  //  2. Ferenc dontese: a nev es az auto NE legyen kotelezo. A pultnal
+  //     gyakran csak a rendszam es a telefon van meg; a karosult nevet a
+  //     biztositoi papirbol veszik at kesobb, a dosszie-lapon.
+  // Igy a fiok teljesen megszunt: mindketto LATSZIK, egyik sem allitja
+  // meg a mentest. Nincs tobbe rejtett kovetelmeny, es nincs rejtett mezo.
+  h+='<div class="prog-field"><label>'+T('nj_client')+' <span class="nj-opt-t">('+T('nj_optional')+')</span></label><input id="iClient" type="text" value="'+escH(S.njClient||'')+'" placeholder="'+T('nj_client_ph')+'" oninput="S.njClient=this.value;njSync()"/></div>';
+  h+='<div class="prog-field"><label>'+T('nj_auto')+' <span class="nj-opt-t">('+T('nj_optional')+')</span></label><input id="iAuto" type="text" value="'+escH(S.njAuto||'')+'" oninput="S.njAuto=this.value"/></div>';
   h+='<div id="njDup" class="nj-dup" style="display:none"></div>';
   h+='<div id="njWhy" class="nj-why"></div>';
   h+='<div class="prog-actions"><button class="cancel" onclick="closeNewJob()">'+T('btn_cancel')+'</button><button id="njSave" class="submit" onclick="'+(mode==='edit'?'submitEditJob()':'submitNewJob()')+'">'+T('nj_open_'+mode)+'</button></div>';
@@ -1778,12 +1851,12 @@ function njKey(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
 
 window.openNewJob=function(mode){
   S.showNew=1;
-  S.njMode=(mode==='dosar'||mode==='lucrare')?mode:'prog';
+  S.njMode='prog';   // 2026-08-25: a 'lucrare' urlap-mod kivezetve (lucrareAcum az ut)
   S.njEditId=null;
   S.njPlate='';S.njPhone='';S.njClient='';S.njAuto='';S.njAsig='';S.njDosar='';
-  S.njTip=(S.njMode==='dosar')?'asig':null;
-  S.njPay=(S.njMode==='dosar')?'deschid':null;   // mi nyitjuk — nincs mit kerdezni
-  S.njDate=(S.njMode==='lucrare')?njDay(0):'';
+  S.njTip=null;
+  S.njPay=null;
+  S.njDate='';
   S.njTime='08:00';
   render();
 };
@@ -1793,7 +1866,7 @@ window.njSetTip=function(v){S.njTip=v;if(v==='auto')S.njPay=null;render()};
 window.njQuick=function(off){S.njDate=njDay(off);render()};
 
 // legacy aliasok
-window.openNewJobRec=function(){openNewJob('lucrare')};
+window.openNewJobRec=function(){return lucrareAcum()};
 
 // ── ADATJAVITAS — ugyanaz a urlap, csak meglevo munkat ment.
 // A DATUMOT szandekosan NEM engedi: arra a Reprogramare valo, ami szamolja
@@ -1830,31 +1903,23 @@ window.submitEditJob=async function(){
 };
 window.openProgModal=function(){openNewJob('prog')};
 window.closeProgModal=function(){closeNewJob()};
-window.startReceptie=function(){openNewJob('lucrare')};
+window.startReceptie=function(){return lucrareAcum()};
 
 function njMissing(){
   var m=[], mode=S.njMode||'prog';
   if(!njOkPlate(S.njPlate))m.push(T('nj_m_plate'));
-  // ── ALKALMI DOSSZIÉ (2026-08-24) ────────────────────────────
-  // `dosar` módban nem programáljuk az autót — gyakran csak a
-  // biztosítói papír van meg, telefonszám nélkül. A telefon itt
-  // OPCIONÁLIS; ha megadják, akkor viszont érvényesnek kell lennie.
-  // A rendszám és a károsult neve marad kötelező: azok azonosítják
-  // az esetet a biztosító felé.
-  if(mode==='dosar'){
-    if(String(S.njPhone||'').trim() && !njOkPhone(S.njPhone)) m.push(T('nj_m_phone'));
-  } else {
-    if(!njOkPhone(S.njPhone))m.push(T('nj_m_phone'));
-  }
-  if((mode==='lucrare'||mode==='prog'||mode==='edit')&&!S.njTip)m.push(T('m_m_tip'));
-  var kellDosar=(mode==='dosar')||((mode==='lucrare'||mode==='prog'||mode==='edit')&&S.njTip==='asig');
-  if(kellDosar&&mode!=='dosar'&&!S.njPay)m.push(T('nj_m_pay'));
+  if(!njOkPhone(S.njPhone))m.push(T('nj_m_phone'));
+  if((mode==='prog'||mode==='edit')&&!S.njTip)m.push(T('m_m_tip'));
+  var kellDosar=(mode==='prog'||mode==='edit')&&S.njTip==='asig';
+  if(kellDosar&&!S.njPay)m.push(T('nj_m_pay'));
   if(kellDosar&&S.njPay==='deschis'&&!String(S.njDosar||'').trim())m.push(T('nj_m_nrdosar'));
-  // A karosult neve a biztositonal KOTELEZO mezo — ne a pultnal derüljon ki.
-  if(kellDosar&&!String(S.njClient||'').trim())m.push(T('nj_m_client'));
+  // ── A NEV ES AZ AUTO NEM KOTELEZO (Ferenc, 2026-08-26) ────────
+  // Az elojegyzesnel gyakran csak a rendszam es a telefon van meg; a
+  // karosult nevet a biztositoi papirbol veszik at kesobb. Kitoltheto,
+  // de nem allitja meg a mentest.
   // Ugyanaz az eset ketszer: ez valodi hiba, nem engedjuk.
   if(njDup())m.push(T('nj_dup_real'));
-  if((mode==='prog'||mode==='lucrare')&&!S.njDate)m.push(T('nj_m_date'));   // edit: nincs datum
+  if(mode==='prog'&&!S.njDate)m.push(T('nj_m_date'));   // edit: nincs datum
   return m;
 }
 // ── ESET-azonossag, NEM rendszam-azonossag.
@@ -1887,8 +1952,7 @@ function njOpenCases(){
 }
 // VALODI duplikatum: ugyanaz az eset. Ez blokkol.
 function njDup(){
-  var mode=S.njMode||'prog';
-  var tip=(mode==='dosar')?'asig':(S.njTip||null);
+  var tip=(S.njTip||null);
   if(!tip)return null;
   var mine=njCaseKey(S.njAsig, S.njDosar, tip);
   if(!mine)return null;
@@ -1942,11 +2006,13 @@ window.submitNewJob=async function(){
   try{
     var mode=S.njMode||'prog', now=new Date().toISOString();
     var num=await njNextNumber();
-    var flux   = (mode==='dosar') ? 'doar_dosar' : 'reparatie';
-    var sosire = (mode==='lucrare') ? 'sosit' : 'programat';
-    var asig   = (mode==='dosar') || (mode==='lucrare' && S.njTip==='asig');
+    var flux   = 'reparatie';
+    var sosire = 'programat';   // az 'itt van' ut a lucrareAcum — nem az urlap
+    // A tipus dont, nem a mod: az urlap AMIT BEKER, azt at is viszi.
+    // (A 'lucrare' mod kivezetesevel a regi mod-feltetel mindig hamis
+    // lenne, es a biztosito/dosszie-allapot csendben elveszne.)
+    var asig   = (S.njTip==='asig');
     var ph={1:{status:'pending'},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}};
-    if(sosire==='sosit')ph[1]={status:'active',started:now};
     var j={
       id:(window.RPWUtil?RPWUtil.jobId():('RPW-'+String(Date.now()).slice(-6))),
       number:num,
@@ -1976,16 +2042,7 @@ window.submitNewJob=async function(){
     await saveJob(j);
     var plate=j.plate;
     S.showNew=0;
-    if(mode==='lucrare'){
-      location.assign('rpw-recepcio-red.html?job='+j.id);
-    } else if(mode==='dosar'){
-      // ── JAVÍTÁS (2026-08-24) ────────────────────────────────
-      // Alkalmi dossziénál a MUNKA a biztosítói iratokkal van, nem a
-      // panelon. Korábban csak visszatért a listára, és magadnak
-      // kellett megkeresned a dossziét.
-      toast(T('m_ok_dosar')+': '+plate);
-      location.assign('rpw-dosar.html?job='+encodeURIComponent(j.id));
-    } else {
+    {
       S.screen='panou';
       S.panouTab='viitoare';
       toast(T('m_ok_prog')+': '+plate);
@@ -2036,14 +2093,79 @@ window.toggleAdmin=function(){
 };
 
 window.deschideDosar=function(id){location.assign('rpw-dosar.html?job='+id)};
-window.openDosarModal=function(){S.showDosar=1;render()};
-window.closeDosarModal=function(){S.showDosar=0;render()};
-// ── JAVÍTÁS: az openNewJob SZÖVEGET vár ('prog'|'dosar'|'lucrare').
-// Ezek objektumot adtak át, ami egyik ágra sem illett → mindkettő
-// csendben 'prog' módba esett. A gomb felirata mást ígért.
-// „Az auto itt van — recepció most" = lucrare (→ recepció lap).
-// „Az auto később jön — csak a dosszié" = dosar (→ dosszié lap).
-window.dosarTarziu=function(){S.showDosar=0;openNewJob('dosar')};
+// ── AZ AVIZARE DAUNA ATVESZI A „DESCHIDE DOSARUL" MUVELETET (2026-08-25) ──
+// KORABBAN: a gomb URLAPOT nyitott — rendszam es a karosult neve KOTELEZO,
+// utana biztosito es karszam —, es csak ezek utan vitt a dosszie lapra,
+// AHOL UGYANEZEK A MEZOK MEGINT OTT VANNAK. Ket helyen ugyanaz az adat.
+// MOSTANTOL: a gomb letrehozza a dossziet, es meghivja ugyanazt a
+// `deschideDosar()`-t, ami a listaban a kek „Deschide dosarul" gomb mogott
+// van. Egy fuggveny, ket helyrol — nem masolat.
+// AMI ATKERULT: a duplikatum-figyelmeztetes (ugyanaz a rendszam + biztosito
+// + karszam) a dosszie lapra ment at, mert a karszamot ott adjak meg.
+// Lasd `dosarDupCheck()` a rpw-dosar.html-ben.
+window.dosarTarziu=async function(){
+  try{
+    var now=new Date().toISOString();
+    var num=await njNextNumber();
+    var j={
+      id:(window.RPWUtil?RPWUtil.jobId():('RPW-'+String(Date.now()).slice(-6))),
+      number:num,
+      auto:'',vin:'',plate:'',client:'',phone:'',note:'',szinkod:'',
+      sosire:'programat',      // az auto meg nincs itt
+      flux:'doar_dosar',       // csak dosszie, javitas nelkul
+      doarDosar:true,          // regi mezo is, a visszafele olvasashoz
+      inchis:false,
+      phase:1,                 // SOHA nem 0
+      damageType:'asig',
+      dosarStatus:'deschid',   // MI nyitjuk a biztosito fele
+      asigurator:'', nrDosar:'',
+      created:now,
+      photos:[],docs:[],panels:{},elements:{},materials:[],
+      programare:{date:null,time:null,confirmed:false,reprogramari:0,istoric:[]},
+      conditions:{programare:true,loc:false,om:false,piese:false,whatsapp:false},
+      phases:{1:{status:'pending'},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}}
+    };
+    syncMirror(j);
+    JOBS.push(j);
+    await saveJob(j);
+    deschideDosar(j.id);
+  }catch(e){ toast('Error: '+e.message,1) }
+};
+
+// ── A LUCRARE NOUA IS EGYENES UT (Ferenc, 2026-08-25) ───────────────
+// KORABBAN: a zold gomb URLAPOT nyitott (rendszam, telefon, tipus, datum),
+// majd a mentes utan vitt a recepciora — AHOL UGYANEZEK A MEZOK ott vannak,
+// raadasul talonbol, OCR-rel. Ket helyen ugyanaz az adat.
+// MOSTANTOL: a gomb letrehozza a munkalapot es EGYBOL a recepcio-lapra
+// visz. A kartipust, ugyfelet, rendszamot OTT veszik fel — a recepcio
+// elso kepernyoje eppen a tipus-valaszto.
+window.lucrareAcum=async function(){
+  try{
+    var now=new Date().toISOString();
+    var hh=String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
+    var num=await njNextNumber();
+    var j={
+      id:(window.RPWUtil?RPWUtil.jobId():('RPW-'+String(Date.now()).slice(-6))),
+      number:num,
+      auto:'',vin:'',plate:'',client:'',phone:'',note:'',szinkod:'',
+      sosire:'sosit',            // az auto ITT VAN
+      flux:'reparatie',
+      inchis:false,
+      phase:1,                   // SOHA nem 0
+      damageType:null,           // a recepcio tipus-valasztoja donti el
+      dosarStatus:null,
+      created:now,
+      photos:[],docs:[],panels:{},elements:{},materials:[],
+      programare:{date:njDay(0),time:hh,confirmed:true,reprogramari:0,istoric:[]},
+      conditions:{programare:true,loc:true,om:true,piese:false,whatsapp:true},
+      phases:{1:{status:'active',started:now},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}}
+    };
+    syncMirror(j);
+    JOBS.push(j);
+    await saveJob(j);
+    location.assign('rpw-recepcio-red.html?job='+encodeURIComponent(j.id));
+  }catch(e){ toast('Error: '+e.message,1) }
+};
 
 window.dosarFisier=function(e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
@@ -2051,7 +2173,6 @@ window.dosarFisier=function(e){
   r.onload=async function(ev){
     var dataUrl=ev.target.result;
     var b64=(dataUrl.split(',')[1])||'';
-    S.showDosar=0;render();
     toast(T('dosar_citire'));
     try{
       var res=await fetch('/.netlify/functions/ocr',{method:'POST',headers:(window.RPWAuth?RPWAuth.fnHeaders():{'Content-Type':'application/json'}),body:JSON.stringify({image:b64,type:'constatare'})});
@@ -2347,7 +2468,10 @@ function azBuild(){
   var ragadt=JOBS.filter(function(j){return j.sosire==='ratat'});
   var itt=JOBS.filter(function(j){return categorizeJob(j)==='lucrari'});
   var chk=azCheckList();
-  var dos=JOBS.filter(function(j){return categorizeJob(j)==='dosare'});
+  // A kozos lista ota a 'dosare' kategoria nem letezik — a FLUX dont.
+  var dos=JOBS.filter(function(j){
+    return ((j.flux==='doar_dosar')||(j.flux==null&&j.doarDosar===true))&&!j.inchis&&j.sosire!=='ratat'&&!j.separat;
+  });
   var gond=JOBS.filter(function(j){
     if(j.damageType!=='asig')return false;
     return (!String(j.asigurator||'').trim()&&!String(j.nrDosar||'').trim())||!String(j.client||'').trim();

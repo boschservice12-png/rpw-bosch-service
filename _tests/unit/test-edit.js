@@ -89,7 +89,7 @@ console.log('\n3. Mentes — csak az adatokat irja at');
   openEditJob('j1'); S.njTip='asig'; S.njPay=null;
   ok(njMissing().indexOf('nj_m_pay')>=0,'asig dosszie-allapot nelkul -> blokkol');
   openEditJob('j1'); S.njTip='asig'; S.njPay='deschid'; S.njClient='';
-  ok(njMissing().indexOf('nj_m_client')>=0,'ugyfelnev nelkul -> blokkol (uj szabaly)');
+  ok(njMissing().indexOf('nj_m_client')<0,'ugyfelnev nelkul is ATMEGY (Ferenc, 2026-08-26)');
   openEditJob('j1'); S.njTip='asig'; S.njPay='deschis'; S.njDosar='';
   ok(njMissing().indexOf('nj_m_nrdosar')>=0,'"mar nyitva" karszam nelkul -> blokkol');
 

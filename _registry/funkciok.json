@@ -246,15 +246,19 @@
   },
   {
    "id": "F-101",
-   "nev": "Uj munkalap ablak megnyitasa",
+   "nev": "Uj munkalap: Lucrare noua (urlap nelkul, egyenesen a recepciora)",
    "fe": [
     [
      "index.html",
-     "window.openNewJob"
+     "window.lucrareAcum"
+    ],
+    [
+     "index.html",
+     "onclick=\"lucrareAcum()\""
     ]
    ],
    "be": [],
-   "teszt": "_tests/unit/test-entry.js",
+   "teszt": "_tests/frontend/test-fe-panou.js",
    "allapot": "csak-frontend"
   },
   {
@@ -268,6 +272,123 @@
    ],
    "be": [],
    "teszt": "_tests/unit/test-case.js",
+   "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-121",
+   "nev": "Elojegyzes urlap (Programare noua): ket tipus (Dauna asigurare / Dauna auto), a biztositosnal ket dosszie-ag (Avizare dauna / Dosar dauna deschis); a nev es az auto LATSZIK, de nem kotelezo",
+   "fe": [
+    [
+     "index.html",
+     "window.openNewJob"
+    ],
+    [
+     "index.html",
+     "function njMissing"
+    ],
+    [
+     "index.html",
+     "nj_optional"
+    ],
+    [
+     "index.html",
+     "id=\"iAuto\""
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/frontend/test-fe-urlap.js",
+   "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-122",
+   "nev": "Kapcsolat oszlop a foablakon: a VALODI WhatsApp jel (zold=egyeztetve, sotet=meg nem, tompa=nincs telefon)",
+   "fe": [
+    [
+     "index.html",
+     "wa-btn"
+    ],
+    [
+     "index.html",
+     "clickWhatsApp"
+    ],
+    [
+     "index.html",
+     "wa-btn nofon"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/frontend/test-fe-panou.js",
+   "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-123",
+   "nev": "Sor-ikonok a foablakon (naptar/ora/mappa/ceruza/kuka) — vonalas SVG, mindegyiken title ES aria-label",
+   "fe": [
+    [
+     "index.html",
+     "var RPW_ICO"
+    ],
+    [
+     "index.html",
+     "function ico(n)"
+    ],
+    [
+     "index.html",
+     "eb-ico"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/frontend/test-fe-panou.js",
+   "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-124",
+   "nev": "A soron a mappa CSAK ott, ahol van dosszie-munka (Avizare dauna); magankaron es mar nyitott dossziénal a RECEPCIO az ut",
+   "fe": [
+    [
+     "index.html",
+     "var _dosszieMunka"
+    ],
+    [
+     "index.html",
+     "wrench"
+    ],
+    [
+     "index.html",
+     "var _slot"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/frontend/test-fe-panou.js",
+   "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-125",
+   "nev": "Folyamatjelzo: negy lanc egy savban (dosszie / varakozas / ratat / javitas); a statusz es a folyamat EGY oszlopban, minden fulon egyforma logikaval",
+   "fe": [
+    [
+     "rpw-progres.js",
+     "function chain"
+    ],
+    [
+     "rpw-progres.js",
+     "function procName"
+    ],
+    [
+     "rpw-progres.js",
+     "pr-skip"
+    ],
+    [
+     "rpw-progres.js",
+     "j.sosire==='ratat'"
+    ],
+    [
+     "index.html",
+     "RPWProgres.html"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/unit/test-progres.js",
    "allapot": "csak-frontend"
   },
   {
@@ -515,20 +636,28 @@
   },
   {
    "id": "F-201",
-   "nev": "Avizare dauna ablak megnyitasa",
+   "nev": "Avizare dauna: a fejlec gombja EGYENESEN dossziet nyit; a dossziek a KOZOS listaban; a dosszie allapota a folyamat-sav feliratanak elotagja",
    "fe": [
     [
      "index.html",
-     "window.openDosarModal"
+     "onclick=\"dosarTarziu()\""
+    ],
+    [
+     "index.html",
+     "row-dd"
+    ],
+    [
+     "rpw-progres.js",
+     "function procName"
     ]
    ],
    "be": [],
-   "teszt": "_tests/unit/test-dosare.js",
+   "teszt": "_tests/frontend/test-fe-panou.js",
    "allapot": "csak-frontend"
   },
   {
    "id": "F-202",
-   "nev": "Deschide dosar dauna - MI nyitjuk a kardossziet",
+   "nev": "Deschide dosar dauna - a dossziet MI nyitjuk (urlap nelkul, egybol a dosszie lapra)",
    "fe": [
     [
      "index.html",
@@ -537,10 +666,14 @@
     [
      "index.html",
      "dosar_tarziu"
+    ],
+    [
+     "index.html",
+     "deschideDosar(j.id)"
     ]
    ],
    "be": [],
-   "teszt": "_tests/unit/test-dosare.js",
+   "teszt": "_tests/unit/test-entry.js",
    "allapot": "csak-frontend"
   },
   {
@@ -559,6 +692,25 @@
    "be": [],
    "teszt": "_tests/unit/test-dosare.js",
    "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-215",
+   "nev": "Duplikatum-figyelmeztetes a dosszie lapon (ugyanaz a rendszam + biztosito + karszam)",
+   "fe": [
+    [
+     "rpw-dosar.html",
+     "window.dosarDupCheck"
+    ],
+    [
+     "rpw-dosar.html",
+     "dup-warn"
+    ]
+   ],
+   "be": [
+    "rpw_jobs_list"
+   ],
+   "teszt": "_tests/unit/test-dup-dosar.js",
+   "allapot": "el"
   },
   {
    "id": "F-204",
@@ -687,6 +839,35 @@
    ],
    "be": [],
    "teszt": null,
+   "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-126",
+   "nev": "Ugyfel-mezok a dosszie-lapon (nev / telefon / megjegyzes) — kesleltetett szeletes mentes; a gepelt ertek TULELI a keson erkezo szerver-valaszt; a WhatsApp gomb telefon nelkul tiltott",
+   "fe": [
+    [
+     "rpw-dosar.html",
+     "window.setDosarClient"
+    ],
+    [
+     "rpw-dosar.html",
+     "id=\"clTel\""
+    ],
+    [
+     "rpw-dosar.html",
+     "function _clReapply"
+    ],
+    [
+     "rpw-dosar.html",
+     "wa_need_ph"
+    ],
+    [
+     "index.html",
+     "wa_go_dosar"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/frontend/test-fe-dosar.js",
    "allapot": "csak-frontend"
   },
   {

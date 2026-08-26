@@ -20,11 +20,12 @@ setTimeout(()=>{try{
 
   w.setScreen('panou');let h=app.innerHTML;
   ok(/onclick="openNewJob\('prog'\)"/.test(h),'Panou: Programare noua gomb');
-  // 2026-08-25: a felso kek gomb a DOSSZIE-ablakot nyitja (openDosarModal),
-  // nem kozvetlenul az uj-munka modalt.
-  ok(/onclick="openDosarModal\(\)"/.test(h),'Panou: Deschide dosar gomb');
-  ok(typeof w.openDosarModal==='function','openDosarModal letezik');
-  ok(/onclick="openNewJob\('lucrare'\)"/.test(h),'Panou: Lucrare noua gomb');
+  // 2026-08-26 (Ferenc): a felso kek gomb EGYENESEN dossziet nyit, es a
+  // kulon "Avizare dauna" ful visszavonva — egy kozos lista van.
+  ok(/onclick="dosarTarziu\(\)"/.test(h) && /Avizare daun/.test(h),'Panou: Avizare dauna gomb (kozvetlen ut)');
+  ok(!/setPanouTab\('dosare'\)/.test(h),'Panou: kulon dosszie-ful mar nincs');
+  ok(typeof w.dosarTarziu==='function','dosarTarziu letezik');
+  ok(/onclick="lucrareAcum\(\)"/.test(h),'Panou: Lucrare noua gomb (kozvetlen ut)');
   ok(!/startReceptie\(false\)/.test(h),'Panou: regi "Receptie auto" gomb eltunt');
 
   w.setScreen('lucrari');h=app.innerHTML;
@@ -50,12 +51,15 @@ setTimeout(()=>{try{
   ok(!/Allianz/.test(h),'sajat zseb -> biztosito blokk eltunt');
   ok(w.S.njPay===null,'  a dosszie-allapot torlodott');
 
-  w.openNewJob('dosar');h=app.innerHTML;
-  ok(/Allianz/.test(h),'dosar mod -> mindig asig, biztosito lathato');
-  ok(!/type="date"/.test(h),'dosar mod -> nincs datum');
+  // 2026-08-25: nincs tobbe 'dosar' urlap-mod. Ismeretlen mod -> 'prog',
+  // ami a biztonsagos alapertelmezes (nem esik csendben mas agra).
+  w.openNewJob('dosar');
+  ok(w.S.njMode==='prog','ismeretlen mod -> prog (nincs csendes melle-eses)');
+  ok(w.S.njTip===null,'  a tipus nyitva marad, nem donti el helyettunk');
 
-  w.openNewJob('lucrare');
-  w.S.njPlate=w.njPlate('ms50bss');w.S.njPhone='0740123456';w.njSetTip('auto');w.njSync();
+  w.openNewJob('prog');
+  w.S.njPlate=w.njPlate('ms50bss');w.S.njPhone='0740123456';w.njSetTip('auto');
+  w.njQuick(1);w.njSync();
   ok(w.document.getElementById('njSave').disabled===false,'minden megvan -> mentes engedelyezve');
   ok(w.document.getElementById('njWhy').textContent==='','hianylista kiurult');
 

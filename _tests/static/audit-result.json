@@ -1,13 +1,13 @@
 {
-  "generated": "2026-08-25T14:31:51.777Z",
-  "files": 32,
+  "generated": "2026-08-26T21:57:06.418Z",
+  "files": 33,
   "total": 28,
   "allowed": 28,
   "forbidden": 0,
   "findings": [
     {
       "fajl": "index.html",
-      "sor": 982,
+      "sor": 975,
       "mezo": "status:'done'",
       "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
       "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
@@ -15,7 +15,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 1123,
+      "sor": 1131,
       "mezo": "inchis",
       "ok": "megjelenítési kód — a JOB-ot nem módosítja",
       "ut": "olvasás, nem írás",
@@ -23,7 +23,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 1126,
+      "sor": 1134,
       "mezo": "phase",
       "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
       "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
@@ -31,7 +31,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 2210,
+      "sor": 2331,
       "mezo": "phases[]",
       "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
       "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
@@ -39,7 +39,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 2211,
+      "sor": 2332,
       "mezo": "phases[].status",
       "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
       "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
@@ -47,7 +47,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 2237,
+      "sor": 2358,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
@@ -79,7 +79,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 194,
+      "sor": 212,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -87,7 +87,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 199,
+      "sor": 217,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -95,7 +95,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 609,
+      "sor": 636,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
@@ -103,7 +103,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 653,
+      "sor": 680,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",

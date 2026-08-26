@@ -1,4 +1,4 @@
-// L1-I: a Dosare dauna ful sajat oszlopai es muveletei
+// L1-I: a kardosszie-sor sajat oszlopai es muveletei a KOZOS listaban
 const fs=require('fs');const path=require('path');const ROOT=path.join(__dirname,'..','..');
 const _rd=fs.readFileSync; fs.readFileSync=function(p,e){try{return _rd(p,e)}catch(_){return _rd(path.join(ROOT,String(p).replace(/^.*\//,'')),e)}};
 const html=fs.readFileSync('index.html','utf8');
@@ -37,42 +37,29 @@ console.log('\n3. Nem hasal el');
   try{acteCount(v);ok(true,'bemenet #'+i)}catch(e){ok(false,'#'+i+' KIVETEL: '+e.message)}
 });
 
-console.log('\n4. Az OSSZEVONT nezet (L1-M) — a kulon ful helyett');
-ok(html.indexOf("T('col_status')")>0,'egyetlen STATUS oszlop');
-ok(/var deAzi=viitoare\.concat\(dosare\)/.test(html),'a ket lista egy nezetben');
-ok(html.indexOf("setPanouTab(\\'dosare\\')")<0,'a kulon Dosare ful megszunt');
-ok(/tab==='viitoare' && _dd/.test(html),'a dosar SOR sajat agat kap');
-ok(/tab==='viitoare' && _dd[\s\S]{0,300}deschideDosar/.test(html),'  -> Deschide dosarul a fo muvelet');
-ok(/if\(_dd\)\{[\s\S]{0,400}acteCount/.test(html),'a dosar sor iratszamlalot mutat');
-// 2026-08-25: a rendszam melletti 📁/📅 jelveny KIKERULT — felesleges volt.
-// A ket sav megkulonboztetese enelkul is egyertelmu, es EZT kotjuk ki:
-ok(!/fx-b/.test(html),'a rendszam mellett nincs tobbe jelveny');
-ok(/_dd\?'row-dosar'|_dd/.test(html),'  a dosar sor sajat agat kap (kiemeles)');
-ok(/if\(_dd\)\{[\s\S]{0,400}acteCount/.test(html),'  iratszamlalot mutat');
-ok(/tab==='viitoare' && _dd[\s\S]{0,300}deschideDosar/.test(html),'  es Deschide dosarul a fo muvelete');
-ok(/if\(job\.flux==='doar_dosar'\) *return 'dosare'/.test(html),'az ADATMODELL valtozatlan');
+console.log('\n4. EGY KOZOS LISTA — a dosszie-sor sajat oszlopai (Ferenc, 2026-08-26)');
+// 2026-08-26 ("A"): a Status oszlop OSSZEVONVA a Proces oszloppal.
+ok(html.indexOf("T('pr_proces')")>0,'PROCES oszlop a kozos listan');
+ok(!/tab==='viitoare'\)\s*\?\s*'<th>'\+T\('pr_proces'\)\+'<\/th><th>'\+T\('col_status'\)/.test(html),
+   '  a kulon Status oszlop megszunt');
+ok(html.indexOf("setPanouTab(\\'dosare\\')")<0,'kulon Avizare dauna ful mar NINCS');
+ok(/RPWProgres\.html\(j,\{T:T, acteCount:window\.acteCount/.test(html),
+   'a dosszie-sor iratszamat a KOZOS folyamat-fuggveny adja');
+ok(/tab==='viitoare'&&_dd\)\{[\s\S]{0,300}deschideDosar/.test(html.slice(html.indexOf('displayed.forEach'))),'  -> Deschide dosarul a fo muvelet');
+ok(!/fx-b/.test(html),'a rendszam mellett tovabbra sincs jelveny');
+ok(/if\(job\.flux==='doar_dosar'\) *return 'viitoare'/.test(html),'az ADATMODELL: a flux dont, a lista kozos');
 
-console.log('\n5. Az Avizare dauna ablak KET utat kinal (2026-08-25)');
+console.log('\n5. Az Avizare dauna letrehozas KET utja — a FEJLECBEN');
 {
-  // A harmadik gomb („Auto este aici — receptie acum") kikerult: az a ZOLD
-  // „Lucrare noua" gomb dolga, nem az avizalase. Ami maradt:
-  //   • Deschide dosar dauna  -> mi nyitjuk (openNewJob('dosar'))
-  //   • Preluare dosar dauna  -> meglevo constatare/PV atvetele fajlbol
-  // FIGYELEM: a `h+=newJobModalHtml()` KETSZER szerepel a fajlban (a lista-
-  // nezetben is), ezert a zaro hatart a nyito hatartol KELL keresni.
-  const _mb = html.indexOf('if(S.showDosar)');
-  const modal = html.slice(_mb, html.indexOf('h+=newJobModalHtml()', _mb));
-  const gombok = (modal.match(/btn-prog-new/g)||[]).length;
-  ok(gombok === 2, 'pontosan ket ut van az ablakban (' + gombok + ')');
-  ok(/onclick="dosarTarziu\(\)"/.test(modal), '  Deschide dosar dauna -> dosarTarziu');
-  ok(/onchange="dosarFisier\(event\)"/.test(modal), '  Preluare dosar dauna -> fajlbol');
+  const _fb = html.indexOf('panou-hdr-actions');
+  const fej = html.slice(_fb, html.indexOf('// Tabs', _fb));
+  ok(/onclick="dosarTarziu\(\)"/.test(fej), '  Deschide dosar dauna -> dosarTarziu');
+  ok(/onchange="dosarFisier\(event\)"/.test(fej), '  Preluare dosar dauna -> fajlbol');
+  ok(!/showDosar|openDosarModal/.test(html),'a felugro ablak minden nyoma eltunt');
   ok(!/dosarAici/.test(html), 'a kivezetett harmadik ut sehol nem maradt (halott kod sem)');
   ok(!/dosar_aici/.test(html), '  a felirata sem');
   ok(/dosar_tarziu:\{ro:'Deschide dosar/.test(html), 'az elso gomb neve: Deschide dosar dauna');
   ok(/dosar_fisier:\{ro:'Preluare dosar/.test(html), 'a masodike: Preluare dosar dauna');
-  // a kerdes a KET megmarado uthoz szol, nem a kivezetetthez
-  ok(!/dosar_q:\{ro:'Autovehiculul este in service/.test(html),
-     'a kerdes nem a kivezetett gombra kerdez tobbe');
 }
 
 console.log('\n'+(fail?'x ':'OK ')+pass+' pass / '+fail+' fail');

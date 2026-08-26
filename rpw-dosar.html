@@ -60,6 +60,14 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .ff{background:var(--bg);border:1px solid var(--b);border-radius:6px;padding:6px 8px}
 .ff-l{font-size:8px;color:var(--t3);letter-spacing:.8px;text-transform:uppercase;font-weight:600;margin-bottom:1px}
 .ff-v{font-size:13px;font-weight:700;color:var(--t)}
+/* ── Szerkesztheto ugyfel-mezok (Ferenc F-1, 2026-08-26) ──────────
+   Ugyanaz a doboz, mint az olvashato mezoke — csak kek szegellyel es
+   beirhato tartalommal, hogy ranezesre lassd: EZT itt lehet javitani. */
+.ff.edit{background:var(--w);border-color:var(--bl)}
+.ff-in{width:100%;border:0;background:transparent;font-family:inherit;font-size:13px;
+  font-weight:700;color:var(--t);padding:0;outline:none}
+.ff-in::placeholder{color:var(--t3);font-weight:600}
+.wa-off{background:var(--b2)!important;color:var(--t3)!important;cursor:not-allowed!important}
 .type-badge{display:inline-block;padding:6px 16px;border-radius:var(--rd);font-size:12px;font-weight:800;margin-bottom:8px}
 .type-asig{background:var(--bll);color:var(--bl);border:2px solid var(--bl)}
 .type-auto{background:var(--orl);color:var(--or);border:2px solid var(--or)}
@@ -162,6 +170,16 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .dd-a3{background:#16a34a}
 .dd-a2:hover,.dd-a3:hover{filter:brightness(.93)}
 .dd-undo{background:transparent;border:1px solid var(--b);color:var(--t3);border-radius:20px;padding:5px 11px;font:700 11px inherit;cursor:pointer}
+
+/* Duplikatum-figyelmeztetes: nem blokkol, de nem is nemul el. */
+.dup-warn{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9999;
+  display:flex;align-items:center;gap:12px;max-width:92vw;
+  background:#7f1d1d;color:#fff;border-radius:10px;padding:11px 14px;
+  box-shadow:0 8px 26px rgba(0,0,0,.32);font-size:13px}
+.dup-warn b{white-space:nowrap}
+.dup-warn span{opacity:.85;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.dup-warn a{color:#fff;text-decoration:underline;white-space:nowrap}
+.dup-warn button{background:none;border:0;color:#fff;font-size:18px;line-height:1;cursor:pointer;padding:0 2px}
 </style>
 </head>
 <body>
@@ -184,7 +202,7 @@ window.__rpwServerReady = (async function(){
   }catch(e){ return {ok:false, problems:['verify_threw'], error:e}; }
 })();
 var JOB=null;
-var S={sec:{client:1,auto:1,acte:1,talon:0,docs:0,photos:1,elems:1}};
+var S={sec:{client:1,auto:1,acte:1,talon:0,docs:0,photos:1,elems:1,cliup:null}};
 
 function gJI(){return new URLSearchParams(location.search).get('job')}
 async function loadJob(){
@@ -197,6 +215,7 @@ async function loadJob(){
     if(res.error)throw res.error;
     var _lts=0,_sts=0;try{_lts=Date.parse(null||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
     if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};
+    _clReapply(JOB);            // amit epp gepelsz, az TULELI a szerver-valaszt
     try{RPWCache.setJob(JOB)}catch(e){}}
     try{RPWCache.setJob(JOB)}catch(e){}
   }catch(e){if(!JOB)JOB=null}
@@ -237,6 +256,11 @@ dlg_del_s:{ro:'Se șterge din dosar. Îl poți încărca din nou oricând.',en:'
 dlg_zip_t:{ro:'Arhivarea nu e disponibilă',en:'Archiving unavailable',hu:'A csomagolás nem elérhető'},
 dlg_zip_s:{ro:'Componenta de arhivare nu s-a încărcat. Reîncarcă pagina cu internet activ.',en:'The archiver did not load. Reload the page with internet on.',hu:'A csomagoló nem töltődött be. Tölts újra a lapot élő internettel.'},
 dlg_tel_t:{ro:'Nu există număr de telefon',en:'No phone number',hu:'Nincs telefonszám'},
+cl_ph_ph:{ro:'07xx xxx xxx',en:'07xx xxx xxx',hu:'07xx xxx xxx'},
+cl_nm_ph:{ro:'Numele păgubitului',en:'Claimant name',hu:'A károsult neve'},
+cl_nt_ph:{ro:'Observații',en:'Notes',hu:'Megjegyzés'},
+wa_send:{ro:'Trimite link încărcare',en:'Send upload link',hu:'Feltöltési link küldése'},
+wa_need_ph:{ro:'Scrie numărul de telefon',en:'Enter the phone number',hu:'Írd be a telefonszámot'},
 dlg_tel_s:{ro:'Linkul a fost copiat — îl poți trimite manual.',en:'The link was copied — send it manually.',hu:'A linket kimásoltam — küldd el kézzel.'},
 dlg_ov_t:{ro:'Fază deblocată',en:'Phase unlocked',hu:'A fázis feloldva'},
 dlg_ovErr_t:{ro:'Deblocarea nu a reușit',en:'Unlock failed',hu:'A feloldás nem sikerült'},
@@ -388,12 +412,15 @@ function render(){
   h+='</div>';
 
   // Client info
-  h+='<div class="sec"><div class="sec-h" onclick="tS(\'client\')"><div class="sec-t"><span class="step-n">C</span> '+T('client')+'</div></div><div class="sec-bd '+(S.sec.client?'open':'')+'"><div class="type-badge '+(job.damageType==='asig'?'type-asig':'type-auto')+'">'+(job.damageType==='asig'?T('asig'):T('autoD'))+'</div><div class="fg"><div class="ff"><div class="ff-l">'+T('name')+'</div><div class="ff-v">'+escH(job.client||'—')+'</div></div><div class="ff"><div class="ff-l">'+T('phone')+'</div><div class="ff-v">'+escH(job.phone||'—')+'</div></div></div><div class="fg"><div class="ff" style="grid-column:1/3"><div class="ff-l">'+T('note')+'</div><div class="ff-v" style="font-weight:500">'+escH(job.note||'—')+'</div></div></div></div></div>';
+  h+='<div class="sec"><div class="sec-h" onclick="tS(\'client\')"><div class="sec-t"><span class="step-n">C</span> '+T('client')+'</div></div><div class="sec-bd '+(S.sec.client?'open':'')+'"><div class="type-badge '+(job.damageType==='asig'?'type-asig':'type-auto')+'">'+(job.damageType==='asig'?T('asig'):T('autoD'))+'</div><div class="fg"><div class="ff edit"><div class="ff-l">'+T('name')+'</div><input id="clNume" class="ff-in" type="text" value="'+escA(job.client||'')+'" placeholder="'+T('cl_nm_ph')+'" oninput="setDosarClient(\'client\',this.value)" onchange="setDosarClient(\'client\',this.value,1)"/></div><div class="ff edit"><div class="ff-l">'+T('phone')+'</div><input id="clTel" class="ff-in mono" type="tel" value="'+escA(job.phone||'')+'" placeholder="'+T('cl_ph_ph')+'" oninput="setDosarClient(\'phone\',this.value)" onchange="setDosarClient(\'phone\',this.value,1)"/></div></div><div class="fg"><div class="ff edit" style="grid-column:1/3"><div class="ff-l">'+T('note')+'</div><input id="clObs" class="ff-in" type="text" value="'+escA(job.note||'')+'" placeholder="'+T('cl_nt_ph')+'" oninput="setDosarClient(\'note\',this.value)" onchange="setDosarClient(\'note\',this.value,1)"/></div></div></div></div>';
 
   // Auto
   // 📎 Documente client (WhatsApp) + link încărcare
   var _cu=job.clientUploads||[];
-  h+='<div class="sec"><div class="sec-h" onclick="tS(\'cliup\')"><div class="sec-t"><span class="step-n">📎</span> Documente client</div><span class="sec-badge '+(_cu.length?'sb-ok':'sb-nd')+'">'+_cu.length+'</span></div><div class="sec-bd '+(S.sec.cliup?'open':'')+'"><button style="width:100%;padding:11px;border:none;border-radius:10px;background:#1E9D55;color:#fff;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:10px" onclick="trimiteLinkUpload()">📲 Trimite link încărcare (WhatsApp)</button>';
+  // null = a felhasznalo meg nem nyult hozza -> ITT dol el egyszer, es
+  // onnantol sima kapcsolo (kulonben a tS() elso kattintasa nem tenne semmit).
+  if(S.sec.cliup===null) S.sec.cliup = (_cu.length===0) ? 1 : 0;
+  h+='<div class="sec"><div class="sec-h" onclick="tS(\'cliup\')"><div class="sec-t"><span class="step-n">📎</span> Documente client</div><span class="sec-badge '+(_cu.length?'sb-ok':'sb-nd')+'">'+_cu.length+'</span></div><div class="sec-bd '+(S.sec.cliup?'open':'')+'"><button id="waLink" class="'+(job.phone?'':'wa-off')+'" style="width:100%;padding:11px;border:none;border-radius:10px;background:#1E9D55;color:#fff;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:10px" '+(job.phone?'':'disabled')+' onclick="trimiteLinkUpload()">📲 '+(job.phone?T('wa_send'):T('wa_need_ph'))+'</button>';
   if(_cu.length){h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';_cu.forEach(function(u){var im=/\.(jpg|jpeg|png|webp)(\?|$)/i.test(u.url||'');h+='<a href="'+escU(u.url)+'" target="_blank" style="aspect-ratio:1;border:1px solid var(--b);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#eef2f7;text-decoration:none;color:#374151;font-size:11px;font-weight:700;text-align:center;padding:6px">'+(im?'<img src="'+escU(u.url)+'" style="width:100%;height:100%;object-fit:cover">':'📄 '+escH(u.name||'doc'))+'</a>';});h+='</div>';}
   else h+='<div style="color:var(--t3);font-size:12px">Niciun fișier de la client încă.</div>';
   h+='</div></div>';
@@ -747,6 +774,62 @@ window.setDosarStatus=async function(v){
   try{await RPWDb.patchV2(sb,JOB.id,{dosarStatus:v,damageType:JOB.damageType},{actor:'service'})}catch(err){}
   render();
 };
+/* ── UGYFEL-MEZOK MENTESE (Ferenc F-1/F-2, 2026-08-26) ──────────────
+   A nev, a telefon es a megjegyzes gepeles kozben mentodik, 800 ms
+   keslelteteesel — ugyanazon a VEDETT, szeletes uton (patchV2), amin a
+   lap tobbi mezoje is megy. Nincs kulon "Mentes" gomb, amit el lehet
+   felejteni; kilepeskor (onchange) azonnal kiurul a sor.
+
+   AMIT NEM CSINALUNK: nem rajzoljuk ujra a lapot gepeles kozben — az
+   elvenne a fokuszt a mezorol. Helyette csak azt frissitjuk, ami valoban
+   valtozik: a WhatsApp gomb allapotat.                              */
+var _clT=null, _clP={};
+/* ── AMIT MOST GEPELSZ, AZT SEMMI NEM TOROLHETI ───────────────────
+   A loadJob() eloszor a gyorsitotarbol rajzol, MAJD a szerver
+   valaszara LECSERELI a JOB-ot es ujrarajzol. Aki addig beirta a
+   telefont, annak elveszett — Ferenc pontosan ezt fogta ki.
+   Ezert amit beirtal, azt itt tartjuk, amig a szerver vissza nem
+   igazolja a mentest; a kesobb erkezo szerver-valaszra ujra ratesszuk. */
+var _clDirty={};
+function _clReapply(job){
+  if(!job) return job;
+  for(var k in _clDirty){ if(Object.prototype.hasOwnProperty.call(_clDirty,k)) job[k]=_clDirty[k]; }
+  return job;
+}
+function _clWaBtn(){
+  try{
+    var b=document.getElementById('waLink'); if(!b)return;
+    var van=!!String((JOB&&JOB.phone)||'').trim();
+    b.disabled=!van;
+    b.className=van?'':'wa-off';
+    b.textContent='📲 '+(van?T('wa_send'):T('wa_need_ph'));
+  }catch(e){}
+}
+window.setDosarClient=function(k,v,azonnal){
+  if(!JOB)return;
+  if(['client','phone','note'].indexOf(k)<0)return;   // csak ez a harom
+  JOB[k]=String(v==null?'':v);
+  _clP[k]=JOB[k];
+  _clDirty[k]=JOB[k];
+  try{RPWCache.setJob(JOB)}catch(e){}
+  _clWaBtn();
+  if(_clT){clearTimeout(_clT);_clT=null}
+  var kuld=function(){
+    _clT=null;
+    var p=_clP; _clP={};
+    if(!Object.keys(p).length)return;
+    /* Sikeres mentes utan a mezo mar nem "fuggoben levo": a szerver is
+       ezt tudja. Ha a mentes NEM sikerul, szandekosan bennhagyjuk, hogy
+       a kovetkezo szerver-valasz se torolhesse le a kepernyorol. */
+    try{
+      Promise.resolve(RPWDb.patchV2(sb,JOB.id,p,{actor:'service'}))
+        .then(function(){ for(var k in p){ if(_clDirty[k]===p[k]) delete _clDirty[k] } })
+        .catch(function(){});
+    }catch(err){}
+  };
+  if(azonnal)kuld(); else _clT=setTimeout(kuld,800);
+};
+
 window.setDosarField=async function(k,v){
   if(!JOB)return;
   v=String(v||'').trim();
@@ -755,7 +838,60 @@ window.setDosarField=async function(k,v){
   try{RPWCache.setJob(JOB)}catch(e){}
   try{await RPWDb.patchV2(sb,JOB.id,p,{actor:'service'})}catch(err){}
   render();
+  if(k==='asigurator'||k==='nrDosar') dosarDupCheck();
 };
+
+// ── DUPLIKATUM-FIGYELMEZTETES (2026-08-25) ──────────────────────────
+// KORABBAN az uj-dosszie URLAP blokkolta a masodik azonos esetet:
+// ugyanaz a rendszam + ugyanaz a biztosito + ugyanaz a karszam.
+// Az urlap 2026-08-25-en kikerult (az Avizare dauna gomb egybol ide
+// hoz), es a karszamot MOST ITT adjak meg — ezert a figyelmeztetes is
+// ide kerult at. NEM blokkol, mert a dosszie ekkor mar letezik; de
+// nem is nemul el, mert a ket azonos dosszie valodi kar.
+//
+// Egy autonak lehet egyszerre Allianz-kara es Groupama-kara: az KET
+// szabalyos eset. Csak az UGYANAZ ketszer a duplikatum.
+function _dupPlateKey(x){ return String(x||'').toUpperCase().replace(/[^A-Z0-9]/g,'') }
+function _dupCaseKey(asig,nr){
+  var a=String(asig||'').trim().toUpperCase(), d=String(nr||'').trim().toUpperCase();
+  if(!a && !d) return null;                       // nincs mibol azonositani
+  return 'ASIG|'+a+'|'+d;
+}
+window.dosarDupCheck=async function(){
+  if(!JOB) return null;
+  var plate=_dupPlateKey(JOB.plate);
+  if(!plate) return null;                         // rendszam nelkul nem azonosithato
+  var mine=_dupCaseKey(JOB.asigurator, JOB.nrDosar);
+  if(!mine) return null;
+  var rows=[];
+  try{
+    var r=await RPWDb.listActive(sb);
+    if(r && r.error) return null;                 // offline vagy szerverhiba: csendben
+    rows=(r && r.data) || [];
+  }catch(e){ return null }
+  for(var i=0;i<rows.length;i++){
+    var j=(rows[i] && rows[i].data) || rows[i];
+    if(!j || j.id===JOB.id) continue;
+    if(j.inchis) continue;                        // lezart eset nem szamit
+    if(_dupPlateKey(j.plate)!==plate) continue;
+    if(_dupCaseKey(j.asigurator, j.nrDosar)!==mine) continue;
+    _dupWarn(j);
+    return j;
+  }
+  return null;
+};
+function _dupWarn(j){
+  var mit=(j.nrDosar||'?')+' · '+(j.asigurator||'?');
+  var hova='rpw-dosar.html?job='+encodeURIComponent(j.id);
+  var box=document.createElement('div');
+  box.className='dup-warn';
+  box.innerHTML='<b>&#9888; Acest dosar exista deja</b>'
+    +'<span>'+escA(JOB.plate||'')+' &middot; '+escA(mit)+'</span>'
+    +'<a href="'+escA(hova)+'">Deschide dosarul existent</a>'
+    +'<button onclick="this.parentNode.remove()">&times;</button>';
+  var prev=document.querySelector('.dup-warn'); if(prev) prev.remove();
+  (document.body||document.documentElement).appendChild(box);
+}
 // ── EGY FÁJL EGY RÉSBE ──────────────────────────────────────────
 // EGYETLEN feltöltési út: a résenkénti gomb és a kötegelt feltöltés
 // is ezt hívja. Két út két külön hibát jelentene.
