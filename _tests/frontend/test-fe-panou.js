@@ -111,6 +111,21 @@ console.log('\n1f. A dosszié állapota MINDEN biztosítós soron látszik (Fere
   ok(R('MS-44-DDD') && !/dd2-/.test(R('MS-44-DDD').innerHTML),'magánkáron továbbra sincs jelvény');
 }
 
+console.log('\n1g. Folyamatjelző oszlop a listán (Ferenc: A · mindkettő)');
+{
+  const ths=[...w.document.querySelectorAll('.panou-tbl th')].map(t=>t.textContent.trim());
+  ok(ths.indexOf('Proces')>=0,'van „Proces" oszlop: '+ths.join(' | '));
+  const rows=[...w.document.querySelectorAll('tr.panou-row')];
+  ok(rows.every(r=>r.querySelector('.pr-wrap')),'MINDEN soron ott a sáv');
+  const R=p=>rows.find(r=>r.textContent.indexOf(p)>=0);
+  const dos=R('MS-11-AAA'), var_=R('MS-33-CCC');
+  ok(dos && dos.querySelectorAll('.pr-seg').length===3,'kárdosszié → 3 szegmens');
+  ok(var_ && var_.querySelectorAll('.pr-seg').length===5,'várakozó javítás → 5 szegmens');
+  ok(var_ && var_.querySelector('.pr-seg.pr-block'),'  a WhatsApp-kapu borostyán szegmens');
+  ok(!/onclick/.test(dos.querySelector('.pr-wrap').outerHTML),'a sáv NEM kattintható (D-5)');
+  ok(!!w.document.getElementById('rpw-progres-css'),'a modul betette a saját stílusát');
+}
+
 console.log('\n1b. Kapcsolat = a VALÓDI WhatsApp jel (Ferenc, 2026-08-26)');
 {
   const h=app();

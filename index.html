@@ -35,6 +35,7 @@ if('serviceWorker' in navigator && location.protocol==='https:'){window.addEvent
    is átengedne mindenkit. Korábban a config ELŐTT futott — néma rés volt. */
 try{ if(window.RPWAuth) RPWAuth.guard(); }catch(e){}</script>
 <script src="rpw-workflow.js"></script>
+<script src="rpw-progres.js"></script><!-- 2026-08-26: folyamatjelzo -->
 <script src="rpw-save.js"></script>
 <script src="rpw-queue.js"></script><!-- 2026-08-25: tartos offline sor -->
 <script src="rpw-data.js"></script><!-- v4: szerveroldali átmenetek -->
@@ -215,10 +216,6 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .tbl td{padding:12px 16px;font-size:13px;vertical-align:middle}.tbl td.c{text-align:center}
 .badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:10px;font-weight:700}
 .badge-r{background:var(--r100);color:var(--r700)}.badge-g{background:var(--gl);color:var(--g)}.badge-y{background:var(--yl);color:var(--y)}.badge-bl{background:var(--bll);color:var(--bl)}.badge-p{background:var(--pl);color:var(--p)}.badge-or{background:var(--orl);color:var(--or)}.badge-tl{background:var(--tll);color:var(--tl)}
-.prog{height:4px;background:var(--bg);border-radius:2px;display:flex;gap:1px;overflow:hidden;width:100px}
-.prog-s{height:100%;border-radius:1px;flex:1}
-.ps1{background:var(--r)}.ps2{background:var(--or)}.ps3{background:var(--y)}.ps4{background:var(--bl)}.ps5{background:var(--p)}.ps6{background:var(--tl)}.ps7{background:var(--g)}.pse{background:var(--b)}
-.psr{background:var(--r)}.psy{background:var(--y)}.psg{background:var(--g)}
 .act-btn{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:none}
 .cell-inp{display:block;width:100%;min-width:90px;border:1px solid var(--b2);border-radius:6px;padding:4px 6px;font-size:11px;font-family:inherit;margin:2px 0;outline:none;background:#fffbeb}
 .cell-inp:focus{border-color:var(--r)}
@@ -649,6 +646,16 @@ nj_tomorrow:{ro:'Maine',en:'Tomorrow',hu:'Holnap'},
 nj_after:{ro:'Poimaine',en:'In 2 days',hu:'Holnaputan'},
 nj_asigurator:{ro:'Asigurator',en:'Insurer',hu:'Biztosito'},
 nj_nrdosar:{ro:'Nr. dosar asigurator',en:'Claim number',hu:'Karszam'},
+pr_proces:{ro:'Proces',en:'Process',hu:'Folyamat'},
+pr_acte:{ro:'acte',en:'docs',hu:'irat'},
+pr_lepes:{ro:'pasi',en:'steps',hu:'lepes'},
+pr_fazis:{ro:'faze',en:'phases',hu:'fazis'},
+pr_feltetel:{ro:'conditii',en:'conditions',hu:'feltetel'},
+pr_gata:{ro:'Gata de receptie',en:'Ready for reception',hu:'Fogadasra kesz'},
+pr_var_wa:{ro:'Asteapta WhatsApp',en:'Waiting for WhatsApp',hu:'WhatsAppra var'},
+dd_s1:{ro:'Colectare acte',en:'Collecting documents',hu:'Iratgyujtes'},
+dd_s2:{ro:'Predat la asigurator',en:'Handed to insurer',hu:'Atadva a biztositonak'},
+dd_s3:{ro:'Inchis',en:'Closed',hu:'Lezarva'},
 nj_optional:{ro:'opțional',en:'optional',hu:'opcionalis'},
 nj_client:{ro:'Client',en:'Client',hu:'Ugyfel'},
 nj_client_ph:{ro:'Numele pagubitului',en:'Claimant name',hu:'A karosult neve'},
@@ -915,7 +922,6 @@ stat_thresholdDays:{ro:'Prag (zile)',en:'Threshold (days)',hu:'Hatar (nap)'},
 var PK=['ph1','ph2','ph3','ph4','ph5','ph6','ph7'];
 // Status color: red=active, yellow=waiting(reconstatare), green=done
 function phBadge(phase){if(phase===7)return 'badge-g';if(phase===3)return 'badge-y';return 'badge-r'}
-var PS=['ps1','ps2','ps3','ps4','ps5','ps6','ps7'];
 function gL(){return localStorage.getItem('rpw_lang')||'ro'}
 function sL(l){localStorage.setItem('rpw_lang',l);render()}
 function T(k){var e=i[k];return e?e[gL()]||e.ro||k:k}
@@ -1051,7 +1057,14 @@ function render(){
       h+='<td>'+(ed?inp('auto',j.auto,'Auto')+inp('plate',j.plate,'Nr. inmatr.')+inp('vin',j.vin,'VIN'):(escH(j.auto||'—')+'<br><span class="mono" style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:.4px">'+escH(j.plate||'')+'</span>'+(j.vin?'<span class="mono" style="font-size:10px;color:var(--t3)"> · '+escH(j.vin.slice(-6))+'</span>':'')))+'</td>';
       h+='<td>'+(ed?inp('client',j.client,'Client')+inp('phone',j.phone,'Telefon'):(escH(j.client||'—')+'<br><span style="font-size:10px;color:var(--t3)">'+escH(j.phone||'')+'</span>'))+'</td>';
       h+='<td><span class="badge '+phBadge(j.phase)+'">'+T(PK[j.phase-1])+'</span></td>';
-      h+='<td><div class="prog">';for(var p=1;p<=7;p++){var pc2=p<j.phase?'psg':p===j.phase?(p===3?'psy':'psr'):'pse';h+='<div class="prog-s '+pc2+'"></div>'}h+='</div></td>';
+      // ── FOLYAMATJELZO (Ferenc, 2026-08-26) ──────────────────────────
+      // Itt korabban egy KEZZEL IRT sav allt, ami minden korabbi fazist
+      // zoldre festett — a KIHAGYOTT Reconstatare-t is kesznek mutatta.
+      // Mostantol ugyanaz a fuggveny rajzol, mint a panelen es a
+      // munkalapokon: a kihagyott lepes atlos, a keso fazis borostyan.
+      h+='<td>'+(window.RPWProgres
+        ? RPWProgres.html(j,{T:T, acteCount:window.acteCount, threshold:S.statThreshold})
+        : '')+'</td>';
       var cnd=computeConditions(j);
       h+='<td><div class="cond-row" style="cursor:pointer" title="'+T('cond_modal_title')+'" onclick="openCondModal(\''+j.id+'\')">'+renderCondIcon(cnd.programare)+renderCondIcon(cnd.loc)+renderCondIcon(cnd.om)+renderCondIcon(cnd.piese,'piese')+renderCondIcon(cnd.whatsapp)+'</div></td>';
       h+='<td style="font-size:12px;color:var(--t3)">'+(j.created?new Date(j.created).toLocaleDateString(loc,{day:'2-digit',month:'2-digit',year:'numeric'}):'')+'</td>';
@@ -1207,7 +1220,7 @@ function renderPanou(){
   } else {
     h+='<table class="panou-tbl"><thead><tr><th>'+T('client')+'</th><th>'+T('plate')+'</th><th>'+T('col_data')+'</th>'
       + ((tab==='viitoare')
-          ? '<th>'+T('col_status')+'</th>'
+          ? '<th>'+T('pr_proces')+'</th><th>'+T('col_status')+'</th>'
           : '<th>'+T('phase')+'</th><th>'+T('status_cond')+'</th>')
       + '<th>'+T('contact')+'</th><th>'+T('actions')+'</th></tr></thead><tbody>';
     displayed.forEach(function(j){
@@ -1242,6 +1255,15 @@ function renderPanou(){
       // iratszámlálót mutat, és „Deschide dosarul" a fő művelete.
       h+='<td class="mono" style="font-weight:700;letter-spacing:.4px">'+escH(j.plate||'—')+'</td>';
       h+='<td class="pg-cell">'+progCell(j)+'</td>';
+      if(tab==='viitoare'){
+        // ── FOLYAMATJELZO (Ferenc, 2026-08-26) ───────────────────────
+        // A rajzot a rpw-progres.js adja — UGYANAZ a fuggveny, mint a
+        // munkalapokon, hogy a jelzo ne mondhasson ketfelet.
+        h+='<td>'+(window.RPWProgres
+          ? RPWProgres.html(j,{T:T, acteCount:window.acteCount, threshold:S.statThreshold,
+                               lateProg:(progInfo(j).state==='late')})
+          : '')+'</td>';
+      }
       if(tab==='viitoare'&&_dd){
         // Kardosszie a kozos listaban: a lenyeg, hany irat van meg.
         var ac=acteCount(j);

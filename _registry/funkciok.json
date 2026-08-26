@@ -363,6 +363,27 @@
    "allapot": "csak-frontend"
   },
   {
+   "id": "F-125",
+   "nev": "Folyamatjelzo: harom lanc egy savban (dosszie 3 lepes / varakozas 5 feltetel / javitas 7 fazis), kihagyott lepes jelolve, keses borostyan",
+   "fe": [
+    [
+     "rpw-progres.js",
+     "function chain"
+    ],
+    [
+     "rpw-progres.js",
+     "pr-skip"
+    ],
+    [
+     "index.html",
+     "RPWProgres.html"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/unit/test-progres.js",
+   "allapot": "csak-frontend"
+  },
+  {
    "id": "F-103",
    "nev": "Kovetkezo munkalapszam kerese a szervertol",
    "fe": [
