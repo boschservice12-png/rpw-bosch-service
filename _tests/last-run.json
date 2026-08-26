@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-26T22:26:34.644Z",
+  "generated": "2026-08-26T22:34:20.292Z",
   "node": "v22.22.2",
   "npm": "10.9.7",
   "jsdom": "30.0.1",
@@ -10,8 +10,8 @@
     "files": 42,
     "nemIndult": 0,
     "bukott": 0,
-    "assertions": 2473,
-    "passed": 2473,
+    "assertions": 2496,
+    "passed": 2496,
     "failed": 0,
     "verdict": "PASS"
   },
@@ -30,8 +30,8 @@
     "files": 4,
     "nemIndult": 0,
     "bukott": 0,
-    "assertions": 359,
-    "passed": 359,
+    "assertions": 365,
+    "passed": 365,
     "failed": 0,
     "verdict": "PASS"
   },
@@ -49,7 +49,7 @@
     "verdict": "NOT VERIFIED",
     "note": "a MANUAL-STAGING-CHECKLIST.md nincs kitöltve"
   },
-  "duration_ms": 35369,
+  "duration_ms": 35301,
   "results": [
     {
       "cat": "unit",
@@ -58,7 +58,7 @@
       "status": "OK",
       "pass": 95,
       "fail": 0,
-      "ms": 2227
+      "ms": 2247
     },
     {
       "cat": "unit",
@@ -67,7 +67,7 @@
       "status": "OK",
       "pass": 50,
       "fail": 0,
-      "ms": 2125
+      "ms": 2137
     },
     {
       "cat": "unit",
@@ -76,7 +76,7 @@
       "status": "OK",
       "pass": 23,
       "fail": 0,
-      "ms": 745
+      "ms": 779
     },
     {
       "cat": "unit",
@@ -85,7 +85,7 @@
       "status": "OK",
       "pass": 28,
       "fail": 0,
-      "ms": 36
+      "ms": 40
     },
     {
       "cat": "unit",
@@ -94,7 +94,7 @@
       "status": "OK",
       "pass": 105,
       "fail": 0,
-      "ms": 1015
+      "ms": 911
     },
     {
       "cat": "unit",
@@ -103,7 +103,7 @@
       "status": "OK",
       "pass": 28,
       "fail": 0,
-      "ms": 1034
+      "ms": 798
     },
     {
       "cat": "unit",
@@ -112,7 +112,7 @@
       "status": "OK",
       "pass": 24,
       "fail": 0,
-      "ms": 2446
+      "ms": 2456
     },
     {
       "cat": "unit",
@@ -121,7 +121,7 @@
       "status": "OK",
       "pass": 34,
       "fail": 0,
-      "ms": 43
+      "ms": 40
     },
     {
       "cat": "unit",
@@ -130,7 +130,7 @@
       "status": "OK",
       "pass": 39,
       "fail": 0,
-      "ms": 804
+      "ms": 809
     },
     {
       "cat": "unit",
@@ -139,7 +139,7 @@
       "status": "OK",
       "pass": 28,
       "fail": 0,
-      "ms": 37
+      "ms": 36
     },
     {
       "cat": "unit",
@@ -148,7 +148,7 @@
       "status": "OK",
       "pass": 22,
       "fail": 0,
-      "ms": 40
+      "ms": 36
     },
     {
       "cat": "unit",
@@ -175,7 +175,7 @@
       "status": "OK",
       "pass": 54,
       "fail": 0,
-      "ms": 37
+      "ms": 34
     },
     {
       "cat": "unit",
@@ -184,7 +184,7 @@
       "status": "OK",
       "pass": 69,
       "fail": 0,
-      "ms": 2179
+      "ms": 2205
     },
     {
       "cat": "unit",
@@ -193,7 +193,7 @@
       "status": "OK",
       "pass": 39,
       "fail": 0,
-      "ms": 39
+      "ms": 37
     },
     {
       "cat": "unit",
@@ -202,7 +202,7 @@
       "status": "OK",
       "pass": 64,
       "fail": 0,
-      "ms": 35
+      "ms": 40
     },
     {
       "cat": "unit",
@@ -211,7 +211,7 @@
       "status": "OK",
       "pass": 15,
       "fail": 0,
-      "ms": 36
+      "ms": 37
     },
     {
       "cat": "unit",
@@ -220,7 +220,7 @@
       "status": "OK",
       "pass": 70,
       "fail": 0,
-      "ms": 38
+      "ms": 42
     },
     {
       "cat": "unit",
@@ -229,7 +229,7 @@
       "status": "OK",
       "pass": 19,
       "fail": 0,
-      "ms": 753
+      "ms": 847
     },
     {
       "cat": "unit",
@@ -238,7 +238,7 @@
       "status": "OK",
       "pass": 21,
       "fail": 0,
-      "ms": 36
+      "ms": 38
     },
     {
       "cat": "unit",
@@ -247,7 +247,7 @@
       "status": "OK",
       "pass": 32,
       "fail": 0,
-      "ms": 38
+      "ms": 36
     },
     {
       "cat": "unit",
@@ -256,7 +256,7 @@
       "status": "OK",
       "pass": 88,
       "fail": 0,
-      "ms": 44
+      "ms": 46
     },
     {
       "cat": "unit",
@@ -265,7 +265,7 @@
       "status": "OK",
       "pass": 34,
       "fail": 0,
-      "ms": 35
+      "ms": 38
     },
     {
       "cat": "unit",
@@ -274,7 +274,7 @@
       "status": "OK",
       "pass": 29,
       "fail": 0,
-      "ms": 55
+      "ms": 62
     },
     {
       "cat": "unit",
@@ -283,7 +283,7 @@
       "status": "OK",
       "pass": 24,
       "fail": 0,
-      "ms": 38
+      "ms": 40
     },
     {
       "cat": "unit",
@@ -292,7 +292,7 @@
       "status": "OK",
       "pass": 40,
       "fail": 0,
-      "ms": 42
+      "ms": 41
     },
     {
       "cat": "unit",
@@ -301,7 +301,7 @@
       "status": "OK",
       "pass": 24,
       "fail": 0,
-      "ms": 2626
+      "ms": 2707
     },
     {
       "cat": "unit",
@@ -310,7 +310,7 @@
       "status": "OK",
       "pass": 30,
       "fail": 0,
-      "ms": 38
+      "ms": 41
     },
     {
       "cat": "unit",
@@ -319,7 +319,7 @@
       "status": "OK",
       "pass": 56,
       "fail": 0,
-      "ms": 36
+      "ms": 41
     },
     {
       "cat": "unit",
@@ -328,16 +328,16 @@
       "status": "OK",
       "pass": 44,
       "fail": 0,
-      "ms": 219
+      "ms": 220
     },
     {
       "cat": "unit",
       "file": "test-registry.js",
       "full": "/home/user/rpw-bosch-service/_tests/unit/test-registry.js",
       "status": "OK",
-      "pass": 740,
+      "pass": 763,
       "fail": 0,
-      "ms": 58
+      "ms": 59
     },
     {
       "cat": "unit",
@@ -346,7 +346,7 @@
       "status": "OK",
       "pass": 26,
       "fail": 0,
-      "ms": 1600
+      "ms": 1700
     },
     {
       "cat": "unit",
@@ -355,7 +355,7 @@
       "status": "OK",
       "pass": 47,
       "fail": 0,
-      "ms": 879
+      "ms": 900
     },
     {
       "cat": "unit",
@@ -364,7 +364,7 @@
       "status": "OK",
       "pass": 54,
       "fail": 0,
-      "ms": 54
+      "ms": 51
     },
     {
       "cat": "unit",
@@ -373,7 +373,7 @@
       "status": "OK",
       "pass": 95,
       "fail": 0,
-      "ms": 41
+      "ms": 39
     },
     {
       "cat": "unit",
@@ -382,7 +382,7 @@
       "status": "OK",
       "pass": 50,
       "fail": 0,
-      "ms": 2747
+      "ms": 2749
     },
     {
       "cat": "unit",
@@ -391,7 +391,7 @@
       "status": "OK",
       "pass": 28,
       "fail": 0,
-      "ms": 36
+      "ms": 37
     },
     {
       "cat": "unit",
@@ -400,7 +400,7 @@
       "status": "OK",
       "pass": 12,
       "fail": 0,
-      "ms": 36
+      "ms": 34
     },
     {
       "cat": "unit",
@@ -409,7 +409,7 @@
       "status": "OK",
       "pass": 19,
       "fail": 0,
-      "ms": 36
+      "ms": 38
     },
     {
       "cat": "unit",
@@ -418,7 +418,7 @@
       "status": "OK",
       "pass": 19,
       "fail": 0,
-      "ms": 40
+      "ms": 37
     },
     {
       "cat": "unit",
@@ -427,7 +427,7 @@
       "status": "OK",
       "pass": 95,
       "fail": 0,
-      "ms": 694
+      "ms": 700
     },
     {
       "cat": "integration",
@@ -436,7 +436,7 @@
       "status": "OK",
       "pass": 46,
       "fail": 0,
-      "ms": 1050
+      "ms": 995
     },
     {
       "cat": "integration",
@@ -445,7 +445,7 @@
       "status": "OK",
       "pass": 114,
       "fail": 0,
-      "ms": 1178
+      "ms": 1145
     },
     {
       "cat": "integration",
@@ -454,7 +454,7 @@
       "status": "OK",
       "pass": 102,
       "fail": 0,
-      "ms": 1069
+      "ms": 1044
     },
     {
       "cat": "frontend",
@@ -463,16 +463,16 @@
       "status": "OK",
       "pass": 30,
       "fail": 0,
-      "ms": 3799
+      "ms": 3748
     },
     {
       "cat": "frontend",
       "file": "test-fe-panou.js",
       "full": "/home/user/rpw-bosch-service/_tests/frontend/test-fe-panou.js",
       "status": "OK",
-      "pass": 130,
+      "pass": 136,
       "fail": 0,
-      "ms": 2908
+      "ms": 2956
     },
     {
       "cat": "frontend",
@@ -481,7 +481,7 @@
       "status": "OK",
       "pass": 176,
       "fail": 0,
-      "ms": 830
+      "ms": 794
     },
     {
       "cat": "frontend",
@@ -490,7 +490,7 @@
       "status": "OK",
       "pass": 23,
       "fail": 0,
-      "ms": 1288
+      "ms": 1286
     },
     {
       "cat": "static",
@@ -499,7 +499,7 @@
       "status": "OK",
       "pass": 2,
       "fail": 0,
-      "ms": 58
+      "ms": 59
     }
   ]
 }

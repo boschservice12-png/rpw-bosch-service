@@ -426,6 +426,22 @@ console.log('\n6c. G-3 — ikon-sav, kinyithatoan');
   ok(w.localStorage.getItem('rpw_sb')==='rail','  ez is megmarad');
 }
 
+console.log('\n6e. Nincs felso piros sav (Ferenc: "vegyuk ki")');
+{
+  const d=w.document;
+  ok(!d.querySelector('.partner-bar'),'a Programari lapon nincs piros sav');
+  ok(!/Paint Workflow/.test(d.getElementById('app').innerHTML),'  a felirata sem maradt ott');
+  w.setScreen('lucrari');
+  ok(!d.querySelector('.partner-bar'),'a Lucrari lapon sincs');
+  w.setScreen('statistici');
+  ok(!d.querySelector('.partner-bar'),'a Statistici lapon sincs');
+  w.setScreen('parametri');
+  ok(!d.querySelector('.partner-bar'),'a Parametri lapon sincs');
+  w.setScreen('echipa');
+  ok(!d.querySelector('.partner-bar'),'az Echipa lapon sincs');
+  w.setScreen('panou');
+}
+
 console.log('\n6d. Az iranyitopult jegyei a kirajzolt panelen');
 {
   const d=w.document, gs=e=>w.getComputedStyle(e);

@@ -204,9 +204,6 @@ html[data-sb="rail"] .sb-toggle span{display:none}
 .ftr-num.bad{color:var(--r)}.ftr-num.warn{color:var(--y)}
 @media (max-width:900px){.stat-grid{grid-template-columns:1fr}.stat-card.full{grid-column:span 1}}
 .main{margin-left:var(--sbw,74px);flex:1}
-.partner-bar{background:var(--r);padding:14px 24px;display:flex;align-items:center;gap:10px;color:#fff}
-.partner-bar svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2}
-.pb-name{font-size:15px;font-weight:700}
 .tabs{background:var(--w);border-bottom:1px solid var(--b);padding:0 24px;display:flex}
 .tab{padding:14px 20px;font-size:13px;color:var(--t3);font-weight:500;cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px}
 .tab.on{color:var(--r);border-bottom-color:var(--r);font-weight:600}
@@ -561,7 +558,6 @@ reopen_reason:{ro:'Motivul redeschiderii:',en:'Reason for reopening:',hu:'Az új
 reactivat_fail:{ro:'Operațiunea a fost respinsă.',en:'The operation was rejected.',hu:'A művelet elutasítva.'},
 
 dashboard:{ro:'Dashboard',en:'Dashboard',hu:'Dashboard'},
-paintWf:{ro:'Paint Workflow',en:'Paint Workflow',hu:'Paint Workflow'},
 listJobs:{ro:'LISTA LUCRARI',en:'JOB LIST',hu:'MUNKAK LISTAJA'},
 jobMgmt:{ro:'Gestiune lucrari',en:'Job management',hu:'Munka kezeles'},
 ph1:{ro:'Receptie',en:'Reception',hu:'Recepcio'},ph2:{ro:'Evaluare',en:'Assessment',hu:'Karfelmeres'},
@@ -1090,7 +1086,7 @@ function render(){
 
   var h=sbNav('lucrari');
 
-  h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
+  h+='<div class="main">';
   h+='<div class="page-hdr"><div><div class="ph-label">'+T('listJobs')+'</div><div class="ph-title">'+T('jobMgmt')+'</div></div><div style="display:flex;gap:8px"><button class="btn btn-o" onclick="triggerImport()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import ZIP</button><button class="btn btn-r" onclick="openNewJob()">'+IC.plus+' '+T('newJob')+'</button></div></div><input type="file" id="zipImportInput" accept=".zip" style="display:none" onchange="importZIP(event)">';
   h+='<div class="stat-row"><div class="stat-cell"><div class="stat-cell-label">'+T('ph1')+'</div><div class="stat-cell-val" style="color:var(--r)">'+pc[0]+'</div></div><div class="stat-cell"><div class="stat-cell-label">'+T('ph2')+'</div><div class="stat-cell-val" style="color:var(--r)">'+pc[1]+'</div></div><div class="stat-cell"><div class="stat-cell-label">'+T('ph3')+'</div><div class="stat-cell-val" style="color:var(--y)">'+pc[2]+'</div></div><div class="stat-cell"><div class="stat-cell-label">'+T('ph4')+'/'+T('ph5')+'</div><div class="stat-cell-val" style="color:var(--r)">'+(pc[3]+pc[4])+'</div></div><div class="stat-cell"><div class="stat-cell-label">'+T('ph6')+'/'+T('ph7')+'</div><div class="stat-cell-val" style="color:var(--g)">'+(pc[5]+pc[6])+'</div></div></div>';
 
@@ -1243,7 +1239,7 @@ function renderPanou(){
   var h=sbNav('panou');
 
   // Main
-  h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
+  h+='<div class="main">';
 
   // Header + Programare noua gomb
   h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn" style="background:#15181C;color:#fff;border-color:#15181C" onclick="azOpen()">'+T('az_q')+'</button>'+'<button class="btn-prog-new" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="background:var(--bl,#2563eb)" onclick="dosarTarziu()">🛡 '+T('dosar_dauna')+'</button><label class="btn-prog-new" style="background:#F3F4F6;color:#374151;position:relative;display:inline-flex;cursor:pointer;box-sizing:border-box" title="'+T('dosar_fisier')+'">📄 '+T('dosar_fisier')+'<input type="file" accept="image/*,.pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0" onchange="dosarFisier(event)"/></label><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="lucrareAcum()">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
@@ -1530,7 +1526,7 @@ function renderStatistici(){
 
   var h=sbNav('statistici');
 
-  h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
+  h+='<div class="main">';
 
   h+='<div class="page-hdr"><div><div class="ph-label">'+T('statTitle')+'</div><div class="ph-title">'+T('statSub')+'</div></div>';
   h+='<div class="stat-period">';
@@ -1614,7 +1610,7 @@ function renderParametri(){
   var c=CONFIG;
   var cap=((c.posturi.tinichigerie||0)+(c.posturi.vopsitorie||0))*(c.posturi.oreZi||0)*(c.posturi.zileSapt||0);
   var h=sbNav('parametri');
-  h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
+  h+='<div class="main">';
   h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('prm_label')+'</div><div class="panou-title">'+T('prm_title')+'</div></div></div>';
   h+='<div class="prm-wrap"><div class="prm-hint">💡 '+T('prm_hint')+'</div>';
   h+='<div class="prm-card"><div class="prm-ct">'+T('prm_firma')+'</div><div class="prm-grid">';
@@ -2839,7 +2835,7 @@ var EC_PERMS=['team','posts','open','reception','work','close','override','delet
 
 function renderEchipa(){
   var h=sbNav('echipa');
-  h+='<div class="main"><div class="partner-bar">'+IC.user+'<span class="pb-name">'+T('paintWf')+'</span></div>';
+  h+='<div class="main">';
   h+='<div class="page-hdr"><div><div class="ph-label">'+T('ec_label')+'</div><div class="ph-title">'+T('ec_title')+'</div></div></div>';
   h+='<div class="ec-wrap">';
 

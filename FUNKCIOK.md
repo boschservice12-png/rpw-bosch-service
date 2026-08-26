@@ -62,7 +62,7 @@ szám nélkül, azt is megmondja.
 | **F-119** | Idopont-athelyezes (reprogramare) | `index.html` | — | `unit/test-acceptance.js` | 🟦 csak frontend |
 | **F-126** | Ugyfel-mezok a dosszie-lapon (nev / telefon / megjegyzes) — kesleltetett szeletes mentes; a gepelt ertek TULELI a keson erkezo szerver-valaszt; a WhatsApp gomb telefon nelkul tiltott | `rpw-dosar.html` `index.html` | — | `frontend/test-fe-dosar.js` | 🟦 csak frontend |
 | **F-127** | Ikon-sav: az oldalsav 74px-es ikon-savkent indul es kinyithato 240px-re; az allapot a bongeszoben marad, a valtas NEM rajzol ujra (Ferenc G-3) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
-| **F-128** | A panel a RedAssistance iranyitopult formajaban: piros elonev + nagy vekony cim, a belepo gombok a cim ALATT, lekerekitett pill-fulek kerek darabszam-jelvennyel, PIROS oszlopfejlecek — a Lucrari lapon is ugyanigy (Ferenc G-1) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-128** | A panel a RedAssistance iranyitopult formajaban: piros elonev + nagy vekony cim, a belepo gombok a cim ALATT, lekerekitett pill-fulek kerek darabszam-jelvennyel, PIROS oszlopfejlecek — a Lucrari lapon is ugyanigy (Ferenc G-1); a felso piros 'Paint Workflow' sav kivezetve mind az ot kepernyorol | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 
