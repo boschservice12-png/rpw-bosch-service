@@ -1277,9 +1277,27 @@ function renderPanou(){
         // ugyanazt mondta, amit a pill ("Asteptam masina") mar kiirt, es
         // egy MASODIK WhatsApp-vezerlo volt a soron. Az ut a Kapcsolat
         // oszlop WhatsApp jele: sotet, amig nem egyeztettunk, zold utana.
+        // ── A MAPPA CSAK OTT, AHOL VAN DOSSZIE-MUNKA (Ferenc, 2026-08-26)
+        // A "Deschide dosarul" a biztositoi iratok GYUJTESERE valo. Ket
+        // esetben nincs mit gyujteni, ott a RECEPCIO az ut:
+        //   · Dauna auto            — nincs biztosito, nincs dosszie
+        //   · Dosar dauna deschis   — a dosszie MAR nyitva, constatare
+        //                             alapjan dolgozunk; az auto johet
+        // Marad a mappa: Avizare dauna (dosarStatus='deschid') — ott MI
+        // gyujtjuk az iratokat es MI nyitjuk a dossziet.
+        //
+        // Nem zsakutca: a dosszie-lap a recepcio utan magatol jon, es
+        // minden munkalapon ott a visszanyil ra.
+        // Nem duplikalunk: ha a zold szoveges gomb mar ott van (canOpen),
+        // az ikon nem jelenik meg melle.
+        var _dosszieMunka = (j.damageType==='asig' && j.dosarStatus!=='deschis');
+        var _slot = _dosszieMunka
+          ? '<button class="edit-btn eb-ico" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')" title="'+T('open_dosar_btn')+'" aria-label="'+T('open_dosar_btn')+'">'+ico('folder')+'</button>'
+          : (canOpen ? ''
+             : '<button class="edit-btn eb-ico eb-no" onclick="event.stopPropagation();deschideLucrare(\''+j.id+'\')" title="'+T('deschide_lucrarea')+'" aria-label="'+T('deschide_lucrarea')+'">'+ico('wrench')+'</button>');
         h+='<td>'+(canOpen
         ? '<button class="edit-btn '+editCls+'" onclick="event.stopPropagation();deschideLucrare(\''+j.id+'\')">'+T('deschide_lucrarea')+'</button>'
-        : '')+' <button class="edit-btn eb-ico" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')" title="'+T('open_dosar_btn')+'" aria-label="'+T('open_dosar_btn')+'">'+ico('folder')+'</button> <button class="edit-btn eb-edit2 eb-ico" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'" aria-label="'+T('edit_btn')+'">'+ico('pencil')+'</button> <button class="edit-btn eb-repro eb-ico" onclick="event.stopPropagation();openRepro(\''+j.id+'\')" title="'+T('repro_btn')+'" aria-label="'+T('repro_btn')+'">'+ico('calendar')+'</button> <button class="edit-btn eb-ratat eb-ico" onclick="event.stopPropagation();markRatat(\''+j.id+'\')" title="'+T('ratat_btn')+'" aria-label="'+T('ratat_btn')+'">'+ico('clock')+'</button></td>';
+        : '')+' '+_slot+' <button class="edit-btn eb-edit2 eb-ico" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'" aria-label="'+T('edit_btn')+'">'+ico('pencil')+'</button> <button class="edit-btn eb-repro eb-ico" onclick="event.stopPropagation();openRepro(\''+j.id+'\')" title="'+T('repro_btn')+'" aria-label="'+T('repro_btn')+'">'+ico('calendar')+'</button> <button class="edit-btn eb-ratat eb-ico" onclick="event.stopPropagation();markRatat(\''+j.id+'\')" title="'+T('ratat_btn')+'" aria-label="'+T('ratat_btn')+'">'+ico('clock')+'</button></td>';
       } else {
         h+='<td><button class="edit-btn eb-r" onclick="event.stopPropagation();oP(\''+j.id+'\','+(j.phase||1)+')">'+T('edit')+'</button> '+(tab==='ratate'?'<button class="edit-btn eb-react" onclick="event.stopPropagation();reactiveaza(\''+j.id+'\')">'+T('reactiveaza_btn')+'</button> ':'')+'<button class="edit-btn eb-del eb-ico" onclick="event.stopPropagation();dJ(\''+j.id+'\')" title="'+T('sterge')+'" aria-label="'+T('sterge')+'">'+ico('trash')+'</button></td>';
       }
@@ -1582,7 +1600,8 @@ var RPW_ICO={
   clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
   folder:'<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
   pencil:'<svg viewBox="0 0 24 24"><path d="M4 20h4L20 8a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M14 6l4 4"/></svg>',
-  trash:'<svg viewBox="0 0 24 24"><path d="M4 7h16M10 4h4M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>'
+  trash:'<svg viewBox="0 0 24 24"><path d="M4 7h16M10 4h4M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>',
+  wrench:'<svg viewBox="0 0 24 24"><path d="M15.5 3.5a5 5 0 0 0-6.1 6.4L3.6 15.7a2 2 0 0 0 2.8 2.8l5.8-5.8a5 5 0 0 0 6.4-6.1l-2.8 2.8-2.3-2.3z"/></svg>'
 };
 function ico(n){return RPW_ICO[n]||''}
 

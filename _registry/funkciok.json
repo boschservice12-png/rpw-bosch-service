@@ -342,6 +342,27 @@
    "allapot": "csak-frontend"
   },
   {
+   "id": "F-124",
+   "nev": "A soron a mappa CSAK ott, ahol van dosszie-munka (Avizare dauna); magankaron es mar nyitott dossziénal a RECEPCIO az ut",
+   "fe": [
+    [
+     "index.html",
+     "var _dosszieMunka"
+    ],
+    [
+     "index.html",
+     "wrench"
+    ],
+    [
+     "index.html",
+     "var _slot"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/frontend/test-fe-panou.js",
+   "allapot": "csak-frontend"
+  },
+  {
    "id": "F-103",
    "nev": "Kovetkezo munkalapszam kerese a szervertol",
    "fe": [

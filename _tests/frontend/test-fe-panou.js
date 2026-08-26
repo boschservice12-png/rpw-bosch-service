@@ -36,6 +36,12 @@ const JOBS=[
  {id:'V3',number:'MS-26-063',plate:'MS-44-DDD',client:'Sajat Csaba',flux:'reparatie',damageType:'auto',
   sosire:'programat',phase:1,phases:{},inchis:false,
   programare:{date:'2026-08-29',time:'11:00'},conditions:{}},
+ {id:'V5',number:'MS-26-066',plate:'MS-10-GGG',client:'Mar Nyitva Marta',flux:'reparatie',damageType:'asig',
+  dosarStatus:'deschis',nrDosar:'KAR-777',sosire:'programat',phase:1,phases:{},inchis:false,phone:'0740999000',
+  programare:{date:'2026-08-31',time:'13:00'},conditions:{}},
+ {id:'V4',number:'MS-26-065',plate:'MS-88-FFF',client:'Keszen Kalman',flux:'reparatie',damageType:'auto',
+  sosire:'programat',phase:1,phases:{},inchis:false,phone:'0740777888',
+  programare:{date:'2026-08-30',time:'12:00'},conditions:{whatsapp:true}},
  {id:'R1',number:'MS-26-064',plate:'MS-77-EEE',client:'Ratat Dezso',flux:'reparatie',damageType:'auto',
   sosire:'ratat',phase:1,phases:{},inchis:false,phone:'0740555666',
   programare:{date:'2026-08-20',time:'08:00'},conditions:{}},
@@ -65,7 +71,7 @@ const dom=new JSDOM(inline(raw),{virtualConsole:vc, url:'https://rpw.teszt/index
   w.Chart=function(){this.destroy=()=>{}};
  }});
 const w=dom.window;
-for(let i=0;i<60 && !(w.JOBS&&w.JOBS.length===5);i++) await sleep(25);
+for(let i=0;i<60 && !(w.JOBS&&w.JOBS.length===7);i++) await sleep(25);
 w.S.screen='panou'; w.S.panouTab='viitoare';
 try{ w.localStorage.setItem('rpw_az_seen', new Date().toISOString().slice(0,10)); }catch(e){}
 w.render();
@@ -74,7 +80,7 @@ const app=()=>w.document.getElementById('app').innerHTML;
 console.log('\n1. Viitoare fül — a kétállapotú jelvény (K-19)');
 {
   const h=app();
-  ok(w.JOBS.length===5,'az 5 teszt-munka betöltődött');
+  ok(w.JOBS.length===7,'a 7 teszt-munka betöltődött');
   const v1=h.split('<tr').filter(s=>/MS-22-BBB/.test(s))[0]||'';
   const v2=h.split('<tr').filter(s=>/MS-33-CCC/.test(s))[0]||'';
   const v3=h.split('<tr').filter(s=>/MS-44-DDD/.test(s))[0]||'';
@@ -133,6 +139,40 @@ console.log('\n1c. Sor-ikonok: rajz IGEN, néma gomb NEM');
   const titles=icoBtns.map(b=>b.getAttribute('title'));
   ok(titles.some(t=>/Reprogram/i.test(t)),'a Reprogramare ikon címkéje beszél');
   ok(titles.some(t=>/Ratat/i.test(t)),'a Ratat ikon címkéje beszél');
+}
+
+console.log('\n1e. A mappa CSAK ott, ahol van dosszié-munka (Ferenc, 2026-08-26)');
+{
+  const rows=[...w.document.querySelectorAll('tr.panou-row')];
+  const R=p=>rows.find(r=>r.textContent.indexOf(p)>=0);
+  const asig=R('MS-33-CCC');   // biztositos, meg nem egyeztetve
+  const auto=R('MS-44-DDD');   // magankar, meg nem egyeztetve
+  const kesz=R('MS-88-FFF');   // magankar, mar egyeztetve
+
+  ok(asig && /deschideDosar/.test(asig.innerHTML),'biztosítós soron OTT a dosszié-mappa');
+  ok(auto && !/deschideDosar/.test(auto.innerHTML),'magánkár soron NINCS dosszié-mappa');
+  ok(auto && /deschideLucrare/.test(auto.innerHTML),'  helyette a recepció útja');
+  const w2=auto&&auto.querySelector('.eb-ico.eb-no');
+  ok(!!w2 && !!w2.querySelector('svg'),'  ikonos gombként, rajzzal');
+  ok(w2 && (w2.getAttribute('aria-label')||'').length>2,'  címkével');
+
+  // Nem duplikalunk: ha a zold szoveges gomb ott van, nincs melle ikon.
+  ok(kesz && /deschideLucrare/.test(kesz.innerHTML),'kész magánkár soron ott a recepció');
+  ok(kesz && !/deschideDosar/.test(kesz.innerHTML),'  dosszié-mappa ott sincs');
+  ok(kesz && kesz.querySelectorAll('.eb-ico.eb-no').length===0,
+     '  és NEM kettőzzük: a szöveges gomb mellé nem kerül ikon');
+
+  // Dosar dauna deschis: a dosszie MAR nyitva — nincs mit gyujteni.
+  const nyitva=R('MS-10-GGG');   // asig + dosarStatus='deschis', meg nem egyeztetve
+  ok(nyitva && !/deschideDosar/.test(nyitva.innerHTML),
+     '„Dosar daună deschis" soron sincs mappa — a dosszié már nyitva');
+  ok(nyitva && /deschideLucrare/.test(nyitva.innerHTML),'  ott is a recepció útja');
+  ok(nyitva && /dd2-open/.test(nyitva.innerHTML),'  és a zöld „Dosar deschis" jelvény jelzi, miért');
+  const kesz2=R('MS-22-BBB');    // asig + 'deschis' + mar egyeztetve
+  ok(kesz2 && !/deschideDosar/.test(kesz2.innerHTML),'  kész állapotban sem jön vissza a mappa');
+
+  // Aki MEG gyujti az iratokat, annal marad a mappa.
+  ok(asig && /dd2-aviz/.test(asig.innerHTML),'„Avizare daună" soron viszont MARAD — ott mi gyűjtjük az iratokat');
 }
 
 console.log('\n1d. Ratate fül — a kuka is rajz, nem emoji');
