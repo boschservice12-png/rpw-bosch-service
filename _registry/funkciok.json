@@ -1332,7 +1332,7 @@
   },
   {
    "id": "F-127",
-   "nev": "Ikon-sav: az oldalsav 74px-es ikon-savkent indul es kinyithato 240px-re; az allapot a bongeszoben marad, a valtas NEM rajzol ujra (Ferenc G-3)",
+   "nev": "Ikon-sav: az oldalsav 74px-es ikon-savkent indul es kinyithato 240px-re; a kinyito gomb a sav TETEJEN all; kis kepernyon is elerheto, ott a kinyitott sav RATAKAR a tartalomra es valasztaskor becsukodik; az allapot a bongeszoben marad, a valtas NEM rajzol ujra (Ferenc G-3)",
    "fe": [
     [
      "index.html",
@@ -1348,11 +1348,19 @@
     ],
     [
      "index.html",
+     "window.sbGo"
+    ],
+    [
+     "index.html",
      "class=\"sb-toggle\""
     ],
     [
      "index.html",
-     "html[data-sb=\"rail\"]"
+     "html:not([data-sb=\"wide\"]) .sb-item span{display:none}"
+    ],
+    [
+     "index.html",
+     "html[data-sb=\"wide\"]{--sbw:56px;--sbo:240px}"
     ],
     [
      "index.html",

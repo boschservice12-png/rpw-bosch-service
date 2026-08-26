@@ -401,8 +401,9 @@ console.log('\n6c. G-3 — ikon-sav, kinyithatoan');
   const d=w.document;
   ok(d.documentElement.getAttribute('data-sb')==='rail',
      'indulaskor IKON-SAV  ("'+d.documentElement.getAttribute('data-sb')+'")');
-  ok(d.documentElement.style.getPropertyValue('--sbw')==='74px',
-     '  a szelesseg 74px  ("'+d.documentElement.style.getPropertyValue('--sbw')+'")');
+  const SBW=()=>w.getComputedStyle(d.documentElement).getPropertyValue('--sbw').trim();
+  const SBO=()=>w.getComputedStyle(d.documentElement).getPropertyValue('--sbo').trim();
+  ok(SBW()==='74px' && SBO()==='74px','  a szelesseg 74px  ("'+SBW()+'" / "'+SBO()+'")');
   const tg=d.querySelector('.sb-toggle');
   ok(!!tg,'van kinyito gomb');
   ok(!!(tg&&tg.getAttribute('title')),'  a gombnak van neve az egermutatora');
@@ -416,7 +417,7 @@ console.log('\n6c. G-3 — ikon-sav, kinyithatoan');
   const tbl=d.querySelector('.panou-tbl');
   tg.click();
   ok(d.documentElement.getAttribute('data-sb')==='wide','kattintasra KINYILIK');
-  ok(d.documentElement.style.getPropertyValue('--sbw')==='240px','  240px lesz');
+  ok(SBW()==='240px' && SBO()==='240px','  240px lesz  ("'+SBW()+'" / "'+SBO()+'")');
   ok(w.localStorage.getItem('rpw_sb')==='wide','  az allapot megmarad a bongeszoben');
   ok(d.querySelector('.panou-tbl')===tbl,
      '  a lista NEM rajzolodik ujra (ugyanaz az elem marad)');
@@ -424,6 +425,37 @@ console.log('\n6c. G-3 — ikon-sav, kinyithatoan');
   tg.click();
   ok(d.documentElement.getAttribute('data-sb')==='rail','ujra kattintva visszazarul');
   ok(w.localStorage.getItem('rpw_sb')==='rail','  ez is megmarad');
+  ok(SBW()==='74px','  es a szelesseg is visszaall  ("'+SBW()+'")');
+
+  // A gomb a sav TETEJEN all — ott keresi az ember, nem a lap aljan.
+  const elso=d.querySelector('.sb-nav .sb-item');
+  ok(elso && (tg.compareDocumentPosition(elso)&w.Node.DOCUMENT_POSITION_FOLLOWING),
+     'a kinyito gomb a menupontok ELOTT all (a sav tetejen)');
+
+  // Kis kepernyon is elerheto kell legyen, es ott RATAKAR a tartalomra
+  // (oldalt nincs hely). Ezt a jsdom nem tudja megjeleniteni, ezert a
+  // VALODI stiluslapot olvassuk vissza.
+  let mob=null;
+  [].slice.call(d.styleSheets).forEach(sh=>{
+    let r; try{ r=sh.cssRules }catch(e){ return }
+    [].slice.call(r||[]).forEach(x=>{
+      if(x.media && /max-width:\s*768px/.test(x.conditionText||x.media.mediaText||'')) mob=x;
+    });
+  });
+  ok(!!mob,'van kis-kepernyos szabaly');
+  const belso=mob ? [].slice.call(mob.cssRules) : [];
+  const bent=belso.map(x=>x.cssText).join(' ');
+  ok(!/\.sb-toggle[^{]*\{[^}]*display:\s*none/.test(bent),
+     '  a kinyito gomb kis kepernyon NINCS elrejtve');
+  // A KINYITOTT allapot szabalyat kell megnezni, nem az egesz blokkot:
+  // a ":root" is visz --sbw:56px-et, az onmagaban semmit nem bizonyit.
+  const nyit=belso.filter(x=>/data-sb="wide"/.test(x.selectorText||''))
+                  .find(x=>x.style && x.style.getPropertyValue('--sbo'));
+  ok(!!nyit,'  van kinyitott-allapot szabaly kis kepernyore');
+  ok(nyit && nyit.style.getPropertyValue('--sbo').trim()==='240px',
+     '  kinyitva a sav ott is 240px  ("'+(nyit?nyit.style.getPropertyValue('--sbo'):'')+'")');
+  ok(nyit && nyit.style.getPropertyValue('--sbw').trim()==='56px',
+     '  de a tartalom NEM tolodik el — ratakar  ("'+(nyit?nyit.style.getPropertyValue('--sbw'):'')+'")');
 }
 
 console.log('\n6f. A negy belepo gomb FEHER, es lenyomasra szinesedik (Ferenc)');
@@ -466,6 +498,34 @@ console.log('\n6f. A negy belepo gomb FEHER, es lenyomasra szinesedik (Ferenc)')
   // billentyuzetrol is latszik
   ok(akt && /focus-visible/.test(akt.selectorText),
      '  ugyanez latszik billentyuzetes fokusznal is');
+}
+
+console.log('\n6g. Kis kepernyon a kinyitott sav becsukodik valasztaskor');
+{
+  const d=w.document;
+  const mm=w.matchMedia;
+  // 1) KIS kepernyo: kinyitva valasztunk -> a savnak be kell csukodnia,
+  //    kulonben a valasztott lap a sav ALATT maradna.
+  w.matchMedia=q=>({matches:/max-width:\s*768px/.test(q), media:q,
+                    addListener(){}, removeListener(){},
+                    addEventListener(){}, removeEventListener(){}});
+  w.toggleSidebar();
+  ok(d.documentElement.getAttribute('data-sb')==='wide','kis kepernyon kinyitva');
+  d.querySelector('.sb-nav .sb-item').click();
+  ok(d.documentElement.getAttribute('data-sb')==='rail',
+     '  valasztas utan BECSUKODIK  ("'+d.documentElement.getAttribute('data-sb')+'")');
+
+  // 2) NAGY kepernyo: ott a sav elfer a tartalom mellett — nyitva marad.
+  w.matchMedia=q=>({matches:false, media:q, addListener(){}, removeListener(){},
+                    addEventListener(){}, removeEventListener(){}});
+  w.toggleSidebar();
+  ok(d.documentElement.getAttribute('data-sb')==='wide','nagy kepernyon kinyitva');
+  d.querySelector('.sb-nav .sb-item').click();
+  ok(d.documentElement.getAttribute('data-sb')==='wide',
+     '  ott valasztas utan NYITVA marad  ("'+d.documentElement.getAttribute('data-sb')+'")');
+  w.toggleSidebar();                       // vissza az alapallapotba
+  w.matchMedia=mm;
+  w.setScreen('panou');
 }
 
 console.log('\n6e. Nincs felso piros sav (Ferenc: "vegyuk ki")');
