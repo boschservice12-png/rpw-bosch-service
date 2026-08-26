@@ -38,7 +38,7 @@ szám nélkül, azt is megmondja.
 |---|---|---|---|---|---|
 | **F-101** | Uj munkalap: Lucrare noua (urlap nelkul, egyenesen a recepciora) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-102** | Rendszam bevitel es normalizalas | `index.html` | — | `unit/test-case.js` | 🟦 csak frontend |
-| **F-121** | Elojegyzes urlap (Programare noua) — az EGYETLEN megmarado urlap-ut; biztositos esetben a karosult neve LATHATO kotelezo mezo | `index.html` | — | `frontend/test-fe-urlap.js` | 🟦 csak frontend |
+| **F-121** | Elojegyzes urlap (Programare noua): ket tipus (Dauna asigurare / Dauna auto), a biztositosnal ket dosszie-ag (Avizare dauna / Dosar dauna deschis); a nev es az auto LATSZIK, de nem kotelezo | `index.html` | — | `frontend/test-fe-urlap.js` | 🟦 csak frontend |
 | **F-122** | Kapcsolat oszlop a foablakon: a VALODI WhatsApp jel (zold=egyeztetve, sotet=meg nem, tompa=nincs telefon) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-123** | Sor-ikonok a foablakon (naptar/ora/mappa/ceruza/kuka) — vonalas SVG, mindegyiken title ES aria-label | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-103** | Kovetkezo munkalapszam kerese a szervertol | `index.html` | `rpw_next_job_number` `rpw_job_number` | `integration/test-int-workflow.js` | ✅ él |

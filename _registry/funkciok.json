@@ -276,7 +276,7 @@
   },
   {
    "id": "F-121",
-   "nev": "Elojegyzes urlap (Programare noua) — az EGYETLEN megmarado urlap-ut; biztositos esetben a karosult neve LATHATO kotelezo mezo",
+   "nev": "Elojegyzes urlap (Programare noua): ket tipus (Dauna asigurare / Dauna auto), a biztositosnal ket dosszie-ag (Avizare dauna / Dosar dauna deschis); a nev es az auto LATSZIK, de nem kotelezo",
    "fe": [
     [
      "index.html",
@@ -288,7 +288,11 @@
     ],
     [
      "index.html",
-     "nj_client_ph"
+     "nj_optional"
+    ],
+    [
+     "index.html",
+     "id=\"iAuto\""
     ]
    ],
    "be": [],

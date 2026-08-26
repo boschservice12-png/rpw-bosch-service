@@ -139,8 +139,11 @@ try{
   ok(probe('prog',{njPlate:'MS-10-AAA',njPhone:'0740111111',njDate:today()}).length>0,'típus nélkül → blokkol');
   ok(probe('prog',{njPlate:'MS-10-AAA',njPhone:'0740111111',njTip:'auto'}).length>0,'dátum nélkül → blokkol');
   ok(probe('lucrare',{njPlate:'MS-40-DDD',njPhone:'0740444444',njTip:'asig',njPay:'deschis',njClient:'X',njDate:today()}).length>0,'"már nyitva" kárszám nélkül → blokkol');
-  ok(probe('lucrare',{njPlate:'MS-40-DDD',njPhone:'0740444444',njTip:'asig',njPay:'deschid',njDate:today()}).length>0,'dosszié ügyfélnév nélkül → blokkol');
-  eq(probe('lucrare',{njPlate:'MS-40-DDD',njPhone:'0740444444',njTip:'asig',njPay:'deschid',njClient:'Kiss',njDate:today()}),[],'minden megvan → mehet');
+  // 2026-08-26 (Ferenc): a név és az autó NEM kötelező — kitölthető, de
+  // nem állítja meg a mentést. Amit a biztosító kér, azt a dosszié-lapon
+  // veszik fel; a pultnál gyakran csak a rendszám és a telefon van meg.
+  eq(probe('lucrare',{njPlate:'MS-40-DDD',njPhone:'0740444444',njTip:'asig',njPay:'deschid',njDate:today()}),[],'dosszié ügyfélnév NÉLKÜL is mehet');
+  eq(probe('lucrare',{njPlate:'MS-40-DDD',njPhone:'0740444444',njTip:'asig',njPay:'deschid',njClient:'Kiss',njDate:today()}),[],'névvel együtt is mehet');
 
   grp('5 · RENDSZÁM-NORMALIZÁLÁS');
   eq(w.njPlate('ms10aaa'),'MS-10-AAA','ms10aaa → MS-10-AAA');

@@ -76,7 +76,10 @@ eq(njCaseLabel({damageType:null}),'nj_case_auto','sajat zseb');
 eq(njCaseLabel({damageType:'asig'}),'?','ismeretlen');
 
 console.log('\n10. A tobbi javitas a kodban');
-ok(/if\(kellDosar&&!String\(S\.njClient\|\|''\)\.trim\(\)\)m\.push\(T\('nj_m_client'\)\)/.test(html),'ugyfel neve kotelezo dossziehoz');
+// 2026-08-26 (Ferenc): a nev es az auto NEM kotelezo — kitoltheto, de
+// nem allitja meg a mentest. A mezo LATSZIK (nincs elrejto fiok).
+ok(!/nj_m_client/.test(html),'az ugyfelnev NEM kotelezo (a kovetelmeny es a felirata is kivezetve)');
+ok(!/<details class="nj-more"/.test(html),'nincs elrejto "opcionalis" fiok');
 ok(/if\(njDup\(\)\)m\.push\(T\('nj_dup_real'\)\)/.test(html),'valodi duplikatum BLOKKOL');
 ok(/S\.njDate < njDay\(0\)[\s\S]{0,80}nj_date_past/.test(html),'multbeli datum -> figyelmeztetes');
 ok(!/tab==='viitoare' && _dd[\s\S]{0,400}markRatat/.test(html),'a Ratat gomb LEKERULT a dosszie sorrol');

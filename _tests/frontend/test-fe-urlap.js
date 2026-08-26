@@ -7,6 +7,11 @@
 //  biztositos esetben a mentes KOTELEZOVE tette az ugyfel nevet, a mezo
 //  viszont az "Date optionale (client, masina)" fiokban ult, csillag
 //  nelkul. Aki nem nyitotta ki: megnyomta a gombot es nem tortent semmi.
+//
+//  Ferenc dontese ugyanaznap: a nev es az auto NEM kotelezo, de legyen
+//  kitoltheto. Igy a fiok teljesen megszunt: mindketto latszik, egyik
+//  sem allitja meg a mentest. Ez a teszt MINDKETTOT orzi — a rejtes es
+//  a rejtett kovetelmeny visszateresenek nincs utja.
 // ════════════════════════════════════════════════════════════════
 const fs=require('fs'),path=require('path'),jsdom=require('jsdom');
 const {JSDOM}=jsdom;const ROOT=path.resolve(__dirname,'..','..');
@@ -60,7 +65,7 @@ console.log('\n1. Programare nouă — valódi gombkattintással');
   ok(w.S.showNew===1,'az űrlap megnyílt');
 }
 
-console.log('\n2. Biztosítós eset — a károsult neve LÁTHATÓ és kötelező');
+console.log('\n2. Biztosítós eset — név és autó LÁTSZIK, de nem kötelező');
 {
   const asig=[...D().querySelectorAll('button')]
     .find(b=>/njSetTip\('asig'\)/.test(b.getAttribute('onclick')||''));
@@ -68,45 +73,62 @@ console.log('\n2. Biztosítós eset — a károsult neve LÁTHATÓ és kötelez�
   if(asig) asig.click(); else w.njSetTip('asig');
   await sleep(40);
 
-  const cli=D().getElementById('iClient');
+  ok(!D().querySelector('details'),'nincs többé összecsukható „opcionális" fiók');
+  const cli=D().getElementById('iClient'), aut=D().getElementById('iAuto');
   ok(!!cli,'az ügyfélnév-mező kirajzolódott');
-  ok(cli && !inDetails(cli),'a mező NINCS a „Date opționale" fiókban elrejtve');
-  ok(cli && /\*/.test(labelOf(cli)),'a címkéjén ott a csillag (kötelező)');
+  ok(!!aut,'a márka/modell mező kirajzolódott');
+  ok(cli && !inDetails(cli) && aut && !inDetails(aut),'egyik sincs elrejtve');
+  ok(cli && !/\*/.test(labelOf(cli)),'az ügyfélnéven NINCS csillag');
+  ok(aut && !/\*/.test(labelOf(aut)),'a márkán sincs');
+  ok(cli && /opt|Op[țt]|facultat/i.test(labelOf(cli)),'  a címke kiírja: opcionális');
   ok(D().querySelectorAll('#iClient').length===1,'pontosan EGY ügyfélnév-mező van');
 
-  const sum=D().querySelector('details.nj-more summary');
-  ok(!!sum && !/client/i.test(sum.textContent),'a fiók felirata már nem ígér ügyfelet');
-}
-
-console.log('\n3. Amit a felület kér, azzal a mentés át is megy');
-{
-  const set=(sel,val)=>{const el=typeof sel==='string'?D().getElementById(sel):sel;
-    if(!el)return false; el.value=val; el.dispatchEvent(new w.Event('input',{bubbles:true})); return true};
-  ok(set('iPlate','MS-99-ZZZ'),'rendszám kitölthető a látható mezőben');
-  ok(set('iPhone','0740111222'),'telefon kitölthető a látható mezőben');
-  ok(set('iClient','Pagubit Elek'),'ügyfélnév kitölthető a látható mezőben');
+  // A LENYEG: uresen hagyva is atmegy a mentes.
+  const set=(id,val)=>{const el=D().getElementById(id); if(!el)return false;
+    el.value=val; el.dispatchEvent(new w.Event('input',{bubbles:true})); return true};
+  set('iPlate','MS-99-ZZZ'); set('iPhone','0740111222');
   const pay=[...D().querySelectorAll('button')]
     .find(b=>/njSet\('njPay','deschid'\)/.test((b.getAttribute('onclick')||'').replace(/\\/g,'')));
-  ok(!!pay,'a dosszié-állapot választógomb a DOM-ban van');
   if(pay) pay.click(); else w.njSet('njPay','deschid');
   const chip=[...D().querySelectorAll('button')].find(b=>/njQuick\(0\)/.test(b.getAttribute('onclick')||''));
   if(chip) chip.click();
   await sleep(40);
   const miss=w.njMissing();
-  ok(miss.length===0,'njMissing() ÜRES — nincs láthatatlan követelmény: '+JSON.stringify(miss));
+  ok(miss.length===0,'ÜRES névvel is átmegy a mentés: '+JSON.stringify(miss));
+  ok(!/client|ügyfél|nume/i.test(JSON.stringify(miss)),'  a név sehol nem hiányzik');
 }
 
-console.log('\n4. Magánkár — az ügyfélnév marad az opcionális fiókban');
+console.log('\n2b. A két dosszié-változat neve = ami a listán is áll');
+{
+  const opts=[...D().querySelectorAll('button.nj-opt')].map(b=>b.textContent);
+  ok(opts.some(t=>/Avizare daun/i.test(t)),'„Avizare daună" a választék egyike');
+  ok(opts.some(t=>/Dosar daun[ăa] deschis/i.test(t)),'„Dosar daună deschis" a másik');
+  ok(!opts.some(t=>/Dosar de deschis/i.test(t)),'a régi, félreérthető „Dosar de deschis" eltűnt');
+}
+
+console.log('\n3. „Dosar daună deschis" — ott a kárszám KÖTELEZŐ marad');
+{
+  const b=[...D().querySelectorAll('button')]
+    .find(x=>/njSet\('njPay','deschis'\)/.test((x.getAttribute('onclick')||'').replace(/\\/g,'')));
+  ok(!!b,'a „Dosar daună deschis" választógomb a DOM-ban van');
+  if(b) b.click(); else w.njSet('njPay','deschis');
+  await sleep(40);
+  const miss=w.njMissing();
+  ok(miss.length===1,'pontosan EGY dolog hiányzik: '+JSON.stringify(miss));
+  ok(/dosar/i.test(JSON.stringify(miss)),'  a kárszám — mert a dosszié már létezik, azonosítani kell');
+}
+
+console.log('\n4. Magánkár — ugyanaz a két mező, ugyanúgy opcionálisan');
 {
   const auto=[...D().querySelectorAll('button')]
     .find(b=>/njSetTip\('auto'\)/.test(b.getAttribute('onclick')||''));
   if(auto) auto.click(); else w.njSetTip('auto');
   await sleep(40);
-  const cli=D().getElementById('iClient');
-  ok(!!cli && inDetails(cli),'magánkáron az ügyfélnév az opcionális fiókban van');
-  ok(cli && !/\*/.test(labelOf(cli)),'magánkáron NINCS csillag rajta');
-  const sum=D().querySelector('details.nj-more summary');
-  ok(!!sum && /client/i.test(sum.textContent),'a fiók felirata megint ígér ügyfelet');
+  const cli=D().getElementById('iClient'), aut=D().getElementById('iAuto');
+  ok(!!cli && !inDetails(cli),'az ügyfélnév itt is látszik, nem fiókban');
+  ok(!!aut && !inDetails(aut),'a márka/modell is');
+  ok(cli && !/\*/.test(labelOf(cli)),'csillag nélkül');
+  ok(!D().querySelector('details'),'itt sincs elrejtő fiók');
 }
 
 console.log('\n'+(fail?'✗ ':'OK ')+pass+' pass / '+fail+' fail');

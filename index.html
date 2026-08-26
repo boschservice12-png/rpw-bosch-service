@@ -127,6 +127,7 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .panou-row.row-warn:hover td{background-color:#fef08a}
 .panou-hint{font-size:11px;color:var(--t3);padding:6px 24px;background:var(--w);border-bottom:1px solid var(--b);text-align:center;font-style:italic}
 .panou-row.row-dd td:first-child{box-shadow:inset 3px 0 0 var(--bl,#2563eb)}
+.nj-opt-t{font-weight:400;color:var(--t3)}
 .edit-btn.eb-ico{padding:0;width:32px;height:32px;justify-content:center}
 .edit-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .edit-btn{padding:7px 16px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
@@ -254,8 +255,6 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .nj-dup{background:#fef3c7;border:1px solid #fcd34d;color:#7c4a03;border-radius:8px;padding:9px 11px;font-size:12px;margin-bottom:10px;line-height:1.4}
 .nj-why{font-size:11px;color:var(--r);font-weight:700;min-height:14px;margin-bottom:6px}
 .nj-note{font-size:11px;color:var(--t3);margin:-6px 0 12px}
-.nj-more{margin-bottom:14px}
-.nj-more summary{font-size:10px;font-weight:700;color:var(--t3);cursor:pointer;text-transform:uppercase;letter-spacing:1px;padding:4px 0}
 .nj-badge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.5px;background:#e0e7ff;color:#3730a3;border-radius:10px;padding:2px 6px;vertical-align:middle;margin-left:5px}
 @media(max-width:560px){.nj-pick{grid-template-columns:1fr}}
 .pg-cell{font-size:12px;white-space:nowrap}
@@ -637,9 +636,9 @@ nj_t_rep_s:{ro:'Reparam la noi',en:'We repair it',hu:'Nalunk javitjuk'},
 nj_t_dos:{ro:'Dosar',en:'File',hu:'Dosszie'},
 nj_t_dos_s:{ro:'Colectare date pt. asigurator',en:'Data collection for insurer',hu:'Adatgyujtes a biztositohoz'},
 nj_pay:{ro:'Plata / dosar',en:'Payment / file',hu:'Fizetes / dosszie'},
-nj_pay_a:{ro:'Dosar de deschis',en:'File to be opened',hu:'Dossziet nyitunk'},
+nj_pay_a:{ro:'Avizare daună',en:'Damage notification',hu:'Karbejelentes'},
 nj_pay_a_s:{ro:'Noi colectam actele si deschidem',en:'We collect docs and open it',hu:'Mi gyujtjuk az iratokat'},
-nj_pay_b:{ro:'Dosar deja deschis',en:'File already open',hu:'Dosszie mar nyitva'},
+nj_pay_b:{ro:'Dosar daună deschis',en:'Claim file already open',hu:'Kardosszie mar nyitva'},
 nj_pay_b_s:{ro:'Lucram pe baza constatarii',en:'We work from the assessment',hu:'Constatare alapjan dolgozunk'},
 nj_pay_c:{ro:'Plateste clientul',en:'Client pays',hu:'Ugyfel fizet'},
 nj_pay_c_s:{ro:'Fara asigurare',en:'No insurance',hu:'Sajat zsebre'},
@@ -650,10 +649,9 @@ nj_tomorrow:{ro:'Maine',en:'Tomorrow',hu:'Holnap'},
 nj_after:{ro:'Poimaine',en:'In 2 days',hu:'Holnaputan'},
 nj_asigurator:{ro:'Asigurator',en:'Insurer',hu:'Biztosito'},
 nj_nrdosar:{ro:'Nr. dosar asigurator',en:'Claim number',hu:'Karszam'},
-nj_more:{ro:'Date optionale (client, masina)',en:'Optional (client, car)',hu:'Opcionalis (ugyfel, auto)'},
+nj_optional:{ro:'opțional',en:'optional',hu:'opcionalis'},
 nj_client:{ro:'Client',en:'Client',hu:'Ugyfel'},
 nj_client_ph:{ro:'Numele pagubitului',en:'Claimant name',hu:'A karosult neve'},
-nj_more_auto:{ro:'Date optionale (masina)',en:'Optional (car)',hu:'Opcionalis (auto)'},
 nj_auto:{ro:'Marca / model',en:'Make / model',hu:'Marka / modell'},
 nj_missing:{ro:'Lipseste',en:'Missing',hu:'Hianyzik'},
 nj_m_plate:{ro:'nr. inmatriculare',en:'plate',hu:'rendszam'},
@@ -668,7 +666,6 @@ nj_dup_real:{ro:'Acest caz există deja',en:'This case already exists',hu:'Ez az
 nj_dup_real_s:{ro:'Același asigurător și același nr. dosar. Deschide dosarul existent.',en:'Same insurer and same claim number. Open the existing file.',hu:'Ugyanaz a biztosító és ugyanaz a kárszám. Nyisd meg a meglévőt.'},
 nj_dup_auto:{ro:'Există deja o reparație pe cont propriu',en:'A self-paid repair already exists',hu:'Már fut egy saját zsebes javítás'},
 nj_case_auto:{ro:'cont propriu',en:'self-paid',hu:'saját zseb'},
-nj_m_client:{ro:'numele clientului',en:'client name',hu:'az ügyfél neve'},
 nj_date_past:{ro:'Data aleasă e în trecut',en:'The chosen date is in the past',hu:'A választott dátum a múltban van'},
 nj_dup:{ro:'Exista deja o lucrare activa pe acest numar',en:'An active job already exists for this plate',hu:'Erre a rendszamra mar van elo munka'},
 nj_open:{ro:'Salveaza',en:'Save',hu:'Mentes'},
@@ -1640,23 +1637,19 @@ function newJobModalHtml(){
     h+='</div>';
   }
 
-  // ── HIBA (Ferenc, 2026-08-26): a karosult NEVE el volt rejtve ─────────
-  // A mentes biztositos esetben KOTELEZOVE tette az ugyfel nevet
-  // (njMissing: nj_m_client), a mezo viszont az "Date optionale
-  // (client, masina)" fiok MELYEN ult, csillag nelkul. Aki nem nyitotta
-  // ki a fiokot, csak annyit latott: megnyomja a gombot es NEM TORTENIK
-  // SEMMI (a hibauzenet 2,5 mp mulva eltunik). A felirat maga hazudott:
-  // "optionale" — kozben kotelezo volt.
-  // POKA-YOKE: amit a mentes megkovetel, azt a felulet LATHATOAN kerje.
-  if(kellDosar){
-    h+='<div class="prog-field"><label>'+T('nj_client')+' *</label><input id="iClient" type="text" value="'+escH(S.njClient||'')+'" placeholder="'+T('nj_client_ph')+'" oninput="S.njClient=this.value;njSync()"/></div>';
-  }
-  h+='<details class="nj-more"><summary>'+T(kellDosar?'nj_more_auto':'nj_more')+'</summary>';
-  if(!kellDosar){
-    h+='<div class="prog-field" style="margin-top:8px"><label>'+T('nj_client')+'</label><input id="iClient" type="text" value="'+escH(S.njClient||'')+'" oninput="S.njClient=this.value"/></div>';
-  }
-  h+='<div class="prog-field"'+(kellDosar?' style="margin-top:8px"':'')+'><label>'+T('nj_auto')+'</label><input type="text" value="'+escH(S.njAuto||'')+'" oninput="S.njAuto=this.value"/></div>';
-  h+='</details>';
+  // ── NEV + AUTO: LATSZIK, de NEM kotelezo (Ferenc, 2026-08-26) ────────
+  // Ket lepesben jutottunk ide, es mindketto egy-egy hibat zart le:
+  //  1. A mentes kovetelte az ugyfel nevet, a mezo viszont egy
+  //     osszecsukott "Date optionale" fiokban ult, csillag nelkul.
+  //     Aki nem nyitotta ki: megnyomta a gombot es NEM TORTENT SEMMI.
+  //     A felirat maga hazudott: "optionale" — kozben kotelezo volt.
+  //  2. Ferenc dontese: a nev es az auto NE legyen kotelezo. A pultnal
+  //     gyakran csak a rendszam es a telefon van meg; a karosult nevet a
+  //     biztositoi papirbol veszik at kesobb, a dosszie-lapon.
+  // Igy a fiok teljesen megszunt: mindketto LATSZIK, egyik sem allitja
+  // meg a mentest. Nincs tobbe rejtett kovetelmeny, es nincs rejtett mezo.
+  h+='<div class="prog-field"><label>'+T('nj_client')+' <span class="nj-opt-t">('+T('nj_optional')+')</span></label><input id="iClient" type="text" value="'+escH(S.njClient||'')+'" placeholder="'+T('nj_client_ph')+'" oninput="S.njClient=this.value;njSync()"/></div>';
+  h+='<div class="prog-field"><label>'+T('nj_auto')+' <span class="nj-opt-t">('+T('nj_optional')+')</span></label><input id="iAuto" type="text" value="'+escH(S.njAuto||'')+'" oninput="S.njAuto=this.value"/></div>';
   h+='<div id="njDup" class="nj-dup" style="display:none"></div>';
   h+='<div id="njWhy" class="nj-why"></div>';
   h+='<div class="prog-actions"><button class="cancel" onclick="closeNewJob()">'+T('btn_cancel')+'</button><button id="njSave" class="submit" onclick="'+(mode==='edit'?'submitEditJob()':'submitNewJob()')+'">'+T('nj_open_'+mode)+'</button></div>';
@@ -1874,8 +1867,10 @@ function njMissing(){
   var kellDosar=(mode==='prog'||mode==='edit')&&S.njTip==='asig';
   if(kellDosar&&!S.njPay)m.push(T('nj_m_pay'));
   if(kellDosar&&S.njPay==='deschis'&&!String(S.njDosar||'').trim())m.push(T('nj_m_nrdosar'));
-  // A karosult neve a biztositonal KOTELEZO mezo — ne a pultnal derüljon ki.
-  if(kellDosar&&!String(S.njClient||'').trim())m.push(T('nj_m_client'));
+  // ── A NEV ES AZ AUTO NEM KOTELEZO (Ferenc, 2026-08-26) ────────
+  // Az elojegyzesnel gyakran csak a rendszam es a telefon van meg; a
+  // karosult nevet a biztositoi papirbol veszik at kesobb. Kitoltheto,
+  // de nem allitja meg a mentest.
   // Ugyanaz az eset ketszer: ez valodi hiba, nem engedjuk.
   if(njDup())m.push(T('nj_dup_real'));
   if(mode==='prog'&&!S.njDate)m.push(T('nj_m_date'));   // edit: nincs datum
