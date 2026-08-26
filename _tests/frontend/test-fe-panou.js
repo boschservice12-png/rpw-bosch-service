@@ -426,6 +426,48 @@ console.log('\n6c. G-3 — ikon-sav, kinyithatoan');
   ok(w.localStorage.getItem('rpw_sb')==='rail','  ez is megmarad');
 }
 
+console.log('\n6f. A negy belepo gomb FEHER, es lenyomasra szinesedik (Ferenc)');
+{
+  const d=w.document, gs=e=>w.getComputedStyle(e);
+  const tok=n=>gs(d.documentElement).getPropertyValue(n).trim();
+  const gombok=[].slice.call(d.querySelectorAll('.panou-hdr-actions .btn-prog-new'));
+  ok(gombok.length===4,'a negy belepo gomb megvan  ('+gombok.length+')');
+
+  // 1) NYUGALOMBAN feher. A jsdom nem oldja fel a valtozot, ezert a
+  //    tokent magat nezzuk meg: --w = #fff.
+  ok(gombok.every(g=>gs(g).getPropertyValue('background').trim()==='var(--w)'),
+     '  mindegyik a FEHER tokent viseli  ("'
+     +(gombok[0]?gs(gombok[0]).getPropertyValue('background'):'')+'")');
+  ok(/^#fff(fff)?$/i.test(tok('--w')),'  es a --w tenyleg feher  ("'+tok('--w')+'")');
+  // ...es EGYIKEN SEM maradt szines hatter beegetve a stilus-attributumba.
+  ok(gombok.every(g=>!g.style.background && !g.style.backgroundColor),
+     '  egyiken sem maradt beegetett szines hatter');
+
+  // 2) MINDEGYIK VISZI a sajat szinet — kulonben a lenyomas nem szinesedne.
+  const szinek=gombok.map(g=>g.style.getPropertyValue('--c').trim());
+  ok(szinek.every(Boolean),'  mindegyik viszi a sajat szinet: '+JSON.stringify(szinek));
+  ok(new Set(szinek).size===4,'  es mind a negy MAS szin');
+
+  // 3) LENYOMASRA szinesedik. A jsdom nem tud ":active"-ot szimulalni,
+  //    ezert a VALODI stiluslapot olvassuk vissza (CSSOM), nem a forrast.
+  let akt=null;
+  [].slice.call(d.styleSheets).forEach(sh=>{
+    let r; try{ r=sh.cssRules }catch(e){ return }
+    [].slice.call(r||[]).forEach(x=>{
+      if(x.selectorText && /\.btn-prog-new:active/.test(x.selectorText)) akt=x;
+    });
+  });
+  ok(!!akt,'van :active szabaly a gombra');
+  ok(akt && /var\(--c/.test(akt.style.getPropertyValue('background')||
+                            akt.style.getPropertyValue('background-color')||''),
+     '  lenyomva a SAJAT szinevel telik meg');
+  ok(akt && /^(#fff(fff)?|rgb\(255, 255, 255\))$/i.test((akt.style.getPropertyValue('color')||'').trim()),
+     '  es a felirat feherre valt  ("'+(akt?akt.style.getPropertyValue('color'):'')+'")');
+  // billentyuzetrol is latszik
+  ok(akt && /focus-visible/.test(akt.selectorText),
+     '  ugyanez latszik billentyuzetes fokusznal is');
+}
+
 console.log('\n6e. Nincs felso piros sav (Ferenc: "vegyuk ki")');
 {
   const d=w.document;

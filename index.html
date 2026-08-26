@@ -167,8 +167,10 @@ html[data-sb="rail"] .sb-toggle span{display:none}
 
 /* Programare modal */
 .panou-hdr-actions{display:flex;flex-direction:column;align-items:stretch;padding:22px 26px 16px;background:var(--w);border-bottom:1px solid var(--b);gap:14px}
-.btn-prog-new{background:var(--r);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
-.btn-prog-new:hover{background:var(--r700)}
+.btn-prog-new{background:var(--w);color:var(--c,var(--r));border:1.5px solid var(--c,var(--r));padding:9px 17px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
+.btn-prog-new:hover{box-shadow:0 0 0 3px var(--bg)}
+/* LENYOMASRA szinesedik — es billentyuzetrol is latszik, hova all a fokusz */
+.btn-prog-new:active,.btn-prog-new:focus-visible{background:var(--c,var(--r));color:#fff;border-color:var(--c,var(--r))}
 .prog-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px}
 .prog-box{background:var(--w);border-radius:var(--rd);padding:22px;max-width:420px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18)}
 .prog-t{font-size:18px;font-weight:800;margin-bottom:4px}
@@ -1242,7 +1244,7 @@ function renderPanou(){
   h+='<div class="main">';
 
   // Header + Programare noua gomb
-  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn" style="background:#15181C;color:#fff;border-color:#15181C" onclick="azOpen()">'+T('az_q')+'</button>'+'<button class="btn-prog-new" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="background:var(--bl,#2563eb)" onclick="dosarTarziu()">🛡 '+T('dosar_dauna')+'</button><label class="btn-prog-new" style="background:#F3F4F6;color:#374151;position:relative;display:inline-flex;cursor:pointer;box-sizing:border-box" title="'+T('dosar_fisier')+'">📄 '+T('dosar_fisier')+'<input type="file" accept="image/*,.pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0" onchange="dosarFisier(event)"/></label><button class="btn-prog-new" style="background:var(--g,#16a34a)" onclick="lucrareAcum()">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
+  h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn" style="background:#15181C;color:#fff;border-color:#15181C" onclick="azOpen()">'+T('az_q')+'</button>'+'<button class="btn-prog-new" style="--c:var(--r)" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="--c:#2563eb" onclick="dosarTarziu()">🛡 '+T('dosar_dauna')+'</button><label class="btn-prog-new" style="--c:#374151;position:relative;display:inline-flex;cursor:pointer;box-sizing:border-box" title="'+T('dosar_fisier')+'">📄 '+T('dosar_fisier')+'<input type="file" accept="image/*,.pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0" onchange="dosarFisier(event)"/></label><button class="btn-prog-new" style="--c:#16a34a" onclick="lucrareAcum()">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
 
   // Tabs
   h+='<div class="panou-tabs">';

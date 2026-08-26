@@ -1365,7 +1365,7 @@
   },
   {
    "id": "F-128",
-   "nev": "A panel a RedAssistance iranyitopult formajaban: piros elonev + nagy vekony cim, a belepo gombok a cim ALATT, lekerekitett pill-fulek kerek darabszam-jelvennyel, PIROS oszlopfejlecek — a Lucrari lapon is ugyanigy (Ferenc G-1); a felso piros 'Paint Workflow' sav kivezetve mind az ot kepernyorol",
+   "nev": "A panel a RedAssistance iranyitopult formajaban: piros elonev + nagy vekony cim, a belepo gombok a cim ALATT, lekerekitett pill-fulek kerek darabszam-jelvennyel, PIROS oszlopfejlecek — a Lucrari lapon is ugyanigy (Ferenc G-1); a felso piros 'Paint Workflow' sav kivezetve mind az ot kepernyorol; a negy belepo gomb feher alapon, sajat szinevel keretezve — lenyomasra szinesedik",
    "fe": [
     [
      "index.html",
@@ -1386,6 +1386,10 @@
     [
      "index.html",
      ".page-hdr{padding:22px 26px;display:flex;flex-direction:column"
+    ],
+    [
+     "index.html",
+     ".btn-prog-new:active,.btn-prog-new:focus-visible{background:var(--c,var(--r))"
     ]
    ],
    "be": [],
