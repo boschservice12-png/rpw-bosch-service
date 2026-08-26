@@ -215,6 +215,7 @@ async function loadJob(){
     if(res.error)throw res.error;
     var _lts=0,_sts=0;try{_lts=Date.parse(null||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
     if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};
+    _clReapply(JOB);            // amit epp gepelsz, az TULELI a szerver-valaszt
     try{RPWCache.setJob(JOB)}catch(e){}}
     try{RPWCache.setJob(JOB)}catch(e){}
   }catch(e){if(!JOB)JOB=null}
@@ -780,6 +781,18 @@ window.setDosarStatus=async function(v){
    elvenne a fokuszt a mezorol. Helyette csak azt frissitjuk, ami valoban
    valtozik: a WhatsApp gomb allapotat.                              */
 var _clT=null, _clP={};
+/* ── AMIT MOST GEPELSZ, AZT SEMMI NEM TOROLHETI ───────────────────
+   A loadJob() eloszor a gyorsitotarbol rajzol, MAJD a szerver
+   valaszara LECSERELI a JOB-ot es ujrarajzol. Aki addig beirta a
+   telefont, annak elveszett — Ferenc pontosan ezt fogta ki.
+   Ezert amit beirtal, azt itt tartjuk, amig a szerver vissza nem
+   igazolja a mentest; a kesobb erkezo szerver-valaszra ujra ratesszuk. */
+var _clDirty={};
+function _clReapply(job){
+  if(!job) return job;
+  for(var k in _clDirty){ if(Object.prototype.hasOwnProperty.call(_clDirty,k)) job[k]=_clDirty[k]; }
+  return job;
+}
 function _clWaBtn(){
   try{
     var b=document.getElementById('waLink'); if(!b)return;
@@ -794,6 +807,7 @@ window.setDosarClient=function(k,v,azonnal){
   if(['client','phone','note'].indexOf(k)<0)return;   // csak ez a harom
   JOB[k]=String(v==null?'':v);
   _clP[k]=JOB[k];
+  _clDirty[k]=JOB[k];
   try{RPWCache.setJob(JOB)}catch(e){}
   _clWaBtn();
   if(_clT){clearTimeout(_clT);_clT=null}
@@ -801,7 +815,14 @@ window.setDosarClient=function(k,v,azonnal){
     _clT=null;
     var p=_clP; _clP={};
     if(!Object.keys(p).length)return;
-    try{ RPWDb.patchV2(sb,JOB.id,p,{actor:'service'}) }catch(err){}
+    /* Sikeres mentes utan a mezo mar nem "fuggoben levo": a szerver is
+       ezt tudja. Ha a mentes NEM sikerul, szandekosan bennhagyjuk, hogy
+       a kovetkezo szerver-valasz se torolhesse le a kepernyorol. */
+    try{
+      Promise.resolve(RPWDb.patchV2(sb,JOB.id,p,{actor:'service'}))
+        .then(function(){ for(var k in p){ if(_clDirty[k]===p[k]) delete _clDirty[k] } })
+        .catch(function(){});
+    }catch(err){}
   };
   if(azonnal)kuld(); else _clT=setTimeout(kuld,800);
 };

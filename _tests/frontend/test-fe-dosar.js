@@ -36,7 +36,8 @@ const dom=new JSDOM(inline(raw),{virtualConsole:vc,
    from:()=>{const q={eq:()=>q,is:()=>q,single:()=>Promise.resolve({data:null,error:null}),
      order:()=>Promise.resolve({data:[],error:null})};return{select:()=>q}},
    storage:{from:()=>({createSignedUrl:async()=>({data:null,error:{}})})}};
-  w.RPWDb={ getRow:async()=>({data:{data:JSON.parse(JSON.stringify(JOB)),version:1},error:null}),
+  w.RPWDb={ getRow:async()=>({data:{data:JSON.parse(JSON.stringify(JOB)),version:1,
+      updated_at:new Date().toISOString()},error:null}),
     patchV2:async(sb,id,p)=>{PATCH.push(p);return {ok:true}} };
   w.RPWCache={getJob:()=>null,setJob:()=>{}};
   w.localStorage.setItem('rpw_auth',JSON.stringify({token:'t'.repeat(64),name:'T',employeeId:'E1',
@@ -107,6 +108,44 @@ console.log('\n5. A lánc összeér');
      'a mentés CSAK a három ügyfél-mezőt engedi');
   ok(/RPWDb\.patchV2\(sb,JOB\.id,p,\{actor:'service'\}\)/.test(src),
      'ugyanazon a védett, szeletes úton, mint a lap többi mezője');
+}
+
+console.log('\n6. A KESON ERKEZO SZERVER-VALASZ NEM TOROLHETI, AMIT GEPELSZ');
+{
+  // Ferenc: "nem mukodik". A loadJob() eloszor a gyorsitotarbol rajzol,
+  // MAJD a szerver valaszara LECSERELI a JOB-ot es ujrarajzol. Aki addig
+  // beirta a telefont, annak elveszett. Ez a teszt azt a versenyt jatssza
+  // ujra: lassu szerver + kozben gepeles.
+  const PATCH2=[];
+  const vc2=new jsdom.VirtualConsole();['jsdomError','error'].forEach(e=>vc2.on(e,()=>{}));
+  const dom2=new JSDOM(inline(raw),{virtualConsole:vc2,
+   url:'https://rpw.teszt/rpw-dosar.html?job=D1',runScripts:'dangerously',pretendToBeVisual:true,
+   beforeParse(w2){
+    w2.__sbMock={rpc:()=>Promise.resolve({data:{ok:true},error:null}),
+     from:()=>{const q={eq:()=>q,is:()=>q,order:()=>Promise.resolve({data:[],error:null})};return{select:()=>q}},
+     storage:{from:()=>({createSignedUrl:async()=>({data:null,error:{}})})}};
+    w2.RPWDb={ getRow:()=>new Promise(r=>setTimeout(()=>r(
+        {data:{data:JSON.parse(JSON.stringify(JOB)),version:1,
+               updated_at:new Date().toISOString()},error:null}),700)),   // LASSU
+      patchV2:async(sb,id,p)=>{PATCH2.push(p);return {ok:true}} };
+    // a gyorsitotarban mar ott a munka -> az elso rajzolas AZONNAL megy
+    w2.RPWCache={getJob:()=>JSON.parse(JSON.stringify(JOB)),setJob:()=>{}};
+    w2.localStorage.setItem('rpw_auth',JSON.stringify({token:'t'.repeat(64),name:'T',employeeId:'E1',
+      shopId:'S',can:{open:true,team:true},exp:Date.now()+9e6}));
+   }});
+  const w2=dom2.window;
+  for(let i=0;i<60 && !w2.document.getElementById('clTel');i++) await sleep(20);
+  const t=w2.document.getElementById('clTel');
+  ok(!!t,'a lap a gyorsítótárból már kirajzolódott');
+  t.value='0740111222';
+  t.dispatchEvent(new w2.Event('input',{bubbles:true}));
+  await sleep(1400);                       // a lassu szerver-valasz IDE esik
+  const t2=w2.document.getElementById('clTel');
+  ok(t2 && t2.value==='0740111222','a beírt telefon TÚLÉLI a szerver-választ — "'+(t2?t2.value:'?')+'"');
+  ok(w2.JOB && w2.JOB.phone==='0740111222','  és a munkalapon is megmaradt');
+  const b=w2.document.getElementById('waLink');
+  ok(b && !b.disabled,'  a WhatsApp gomb aktív maradt');
+  ok(PATCH2.some(p=>p.phone==='0740111222'),'  és a mentés is elment');
 }
 
 console.log('\n'+(fail?'✗ ':'OK ')+pass+' pass / '+fail+' fail');

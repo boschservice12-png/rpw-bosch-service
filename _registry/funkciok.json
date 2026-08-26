@@ -843,7 +843,7 @@
   },
   {
    "id": "F-126",
-   "nev": "Ugyfel-mezok a dosszie-lapon (nev / telefon / megjegyzes) — kesleltetett szeletes mentes; a WhatsApp gomb telefon nelkul tiltott",
+   "nev": "Ugyfel-mezok a dosszie-lapon (nev / telefon / megjegyzes) — kesleltetett szeletes mentes; a gepelt ertek TULELI a keson erkezo szerver-valaszt; a WhatsApp gomb telefon nelkul tiltott",
    "fe": [
     [
      "rpw-dosar.html",
@@ -852,6 +852,10 @@
     [
      "rpw-dosar.html",
      "id=\"clTel\""
+    ],
+    [
+     "rpw-dosar.html",
+     "function _clReapply"
     ],
     [
      "rpw-dosar.html",
