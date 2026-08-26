@@ -364,7 +364,7 @@
   },
   {
    "id": "F-125",
-   "nev": "Folyamatjelzo: harom lanc egy savban; a STATUSZ es a FOLYAMAT egy oszlopban (a folyamat neve a felirat elotagja), kihagyott lepes jelolve, keses borostyan",
+   "nev": "Folyamatjelzo: negy lanc egy savban (dosszie / varakozas / ratat / javitas); a statusz es a folyamat EGY oszlopban, minden fulon egyforma logikaval",
    "fe": [
     [
      "rpw-progres.js",
@@ -377,6 +377,10 @@
     [
      "rpw-progres.js",
      "pr-skip"
+    ],
+    [
+     "rpw-progres.js",
+     "j.sosire==='ratat'"
     ],
     [
      "index.html",

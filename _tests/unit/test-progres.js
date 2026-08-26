@@ -57,6 +57,24 @@ console.log('\n2. Varakozas — ot feltetel, EGY kapu');
   eq(shape(P.chain({sosire:'programat',conditions:{piese:'livrat'}},{T})),'...DB','livrat kesz');
 }
 
+console.log('\n2b. RATAT — ugyanaz a logika, mint a varakozasnal (Ferenc)');
+{
+  // Az elmaradt programalas NEM fazis-kerdes: az auto be sem jott, egy
+  // fazis sem indult el. Ugyanazt az ot feltetelt mutatja, mint a
+  // varakozas — csak a felirat mas, es MINDIG kesesnek szamit.
+  const r=P.chain({sosire:'ratat',conditions:{programare:true,loc:true}},{T});
+  eq(r.kind,'ratat','sajat fajta, de a varakozas lancaval');
+  eq(r.steps.length,5,'ot feltetel — NEM het fazis');
+  eq(shape(r),'DD..B','ugyanaz az alakzat, mint a varakozasnal');
+  eq(r.label,'pr_ratat','a felirat: nem jott el');
+  eq(r.counter,'2 / 5 pr_feltetel','feltetel-szamlalo');
+  ok(r.late===true,'az elmaradt programalas MINDIG keses');
+  ok(/pr-l-late/.test(P.html({sosire:'ratat',conditions:{}},{T})),'a rajzon is jelzi');
+  // A viitoare es a ratate EGYFORMA: azonos alakzat azonos feltetelekkel.
+  const v=P.chain({sosire:'programat',conditions:{programare:true,loc:true}},{T});
+  eq(shape(r),shape(v),'a ket ful savja UGYANUGY nez ki azonos felteteleknel');
+}
+
 console.log('\n3. Javitas — het fazis, a KIHAGYOTT jelolve (D-3)');
 {
   const j={sosire:'sosit',phase:4,phases:{1:{status:'done'},2:{status:'done'},

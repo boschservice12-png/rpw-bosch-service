@@ -93,10 +93,6 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .panou-tbl td:last-child{border-right:1px solid var(--b);border-radius:0 8px 8px 0}
 .panou-row.row-ok td{background:#dcfce7;border-color:#86efac}
 .panou-row.row-ok td:first-child{border-left:3px solid var(--g)}
-.panou-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:14px;font-size:10px;font-weight:700;white-space:nowrap}
-.pill-ready{background:var(--g);color:#fff}
-.pill-wait{background:var(--y);color:#fff}
-.pill-prog{background:var(--t3);color:#fff}
 .cond-row{display:inline-flex;gap:4px;align-items:center;cursor:help}
 .cond-ic{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
 .cond-ic.ok{background:var(--g)}
@@ -582,8 +578,6 @@ moved_ratat:{ro:'Mutat la lucrari ratate',en:'Moved to missed',hu:'Athelyezve a 
 reactiveaza_btn:{ro:'Reactiveaza',en:'Reactivate',hu:'Visszaallitas'},
 reactivat:{ro:'Reactivat',en:'Reactivated',hu:'Visszaallitva'},
 pill_ready:{ro:'Gata de lucru',en:'Ready to work',hu:'Munkara kesz'},
-pill_wait:{ro:'In Asteptare',en:'Waiting',hu:'Varakozik'},
-pill_prog:{ro:'Programat',en:'Scheduled',hu:'Programalva'},
 cond_programare:{ro:'Programare',en:'Schedule',hu:'Idopont'},
 cond_loc:{ro:'Loc',en:'Place',hu:'Hely'},
 cond_om:{ro:'Om',en:'Person',hu:'Ember'},
@@ -647,6 +641,7 @@ pr_fazis:{ro:'faze',en:'phases',hu:'fazis'},
 pr_feltetel:{ro:'conditii',en:'conditions',hu:'feltetel'},
 pr_gata:{ro:'Gata de receptie',en:'Ready for reception',hu:'Fogadasra kesz'},
 pr_var_wa:{ro:'Asteapta WhatsApp',en:'Waiting for WhatsApp',hu:'WhatsAppra var'},
+pr_ratat:{ro:'Nu a venit',en:'Did not arrive',hu:'Nem jott el'},
 dd_s1:{ro:'Colectare acte',en:'Collecting documents',hu:'Iratgyujtes'},
 dd_s2:{ro:'Predat la asigurator',en:'Handed to insurer',hu:'Atadva a biztositonak'},
 dd_s3:{ro:'Inchis',en:'Closed',hu:'Lezarva'},
@@ -839,7 +834,6 @@ panou_dosare:{ro:'Dosare daună',en:'Claim files',hu:'Kárdossziék'},
 col_asig:{ro:'Asigurator',en:'Insurer',hu:'Biztosito'},
 col_acte:{ro:'Acte',en:'Docs',hu:'Iratok'},
 col_status:{ro:'Status',en:'Status',hu:'Allapot'},
-st_astept:{ro:'Asteptam masina',en:'Waiting for the car',hu:'Varjuk az autot'},
 st_acte:{ro:'acte',en:'docs',hu:'irat'},
 st_predat:{ro:'Predat asiguratorului',en:'Handed to insurer',hu:'Atadva a biztositonak'},
 st_inchis:{ro:'Inchis',en:'Closed',hu:'Lezarva'},
@@ -1215,9 +1209,12 @@ function renderPanou(){
     h+='<div class="empty" style="background:var(--w);border-radius:var(--rd);padding:60px 20px;text-align:center;color:var(--t3)"><div style="font-size:14px;font-weight:600">'+T('noJobs')+'</div></div>';
   } else {
     h+='<table class="panou-tbl"><thead><tr><th>'+T('client')+'</th><th>'+T('plate')+'</th><th>'+T('col_data')+'</th>'
-      + ((tab==='viitoare')
-          ? '<th>'+T('pr_proces')+'</th>'
-          : '<th>'+T('phase')+'</th><th>'+T('status_cond')+'</th>')
+      // ── EGYFORMA LOGIKA MINDEN FULON (Ferenc, 2026-08-26) ────────
+      // A Viitoare es a Ratate (es a tobbi ful) UGYANAZT az oszlopot
+      // kapja: egy Proces sav. Eddig a Ratate meg a regi ket oszlopot
+      // hasznalta (fazis-jelveny + feltetel-ikonok) — ket kulonbozo
+      // nyelv ugyanarra a listara.
+      + '<th>'+T('pr_proces')+'</th>'
       + '<th>'+T('contact')+'</th><th>'+T('actions')+'</th></tr></thead><tbody>';
     displayed.forEach(function(j){
       var cnd=computeConditions(j);
@@ -1229,8 +1226,6 @@ function renderPanou(){
       // hatterszinezes csak zajt adott hozza.
       // A ZOLD marad: az azt jelenti, hogy MINDEN feltetel megvan.
       var rowCls=cnd.all?'row-ok':'';
-      var pillCls=canOpen?'pill-ready':(cnd.count>=2?'pill-wait':'pill-prog');
-      var pillText=canOpen?T('pill_ready'):(cnd.count>=2?T('pill_wait'):T('pill_prog'));
       var editCls=canOpen?'eb-go':'eb-no';
 
       var missing=[];
@@ -1241,7 +1236,6 @@ function renderPanou(){
       if(!cnd.whatsapp)missing.push(T('cond_whatsapp'));
       var tt=missing.length?T('cond_blocked_by')+': '+missing.join(' + '):T('pill_ready');
 
-      var phName=T(PK[(j.phase||1)-1]);
       var phoneClean=(j.phone||'').replace(/[^0-9+]/g,'');
       var waText='Buna ziua! Va contactam de la SC Szkaliczki Service.';
       var waCls=cnd.whatsapp?'':'dark';
@@ -1265,25 +1259,19 @@ function renderPanou(){
            : '')
         +'</td>';
       h+='<td class="pg-cell">'+progCell(j)+'</td>';
-      if(tab==='viitoare'){
-        // ── FOLYAMATJELZO (Ferenc, 2026-08-26) ───────────────────────
+      {
+        // ── STATUSZ ES FOLYAMAT EGY OSZLOPBAN, MINDEN FULON ──────────
+        // Amit a regi Status oszlop mondott, azt a sav felirata mondja:
+        //   iratszamlalo      -> a sav szamlaloja  (0/17 irat)
+        //   "Asteptam masina" -> a sav lepese      (Var a WhatsApp-ra)
+        //   Avizare/Deschis   -> a felirat ELOTAGJA
+        //   biztosito+karszam -> a rendszam ala (azonosito, nem allapot)
         // A rajzot a rpw-progres.js adja — UGYANAZ a fuggveny, mint a
-        // munkalapokon, hogy a jelzo ne mondhasson ketfelet.
+        // munkalapokon es a Lucrari listan.
         h+='<td>'+(window.RPWProgres
           ? RPWProgres.html(j,{T:T, acteCount:window.acteCount, threshold:S.statThreshold,
                                lateProg:(progInfo(j).state==='late')})
           : '')+'</td>';
-      }
-      // ── STATUSZ ES FOLYAMAT OSSZEVONVA (Ferenc "A", 2026-08-26) ──
-      // A viitoare lapon a Status oszlop MEGSZUNT: mindent, amit mondott,
-      // a Proces sav felirata mond el — egy nyelven, egyszer:
-      //   iratszamlalo   -> a sav szamlaloja  (0/17 irat)
-      //   "Asteptam masina" -> a sav lepese   (Var a WhatsApp-ra)
-      //   Avizare/Deschis jelveny -> a felirat ELOTAGJA
-      //   biztosito+karszam -> a rendszam ala (azonosito, nem allapot)
-      if(tab!=='viitoare'){
-        h+='<td><span class="panou-pill '+pillCls+'" title="'+phName+'">'+pillText+'</span></td>';
-        h+='<td><div class="cond-row" title="'+tt+'">'+renderCondIcon(cnd.programare)+renderCondIcon(cnd.loc)+renderCondIcon(cnd.om)+renderCondIcon(cnd.piese,'piese')+renderCondIcon(cnd.whatsapp)+'</div></td>';
       }
       // ── A KAPCSOLAT A WHATSAPP JELE (Ferenc, 2026-08-26) ─────────────
       // Emoji helyett a VALODI WhatsApp jel: zold, ha mar egyeztettunk;

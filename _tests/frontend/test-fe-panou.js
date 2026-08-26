@@ -225,7 +225,7 @@ console.log('\n1e. A mappa CSAK ott, ahol van dosszié-munka (Ferenc, 2026-08-26
   ok(asig && /Avizare daun/.test(asig.textContent),'„Avizare daună" soron a mappa MARAD — ott mi gyűjtjük az iratokat');
 }
 
-console.log('\n1d. Ratate fül — a kuka is rajz, nem emoji');
+console.log('\n1d. Ratate fül — EGYFORMA LOGIKA a Viitoare-val (Ferenc)');
 {
   const rt=[...w.document.querySelectorAll('.panou-tab')]
     .find(b=>(b.getAttribute('onclick')||'').indexOf("'ratate'")>=0);
@@ -238,6 +238,19 @@ console.log('\n1d. Ratate fül — a kuka is rajz, nem emoji');
   ok(!!del && !!del.querySelector('svg'),'a törlés gombon valódi SVG kuka van');
   ok(del && (del.getAttribute('aria-label')||'').length>2,'  felolvasó-címkével');
   ok(!/🗑/.test(h),'a 🗑 emoji eltűnt');
+  // ── Ferenc, 2026-08-26: a ket ful UGYANAZT az oszlopot hasznalja.
+  const ths=[...w.document.querySelectorAll('.panou-tbl th')].map(t=>t.textContent.trim());
+  ok(ths.indexOf('Proces')>=0,'a Ratate fülön is „Proces" oszlop van: '+ths.join(' | '));
+  ok(!ths.some(t=>/Cond|Faz|Fază/i.test(t)),'  a régi fázis/feltétel oszlopok eltűntek');
+  const rr=[...w.document.querySelectorAll('tr.panou-row')]
+    .find(r=>r.textContent.indexOf('MS-77-EEE')>=0);
+  ok(rr && rr.querySelector('.pr-wrap'),'a ratat soron is ott a folyamat-sáv');
+  const lbl=rr?rr.querySelector('.pr-lbl').textContent.replace(/\s+/g,' ').trim():'';
+  ok(/Nu a venit|Nem j/.test(lbl),'  és megmondja, mi történt: '+lbl);
+  ok(/feltétel|conditii|conditions/.test(lbl),'  a FELTETELEKET mutatja, nem fázisokat — az autó be sem jött');
+  // Az elmaradt programalas KESESNEK szamit: a felirat borostyan.
+  // (A savon a kapu-szegmens amugy is borostyan, amig nincs egyeztetes.)
+  ok(rr && rr.querySelector('.pr-lbl.pr-l-late'),'  a felirat késésre vált (elmaradt programálás)');
   const back=[...w.document.querySelectorAll('.panou-tab')]
     .find(b=>(b.getAttribute('onclick')||'').indexOf("'viitoare'")>=0);
   if(back) back.click(); await sleep(30);

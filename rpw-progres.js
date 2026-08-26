@@ -111,8 +111,13 @@
               proc:procName(j,T), counter:cnt, late:false, done:st-1, total:3};
     }
 
-    /* ── 2. VARAKOZAS — az auto meg nem jott be ─────────────────── */
-    if(j.sosire==='programat'){
+    /* ── 2. VARAKOZAS — az auto meg nem jott be ─────────────────────
+       IDE TARTOZIK A "RATAT" IS (Ferenc, 2026-08-26): az elmaradt
+       programalas UGYANAZ az allapot, csak a datum elment es az ugyfel
+       nem jott. A fogadasi feltetelek valtozatlanul ervenyesek — nem
+       fazisokat kell mutatni neki, mert egy fazis sem indult el. */
+    if(j.sosire==='programat' || j.sosire==='ratat'){
+      var ratat=(j.sosire==='ratat');
       var c=j.conditions||{};
       var piese=(c.piese==='livrat')||(c.piese===true);
       var raw=[
@@ -129,11 +134,13 @@
         return {label:r.label, state: r.gate?'block':'todo'};
       });
       var kapu=!!c.whatsapp;
-      return {kind:'astept', steps:st2,
-              label: kapu ? T('pr_gata') : T('pr_var_wa'),
+      return {kind: ratat?'ratat':'astept', steps:st2,
+              label: ratat ? T('pr_ratat') : (kapu ? T('pr_gata') : T('pr_var_wa')),
               proc:procName(j,T),
               counter:n+' / 5 '+T('pr_feltetel'),
-              late: !!opts.lateProg, done:n, total:5};
+              /* Az elmaradt programalas MINDIG kesesnek szamit — ez a
+                 lenyege. */
+              late: ratat || !!opts.lateProg, done:n, total:5};
     }
 
     /* ── 3. JAVITAS FOLYAMATBAN ────────────────────────────────── */
