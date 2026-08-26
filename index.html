@@ -153,6 +153,13 @@ html:not([data-sb="wide"]) .sb-toggle span{display:none}
 .edit-btn{padding:7px 16px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
 .edit-btn.eb-go{background:var(--g);color:#fff}
 .edit-btn.eb-no{background:var(--b2);color:var(--t3);cursor:not-allowed}
+/* A RECEPCIO PIROS (Ferenc, 2026-08-26). Ket allapota van, de MINDIG
+   latszik: telve, ha egyeztettunk; kerettel, ha meg nem. A kerettel
+   valo NEM nema — megnyomva megmondja, mi hianyzik. */
+.edit-btn.eb-rec{background:var(--r);color:#fff;border:1px solid var(--r)}
+.edit-btn.eb-rec:hover{background:var(--r700)}
+.edit-btn.eb-rec.eb-rec-var{background:var(--w);color:var(--r)}
+.edit-btn.eb-rec.eb-rec-var:hover{background:var(--r50)}
 .edit-btn.eb-r{background:var(--r);color:#fff}
 .edit-btn.eb-del{background:var(--r50,#fef2f2);color:var(--r);border:1px solid var(--r100,#fee2e2);padding:7px 10px}
 .edit-btn.eb-del:hover{background:var(--r100,#fee2e2)}
@@ -1381,12 +1388,19 @@ function renderPanou(){
         // az ikon nem jelenik meg melle.
         var _dosszieMunka = (j.damageType==='asig' && j.dosarStatus!=='deschis');
         var _slot = _dosszieMunka
-          ? '<button class="edit-btn eb-ico" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')" title="'+T('open_dosar_btn')+'" aria-label="'+T('open_dosar_btn')+'">'+ico('folder')+'</button>'
-          : (canOpen ? ''
-             : '<button class="edit-btn eb-ico eb-no" onclick="event.stopPropagation();deschideLucrare(\''+j.id+'\')" title="'+T('deschide_lucrarea')+'" aria-label="'+T('deschide_lucrarea')+'">'+ico('wrench')+'</button>');
-        h+='<td>'+(canOpen
-        ? '<button class="edit-btn '+editCls+'" onclick="event.stopPropagation();deschideLucrare(\''+j.id+'\')">'+T('deschide_lucrarea')+'</button>'
-        : '')+' '+_slot+' <button class="edit-btn eb-edit2 eb-ico" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'" aria-label="'+T('edit_btn')+'">'+ico('pencil')+'</button> <button class="edit-btn eb-repro eb-ico" onclick="event.stopPropagation();openRepro(\''+j.id+'\')" title="'+T('repro_btn')+'" aria-label="'+T('repro_btn')+'">'+ico('calendar')+'</button> <button class="edit-btn eb-ratat eb-ico" onclick="event.stopPropagation();markRatat(\''+j.id+'\')" title="'+T('ratat_btn')+'" aria-label="'+T('ratat_btn')+'">'+ico('clock')+'</button></td>';
+          ? '<button class="edit-btn eb-ico" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')" title="'+T('open_dosar_btn')+'" aria-label="'+T('open_dosar_btn')+'">'+ico('folder')+'</button> '
+          : '';
+        // ── A RECEPCIO NEM BUJIK EL (Ferenc, 2026-08-26) ─────────────
+        // Eddig ket alakja volt: zold szoveges gomb, ha a WhatsApp ki
+        // volt pipalva — es NEMA szurke csavarkulcs, ha nem. A legfobb
+        // muvelet igy elrejtozott. Mostantol EGY alakja van: piros
+        // szoveges gomb, rajzzal, MINDEN varakozo soron. Ha meg nincs
+        // meg a WhatsApp, keretes es megnyomva MEGMONDJA, mi hianyzik.
+        var _rec='<button class="edit-btn eb-rec'+(canOpen?'':' eb-rec-var')
+          +'" onclick="event.stopPropagation();deschideLucrare(\''+j.id+'\')"'
+          +' title="'+escA(tt)+'" aria-label="'+escA(T('deschide_lucrarea'))+'">'
+          +ico('wrench')+' '+T('deschide_lucrarea')+'</button>';
+        h+='<td>'+_slot+_rec+' <button class="edit-btn eb-edit2 eb-ico" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'" aria-label="'+T('edit_btn')+'">'+ico('pencil')+'</button> <button class="edit-btn eb-repro eb-ico" onclick="event.stopPropagation();openRepro(\''+j.id+'\')" title="'+T('repro_btn')+'" aria-label="'+T('repro_btn')+'">'+ico('calendar')+'</button> <button class="edit-btn eb-ratat eb-ico" onclick="event.stopPropagation();markRatat(\''+j.id+'\')" title="'+T('ratat_btn')+'" aria-label="'+T('ratat_btn')+'">'+ico('clock')+'</button></td>';
       } else {
         h+='<td><button class="edit-btn eb-r" onclick="event.stopPropagation();oP(\''+j.id+'\','+(j.phase||1)+')">'+T('edit')+'</button> '+(tab==='ratate'?'<button class="edit-btn eb-react" onclick="event.stopPropagation();reactiveaza(\''+j.id+'\')">'+T('reactiveaza_btn')+'</button> ':'')+'<button class="edit-btn eb-del eb-ico" onclick="event.stopPropagation();dJ(\''+j.id+'\')" title="'+T('sterge')+'" aria-label="'+T('sterge')+'">'+ico('trash')+'</button></td>';
       }

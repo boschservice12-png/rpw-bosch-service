@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 90 | 27 | 54 | 3 | 6 | 7 |
+| 91 | 27 | 55 | 3 | 6 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -41,7 +41,7 @@ szám nélkül, azt is megmondja.
 | **F-121** | Elojegyzes urlap (Programare noua): ket tipus (Dauna asigurare / Dauna auto), a biztositosnal ket dosszie-ag (Avizare dauna / Dosar dauna deschis); a nev es az auto LATSZIK, de nem kotelezo | `index.html` | — | `frontend/test-fe-urlap.js` | 🟦 csak frontend |
 | **F-122** | Kapcsolat oszlop a foablakon: a VALODI WhatsApp jel (zold=egyeztetve, sotet=meg nem, tompa=nincs telefon) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-123** | Sor-ikonok a foablakon (naptar/ora/mappa/ceruza/kuka) — vonalas SVG, mindegyiken title ES aria-label | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
-| **F-124** | A soron a mappa CSAK ott, ahol van dosszie-munka (Avizare dauna); magankaron es mar nyitott dossziénal a RECEPCIO az ut | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-124** | A soron a mappa CSAK ott, ahol van dosszie-munka (Avizare dauna); magankaron es mar nyitott dossziénal a RECEPCIO az ut — a mappa mellett a dossziegyujto soron is ott a recepcio | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-125** | Folyamatjelzo: negy lanc egy savban (dosszie / varakozas / ratat / javitas); a statusz es a folyamat EGY oszlopban, minden fulon egyforma logikaval | `rpw-progres.js` `index.html` | — | `unit/test-progres.js` | 🟦 csak frontend |
 | **F-103** | Kovetkezo munkalapszam kerese a szervertol | `index.html` | `rpw_next_job_number` `rpw_job_number` | `integration/test-int-workflow.js` | ✅ él |
 | **F-104** | Munkalapok listaja | `rpw-db.js` | `rpw_jobs_list` | `integration/test-int-workflow.js` | ✅ él |
@@ -63,6 +63,7 @@ szám nélkül, azt is megmondja.
 | **F-126** | Ugyfel-mezok a dosszie-lapon (nev / telefon / megjegyzes) — kesleltetett szeletes mentes; a gepelt ertek TULELI a keson erkezo szerver-valaszt; a WhatsApp gomb telefon nelkul tiltott | `rpw-dosar.html` `index.html` | — | `frontend/test-fe-dosar.js` | 🟦 csak frontend |
 | **F-127** | Ikon-sav: az oldalsav 74px-es ikon-savkent indul es kinyithato 240px-re; a kinyito gomb a sav TETEJEN all; kis kepernyon is elerheto, ott a kinyitott sav RATAKAR a tartalomra es valasztaskor becsukodik; az allapot a bongeszoben marad, a valtas NEM rajzol ujra (Ferenc G-3) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-128** | A panel a RedAssistance iranyitopult formajaban: piros elonev + nagy vekony cim, a belepo gombok a cim ALATT, lekerekitett pill-fulek kerek darabszam-jelvennyel, PIROS oszlopfejlecek — a Lucrari lapon is ugyanigy (Ferenc G-1); a felso piros 'Paint Workflow' sav kivezetve mind az ot kepernyorol; a negy belepo gomb feher alapon, sajat szinevel keretezve — lenyomasra szinesedik | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-129** | A recepcio nem bujik el: MINDEN varakozo soron ott a piros 'Receptie auto' gomb rajzzal. Ket allapota van (telt piros = egyeztetve, keretes piros = meg nem), de egyik sem nema: megnyomva megmondja, mi hianyzik (Ferenc: 'eldugott funkcio, nem logikus') | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 

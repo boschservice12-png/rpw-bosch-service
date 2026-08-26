@@ -343,7 +343,7 @@
   },
   {
    "id": "F-124",
-   "nev": "A soron a mappa CSAK ott, ahol van dosszie-munka (Avizare dauna); magankaron es mar nyitott dossziénal a RECEPCIO az ut",
+   "nev": "A soron a mappa CSAK ott, ahol van dosszie-munka (Avizare dauna); magankaron es mar nyitott dossziénal a RECEPCIO az ut — a mappa mellett a dossziegyujto soron is ott a recepcio",
    "fe": [
     [
      "index.html",
@@ -1398,6 +1398,31 @@
     [
      "index.html",
      ".btn-prog-new:active,.btn-prog-new:focus-visible{background:var(--c,var(--r))"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/frontend/test-fe-panou.js",
+   "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-129",
+   "nev": "A recepcio nem bujik el: MINDEN varakozo soron ott a piros 'Receptie auto' gomb rajzzal. Ket allapota van (telt piros = egyeztetve, keretes piros = meg nem), de egyik sem nema: megnyomva megmondja, mi hianyzik (Ferenc: 'eldugott funkcio, nem logikus')",
+   "fe": [
+    [
+     "index.html",
+     "var _rec='<button class=\"edit-btn eb-rec'"
+    ],
+    [
+     "index.html",
+     ".edit-btn.eb-rec{background:var(--r);color:#fff"
+    ],
+    [
+     "index.html",
+     ".edit-btn.eb-rec.eb-rec-var{background:var(--w);color:var(--r)}"
+    ],
+    [
+     "index.html",
+     "window.deschideLucrare"
     ]
    ],
    "be": [],

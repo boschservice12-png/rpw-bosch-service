@@ -206,8 +206,8 @@ console.log('\n1e. A mappa CSAK ott, ahol van dosszié-munka (Ferenc, 2026-08-26
   ok(asig && /deschideDosar/.test(asig.innerHTML),'biztosítós soron OTT a dosszié-mappa');
   ok(auto && !/deschideDosar/.test(auto.innerHTML),'magánkár soron NINCS dosszié-mappa');
   ok(auto && /deschideLucrare/.test(auto.innerHTML),'  helyette a recepció útja');
-  const w2=auto&&auto.querySelector('.eb-ico.eb-no');
-  ok(!!w2 && !!w2.querySelector('svg'),'  ikonos gombként, rajzzal');
+  const w2=auto&&auto.querySelector('.eb-rec');
+  ok(!!w2 && !!w2.querySelector('svg'),'  PIROS szöveges gombként, rajzzal');
   ok(w2 && (w2.getAttribute('aria-label')||'').length>2,'  címkével');
 
   // Nem duplikalunk: ha a zold szoveges gomb ott van, nincs melle ikon.
@@ -456,6 +456,52 @@ console.log('\n6c. G-3 — ikon-sav, kinyithatoan');
      '  kinyitva a sav ott is 240px  ("'+(nyit?nyit.style.getPropertyValue('--sbo'):'')+'")');
   ok(nyit && nyit.style.getPropertyValue('--sbw').trim()==='56px',
      '  de a tartalom NEM tolodik el — ratakar  ("'+(nyit?nyit.style.getPropertyValue('--sbw'):'')+'")');
+}
+
+console.log('\n6h. A RECEPCIO NEM BUJIK EL (Ferenc: "eldugott funkcio")');
+{
+  const d=w.document, gs=e=>w.getComputedStyle(e);
+  const tok=n=>gs(d.documentElement).getPropertyValue(n).trim();
+  const felold=v=>{const m=/^var\((--[\w-]+)\)$/.exec(String(v).trim());
+                   return m?tok(m[1]):String(v).trim()};
+  const rows=[].slice.call(d.querySelectorAll('tr.panou-row'));
+  const R=p=>rows.find(r=>r.textContent.indexOf(p)>=0);
+
+  // MINDEN varakozo soron ott a recepcio — a dossziegyujto soron is,
+  // a mappa MELLETT. Egy sem marad ut nelkul.
+  const varo=rows.filter(r=>!/Colectare acte/.test(r.textContent));
+  ok(varo.length>=5,'van legalabb ot varakozo sor  ('+varo.length+')');
+  ok(varo.every(r=>r.querySelectorAll('.eb-rec').length===1),
+     'MINDEGYIKEN pontosan egy Recepcio gomb van');
+  ok(varo.every(r=>/deschideLucrare/.test(r.querySelector('.eb-rec').outerHTML)),
+     '  es mindegyik a recepciora visz');
+
+  // A nema szurke csavarkulcs eltunt: nincs tobbe halottnak latszo gomb.
+  ok(rows.every(r=>r.querySelectorAll('.eb-ico.eb-no').length===0),
+     'a nema szurke csavarkulcs SEHOL nem maradt');
+
+  // PIROS mindket allapotban — ez volt Ferenc kerese.
+  const nemkesz=R('MS-44-DDD').querySelector('.eb-rec');   // meg nem egyeztetve
+  const kesz   =R('MS-88-FFF').querySelector('.eb-rec');   // mar egyeztetve
+  ok(felold(gs(kesz).background||gs(kesz).backgroundColor)==='#dc2626',
+     'egyeztetve: TELT piros  ("'+gs(kesz).background+'")');
+  ok(felold(gs(nemkesz).color)==='#dc2626',
+     'meg nem egyeztetve: piros betu es keret  ("'+gs(nemkesz).color+'")');
+  ok(nemkesz.classList.contains('eb-rec-var'),'  megkulonboztetheto a ketto');
+  ok(!kesz.classList.contains('eb-rec-var'),'  es a kesz nem viseli');
+
+  // NEM nema: aki meg nem egyeztetett, annak a gomb MEGMONDJA, mi hianyzik.
+  ok(!nemkesz.disabled,'a meg nem egyeztetett gomb NEM tiltott');
+  ok((nemkesz.getAttribute('title')||'').length>10,
+     '  es az egermutatora megmondja, mi hianyzik  ("'
+     +(nemkesz.getAttribute('title')||'').slice(0,40)+'")');
+  ok((nemkesz.getAttribute('title')||'')!==(kesz.getAttribute('title')||''),
+     '  a ket allapot MAST mond');
+
+  // A dossziegyujto soron a mappa ES a recepcio is ott van.
+  const gyujt=R('MS-33-CCC');
+  ok(/deschideDosar/.test(gyujt.innerHTML) && !!gyujt.querySelector('.eb-rec'),
+     'a dossziegyujto soron a mappa MELLETT is ott a recepcio');
 }
 
 console.log('\n6f. A negy belepo gomb FEHER, es lenyomasra szinesedik (Ferenc)');
