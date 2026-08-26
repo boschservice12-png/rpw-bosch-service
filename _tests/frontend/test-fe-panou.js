@@ -362,6 +362,95 @@ console.log('\n5. A célok a forrásban (amit jsdom nem tud megmutatni)');
   ok(/deschideDosar\(j\.id\)/.test(dt),'dosarTarziu → deschideDosar(<id>) → dosszié-lap');
 }
 
+// ════════════════════════════════════════════════════════════════
+//  6. A REDASSISTANCE-FORMA (Ferenc G-1 / G-2 / G-3, 2026-08-26)
+//  A kepernyorol kuldott iranyitopult formaja — a MI tartalmunkkal.
+//  Nem a stilussort merjuk, hanem amit a bongeszo tenylegesen kirajzol.
+// ════════════════════════════════════════════════════════════════
+console.log('\n6. G-1 — az ot belepo gomb a CIM ALATT van, nem mellette');
+{
+  const d=w.document;
+  const hdr=d.querySelector('.panou-hdr-actions');
+  ok(!!hdr,'van fejlec');
+  const cim=d.querySelector('.panou-title');
+  ok(!!cim,'  van cim');
+  // Az ot belepo ut: Avizare (az_q), Programare, Avizare dauna, Preluare
+  // (file-label), Lucrare noua. Mindegyik a fejlecben.
+  const gombok=hdr.querySelectorAll('button, label');
+  ok(gombok.length>=5,'  legalabb ot belepo vezerlo a fejlecben  ('+gombok.length+')');
+  // A LENYEG: a cim ELOBB van a dokumentumban, mint barmelyik gomb.
+  const utan=w.Node.DOCUMENT_POSITION_FOLLOWING;
+  let mindUtana=true;
+  gombok.forEach(g=>{ if(!(cim.compareDocumentPosition(g)&utan)) mindUtana=false });
+  ok(mindUtana,'MINDEN belepo gomb a cim UTAN all a dokumentumban');
+  // ...es a fejlec oszlopba rendez, tehat ala kerulnek, nem melle.
+  ok(w.getComputedStyle(hdr).flexDirection==='column',
+     'a fejlec OSZLOPBA rendez -> a gombok a cim ALA kerulnek  ("'
+     +w.getComputedStyle(hdr).flexDirection+'")');
+}
+
+console.log('\n6b. G-2 — nincs "Zile" szuro (Ferenc: nem kerte)');
+{
+  const d=w.document;
+  ok(d.querySelectorAll('.panou-hdr-actions select, .panou-tabs select').length===0,
+     'a panel fejlecen nincs legordulo idoszak-szuro');
+}
+
+console.log('\n6c. G-3 — ikon-sav, kinyithatoan');
+{
+  const d=w.document;
+  ok(d.documentElement.getAttribute('data-sb')==='rail',
+     'indulaskor IKON-SAV  ("'+d.documentElement.getAttribute('data-sb')+'")');
+  ok(d.documentElement.style.getPropertyValue('--sbw')==='74px',
+     '  a szelesseg 74px  ("'+d.documentElement.style.getPropertyValue('--sbw')+'")');
+  const tg=d.querySelector('.sb-toggle');
+  ok(!!tg,'van kinyito gomb');
+  ok(!!(tg&&tg.getAttribute('title')),'  a gombnak van neve az egermutatora');
+  // A menupontok feliratai rejtve vannak — ezert MINDEGYIK visz nevet.
+  const items=[].slice.call(d.querySelectorAll('.sb-item'));
+  ok(items.length>=5,'  legalabb ot menupont  ('+items.length+')');
+  ok(items.every(i=>i.getAttribute('title')||i.getAttribute('aria-label')),
+     '  MINDEN menupont nevet visz (a felirat rejtve van)');
+
+  // A valtas NEM rajzol ujra: ugyanaz a tablazat-elem marad a helyen.
+  const tbl=d.querySelector('.panou-tbl');
+  tg.click();
+  ok(d.documentElement.getAttribute('data-sb')==='wide','kattintasra KINYILIK');
+  ok(d.documentElement.style.getPropertyValue('--sbw')==='240px','  240px lesz');
+  ok(w.localStorage.getItem('rpw_sb')==='wide','  az allapot megmarad a bongeszoben');
+  ok(d.querySelector('.panou-tbl')===tbl,
+     '  a lista NEM rajzolodik ujra (ugyanaz az elem marad)');
+
+  tg.click();
+  ok(d.documentElement.getAttribute('data-sb')==='rail','ujra kattintva visszazarul');
+  ok(w.localStorage.getItem('rpw_sb')==='rail','  ez is megmarad');
+}
+
+console.log('\n6d. Az iranyitopult jegyei a kirajzolt panelen');
+{
+  const d=w.document, gs=e=>w.getComputedStyle(e);
+  // jsdom NEM oldja fel a CSS-valtozokat: a szamitott ertek "var(--r)"
+  // marad. Ezert ketlepesben merunk — mi ertek all az elemen, es mi az
+  // a token valojaban. Igy a "piros" allitas nem hit kerdese.
+  const tok=n=>gs(d.documentElement).getPropertyValue(n).trim();
+  const felold=v=>{const m=/^var\((--[\w-]+)\)$/.exec(String(v).trim());
+                   return m?tok(m[1]):String(v).trim()};
+  const th=d.querySelector('.panou-tbl th');
+  ok(!!th,'van oszlopfejlec');
+  // PIROS oszlopfejlec — a kepernyorol kuldott pult jellegzetessege.
+  ok(th && /^#dc2626$|^rgb\(220, 38, 38\)$/i.test(felold(gs(th).color)),
+     '  az oszlopfejlec PIROS  ("'+(th?gs(th).color+'" -> "'+felold(gs(th).color):'')+'")');
+  ok(th && gs(th).textTransform!=='uppercase',
+     '  es nem csupa nagybetu  ("'+(th?gs(th).textTransform:'')+'")');
+  // nagy, VEKONY cim
+  const cim=d.querySelector('.panou-title');
+  ok(cim && gs(cim).fontWeight==='400','  a cim nagy es VEKONY  ("'+(cim?gs(cim).fontWeight:'')+'")');
+  // kerek darabszam-jelveny a fuleken
+  const cnt=d.querySelector('.panou-tab .tab-count');
+  ok(cnt && gs(cnt).borderRadius==='999px',
+     '  a darabszam-jelveny kerek  ("'+(cnt?gs(cnt).borderRadius:'')+'")');
+}
+
 console.log('\n'+(fail?'✗ ':'OK ')+pass+' pass / '+fail+' fail');
 process.exit(fail?1:0);
 })().catch(e=>{console.error(e);process.exit(1)});

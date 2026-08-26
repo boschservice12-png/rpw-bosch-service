@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 88 | 27 | 52 | 3 | 6 | 7 |
+| 90 | 27 | 54 | 3 | 6 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -61,6 +61,8 @@ szám nélkül, azt is megmondja.
 | **F-118** | Idopont (programare) ablak | `index.html` | — | `unit/test-prog.js` | 🟦 csak frontend |
 | **F-119** | Idopont-athelyezes (reprogramare) | `index.html` | — | `unit/test-acceptance.js` | 🟦 csak frontend |
 | **F-126** | Ugyfel-mezok a dosszie-lapon (nev / telefon / megjegyzes) — kesleltetett szeletes mentes; a gepelt ertek TULELI a keson erkezo szerver-valaszt; a WhatsApp gomb telefon nelkul tiltott | `rpw-dosar.html` `index.html` | — | `frontend/test-fe-dosar.js` | 🟦 csak frontend |
+| **F-127** | Ikon-sav: az oldalsav 74px-es ikon-savkent indul es kinyithato 240px-re; az allapot a bongeszoben marad, a valtas NEM rajzol ujra (Ferenc G-3) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-128** | A panel a RedAssistance iranyitopult formajaban: piros elonev + nagy vekony cim, a belepo gombok a cim ALATT, lekerekitett pill-fulek kerek darabszam-jelvennyel, PIROS oszlopfejlecek — a Lucrari lapon is ugyanigy (Ferenc G-1) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 

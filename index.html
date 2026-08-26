@@ -47,7 +47,7 @@ try{ if(window.RPWAuth) RPWAuth.guard(); }catch(e){}</script>
 html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100dvh;-webkit-tap-highlight-color:transparent}
 .mono{font-family:'JetBrains Mono','Courier New',monospace}
 .layout{display:flex;min-height:100dvh}
-.sidebar{width:240px;background:var(--w);border-right:1px solid var(--b);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:40}
+.sidebar{width:var(--sbw,74px);background:var(--w);border-right:1px solid var(--b);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:40}
 .sb-logo{padding:18px 16px;display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--b)}
 .sb-logo-c{width:40px;height:40px;border-radius:50%;background:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}
 .sb-logo-ring{width:24px;height:24px;border-radius:50%;background:#fff}
@@ -63,16 +63,41 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .sb-lang{padding:12px 18px;border-top:1px solid var(--b);display:flex;gap:4px}
 .lb{padding:4px 10px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid var(--b);background:var(--w);color:var(--t3);font-family:inherit}.lb.on{background:var(--r);color:#fff;border-color:var(--r)}
 
+/* ═══ IKON-SAV (Ferenc G-3, 2026-08-26) ══════════════════════════════
+   Az oldalsav alapbol 74px szeles ikon-sav — ugyanaz a forma, mint a
+   RedAssistance iranyitopulton. Kinyithato: a --sbw valtozo 240px-re
+   valt, a feliratok elojonnek. Az allapot a bongeszoben marad meg.
+   A szelesseget CSS-valtozo hordozza, mert a .main minden kepernyon
+   kulon rajzolodik — igy egyetlen ertek mozgat mindent, ujrarajzolas
+   nelkul.                                                              */
+html[data-sb="rail"] .sb-logo{padding:16px 0;justify-content:center;border-bottom:0}
+html[data-sb="rail"] .sb-logo-tx{display:none}
+html[data-sb="rail"] .sb-nav{padding:6px 0;display:flex;flex-direction:column;align-items:center;gap:2px}
+html[data-sb="rail"] .sb-item{width:42px;height:42px;padding:0;margin:0;justify-content:center;border-radius:12px}
+html[data-sb="rail"] .sb-item span{display:none}
+html[data-sb="rail"] .sb-item.on{background:var(--r50);color:var(--r)}
+html[data-sb="rail"] .sb-item.sb-admin-on{background:var(--gl);color:var(--g)}
+html[data-sb="rail"] .sb-lang{flex-direction:column;padding:10px 0;align-items:center;gap:3px}
+html[data-sb="rail"] .sb-lang .lb{width:38px;text-align:center;padding:4px 0}
+/* a kinyito gomb — az egyetlen elem, ami mindket allapotban ugyanott van */
+.sb-toggle{display:flex;align-items:center;gap:11px;padding:11px 14px;margin:0 12px 8px;
+  border:1px solid var(--b);border-radius:10px;background:var(--w);color:var(--t2);
+  font:600 12px inherit;cursor:pointer;width:calc(100% - 24px)}
+.sb-toggle:hover{border-color:var(--b2);color:var(--t)}
+.sb-toggle svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex:0 0 auto}
+html[data-sb="rail"] .sb-toggle{width:42px;height:42px;padding:0;margin:0 auto 8px;justify-content:center}
+html[data-sb="rail"] .sb-toggle span{display:none}
+
 /* ═══ Panou (Lean Dashboard) modul ═══ */
 .panou-hdr{padding:18px 24px 12px;background:var(--w);border-bottom:1px solid var(--b)}
-.panou-label{font-size:11px;font-weight:700;color:var(--r);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
-.panou-title{font-size:28px;font-weight:800;color:var(--t)}
-.panou-tabs{display:inline-flex;gap:4px;background:var(--w);border:1px solid var(--b);border-radius:12px;padding:5px;margin:18px 24px 0}
-.panou-tab{padding:10px 18px;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:8px;font-family:inherit;background:none;border:none}
+.panou-label{font-size:10px;font-weight:800;color:var(--r);letter-spacing:2.2px;text-transform:uppercase;margin-bottom:3px}
+.panou-title{font-size:30px;font-weight:400;letter-spacing:-.02em;line-height:1.12;color:var(--t)}
+.panou-tabs{display:inline-flex;gap:4px;background:var(--w);border:1px solid var(--b);border-radius:16px;padding:8px;margin:18px 26px 0}
+.panou-tab{padding:9px 16px;font-size:14px;font-weight:600;color:var(--t2);cursor:pointer;border-radius:12px;display:flex;align-items:center;gap:8px;font-family:inherit;background:none;border:none}
 .panou-tab.on{color:var(--r);background:var(--r50);font-weight:700}
-.panou-tab .tab-count{background:var(--bg);color:var(--t2);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;min-width:22px;text-align:center}
+.panou-tab .tab-count{background:var(--b);color:var(--t2);font-size:11px;font-weight:800;padding:0 6px;border-radius:999px;min-width:22px;height:22px;display:inline-grid;place-items:center;font-variant-numeric:tabular-nums}
 .panou-tab.on .tab-count{background:var(--r);color:#fff}
-.panou-footer{padding:16px 24px;display:flex;justify-content:flex-end;align-items:center;gap:16px;font-size:12px;color:var(--t3);border-top:1px solid var(--b);margin-top:24px}
+.panou-footer{padding:16px 26px;display:flex;justify-content:flex-end;align-items:center;gap:16px;font-size:12px;color:var(--t3);border-top:1px solid var(--b);margin-top:24px}
 .panou-footer .ft-brand{margin-right:auto;color:var(--t2);font-weight:600}
 .panou-footer a{color:var(--t3);text-decoration:underline;cursor:pointer}
 .prm-wrap{padding:18px 24px 0}
@@ -85,10 +110,10 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .prm-f input{border:1px solid var(--b);border-radius:8px;padding:9px 11px;font-size:13px;font-weight:600;color:var(--t);font-family:inherit;outline:none}
 .prm-f input:focus{border-color:var(--r)}
 .prm-capac{margin-top:12px;padding:10px 14px;background:var(--gl);border:1px solid var(--g);border-radius:8px;font-size:13px;color:var(--g);font-weight:600}
-.panou-tbl-wrap{padding:14px 24px 24px;background:var(--bg);min-height:60vh}
+.panou-tbl-wrap{padding:14px 26px 26px;background:var(--bg);min-height:60vh}
 .panou-tbl{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:13px}
-.panou-tbl th{text-align:left;padding:8px 12px;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase}
-.panou-tbl td{padding:12px;vertical-align:middle;background:var(--w);border-top:1px solid var(--b);border-bottom:1px solid var(--b)}
+.panou-tbl th{text-align:left;padding:10px 12px 12px;font-size:12.5px;font-weight:700;color:var(--r);letter-spacing:.2px;white-space:nowrap}
+.panou-tbl td{padding:14px 12px;vertical-align:middle;background:var(--w);border-top:1px solid var(--b);border-bottom:1px solid var(--b)}
 .panou-tbl td:first-child{border-left:1px solid var(--b);border-radius:8px 0 0 8px}
 .panou-tbl td:last-child{border-right:1px solid var(--b);border-radius:0 8px 8px 0}
 .panou-row.row-ok td{background:#dcfce7;border-color:#86efac}
@@ -119,7 +144,7 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .panou-row{cursor:pointer}
 .panou-row:hover td{background-color:rgba(220,38,38,.04)}
 .panou-row.row-ok:hover td{background-color:#bbf7d0}
-.panou-hint{font-size:11px;color:var(--t3);padding:6px 24px;background:var(--w);border-bottom:1px solid var(--b);text-align:center;font-style:italic}
+.panou-hint{font-size:11px;color:var(--t3);padding:6px 26px;background:var(--w);border-bottom:1px solid var(--b);text-align:center;font-style:italic}
 .panou-row.row-dd td:first-child{box-shadow:inset 3px 0 0 var(--bl,#2563eb)}
 .nj-opt-t{font-weight:400;color:var(--t3)}
 .edit-btn.eb-ico{padding:0;width:32px;height:32px;justify-content:center}
@@ -141,7 +166,7 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .wa-btn svg{width:16px;height:16px;fill:#fff}
 
 /* Programare modal */
-.panou-hdr-actions{display:flex;justify-content:space-between;align-items:flex-end;padding:18px 24px 12px;background:var(--w);border-bottom:1px solid var(--b);gap:16px;flex-wrap:wrap}
+.panou-hdr-actions{display:flex;flex-direction:column;align-items:stretch;padding:22px 26px 16px;background:var(--w);border-bottom:1px solid var(--b);gap:14px}
 .btn-prog-new{background:var(--r);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
 .btn-prog-new:hover{background:var(--r700)}
 .prog-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px}
@@ -178,7 +203,7 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .ftr-num{font-size:48px;font-weight:900;color:var(--g)}
 .ftr-num.bad{color:var(--r)}.ftr-num.warn{color:var(--y)}
 @media (max-width:900px){.stat-grid{grid-template-columns:1fr}.stat-card.full{grid-column:span 1}}
-.main{margin-left:240px;flex:1}
+.main{margin-left:var(--sbw,74px);flex:1}
 .partner-bar{background:var(--r);padding:14px 24px;display:flex;align-items:center;gap:10px;color:#fff}
 .partner-bar svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2}
 .pb-name{font-size:15px;font-weight:700}
@@ -186,9 +211,9 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .tab{padding:14px 20px;font-size:13px;color:var(--t3);font-weight:500;cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px}
 .tab.on{color:var(--r);border-bottom-color:var(--r);font-weight:600}
 .tab svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8}
-.page-hdr{padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px}
-.ph-label{font-size:11px;font-weight:700;color:var(--r);letter-spacing:1.5px;text-transform:uppercase}
-.ph-title{font-size:22px;font-weight:800;margin-top:2px}
+.page-hdr{padding:22px 26px;display:flex;flex-direction:column;align-items:stretch;gap:14px}
+.ph-label{font-size:10px;font-weight:800;color:var(--r);letter-spacing:2.2px;text-transform:uppercase}
+.ph-title{font-size:30px;font-weight:400;letter-spacing:-.02em;line-height:1.12;margin-top:3px}
 .btn{border:none;border-radius:var(--rd);padding:10px 20px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
 .btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
 .btn-r{background:var(--r);color:#fff}.btn-r:active{background:var(--r700)}
@@ -199,7 +224,7 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .stat-cell-val{font-size:22px;font-weight:800;margin-top:2px}
 .tbl-wrap{margin:16px 24px;background:var(--w);border:1px solid var(--b);border-radius:var(--rd);overflow-x:auto}
 .tbl{width:100%;border-collapse:collapse;min-width:600px}
-.tbl thead th{padding:12px 16px;text-align:left;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--b)}
+.tbl thead th{padding:12px 16px;text-align:left;font-size:12.5px;font-weight:700;color:var(--r);letter-spacing:.2px;border-bottom:1px solid var(--b)}
 .tbl thead th.c{text-align:center}
 .tbl tbody tr{border-bottom:1px solid var(--bg)}.tbl tbody tr:last-child{border-bottom:none}
 .tbl tbody tr:hover{background:var(--r50)}
@@ -224,7 +249,7 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
 .empty{text-align:center;padding:60px 24px;color:var(--t3)}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--w);padding:12px 20px;border-radius:var(--rd);font-size:12px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.12);border-left:4px solid var(--g);z-index:200}
 .loading{text-align:center;padding:60px;color:var(--t3);font-size:14px}
-@media(max-width:768px){.sidebar{width:56px}.sb-logo-t,.sb-item span,.sb-lang{display:none}.sb-logo{padding:14px 12px;justify-content:center}.sb-item{padding:12px 0;justify-content:center;margin-right:0;border-radius:0}.sb-item.on{border-radius:0;margin-right:0}.main{margin-left:56px}.stat-row{grid-template-columns:repeat(3,1fr)}.page-hdr{padding:16px}.tbl-wrap{margin:12px 16px}}
+@media(max-width:768px){.sidebar{width:56px}.sb-toggle{display:none}.sb-logo-t,.sb-item span,.sb-lang{display:none}.sb-logo{padding:14px 12px;justify-content:center}.sb-item{padding:12px 0;justify-content:center;margin-right:0;border-radius:0}.sb-item.on{border-radius:0;margin-right:0}.main{margin-left:56px}.stat-row{grid-template-columns:repeat(3,1fr)}.page-hdr{padding:16px}.tbl-wrap{margin:12px 16px}}
 @media(max-width:480px){.stat-row{grid-template-columns:1fr 1fr}}
 .nj-sub{font-size:12px;color:var(--t3);margin-bottom:16px}
 .nj-box{max-width:520px;max-height:92vh;overflow:auto}
@@ -572,6 +597,8 @@ admin_wrong:{ro:'PIN gresit',en:'Wrong PIN',hu:'Hibas PIN'},
 admin_only:{ro:'Doar admin poate sterge — activeaza modul admin (lacatul)',en:'Admin only — unlock admin mode',hu:'Csak admin torolhet — kapcsold be az admin modot (lakat)'},
 
 // === Panou (Lean Dashboard) modul ===
+sb_open:{ro:'Extinde meniul',en:'Expand menu',hu:'Menu kinyitasa'},
+sb_close:{ro:'Restrange meniul',en:'Collapse menu',hu:'Menu bezarasa'},
 panou_label:{ro:'PANOUL REDASSISTANCE',en:'REDASSISTANCE PANEL',hu:'REDASSISTANCE PANEL'},
 panou_title:{ro:'Centru de Control Operational',en:'Operational Control Center',hu:'Operativ Iranyitokozpont'},
 panou_viitoare:{ro:'Lucrari viitoare',en:'Upcoming jobs',hu:'Jovobeli munkak'},
@@ -1006,18 +1033,48 @@ window.importZIP=async function(e){
 
 var IC={panou:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',jobs:'<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',stats:'<svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>',prog:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',plus:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',edit:'<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',del:'<svg viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>',user:'<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',params:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>'};
 
+/* -- IKON-SAV allapota (Ferenc G-3, 2026-08-26) --------------------
+   Alapallapot a 74px-es ikon-sav; a kinyitas a bongeszoben megmarad.
+   A szelesseget CSS-valtozo hordozza, ezert a valtas NEM rajzol ujra:
+   a nyitott urlap es a felgorgetett lista helyben marad. */
+function sbRail(){
+  try{ return localStorage.getItem('rpw_sb')!=='wide' }catch(e){ return true }
+}
+function sbApply(){
+  var r=sbRail(), d=document.documentElement;
+  d.setAttribute('data-sb', r?'rail':'wide');
+  d.style.setProperty('--sbw', r?'74px':'240px');
+}
+window.toggleSidebar=function(){
+  try{ localStorage.setItem('rpw_sb', sbRail()?'wide':'rail') }catch(e){}
+  sbApply();
+  var b=document.querySelector('.sb-toggle');
+  if(b){ var t=sbRail()?T('sb_open'):T('sb_close');
+         b.title=t; b.setAttribute('aria-label',t);
+         var sp=b.querySelector('span'); if(sp)sp.textContent=t; }
+};
+function sbToggle(){
+  var r=sbRail(), t=r?T('sb_open'):T('sb_close');
+  return '<button class="sb-toggle" type="button" title="'+escA(t)+'" aria-label="'+escA(t)+'" onclick="toggleSidebar()">'
+    +'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>'
+    +'<span>'+escH(t)+'</span></button>';
+}
+sbApply();   // az ikon-sav allapota MAR az elso rajzolas elott all
+
 function sbNav(active){
   var ln=gL();
-  function it(scr,ic,t,key){return '<div class="sb-item '+(active===key?'on':'')+'" onclick="setScreen(\''+scr+'\')">'+ic+'<span>'+t+'</span></div>';}
+  /* A feliratok az ikon-savban el vannak rejtve, ezert MINDEN elem visz
+     nevet az egermutatora es a felolvasonak is. */
+  function it(scr,ic,t,key){return '<div class="sb-item '+(active===key?'on':'')+'" title="'+escA(t)+'" aria-label="'+escA(t)+'" onclick="setScreen(\''+scr+'\')">'+ic+'<span>'+t+'</span></div>';}
   return '<div class="sidebar"><div class="sb-logo"><div class="sb-logo-c"><div class="sb-logo-ring"></div><div class="sb-logo-d"></div></div><div class="sb-logo-tx"><div class="sb-logo-t"><span>Red</span>Assistance</div><div class="sb-logo-sub">DIGITAL ECOSYSTEM</div></div></div><div class="sb-nav">'+
     it('panou',IC.prog,T('panou'),'panou')+
     it('lucrari',IC.jobs,T('lucrari'),'lucrari')+
     it('echipa','<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>',T('echipa'),'echipa')+
     it('statistici',IC.stats,T('statistici'),'statistici')+
     it('parametri',IC.params,T('parametri'),'parametri')+
-    (isAdmin()?'<div class="sb-item" onclick="location.assign(\'rpw-cleanup.html\')"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg><span>Curatare</span></div>':'')+
-    (isAdmin()?'<div class="sb-item" onclick="location.assign(\'rpw-cos.html\')"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M10 11v6M14 11v6"/></svg><span>Coș (șterse)</span></div>':'')+
-    '</div><div style="padding:6px 4px;border-top:1px solid var(--b)"><div class="sb-item'+(isAdmin()?' sb-admin-on':'')+'" onclick="toggleAdmin()"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="'+(isAdmin()?'M7 11V7a5 5 0 019.9-1':'M7 11V7a5 5 0 0110 0v4')+'"/></svg><span>'+(isAdmin()?'ADMIN ✓':T('admin_lbl'))+'</span></div></div><div class="sb-lang"><button class="lb '+(ln==='ro'?'on':'')+'" onclick="sL(\'ro\')">RO</button><button class="lb '+(ln==='en'?'on':'')+'" onclick="sL(\'en\')">EN</button><button class="lb '+(ln==='hu'?'on':'')+'" onclick="sL(\'hu\')">HU</button></div></div>';
+    (isAdmin()?'<div class="sb-item" title="Curatare" aria-label="Curatare" onclick="location.assign(\'rpw-cleanup.html\')"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg><span>Curatare</span></div>':'')+
+    (isAdmin()?'<div class="sb-item" title="Cos (sterse)" aria-label="Cos (sterse)" onclick="location.assign(\'rpw-cos.html\')"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M10 11v6M14 11v6"/></svg><span>Coș (șterse)</span></div>':'')+
+    '</div><div style="padding:6px 4px;border-top:1px solid var(--b)"><div class="sb-item'+(isAdmin()?' sb-admin-on':'')+'" title="'+escA(T('admin_lbl'))+'" aria-label="'+escA(T('admin_lbl'))+'" onclick="toggleAdmin()"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="'+(isAdmin()?'M7 11V7a5 5 0 019.9-1':'M7 11V7a5 5 0 0110 0v4')+'"/></svg><span>'+(isAdmin()?'ADMIN ✓':T('admin_lbl'))+'</span></div></div>'+sbToggle()+'<div class="sb-lang"><button class="lb '+(ln==='ro'?'on':'')+'" onclick="sL(\'ro\')">RO</button><button class="lb '+(ln==='en'?'on':'')+'" onclick="sL(\'en\')">EN</button><button class="lb '+(ln==='hu'?'on':'')+'" onclick="sL(\'hu\')">HU</button></div></div>';
 }
 
 function render(){

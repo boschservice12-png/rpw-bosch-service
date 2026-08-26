@@ -1329,6 +1329,68 @@
    ],
    "teszt": "_tests/unit/test-queue.js",
    "allapot": "el"
+  },
+  {
+   "id": "F-127",
+   "nev": "Ikon-sav: az oldalsav 74px-es ikon-savkent indul es kinyithato 240px-re; az allapot a bongeszoben marad, a valtas NEM rajzol ujra (Ferenc G-3)",
+   "fe": [
+    [
+     "index.html",
+     "function sbRail"
+    ],
+    [
+     "index.html",
+     "function sbApply"
+    ],
+    [
+     "index.html",
+     "window.toggleSidebar"
+    ],
+    [
+     "index.html",
+     "class=\"sb-toggle\""
+    ],
+    [
+     "index.html",
+     "html[data-sb=\"rail\"]"
+    ],
+    [
+     "index.html",
+     "sb_open"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/frontend/test-fe-panou.js",
+   "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-128",
+   "nev": "A panel a RedAssistance iranyitopult formajaban: piros elonev + nagy vekony cim, a belepo gombok a cim ALATT, lekerekitett pill-fulek kerek darabszam-jelvennyel, PIROS oszlopfejlecek — a Lucrari lapon is ugyanigy (Ferenc G-1)",
+   "fe": [
+    [
+     "index.html",
+     ".panou-hdr-actions{display:flex;flex-direction:column"
+    ],
+    [
+     "index.html",
+     ".panou-title{font-size:30px;font-weight:400"
+    ],
+    [
+     "index.html",
+     ".panou-tbl th{text-align:left;padding:10px 12px 12px;font-size:12.5px;font-weight:700;color:var(--r)"
+    ],
+    [
+     "index.html",
+     ".tbl thead th{padding:12px 16px;text-align:left;font-size:12.5px;font-weight:700;color:var(--r)"
+    ],
+    [
+     "index.html",
+     ".page-hdr{padding:22px 26px;display:flex;flex-direction:column"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/frontend/test-fe-panou.js",
+   "allapot": "csak-frontend"
   }
  ]
 }
