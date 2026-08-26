@@ -42,7 +42,7 @@ const dom=new JSDOM(inline(raw),{virtualConsole:vc,
   w.RPWCache={getJob:()=>null,setJob:()=>{}};
   w.localStorage.setItem('rpw_auth',JSON.stringify({token:'t'.repeat(64),name:'T',employeeId:'E1',
     shopId:'S',can:{open:true,team:true},exp:Date.now()+9e6}));
-  let OPEN=null; w.open=(u)=>{OPEN=u;w.__open=u;return null};
+  w.open=(u)=>{w.__opened=u;return null};
  }});
 const w=dom.window;
 for(let i=0;i<120 && !w.document.getElementById('clTel');i++) await sleep(25);
@@ -108,6 +108,34 @@ console.log('\n5. A lánc összeér');
      'a mentés CSAK a három ügyfél-mezőt engedi');
   ok(/RPWDb\.patchV2\(sb,JOB\.id,p,\{actor:'service'\}\)/.test(src),
      'ugyanazon a védett, szeletes úton, mint a lap többi mezője');
+}
+
+console.log('\n5b. A KÜLDŐ GOMB NEM BÚJHAT EL (Ferenc: „nem találom")');
+{
+  // A gomb a "Documente client" szekcioban ul, ami ossze volt csukva —
+  // aki beirta a telefont, nem talalta meg a kuldest. Amig nincs egyetlen
+  // ugyfel-fajl sem, a szekcio NYITVA erkezik.
+  const b=D().getElementById('waLink');
+  const bd=b?b.closest('.sec-bd'):null;
+  ok(bd && /open/.test(bd.className),'üres dossziénál a szekció NYITVA érkezik — a gomb látszik');
+  // es a kapcsolo tovabbra is mukodik: elso kattintasra BEZAR
+  const hd=[...D().querySelectorAll('.sec-h')].find(h=>/Documente client/.test(h.textContent));
+  ok(!!hd,'a szekció fejléce kattintható');
+  hd.click(); await sleep(50);
+  ok(!/open/.test(D().getElementById('waLink').closest('.sec-bd').className),
+     '  első kattintásra bezár (a kapcsoló nem romlott el)');
+  hd.click(); await sleep(50);
+  ok(/open/.test(D().getElementById('waLink').closest('.sec-bd').className),'  másodikra megint nyit');
+  // a kuldes tenyleg a wa.me-re megy
+  const t=D().getElementById('clTel');
+  t.value='0740111222'; t.dispatchEvent(new w.Event('input',{bubbles:true}));
+  await sleep(40);
+  w.__opened=null;
+  D().getElementById('waLink').click(); await sleep(60);
+  ok(w.__opened && /^https:\/\/wa\.me\/40740111222\?text=/.test(w.__opened),
+     'a gomb tényleg a WhatsApp-ot nyitja: '+String(w.__opened).slice(0,46)+'…');
+  ok(w.__opened && /rpw-upload\.html%3Fjob%3D|rpw-upload\.html\?job=/.test(decodeURIComponent(w.__opened)),
+     '  a feltöltési linkkel');
 }
 
 console.log('\n6. A KESON ERKEZO SZERVER-VALASZ NEM TOROLHETI, AMIT GEPELSZ');
