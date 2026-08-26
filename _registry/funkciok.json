@@ -296,6 +296,27 @@
    "allapot": "csak-frontend"
   },
   {
+   "id": "F-122",
+   "nev": "Kapcsolat oszlop a foablakon: a VALODI WhatsApp jel (zold=egyeztetve, sotet=meg nem, tompa=nincs telefon)",
+   "fe": [
+    [
+     "index.html",
+     "wa-btn"
+    ],
+    [
+     "index.html",
+     "clickWhatsApp"
+    ],
+    [
+     "index.html",
+     "wa-btn nofon"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/frontend/test-fe-panou.js",
+   "allapot": "csak-frontend"
+  },
+  {
    "id": "F-103",
    "nev": "Kovetkezo munkalapszam kerese a szervertol",
    "fe": [

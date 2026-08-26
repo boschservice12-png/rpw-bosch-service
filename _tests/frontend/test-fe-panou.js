@@ -27,9 +27,11 @@ const JOBS=[
   created:'2026-08-25',programare:{}},
  {id:'V1',number:'MS-26-061',plate:'MS-22-BBB',client:'Prog Anna',flux:'reparatie',damageType:'asig',
   dosarStatus:'deschis',sosire:'programat',phase:1,phases:{},inchis:false,
-  programare:{date:'2026-08-27',time:'09:00'},conditions:{programare:true}},
+  phone:'0740111222',
+  programare:{date:'2026-08-27',time:'09:00'},conditions:{programare:true,whatsapp:true}},
  {id:'V2',number:'MS-26-062',plate:'MS-33-CCC',client:'Aviz Bela',flux:'reparatie',damageType:'asig',
   dosarStatus:'deschid',sosire:'programat',phase:1,phases:{},inchis:false,
+  phone:'0740333444',
   programare:{date:'2026-08-28',time:'10:00'},conditions:{}},
  {id:'V3',number:'MS-26-063',plate:'MS-44-DDD',client:'Sajat Csaba',flux:'reparatie',damageType:'auto',
   sosire:'programat',phase:1,phases:{},inchis:false,
@@ -78,6 +80,32 @@ console.log('\n1. Viitoare fül — a kétállapotú jelvény (K-19)');
   ok(!/dd2-/.test(v3),'magánkáron NINCS jelvény');
   ok(!/MS-11-AAA/.test(h),'a kárdosszié nincs a Viitoare listán');
   ok(!/prog-modal/.test(h),'a felugró kék modal nem renderelődik');
+}
+
+console.log('\n1b. Kapcsolat = a VALÓDI WhatsApp jel (Ferenc, 2026-08-26)');
+{
+  const h=app();
+  ok(!/Contacteaza clientul|need_wa_btn/.test(h),'a „Contactează clientul" szöveges gomb eltűnt');
+  const rows=[...w.document.querySelectorAll('tr.panou-row')];
+  ok(rows.length>0,'vannak sorok');
+  ok(rows.every(r=>r.querySelectorAll('.wa-btn').length===1),
+     'soronként PONTOSAN EGY WhatsApp-vezérlő van (nem kettő)');
+  const wa=[...w.document.querySelectorAll('.wa-btn')];
+  ok(wa.length>0 && wa.every(b=>!!b.querySelector('svg')),'mindegyik a valódi WhatsApp jelet viseli (svg)');
+  ok(!/💬/.test(h),'a 💬 emoji sehol nem maradt a listán');
+
+  const rowOf=p=>rows.find(r=>r.textContent.indexOf(p)>=0);
+  const btnOf=p=>{const r=rowOf(p);return r?r.querySelector('.wa-btn'):null};
+  const b1=btnOf('MS-22-BBB'), b2=btnOf('MS-33-CCC'), b3=btnOf('MS-44-DDD');
+  ok(b1 && !b1.classList.contains('dark') && !b1.classList.contains('nofon'),
+     'egyeztetett ügyfél → ZÖLD jel');
+  ok(b2 && b2.classList.contains('dark'),'még nem egyeztetett → SÖTÉT jel');
+  ok(b3 && b3.classList.contains('nofon'),'nincs telefon → tompított jel');
+  ok(b3 && /openCondModal/.test(b3.getAttribute('onclick')||''),
+     '  telefon nélkül sem zsákutca: a kézi bejelölés útja nyílik');
+  ok(b3 && !b3.disabled,'  nem néma tiltott gomb');
+  ok(b2 && /clickWhatsApp/.test(b2.getAttribute('onclick')||''),
+     'a sötét jel kattintásra ÍR az ügyfélnek és be is jelöli');
 }
 
 console.log('\n2. Az Avizare daună fül — valódi fülváltással');
