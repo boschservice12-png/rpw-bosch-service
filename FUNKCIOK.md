@@ -38,7 +38,7 @@ szám nélkül, azt is megmondja.
 |---|---|---|---|---|---|
 | **F-101** | Uj munkalap: Lucrare noua (urlap nelkul, egyenesen a recepciora) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-102** | Rendszam bevitel es normalizalas | `index.html` | — | `unit/test-case.js` | 🟦 csak frontend |
-| **F-121** | Elojegyzes urlap (Programare noua) — az EGYETLEN megmarado urlap-ut | `index.html` | — | `unit/test-entry.js` | 🟦 csak frontend |
+| **F-121** | Elojegyzes urlap (Programare noua) — az EGYETLEN megmarado urlap-ut; biztositos esetben a karosult neve LATHATO kotelezo mezo | `index.html` | — | `frontend/test-fe-urlap.js` | 🟦 csak frontend |
 | **F-103** | Kovetkezo munkalapszam kerese a szervertol | `index.html` | `rpw_next_job_number` `rpw_job_number` | `integration/test-int-workflow.js` | ✅ él |
 | **F-104** | Munkalapok listaja | `rpw-db.js` | `rpw_jobs_list` | `integration/test-int-workflow.js` | ✅ él |
 | **F-105** | Egy munkalap betoltese | `rpw-db.js` | `rpw_job_get` | `integration/test-int-workflow.js` | ✅ él |

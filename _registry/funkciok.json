@@ -276,7 +276,7 @@
   },
   {
    "id": "F-121",
-   "nev": "Elojegyzes urlap (Programare noua) — az EGYETLEN megmarado urlap-ut",
+   "nev": "Elojegyzes urlap (Programare noua) — az EGYETLEN megmarado urlap-ut; biztositos esetben a karosult neve LATHATO kotelezo mezo",
    "fe": [
     [
      "index.html",
@@ -285,10 +285,14 @@
     [
      "index.html",
      "function njMissing"
+    ],
+    [
+     "index.html",
+     "nj_client_ph"
     ]
    ],
    "be": [],
-   "teszt": "_tests/unit/test-entry.js",
+   "teszt": "_tests/frontend/test-fe-urlap.js",
    "allapot": "csak-frontend"
   },
   {

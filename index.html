@@ -651,6 +651,8 @@ nj_asigurator:{ro:'Asigurator',en:'Insurer',hu:'Biztosito'},
 nj_nrdosar:{ro:'Nr. dosar asigurator',en:'Claim number',hu:'Karszam'},
 nj_more:{ro:'Date optionale (client, masina)',en:'Optional (client, car)',hu:'Opcionalis (ugyfel, auto)'},
 nj_client:{ro:'Client',en:'Client',hu:'Ugyfel'},
+nj_client_ph:{ro:'Numele pagubitului',en:'Claimant name',hu:'A karosult neve'},
+nj_more_auto:{ro:'Date optionale (masina)',en:'Optional (car)',hu:'Opcionalis (auto)'},
 nj_auto:{ro:'Marca / model',en:'Make / model',hu:'Marka / modell'},
 nj_missing:{ro:'Lipseste',en:'Missing',hu:'Hianyzik'},
 nj_m_plate:{ro:'nr. inmatriculare',en:'plate',hu:'rendszam'},
@@ -1612,9 +1614,22 @@ function newJobModalHtml(){
     h+='</div>';
   }
 
-  h+='<details class="nj-more"><summary>'+T('nj_more')+'</summary>';
-  h+='<div class="prog-field" style="margin-top:8px"><label>'+T('nj_client')+'</label><input type="text" value="'+escH(S.njClient||'')+'" oninput="S.njClient=this.value"/></div>';
-  h+='<div class="prog-field"><label>'+T('nj_auto')+'</label><input type="text" value="'+escH(S.njAuto||'')+'" oninput="S.njAuto=this.value"/></div>';
+  // ── HIBA (Ferenc, 2026-08-26): a karosult NEVE el volt rejtve ─────────
+  // A mentes biztositos esetben KOTELEZOVE tette az ugyfel nevet
+  // (njMissing: nj_m_client), a mezo viszont az "Date optionale
+  // (client, masina)" fiok MELYEN ult, csillag nelkul. Aki nem nyitotta
+  // ki a fiokot, csak annyit latott: megnyomja a gombot es NEM TORTENIK
+  // SEMMI (a hibauzenet 2,5 mp mulva eltunik). A felirat maga hazudott:
+  // "optionale" — kozben kotelezo volt.
+  // POKA-YOKE: amit a mentes megkovetel, azt a felulet LATHATOAN kerje.
+  if(kellDosar){
+    h+='<div class="prog-field"><label>'+T('nj_client')+' *</label><input id="iClient" type="text" value="'+escH(S.njClient||'')+'" placeholder="'+T('nj_client_ph')+'" oninput="S.njClient=this.value;njSync()"/></div>';
+  }
+  h+='<details class="nj-more"><summary>'+T(kellDosar?'nj_more_auto':'nj_more')+'</summary>';
+  if(!kellDosar){
+    h+='<div class="prog-field" style="margin-top:8px"><label>'+T('nj_client')+'</label><input id="iClient" type="text" value="'+escH(S.njClient||'')+'" oninput="S.njClient=this.value"/></div>';
+  }
+  h+='<div class="prog-field"'+(kellDosar?' style="margin-top:8px"':'')+'><label>'+T('nj_auto')+'</label><input type="text" value="'+escH(S.njAuto||'')+'" oninput="S.njAuto=this.value"/></div>';
   h+='</details>';
   h+='<div id="njDup" class="nj-dup" style="display:none"></div>';
   h+='<div id="njWhy" class="nj-why"></div>';
