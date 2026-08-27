@@ -145,6 +145,7 @@ html:not([data-sb="wide"]) .sb-toggle span{display:none}
 .panou-row{cursor:pointer}
 .panou-row:hover td{background-color:rgba(220,38,38,.04)}
 .panou-row.row-ok:hover td{background-color:#bbf7d0}
+.cl-sent{display:inline-flex;align-items:center;gap:3px;margin-left:6px;vertical-align:middle;background:var(--gl);color:var(--g);border:1px solid #86efac;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
 .panou-hint{font-size:11px;color:var(--t3);padding:6px 26px;background:var(--w);border-bottom:1px solid var(--b);text-align:center;font-style:italic}
 .panou-row.row-dd td:first-child{box-shadow:inset 3px 0 0 var(--bl,#2563eb)}
 .nj-opt-t{font-weight:400;color:var(--t3)}
@@ -603,6 +604,9 @@ admin_wrong:{ro:'PIN gresit',en:'Wrong PIN',hu:'Hibas PIN'},
 admin_only:{ro:'Doar admin poate sterge — activeaza modul admin (lacatul)',en:'Admin only — unlock admin mode',hu:'Csak admin torolhet — kapcsold be az admin modot (lakat)'},
 
 // === Panou (Lean Dashboard) modul ===
+no_name:{ro:'fara nume',en:'no name',hu:'nincs nev'},
+cl_sent:{ro:'Clientul a trimis fisiere',en:'Client sent files',hu:'Az ugyfel kuldott fajlokat'},
+acte_gata:{ro:'Acte complete',en:'Documents complete',hu:'Iratok megvannak'},
 sb_open:{ro:'Extinde meniul',en:'Expand menu',hu:'Menu kinyitasa'},
 sb_close:{ro:'Restrange meniul',en:'Collapse menu',hu:'Menu bezarasa'},
 panou_label:{ro:'PANOUL REDASSISTANCE',en:'REDASSISTANCE PANEL',hu:'REDASSISTANCE PANEL'},
@@ -1315,6 +1319,7 @@ function renderPanou(){
       if(!cnd.whatsapp)missing.push(T('cond_whatsapp'));
       var tt=missing.length?T('cond_blocked_by')+': '+missing.join(' + '):T('pill_ready');
 
+      var _sent=(window.clientSent?clientSent(j):0);
       var phoneClean=(j.phone||'').replace(/[^0-9+]/g,'');
       var waText='Buna ziua! Va contactam de la SC Szkaliczki Service.';
       var waCls=cnd.whatsapp?'':'dark';
@@ -1323,7 +1328,17 @@ function renderPanou(){
 
       var _ddRow=(j.flux==='doar_dosar')||(j.flux==null&&j.doarDosar===true);
       h+='<tr class="panou-row '+rowCls+(_ddRow?' row-dd':'')+'" ondblclick="openCondModal(\''+j.id+'\')">';
-      h+='<td><div style="font-weight:700">'+escH(j.client||j.proprietar||'—')+'</div><div style="font-size:10px;color:var(--t3)">'+escH(j.number||j.id||'')+'</div></td>';
+      // ── A NEVTELEN SOR IS KAPJON ARCOT (Ferenc, 2026-08-27) ───────
+      // Egy frissen erkezett dosszienel meg nincs se nev, se rendszam.
+      // Eddig ilyenkor a sor "—" volt, es nyolc ilyen "—" allt egymas
+      // alatt: azonosithatatlan. Mostantol a MUNKASZAM a focim, ala
+      // pedig odairjuk, hogy a nev az, ami hianyzik.
+      var _nev=j.client||j.proprietar||j.proprietarDosar||'';
+      h+='<td><div style="font-weight:700"'+(_nev?'':' class="mono"')+'>'
+        +escH(_nev||j.number||j.id||'—')+'</div>'
+        +'<div style="font-size:10px;color:var(--t3)">'
+        +(_nev?escH(j.number||j.id||''):('<i>'+escH(T('no_name'))+'</i>'))
+        +'</div></td>';
       var _dd=(j.flux==='doar_dosar')||(j.flux==null&&j.doarDosar===true);
       // 2026-08-25: a rendszám mellől kikerült a 📁/📅 jelvény. A két sáv
       // megkülönböztetése enélkül is egyértelmű: a dosszié-sor kiemelt,
@@ -1365,7 +1380,11 @@ function renderPanou(){
             // Dossziénál a telefont a dosszié-lapon írod be (ott derül ki
             // a papírokból); javításnál a feltétel-ablak a hely.
             + (_dd ? 'deschideDosar(\''+j.id+'\')' : 'openCondModal(\''+j.id+'\')')
-            + '" title="'+T('wa_no_phone')+' — '+(_dd?T('wa_go_dosar'):T('need_wa_tip'))+'">'+waMark+'</button>')+'</td>';
+            + '" title="'+T('wa_no_phone')+' — '+(_dd?T('wa_go_dosar'):T('need_wa_tip'))+'">'+waMark+'</button>')
+        // Amit az ugyfel kuldott, azt LATNI kell. Ez a kapcsolat-oszlop:
+        // ide tartozik, mert ez tortent az ugyfellel.
+        +(_sent?'<span class="cl-sent" title="'+escA(T('cl_sent'))+'">&#128242; '+_sent+'</span>':'')
+        +'</td>';
       if(tab==='viitoare'&&_dd){
         h+='<td><button class="edit-btn" style="background:var(--bl,#2563eb);color:#fff;border-color:var(--bl,#2563eb)" onclick="event.stopPropagation();deschideDosar(\''+j.id+'\')">'+ico('folder')+' '+T('open_dosar_btn')+'</button> <button class="edit-btn eb-edit2 eb-ico" onclick="event.stopPropagation();openEditJob(\''+j.id+'\')" title="'+T('edit_btn')+'" aria-label="'+T('edit_btn')+'">'+ico('pencil')+'</button> <button class="edit-btn eb-repro eb-ico" onclick="event.stopPropagation();openRepro(\''+j.id+'\')" title="'+T('repro_btn')+'" aria-label="'+T('repro_btn')+'">'+ico('calendar')+'</button></td>';
       } else if(tab==='viitoare'){
@@ -1899,6 +1918,27 @@ window.njNextNumber=async function(){
 
 // ── IRATSZAMLALO — a dosszie-oldallal AZONOS szabaly (egy forras, ket nezet)
 // deschid = mi nyitjuk -> teljes csomag | deschis = mar nyitva -> constatare+fotok+karszam
+/* ── MIT KULDOTT AZ UGYFEL (Ferenc, 2026-08-27) ────────────────────
+   Egy valodi eset mutatta meg, hogy erre szukseg van: az ugyfel
+   feltoltotte az EGESZ dossziet — 18 irat-helyet es 4 fotot —, es a
+   panel egy szoval sem jelezte. Egy apro szurke szamlalo valtozott egy
+   olyan soron, aminek se rendszama, se neve nem volt.
+   A feltolto oldal minden fajlra rauti a src:'whatsapp' belyeget,
+   ezert a ket helyet (szabad fotok + nevesitett iratok) egyutt tudjuk
+   megszamolni. */
+window.clientSent=function(job){
+  var n=0;
+  var szamol=function(f){ if(f && f.src==='whatsapp') n++ };
+  var lista=(job&&job.clientUploads);
+  if(Array.isArray(lista)) lista.forEach(szamol);
+  var acte=(job&&job.dosarActe)||{};
+  for(var k in acte){ if(!Object.prototype.hasOwnProperty.call(acte,k))continue;
+    var a=acte[k];
+    if(Array.isArray(a)) a.forEach(szamol); else szamol(a);
+  }
+  return n;
+};
+
 window.acteCount=function(job){
   var DA=window.RPW_DAUNA_DOCS||[], acte=(job&&job.dosarActe)||{};
   var mod=(job&&job.dosarStatus==='deschis')?'deschis':'deschid';

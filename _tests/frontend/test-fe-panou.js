@@ -45,6 +45,14 @@ const JOBS=[
  {id:'V4',number:'MS-26-065',plate:'MS-88-FFF',client:'Keszen Kalman',flux:'reparatie',damageType:'auto',
   sosire:'programat',phase:1,phases:{},inchis:false,phone:'0740777888',
   programare:{date:'2026-08-30',time:'12:00'},conditions:{whatsapp:true}},
+ // Valodi eset masolata: az ugyfel feltoltott, de a soron se nev, se
+ // rendszam. Egy 'service' forrasu fajl is van benne — azt NEM szabad
+ // az ugyfel kuldemenyei koze szamolni.
+ {id:'U1',number:'MS-26-080',plate:'',client:'',flux:'doar_dosar',doarDosar:true,
+  damageType:'asig',dosarStatus:'deschid',
+  dosarActe:{foto_fata:[{src:'whatsapp'},{src:'whatsapp'}],vin_talon:{src:'whatsapp'}},
+  clientUploads:[{src:'whatsapp'},{src:'service'}],
+  phase:1,phases:{},inchis:false,created:'2026-08-27',programare:{}},
  {id:'R1',number:'MS-26-064',plate:'MS-77-EEE',client:'Ratat Dezso',flux:'reparatie',damageType:'auto',
   sosire:'ratat',phase:1,phases:{},inchis:false,phone:'0740555666',
   programare:{date:'2026-08-20',time:'08:00'},conditions:{}},
@@ -74,7 +82,7 @@ const dom=new JSDOM(inline(raw),{virtualConsole:vc, url:'https://rpw.teszt/index
   w.Chart=function(){this.destroy=()=>{}};
  }});
 const w=dom.window;
-for(let i=0;i<60 && !(w.JOBS&&w.JOBS.length===8);i++) await sleep(25);
+for(let i=0;i<60 && !(w.JOBS&&w.JOBS.length===9);i++) await sleep(25);
 // ── Ferenc, 2026-08-26: az app a PROGRAMARI lapon indul ─────────────
 ok(w.S.screen==='panou','indulaskor a Programari lap nyilik (nem a Lucrari)');
 ok(/panou-tbl|panou-hdr-actions/.test(w.document.getElementById('app').innerHTML),
@@ -87,7 +95,7 @@ const app=()=>w.document.getElementById('app').innerHTML;
 console.log('\n1. Viitoare fül — a kétállapotú jelvény (K-19)');
 {
   const h=app();
-  ok(w.JOBS.length===8,'a 8 teszt-munka betöltődött');
+  ok(w.JOBS.length===9,'a 9 teszt-munka betöltődött');
   const v1=h.split('<tr').filter(s=>/MS-22-BBB/.test(s))[0]||'';
   const v2=h.split('<tr').filter(s=>/MS-33-CCC/.test(s))[0]||'';
   const v3=h.split('<tr').filter(s=>/MS-44-DDD/.test(s))[0]||'';
@@ -502,6 +510,57 @@ console.log('\n6h. A RECEPCIO NEM BUJIK EL (Ferenc: "eldugott funkcio")');
   const gyujt=R('MS-33-CCC');
   ok(/deschideDosar/.test(gyujt.innerHTML) && !!gyujt.querySelector('.eb-rec'),
      'a dossziegyujto soron a mappa MELLETT is ott a recepcio');
+}
+
+console.log('\n6i. AMIT AZ UGYFEL KULDOTT, AZ LATSZIK (Ferenc, valodi eset)');
+{
+  const d=w.document;
+  const rows=[].slice.call(d.querySelectorAll('tr.panou-row'));
+  const R=p=>rows.find(r=>r.textContent.indexOf(p)>=0);
+  const sor=R('MS-26-080');
+  ok(!!sor,'a nevtelen dosszie-sor ott van');
+
+  // 1) A JELVENY. Nem apro szurke szam: lathato jeloles.
+  const jel=sor&&sor.querySelector('.cl-sent');
+  ok(!!jel,'a soron ott az "ugyfel kuldott" jelveny');
+  ok(jel && /4/.test(jel.textContent),
+     '  es MEGMONDJA, hany fajl jott  ("'+(jel?jel.textContent.trim():'')+'")');
+  ok(jel && (jel.getAttribute('title')||'').length>5,'  neve is van az egermutatora');
+  // A 'service' forrasu fajlt NEM szamoljuk az ugyfelenek: 2+1+1 = 4, nem 5.
+  ok(w.clientSent(w.JOBS.find(j=>j.id==='U1'))===4,
+     '  csak az ugyfel fajljait szamolja (a szervizet nem)');
+  ok(w.clientSent({})===0 && w.clientSent(null)===0,'  ures munkan nem hasal el');
+
+  // 2) A NEVTELEN SOR ARCA. Eddig "—" allt itt.
+  ok(sor && !/^\s*—/.test(sor.cells[0].textContent),
+     'a nevtelen sor NEM "—" tobbe');
+  ok(sor && /MS-26-080/.test(sor.cells[0].textContent),
+     '  a munkaszam a focim  ("'+(sor?sor.cells[0].textContent.trim().slice(0,30):'')+'")');
+  ok(sor && sor.cells[0].querySelector('i'),
+     '  es odairja, hogy a NEV az, ami hianyzik');
+  // akinek VAN neve, annal valtozatlan marad
+  const nevvel=R('Dosar Elek');
+  ok(nevvel && /Dosar Elek/.test(nevvel.cells[0].textContent),'akinek van neve, ott a neve all');
+  ok(nevvel && !nevvel.cells[0].querySelector('i'),'  ott nincs "nincs nev" megjegyzes');
+  // aki NEM kapott az ugyfeltol semmit, annak nincs jelvenye
+  ok(nevvel && !nevvel.querySelector('.cl-sent'),'akinek nem kuldtek, annak nincs jelvenye');
+
+  // 3) HA AZ IRATOK OSSZEGYULTEK, A VALODI PANELON is latszania kell.
+  //    Nem eleg, hogy a modul tudja: a panelnak at is kell adnia neki a
+  //    szamlalot. Ezt csak a kirajzolt lapon lehet megmerni.
+  const eredeti=w.acteCount;
+  w.acteCount=function(){ return {done:17,total:17,mod:'deschid'} };
+  w.render();
+  const teli=[].slice.call(d.querySelectorAll('tr.panou-row'))
+              .find(r=>r.textContent.indexOf('MS-26-080')>=0);
+  ok(teli && teli.querySelector('.pr-l-ok'),
+     'teli dossziera a panel ZOLDEN mondja ki, hogy megvannak az iratok');
+  ok(teli && /Acte complete|Iratok|Documents/i.test(teli.textContent),
+     '  es szavakkal is  ("'+(teli?(teli.querySelector('.pr-lbl')||{}).textContent||'':'')+'")');
+  w.acteCount=eredeti; w.render();
+  const ures=[].slice.call(d.querySelectorAll('tr.panou-row'))
+              .find(r=>r.textContent.indexOf('MS-11-AAA')>=0);
+  ok(ures && !ures.querySelector('.pr-l-ok'),'  felig kesz dossziera nem');
 }
 
 console.log('\n6f. A negy belepo gomb FEHER, es lenyomasra szinesedik (Ferenc)');

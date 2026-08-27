@@ -1428,6 +1428,73 @@
    "be": [],
    "teszt": "_tests/frontend/test-fe-panou.js",
    "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-130",
+   "nev": "Az ugyfel kuldemenye LATSZIK a soron: zold jelveny a Kapcsolat oszlopban, a beerkezett fajlok szamaval. Csak a src='whatsapp' belyegu fajlokat szamolja (a szervizet nem), a szabad fotokat es a nevesitett irat-helyeket egyutt",
+   "fe": [
+    [
+     "index.html",
+     "window.clientSent"
+    ],
+    [
+     "index.html",
+     "class=\"cl-sent\""
+    ],
+    [
+     "index.html",
+     ".cl-sent{display:inline-flex"
+    ],
+    [
+     "index.html",
+     "cl_sent"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/frontend/test-fe-panou.js",
+   "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-131",
+   "nev": "Ha a kotelezo iratok osszegyultek, a folyamat-sav felirata KIMONDJA (zolden, 'Acte complete'); a lepes maga meg nem kesz, mert a dossziet meg nem adtuk at. Katalogus nelkul (0/0) NEM allit keszet",
+   "fe": [
+    [
+     "rpw-progres.js",
+     "gata = (ac.total>0 && (ac.done||0)>=ac.total)"
+    ],
+    [
+     "rpw-progres.js",
+     "ready: gata"
+    ],
+    [
+     "rpw-progres.js",
+     ".pr-lbl.pr-l-ok{color:#166534}"
+    ],
+    [
+     "index.html",
+     "acte_gata"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/unit/test-progres.js",
+   "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-132",
+   "nev": "A nevtelen sor is kap arcot: ha nincs se nev, se rendszam, a MUNKASZAM a focim (mono), ala pedig odakerul, hogy a nev az, ami hianyzik",
+   "fe": [
+    [
+     "index.html",
+     "var _nev=j.client||j.proprietar||j.proprietarDosar||''"
+    ],
+    [
+     "index.html",
+     "no_name"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/frontend/test-fe-panou.js",
+   "allapot": "csak-frontend"
   }
  ]
 }

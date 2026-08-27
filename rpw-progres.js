@@ -43,6 +43,9 @@
    +'.pr-lbl .pr-cnt{color:#999;font-weight:600}'
    +'.pr-proc{font-weight:800;color:#1a1a1a}'
    +'.pr-lbl.pr-l-late{color:#92400e}'
+   /* az iratok egyutt vannak — ez jo hir, ezert zold */
+   +'.pr-lbl.pr-l-ok{color:#166534}'
+   +'.pr-lbl.pr-l-ok .pr-cnt{color:#16a34a}'
    /* nagy valtozat a munkalapokon */
    +'.pr-big .pr-seg{width:100%;height:10px;border-radius:3px}'
    +'.pr-big .pr-segs{gap:4px;width:100%}'
@@ -100,14 +103,22 @@
         {label:T('dd_s2'), state: st>2?'done':(st===2?'now':'todo')},
         {label:T('dd_s3'), state: st===3?'done':'todo'}
       ];
-      var cnt='';
+      var cnt='', gata=false;
       if(st===1 && typeof opts.acteCount==='function'){
         var ac=opts.acteCount(j)||{};
         cnt=(ac.done||0)+' / '+(ac.total||0)+' '+T('pr_acte');
+        /* HA AZ IRATOK OSSZEGYULTEK, AZT KI KELL MONDANI. Eddig csak a
+           szamlalo ert el a vegere — egy apro szurke szam, amit senki
+           nem nezett. A lepes maga MEG NEM kesz (a dossziet meg nem
+           adtuk at), ezert a szegmens marad aktiv; csak a felirat
+           mondja meg, hogy innen mehet tovabb. */
+        gata = (ac.total>0 && (ac.done||0)>=ac.total);
       }else{
         cnt=st+' / 3 '+T('pr_lepes');
       }
-      return {kind:'dosar', steps:steps, label:steps[st-1].label,
+      return {kind:'dosar', steps:steps,
+              label: gata ? T('acte_gata') : steps[st-1].label,
+              ready: gata,
               proc:procName(j,T), counter:cnt, late:false, done:st-1, total:3};
     }
 
@@ -199,7 +210,7 @@
       h+='<span class="pr-seg '+cls+'" title="'+esc(s.label)+'"></span>';
     });
     h+='</div>';
-    h+='<div class="pr-lbl'+(ch.late?' pr-l-late':'')+'">'
+    h+='<div class="pr-lbl'+(ch.late?' pr-l-late':'')+(ch.ready?' pr-l-ok':'')+'">'
       +(ch.proc?'<span class="pr-proc">'+esc(ch.proc)+'</span> · ':'')
       +esc(ch.label)
       +' <span class="pr-cnt">· '+esc(ch.counter)+'</span></div>';
