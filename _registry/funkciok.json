@@ -1569,7 +1569,7 @@
       "fe": [
         [
           "rpw-upload.html",
-          "var kuldve = !!(JOB.clientGata && JOB.clientGata.at);"
+          "var kuldve   = !!(JOB.clientGata && JOB.clientGata.at);"
         ],
         [
           "rpw-upload.html",
@@ -1577,7 +1577,7 @@
         ],
         [
           "rpw-upload.html",
-          "JOB.clientGata={at:most,files:db};"
+          "JOB.clientGata={at:most,files:fajlDb()};"
         ],
         [
           "rpw-upload.html",
@@ -1585,7 +1585,7 @@
         ],
         [
           "rpw-upload.html",
-          "JOB.clientGata=null; render(); }"
+          "JOB.clientGata=elozo||null; render(); }"
         ]
       ],
       "be": [],
@@ -1603,6 +1603,39 @@
         [
           "rpw-upload.html",
           ".list{margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-upload.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-138",
+      "nev": "A kuldes SOSEM automatikus: a lap harom helyen mondta a 'Trimis' szot, pedig csak mentes tortent (18/18 uzenet + minden egyes fajl utan), ezert az ugyfel azt hitte, mar elkuldte. Most a mentes 'incarcat'-ot mond, es csak a gomb 'Trimis'. Ha kuldes UTAN uj fajl kerul fel, a Trimite gomb visszajon, es megmondja, hany uj van",
+      "fe": [
+        [
+          "rpw-upload.html",
+          "sunt încărcate. Apăsați butonul Trimite de mai jos."
+        ],
+        [
+          "rpw-upload.html",
+          "toast('✓ Fișier încărcat')"
+        ],
+        [
+          "rpw-upload.html",
+          "toast('✓ Fișiere încărcate')"
+        ],
+        [
+          "rpw-upload.html",
+          "var ujFajl   = kuldve && most_db > kuldott;"
+        ],
+        [
+          "rpw-upload.html",
+          "function fajlDb(){var n=uploads.length;"
+        ],
+        [
+          "rpw-upload.html",
+          "+'&#128228; Trimite fișierele noi ('+(most_db-kuldott)+')</button>';"
         ]
       ],
       "be": [],

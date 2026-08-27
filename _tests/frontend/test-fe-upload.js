@@ -203,6 +203,67 @@ console.log('\n6. AKI MAR ELKULDTE, ujranyitaskor is a visszaigazolast latja');
   L.w.close();
 }
 
+console.log('\n8. A KULDES NEM AUTOMATIKUS — a lap sehol nem allitja, hogy mar elment');
+{
+  // Ferenc: "a kuldes ne legyen automatikus". Harom helyen mondta a lap a
+  // "Trimis" szot, pedig csak MENTES tortent: a 18/18 uzenetben, es minden
+  // egyes fajl feltoltese utan. Az ugyfel ezert azt hitte, mar elkuldte.
+  const teljes=ujJob(); teljes.dosarActe.foto_avarii=[{url:'a.jpg',path:'p/a',type:'image/jpeg'}];
+  const L=await lap(teljes);                       // 18/18, de MEG NEM kuldve
+  ok(!!L.gomb(),'18/18-nal is ott all a Trimite gomb — nem megy el magatol');
+  ok(!/au fost trimise/i.test(L.szoveg()),
+     'a 18/18 uzenet NEM allitja, hogy elmentek a papirok');
+  ok(/sunt încărcate/.test(L.szoveg()),
+     '  hanem azt, hogy fel vannak toltve');
+  ok(/Apăsați butonul Trimite/.test(L.szoveg()),
+     '  es megmondja, mi a kovetkezo lepes');
+  ok(L.PATCH.length===0,'a puszta megnyitas semmit nem kuld el');
+  L.w.close();
+
+  // A fajlonkenti visszajelzes sem mondhatja, hogy "Trimis".
+  const src=require('fs').readFileSync(path.join(ROOT,'rpw-upload.html'),'utf8');
+  const toastok=(src.match(/toast\('[^']*'/g)||[]).map(x=>x.slice(7,-1));
+  const hazug=toastok.filter(t=>/Trimis/.test(t));
+  ok(hazug.length===1,
+     'a "Trimis" szo pontosan EGY visszajelzesben szerepel — a gombeban'
+     +(hazug.length!==1?('  ['+hazug.join(' | ')+']'):''));
+  ok(/toast\('✓ Fișier încărcat'\)/.test(src) && /toast\('✓ Fișiere încărcate'\)/.test(src),
+     '  a fajlmentes "incarcat"-ot mond, nem "trimis"-t');
+}
+
+console.log('\n8b. KULDES UTAN felvett fajlnal a Trimite VISSZAJON');
+{
+  // "plusz extra kepek, maradjon trimite" — kulonben az utolag felrakott
+  // kepekrol a szerviz sosem kapna jelzest.
+  const L=await lap(ujJob({clientGata:{at:'2026-08-27T09:00:00.000Z',files:14}}));  // most 18 van
+  ok(!!L.D().querySelector('.sent'),'a korabbi visszaigazolas megmarad');
+  const g=L.gomb();
+  ok(!!g,'  DE a Trimite gomb visszajott az uj fajlok miatt');
+  ok(!!g && /4/.test(g.textContent),'  es megmondja, hany uj van  ("'+(g?g.textContent.trim():'—')+'")');
+  ok(/Ați adăugat 4 fișier/.test(L.szoveg()),'  szoveggel is');
+  L.w.close();
+}
+
+console.log('\n8c. Ha nincs uj fajl a kuldes ota, NINCS ujra gomb');
+{
+  const L=await lap(ujJob({clientGata:{at:'2026-08-27T09:00:00.000Z',files:18}}));
+  ok(!L.gomb(),'ugyanannyi fajlnal nem tolakszik ujra a gomb');
+  ok(!!L.D().querySelector('.sent'),'  csak a visszaigazolas all');
+  L.w.close();
+}
+
+console.log('\n8d. Sikertelen UJRAKULDES nem torli a korabbi sikeres kuldest');
+{
+  const L=await lap(ujJob({clientGata:{at:'2026-08-27T09:00:00.000Z',files:14}}),{mentesHibas:true});
+  ok(!!L.gomb(),'van mire kattintani');
+  if(L.gomb()) L.gomb().click();
+  await sleep(80);
+  ok(!!L.D().querySelector('.sent'),
+     'a regi visszaigazolas MEGMARAD — egy sikertelen ujrakuldes nem torli el');
+  ok(!!L.gomb(),'  es az uj fajlok gombja is ott van, ujraprobalhato');
+  L.w.close();
+}
+
 console.log('\n7. EGYETLEN DOBOZ SEM SOR-KOZI (Ferenc: "aranytalan")');
 {
   // A <label class="drop"> alapertelmezesben SOR-KOZI elem volt. A sor-kozi

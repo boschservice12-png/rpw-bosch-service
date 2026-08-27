@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 99 | 27 | 63 | 3 | 6 | 7 |
+| 100 | 27 | 64 | 3 | 6 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -72,6 +72,7 @@ szám nélkül, azt is megmondja.
 | **F-135** | Az ugyfel feltolto lapjanak elolapja marka es rendszam nelkul is megmondja, MELYIK dossziehoz tolt fel: eddig a szo szerinti 'Autovehicul' tartalek-szoveg allt ott, most a dossziészam a focim | `rpw-upload.html` | — | `frontend/test-fe-upload.js` | 🟦 csak frontend |
 | **F-136** | 'Trimite' gomb az ugyfel feltolto lapjan: a fajlok eddig is azonnal mentodtek, de az ugyfelnek nem volt egy pillanata, amikor kimondhatta, hogy kesz — es visszaigazolast sem kapott. A gomb clientGata{at,files}-t ir client_whatsapp neveben, hianyos dossziénél is kuldheto, sikertelen mentesnel visszagorgul | `rpw-upload.html` | — | `frontend/test-fe-upload.js` | 🟦 csak frontend |
 | **F-137** | Az 'Adauga alte poze / documente' mezo sor-kozi (<label> display nelkul) doboz volt: a fuggoleges kerete es belso margoja nem tolta arrebb a szomszedait, hanem 14px-t ratakart a kartya cimere es 7px-t a kepekre. Emellett a mellekelt fajlok kockai 3 oszlopban alltak a kotelezo iratok 4 oszlopa helyett — ugyanaz a kep ket meretben | `rpw-upload.html` | — | `frontend/test-fe-upload.js` | 🟦 csak frontend |
+| **F-138** | A kuldes SOSEM automatikus: a lap harom helyen mondta a 'Trimis' szot, pedig csak mentes tortent (18/18 uzenet + minden egyes fajl utan), ezert az ugyfel azt hitte, mar elkuldte. Most a mentes 'incarcat'-ot mond, es csak a gomb 'Trimis'. Ha kuldes UTAN uj fajl kerul fel, a Trimite gomb visszajon, es megmondja, hany uj van | `rpw-upload.html` | — | `frontend/test-fe-upload.js` | 🟦 csak frontend |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 
