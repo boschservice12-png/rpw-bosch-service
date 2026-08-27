@@ -1,1546 +1,1596 @@
 {
- "_olvasd": "Minden funkcionak SZAMA van. Ha egy lepes eltunik vagy atalakul, a _tests/unit/test-registry.js a SZAMAVAL jelzi. Uj funkcio = uj sor ITT, kulonben a teszt 'nincs beszamozva' hibat ad.",
- "_verzio": "1.0",
- "_mezok": {
-  "id": "F-### allando szam, SOHA nem valtozik es nem hasznaljuk ujra",
-  "nev": "mit csinal, magyarul, egy mondatban",
-  "fe": "frontend horgony: [fajl, keresett szoveg] parok - ezeknek letezniuk KELL",
-  "be": "backend RPC nevek a _migrations/*.sql-bol",
-  "teszt": "melyik teszt orzi; null = MEG NINCS TESZTJE",
-  "allapot": "el | csak-frontend | csak-backend | nincs-bekotve"
- },
- "funkciok": [
-  {
-   "id": "F-001",
-   "nev": "Belepes (login)",
-   "fe": [
-    [
-     "rpw-auth.js",
-     "rpw_login"
-    ]
-   ],
-   "be": [
-    "rpw_login"
-   ],
-   "teszt": "_tests/unit/test-rpc-consistency.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-002",
-   "nev": "Munkamenet ellenorzese",
-   "fe": [
-    [
-     "rpw-auth.js",
-     "rpw2_session"
-    ]
-   ],
-   "be": [
-    "rpw2_session"
-   ],
-   "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-003",
-   "nev": "Kilepes (logout)",
-   "fe": [
-    [
-     "rpw-auth.js",
-     "rpw_logout"
-    ]
-   ],
-   "be": [
-    "rpw_logout"
-   ],
-   "teszt": "_tests/unit/test-rpc-consistency.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-004",
-   "nev": "Csapat lekerese (regi ut)",
-   "fe": [
-    [
-     "rpw-auth.js",
-     "rpw_team"
-    ]
-   ],
-   "be": [
-    "rpw_team"
-   ],
-   "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-005",
-   "nev": "Csapat lekerese (uj ut)",
-   "fe": [
-    [
-     "index.html",
-     "rpw2_team"
-    ]
-   ],
-   "be": [
-    "rpw2_team"
-   ],
-   "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-006",
-   "nev": "Nevsor (roster) lekerese",
-   "fe": [
-    [
-     "rpw-login.html",
-     "rpw2_roster"
-    ]
-   ],
-   "be": [
-    "rpw2_roster"
-   ],
-   "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-007",
-   "nev": "Dolgozo mentese",
-   "fe": [
-    [
-     "index.html",
-     "rpw2_employee_save"
-    ]
-   ],
-   "be": [
-    "rpw2_employee_save"
-   ],
-   "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-008",
-   "nev": "Szerepkor mentese",
-   "fe": [
-    [
-     "index.html",
-     "rpw2_role_save"
-    ]
-   ],
-   "be": [
-    "rpw2_role_save"
-   ],
-   "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-009",
-   "nev": "Jogosultsag-kerdes (mit szabad?)",
-   "fe": [],
-   "be": [
-    "rpw2_can"
-   ],
-   "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "csak-backend"
-  },
-  {
-   "id": "F-010",
-   "nev": "PIN beallitasa",
-   "fe": [
-    [
-     "index.html",
-     "rpw2_pin_set"
-    ]
-   ],
-   "be": [
-    "rpw2_pin_set"
-   ],
-   "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-011",
-   "nev": "PIN allapot (hanyadik hibas probalkozas, zarolva?)",
-   "fe": [
-    [
-     "index.html",
-     "rpw2_pin_status"
-    ]
-   ],
-   "be": [
-    "rpw2_pin_status"
-   ],
-   "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-012",
-   "nev": "PIN zarolas feloldasa adminkent",
-   "fe": [
-    [
-     "index.html",
-     "rpw2_pin_unlock"
-    ]
-   ],
-   "be": [
-    "rpw2_pin_unlock"
-   ],
-   "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-013",
-   "nev": "Gyenge PIN elutasitasa (1234, 0000, 111111)",
-   "fe": [],
-   "be": [
-    "rpw__pin_weak"
-   ],
-   "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "csak-backend"
-  },
-  {
-   "id": "F-014",
-   "nev": "Admin mod kapcsolo a fooldalon",
-   "fe": [
-    [
-     "index.html",
-     "window.toggleAdmin"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-p0-5-admin.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-015",
-   "nev": "Dolgozo/szerepkor/PIN admin ablak",
-   "fe": [
-    [
-     "index.html",
-     "window.ecEmp"
-    ],
-    [
-     "index.html",
-     "window.ecRole"
-    ],
-    [
-     "index.html",
-     "window.ecPin"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-pin-dialog.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-016",
-   "nev": "Belepes uj uton (rpw2_login, tokenes munkamenet)",
-   "fe": [
-    [
-     "rpw-auth.js",
-     "rpw2_login"
-    ]
-   ],
-   "be": [
-    "rpw2_login"
-   ],
-   "teszt": "_tests/integration/test-int-tenant.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-101",
-   "nev": "Uj munkalap: Lucrare noua (urlap nelkul, egyenesen a recepciora)",
-   "fe": [
-    [
-     "index.html",
-     "window.lucrareAcum"
-    ],
-    [
-     "index.html",
-     "onclick=\"lucrareAcum()\""
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-panou.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-102",
-   "nev": "Rendszam bevitel es normalizalas",
-   "fe": [
-    [
-     "index.html",
-     "window.njPlate"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-case.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-121",
-   "nev": "Elojegyzes urlap (Programare noua): ket tipus (Dauna asigurare / Dauna auto), a biztositosnal ket dosszie-ag (Avizare dauna / Dosar dauna deschis); a nev es az auto LATSZIK, de nem kotelezo",
-   "fe": [
-    [
-     "index.html",
-     "window.openNewJob"
-    ],
-    [
-     "index.html",
-     "function njMissing"
-    ],
-    [
-     "index.html",
-     "nj_optional"
-    ],
-    [
-     "index.html",
-     "id=\"iAuto\""
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-urlap.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-122",
-   "nev": "Kapcsolat oszlop a foablakon: a VALODI WhatsApp jel (zold=egyeztetve, sotet=meg nem, tompa=nincs telefon)",
-   "fe": [
-    [
-     "index.html",
-     "wa-btn"
-    ],
-    [
-     "index.html",
-     "clickWhatsApp"
-    ],
-    [
-     "index.html",
-     "wa-btn nofon"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-panou.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-123",
-   "nev": "Sor-ikonok a foablakon (naptar/ora/mappa/ceruza/kuka) — vonalas SVG, mindegyiken title ES aria-label",
-   "fe": [
-    [
-     "index.html",
-     "var RPW_ICO"
-    ],
-    [
-     "index.html",
-     "function ico(n)"
-    ],
-    [
-     "index.html",
-     "eb-ico"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-panou.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-124",
-   "nev": "A soron a mappa CSAK ott, ahol van dosszie-munka (Avizare dauna); magankaron es mar nyitott dossziénal a RECEPCIO az ut — a mappa mellett a dossziegyujto soron is ott a recepcio",
-   "fe": [
-    [
-     "index.html",
-     "var _dosszieMunka"
-    ],
-    [
-     "index.html",
-     "wrench"
-    ],
-    [
-     "index.html",
-     "var _slot"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-panou.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-125",
-   "nev": "Folyamatjelzo: negy lanc egy savban (dosszie / varakozas / ratat / javitas); a statusz es a folyamat EGY oszlopban, minden fulon egyforma logikaval",
-   "fe": [
-    [
-     "rpw-progres.js",
-     "function chain"
-    ],
-    [
-     "rpw-progres.js",
-     "function procName"
-    ],
-    [
-     "rpw-progres.js",
-     "pr-skip"
-    ],
-    [
-     "rpw-progres.js",
-     "j.sosire==='ratat'"
-    ],
-    [
-     "index.html",
-     "RPWProgres.html"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-progres.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-103",
-   "nev": "Kovetkezo munkalapszam kerese a szervertol",
-   "fe": [
-    [
-     "index.html",
-     "rpw_next_job_number"
-    ]
-   ],
-   "be": [
-    "rpw_next_job_number",
-    "rpw_job_number"
-   ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-104",
-   "nev": "Munkalapok listaja",
-   "fe": [
-    [
-     "rpw-db.js",
-     "rpw_jobs_list"
-    ]
-   ],
-   "be": [
-    "rpw_jobs_list"
-   ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-105",
-   "nev": "Egy munkalap betoltese",
-   "fe": [
-    [
-     "rpw-db.js",
-     "rpw_job_get"
-    ]
-   ],
-   "be": [
-    "rpw_job_get"
-   ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-106",
-   "nev": "Mentes regi uton (v2, vedelem nelkul)",
-   "fe": [
-    [
-     "rpw-db.js",
-     "rpw_patch"
-    ]
-   ],
-   "be": [
-    "rpw_patch"
-   ],
-   "teszt": "_tests/unit/test-rpc-consistency.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-107",
-   "nev": "Mentes vedett uton (v3, munkafolyamat-mezok tiltva)",
-   "fe": [
-    [
-     "rpw-db.js",
-     "rpw_patch_v3"
-    ],
-    [
-     "rpw-config.js",
-     "PATCH_RPC"
-    ]
-   ],
-   "be": [
-    "rpw_patch_v3"
-   ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "nincs-bekotve"
-  },
-  {
-   "id": "F-108",
-   "nev": "Verzioutkozes kezelese (ketten irtak egyszerre)",
-   "fe": [
-    [
-     "rpw-conflict.js",
-     "conflict"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-conflict.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-109",
-   "nev": "Vedett mezok kiszurese mentes elott",
-   "fe": [
-    [
-     "rpw-save.js",
-     "function stripProtected"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-110",
-   "nev": "Szerveroldali elutasitas felismerese (nem nemul el a hiba)",
-   "fe": [
-    [
-     "rpw-save.js",
-     "function serverRejection"
-    ]
-   ],
-   "be": [],
-   "teszt": null,
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-111",
-   "nev": "Fazisvaltas (recepcio -> evaluare -> ...)",
-   "fe": [
-    [
-     "rpw-workflow.js",
-     "phase"
-    ]
-   ],
-   "be": [
-    "rpw_transition"
-   ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "nincs-bekotve"
-  },
-  {
-   "id": "F-112",
-   "nev": "Fazis-kovetelmenyek (mi hianyzik meg a tovabblepeshez)",
-   "fe": [
-    [
-     "rpw-workflow.js",
-     "need"
-    ]
-   ],
-   "be": [
-    "rpw_requirements"
-   ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "nincs-bekotve"
-  },
-  {
-   "id": "F-113",
-   "nev": "Lezarhato-e a munkalap",
-   "fe": [],
-   "be": [
-    "rpw_can_complete"
-   ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "csak-backend"
-  },
-  {
-   "id": "F-114",
-   "nev": "Munkalap kukaba dobasa",
-   "fe": [
-    [
-     "rpw-db.js",
-     "rpw_job_trash"
-    ]
-   ],
-   "be": [
-    "rpw_job_trash"
-   ],
-   "teszt": "_tests/unit/test-delete.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-115",
-   "nev": "Visszaallitas a kukabol",
-   "fe": [
-    [
-     "rpw-db.js",
-     "rpw_job_restore"
-    ]
-   ],
-   "be": [
-    "rpw_job_restore"
-   ],
-   "teszt": "_tests/unit/test-delete.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-116",
-   "nev": "Vegleges torles",
-   "fe": [
-    [
-     "rpw-db.js",
-     "rpw_job_purge"
-    ]
-   ],
-   "be": [
-    "rpw_job_purge"
-   ],
-   "teszt": "_tests/unit/test-delete.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-117",
-   "nev": "Meglevo munkalap szerkesztese",
-   "fe": [
-    [
-     "index.html",
-     "window.openEditJob"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-edit.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-118",
-   "nev": "Idopont (programare) ablak",
-   "fe": [
-    [
-     "index.html",
-     "window.openProgModal"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-prog.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-119",
-   "nev": "Idopont-athelyezes (reprogramare)",
-   "fe": [
-    [
-     "index.html",
-     "window.openRepro"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-acceptance.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-201",
-   "nev": "Avizare dauna: a fejlec gombja EGYENESEN dossziet nyit; a dossziek a KOZOS listaban; a dosszie allapota a folyamat-sav feliratanak elotagja",
-   "fe": [
-    [
-     "index.html",
-     "onclick=\"dosarTarziu()\""
-    ],
-    [
-     "index.html",
-     "row-dd"
-    ],
-    [
-     "rpw-progres.js",
-     "function procName"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-panou.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-202",
-   "nev": "Deschide dosar dauna - a dossziet MI nyitjuk (urlap nelkul, egybol a dosszie lapra)",
-   "fe": [
-    [
-     "index.html",
-     "window.dosarTarziu"
-    ],
-    [
-     "index.html",
-     "dosar_tarziu"
-    ],
-    [
-     "index.html",
-     "deschideDosar(j.id)"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-entry.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-203",
-   "nev": "Preluare dosar dauna - meglevo dosszie atvetele fajlbol",
-   "fe": [
-    [
-     "index.html",
-     "window.dosarFisier"
-    ],
-    [
-     "index.html",
-     "dosar_fisier"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-dosare.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-215",
-   "nev": "Duplikatum-figyelmeztetes a dosszie lapon (ugyanaz a rendszam + biztosito + karszam)",
-   "fe": [
-    [
-     "rpw-dosar.html",
-     "window.dosarDupCheck"
-    ],
-    [
-     "rpw-dosar.html",
-     "dup-warn"
-    ]
-   ],
-   "be": [
-    "rpw_jobs_list"
-   ],
-   "teszt": "_tests/unit/test-dup-dosar.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-204",
-   "nev": "Dosszie oldal iratrekeszekkel",
-   "fe": [
-    [
-     "rpw-dosar.html",
-     "RPW_DAUNA_DOCS"
-    ],
-    [
-     "rpw-dosar.html",
-     "window.acteCountFor"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-dosarflux.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-205",
-   "nev": "Irat feltoltese egy rekeszbe",
-   "fe": [
-    [
-     "rpw-dosar.html",
-     "_uploadFileToSlot"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-classify.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-206",
-   "nev": "Irat torlese a rekeszbol",
-   "fe": [
-    [
-     "rpw-dosar.html",
-     "_stergeActaGo"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-dialogs.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-207",
-   "nev": "Iratszamlalo (hany irat van meg)",
-   "fe": [
-    [
-     "index.html",
-     "window.acteCount"
-    ],
-    [
-     "rpw-dosar.html",
-     "window.acteCountFor"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-dosare.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-208",
-   "nev": "Tomeges feltoltes - sok kep egyszerre",
-   "fe": [
-    [
-     "rpw-dosar.html",
-     "bulkActe"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-classify.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-209",
-   "nev": "AI iratbesorolas - javaslat a rekeszre",
-   "fe": [
-    [
-     "rpw-classify.js",
-     "function suggestSlot"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-classify.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-210",
-   "nev": "AI iratbesorolas - szerver oldal (Claude)",
-   "fe": [
-    [
-     "rpw-classify.js",
-     "/.netlify/functions/classify"
-    ],
-    [
-     "functions/classify.js",
-     "anthropic"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-p0-7-functions.js",
-   "allapot": "nincs-bekotve"
-  },
-  {
-   "id": "F-211",
-   "nev": "OCR - szoveg kiolvasasa kepbol",
-   "fe": [
-    [
-     "functions/ocr.js",
-     "anthropic"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-p0-7-functions.js",
-   "allapot": "nincs-bekotve"
-  },
-  {
-   "id": "F-212",
-   "nev": "Feltoltesi link kuldese az ugyfelnek",
-   "fe": [
-    [
-     "rpw-dosar.html",
-     "window.trimiteLinkUpload"
-    ]
-   ],
-   "be": [],
-   "teszt": null,
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-126",
-   "nev": "Ugyfel-mezok a dosszie-lapon (nev / telefon / megjegyzes) — kesleltetett szeletes mentes; a gepelt ertek TULELI a keson erkezo szerver-valaszt; a WhatsApp gomb telefon nelkul tiltott",
-   "fe": [
-    [
-     "rpw-dosar.html",
-     "window.setDosarClient"
-    ],
-    [
-     "rpw-dosar.html",
-     "id=\"clTel\""
-    ],
-    [
-     "rpw-dosar.html",
-     "function _clReapply"
-    ],
-    [
-     "rpw-dosar.html",
-     "wa_need_ph"
-    ],
-    [
-     "index.html",
-     "wa_go_dosar"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-dosar.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-213",
-   "nev": "Fotok kezelese (tomorites, tarolas)",
-   "fe": [
-    [
-     "rpw-photos.js",
-     "photo"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-p0-6-storage.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-214",
-   "nev": "Regi base64 kepek atkoltoztetese",
-   "fe": [
-    [
-     "rpw-base64-migrate.js",
-     "base64"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-p0-6-storage.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-301",
-   "nev": "Offline sor - a mentes akkor is megmarad, ha nincs net",
-   "fe": [
-    [
-     "rpw-queue.js",
-     "function create"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-queue.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-302",
-   "nev": "Kozos sor-peldany (mindenki ugyanabba a sorba ir)",
-   "fe": [
-    [
-     "rpw-queue.js",
-     "shared"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-queue.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-303",
-   "nev": "Sor ujraindul oldal-ujratoltes utan",
-   "fe": [
-    [
-     "rpw-data.js",
-     "_resume"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-queue.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-304",
-   "nev": "Szinkron-allapot kijelzese (mentve / var / hiba)",
-   "fe": [
-    [
-     "rpw-save.js",
-     "getSyncState"
-    ]
-   ],
-   "be": [],
-   "teszt": null,
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-305",
-   "nev": "Helyi gyorsitotar (offline is latszik a munkalap)",
-   "fe": [
-    [
-     "rpw-cache.js",
-     "function setJob"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-delete.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-306",
-   "nev": "Regi kulcsok takaritasa induláskor",
-   "fe": [
-    [
-     "rpw-cache.js",
-     "function migrateLegacy"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-delete.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-307",
-   "nev": "Belepesi kulcsok VEDELME a takaritastol",
-   "fe": [
-    [
-     "rpw-cache.js",
-     "LEGACY_SESSION"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-delete.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-308",
-   "nev": "Rendszam maszkolasa a gyorsitotarban",
-   "fe": [
-    [
-     "rpw-cache.js",
-     "function maskPlate"
-    ]
-   ],
-   "be": [],
-   "teszt": null,
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-309",
-   "nev": "Figyelmeztetes kilepeskor, ha van mentetlen adat",
-   "fe": [
-    [
-     "rpw-save.js",
-     "function bindBeforeUnload"
-    ]
-   ],
-   "be": [],
-   "teszt": null,
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-401",
-   "nev": "Recepcio fazis oldal",
-   "fe": [
-    [
-     "rpw-recepcio-red.html",
-     "window.goPhase"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-transition.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-402",
-   "nev": "Evaluare fazis oldal",
-   "fe": [
-    [
-     "rpw-evaluare-red.html",
-     "window.goPhase"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-transition.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-403",
-   "nev": "Tinichigerie fazis oldal",
-   "fe": [
-    [
-     "rpw-tinichigerie-red.html",
-     "window.goPhase"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-transition.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-404",
-   "nev": "Vopsitorie fazis oldal",
-   "fe": [
-    [
-     "rpw-vopsitorie-red.html",
-     "window.goPhase"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-transition.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-405",
-   "nev": "Reconstatare fazis oldal",
-   "fe": [
-    [
-     "rpw-reconstatare-red.html",
-     "window.goPhase"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-transition.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-406",
-   "nev": "Control fazis oldal",
-   "fe": [
-    [
-     "rpw-control-red.html",
-     "window.goPhase"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-transition.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-407",
-   "nev": "Inchidere (lezaras) fazis oldal",
-   "fe": [
-    [
-     "rpw-inchidere-red.html",
-     "window.goPhase"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-transition.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-408",
-   "nev": "Audatex arajanlat importalasa",
-   "fe": [
-    [
-     "rpw-evaluare-red.html",
-     "window.importAudatex"
-    ]
-   ],
-   "be": [],
-   "teszt": null,
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-409",
-   "nev": "Dosszie exportalasa lezaraskor",
-   "fe": [
-    [
-     "rpw-inchidere-red.html",
-     "window.exportDosar"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-oneway.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-410",
-   "nev": "WhatsApp ertesites kuldese",
-   "fe": [
-    [
-     "rpw-evaluare-red.html",
-     "window.sendWA"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-wa.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-411",
-   "nev": "E-mail kuldes (biztosito, ugyfel)",
-   "fe": [
-    [
-     "rpw-evaluare-red.html",
-     "window.sendMail"
-    ],
-    [
-     "functions/sendmail.js",
-     "sendmail"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-p0-7-functions.js",
-   "allapot": "nincs-bekotve"
-  },
-  {
-   "id": "F-501",
-   "nev": "Takaritas: mi torolheto",
-   "fe": [
-    [
-     "rpw-cleanup.html",
-     "rpw_cleanup_list"
-    ]
-   ],
-   "be": [
-    "rpw_cleanup_list"
-   ],
-   "teszt": "_tests/unit/test-delete.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-502",
-   "nev": "Takaritas: vegleges torles",
-   "fe": [
-    [
-     "rpw-cleanup.html",
-     "rpw_cleanup_hard_delete"
-    ]
-   ],
-   "be": [
-    "rpw_cleanup_hard_delete"
-   ],
-   "teszt": "_tests/unit/test-delete.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-503",
-   "nev": "Takaritas szaraz futasa (csak megmutatja, nem torol)",
-   "fe": [
-    [
-     "rpw-cleanup.html",
-     "window.dryRunMigrate"
-    ]
-   ],
-   "be": [],
-   "teszt": null,
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-504",
-   "nev": "Munkaallomasok (posturi) lekerese",
-   "fe": [
-    [
-     "index.html",
-     "rpw_posts_get"
-    ]
-   ],
-   "be": [
-    "rpw_posts_get"
-   ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-505",
-   "nev": "Munkaallomas mentese",
-   "fe": [
-    [
-     "index.html",
-     "rpw_post_upsert"
-    ]
-   ],
-   "be": [
-    "rpw_post_upsert"
-   ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-506",
-   "nev": "Munkalap hozzarendelese munkaallomashoz",
-   "fe": [
-    [
-     "index.html",
-     "rpw_post_assign"
-    ]
-   ],
-   "be": [
-    "rpw_post_assign"
-   ],
-   "teszt": "_tests/integration/test-int-workflow.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-901",
-   "nev": "Szerver-kepesseg ellenorzes (egyezik-e a kliens es a szerver)",
-   "fe": [
-    [
-     "rpw-guard.js",
-     "rpw_server_capabilities"
-    ]
-   ],
-   "be": [
-    "rpw_server_capabilities"
-   ],
-   "teszt": "_tests/unit/test-p0-1-guard.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-902",
-   "nev": "Vesz-leallitas, ha a szerver nem felel meg",
-   "fe": [
-    [
-     "rpw-guard.js",
-     "function halt"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-p0-1-guard.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-903",
-   "nev": "Szigoru mod feltetele (mikor allitunk le tenyleg)",
-   "fe": [
-    [
-     "rpw-guard.js",
-     "function strictNeeded"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-p0-1-guard.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-904",
-   "nev": "Kliens konfiguracio",
-   "fe": [
-    [
-     "rpw-config.js",
-     "PATCH_RPC"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-p0-1-guard.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-905",
-   "nev": "Belso fajlok kizarasa a nyilvanos deploybol",
-   "fe": [
-    [
-     "netlify.toml",
-     "force = true"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-deploy.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-906",
-   "nev": "JSON melysegi osszefesules a mentesnel",
-   "fe": [
-    [
-     "rpw-queue.js",
-     "function deepMerge"
-    ]
-   ],
-   "be": [
-    "jsonb_deep_merge"
-   ],
-   "teszt": "_tests/unit/test-queue.js",
-   "allapot": "el"
-  },
-  {
-   "id": "F-127",
-   "nev": "Ikon-sav: az oldalsav 74px-es ikon-savkent indul es kinyithato 240px-re; a kinyito gomb a sav TETEJEN all; kis kepernyon is elerheto, ott a kinyitott sav RATAKAR a tartalomra es valasztaskor becsukodik; az allapot a bongeszoben marad, a valtas NEM rajzol ujra (Ferenc G-3)",
-   "fe": [
-    [
-     "index.html",
-     "function sbRail"
-    ],
-    [
-     "index.html",
-     "function sbApply"
-    ],
-    [
-     "index.html",
-     "window.toggleSidebar"
-    ],
-    [
-     "index.html",
-     "window.sbGo"
-    ],
-    [
-     "index.html",
-     "class=\"sb-toggle\""
-    ],
-    [
-     "index.html",
-     "html:not([data-sb=\"wide\"]) .sb-item span{display:none}"
-    ],
-    [
-     "index.html",
-     "html[data-sb=\"wide\"]{--sbw:56px;--sbo:240px}"
-    ],
-    [
-     "index.html",
-     "sb_open"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-panou.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-128",
-   "nev": "A panel a RedAssistance iranyitopult formajaban: piros elonev + nagy vekony cim, a belepo gombok a cim ALATT, lekerekitett pill-fulek kerek darabszam-jelvennyel, PIROS oszlopfejlecek — a Lucrari lapon is ugyanigy (Ferenc G-1); a felso piros 'Paint Workflow' sav kivezetve mind az ot kepernyorol; a negy belepo gomb feher alapon, sajat szinevel keretezve — lenyomasra szinesedik",
-   "fe": [
-    [
-     "index.html",
-     ".panou-hdr-actions{display:flex;flex-direction:column"
-    ],
-    [
-     "index.html",
-     ".panou-title{font-size:30px;font-weight:400"
-    ],
-    [
-     "index.html",
-     ".panou-tbl th{text-align:left;padding:10px 12px 12px;font-size:12.5px;font-weight:700;color:var(--r)"
-    ],
-    [
-     "index.html",
-     ".tbl thead th{padding:12px 16px;text-align:left;font-size:12.5px;font-weight:700;color:var(--r)"
-    ],
-    [
-     "index.html",
-     ".page-hdr{padding:22px 26px;display:flex;flex-direction:column"
-    ],
-    [
-     "index.html",
-     ".btn-prog-new:active,.btn-prog-new:focus-visible{background:var(--c,var(--r))"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-panou.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-129",
-   "nev": "A recepcio nem bujik el: MINDEN varakozo soron ott a piros 'Receptie auto' gomb rajzzal. Ket allapota van (telt piros = egyeztetve, keretes piros = meg nem), de egyik sem nema: megnyomva megmondja, mi hianyzik (Ferenc: 'eldugott funkcio, nem logikus')",
-   "fe": [
-    [
-     "index.html",
-     "var _rec='<button class=\"edit-btn eb-rec'"
-    ],
-    [
-     "index.html",
-     ".edit-btn.eb-rec{background:var(--r);color:#fff"
-    ],
-    [
-     "index.html",
-     ".edit-btn.eb-rec.eb-rec-var{background:var(--w);color:var(--r)}"
-    ],
-    [
-     "index.html",
-     "window.deschideLucrare"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-panou.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-130",
-   "nev": "Az ugyfel kuldemenye LATSZIK a soron: zold jelveny a Kapcsolat oszlopban, a beerkezett fajlok szamaval. Csak a src='whatsapp' belyegu fajlokat szamolja (a szervizet nem), a szabad fotokat es a nevesitett irat-helyeket egyutt",
-   "fe": [
-    [
-     "index.html",
-     "window.clientSent"
-    ],
-    [
-     "index.html",
-     "class=\"cl-sent\""
-    ],
-    [
-     "index.html",
-     ".cl-sent{display:inline-flex"
-    ],
-    [
-     "index.html",
-     "cl_sent"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-panou.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-131",
-   "nev": "Ha a kotelezo iratok osszegyultek, a folyamat-sav felirata KIMONDJA (zolden, 'Acte complete'); a lepes maga meg nem kesz, mert a dossziet meg nem adtuk at. Katalogus nelkul (0/0) NEM allit keszet",
-   "fe": [
-    [
-     "rpw-progres.js",
-     "gata = (ac.total>0 && (ac.done||0)>=ac.total)"
-    ],
-    [
-     "rpw-progres.js",
-     "ready: gata"
-    ],
-    [
-     "rpw-progres.js",
-     ".pr-lbl.pr-l-ok{color:#166534}"
-    ],
-    [
-     "index.html",
-     "acte_gata"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-progres.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-132",
-   "nev": "A nevtelen sor is kap arcot: ha nincs se nev, se rendszam, a MUNKASZAM a focim (mono), ala pedig odakerul, hogy a nev az, ami hianyzik",
-   "fe": [
-    [
-     "index.html",
-     "var _nev=j.client||j.proprietar||j.proprietarDosar||''"
-    ],
-    [
-     "index.html",
-     "no_name"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/frontend/test-fe-panou.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-133",
-   "nev": "Betoltes: eloszor HELYRE TESSZUK a munkat (migrateState), csak utana szurunk. Korabban forditva volt, ezert minden `phase` nelkul erkezett munka nemán kiesett a listabol — Ferenc adataiban 19 darab, koztuk minden telefonrol feltoltott kardosszie",
-   "fe": [
-    [
-     "index.html",
-     "}).map(migrateState).filter(function(d){return d&&typeof d==='object'});"
-    ],
-    [
-     "index.html",
-     "if(j&&j.id&&migrateState(j)){"
-    ],
-    [
-     "index.html",
-     "if(typeof job.phase!=='number'||job.phase<1)job.phase=1;"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-load.js",
-   "allapot": "csak-frontend"
-  },
-  {
-   "id": "F-134",
-   "nev": "A tarolt kep-link egy ora utan lejar, ezert megjeleniteskor MINDIG friss alairas keszul a path-bol — kepre az src, linkre a href. Az 'Documente client' blokk eddig kimaradt ebbol (halott linkek), es a ZIP-export is a tarolt linkrol toltott",
-   "fe": [
-    [
-     "rpw-photos.js",
-     "var el=document.querySelectorAll('[data-rpw-path]:not([data-rpw-done])');"
-    ],
-    [
-     "rpw-photos.js",
-     "if(u){ if(n.tagName==='IMG') n.src=u; else n.href=u; }"
-    ],
-    [
-     "rpw-dosar.html",
-     "RPWPhotos.signedUrl(sb,u.path)"
-    ],
-    [
-     "rpw-dosar.html",
-     "RPWPhotos.hydrate(sb)"
-    ]
-   ],
-   "be": [],
-   "teszt": "_tests/unit/test-foto-lejarat.js",
-   "allapot": "csak-frontend"
-  }
- ]
+  "_olvasd": "Minden funkcionak SZAMA van. Ha egy lepes eltunik vagy atalakul, a _tests/unit/test-registry.js a SZAMAVAL jelzi. Uj funkcio = uj sor ITT, kulonben a teszt 'nincs beszamozva' hibat ad.",
+  "_verzio": "1.0",
+  "_mezok": {
+    "id": "F-### allando szam, SOHA nem valtozik es nem hasznaljuk ujra",
+    "nev": "mit csinal, magyarul, egy mondatban",
+    "fe": "frontend horgony: [fajl, keresett szoveg] parok - ezeknek letezniuk KELL",
+    "be": "backend RPC nevek a _migrations/*.sql-bol",
+    "teszt": "melyik teszt orzi; null = MEG NINCS TESZTJE",
+    "allapot": "el | csak-frontend | csak-backend | nincs-bekotve"
+  },
+  "funkciok": [
+    {
+      "id": "F-001",
+      "nev": "Belepes (login)",
+      "fe": [
+        [
+          "rpw-auth.js",
+          "rpw_login"
+        ]
+      ],
+      "be": [
+        "rpw_login"
+      ],
+      "teszt": "_tests/unit/test-rpc-consistency.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-002",
+      "nev": "Munkamenet ellenorzese",
+      "fe": [
+        [
+          "rpw-auth.js",
+          "rpw2_session"
+        ]
+      ],
+      "be": [
+        "rpw2_session"
+      ],
+      "teszt": "_tests/integration/test-int-tenant.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-003",
+      "nev": "Kilepes (logout)",
+      "fe": [
+        [
+          "rpw-auth.js",
+          "rpw_logout"
+        ]
+      ],
+      "be": [
+        "rpw_logout"
+      ],
+      "teszt": "_tests/unit/test-rpc-consistency.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-004",
+      "nev": "Csapat lekerese (regi ut)",
+      "fe": [
+        [
+          "rpw-auth.js",
+          "rpw_team"
+        ]
+      ],
+      "be": [
+        "rpw_team"
+      ],
+      "teszt": "_tests/integration/test-int-tenant.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-005",
+      "nev": "Csapat lekerese (uj ut)",
+      "fe": [
+        [
+          "index.html",
+          "rpw2_team"
+        ]
+      ],
+      "be": [
+        "rpw2_team"
+      ],
+      "teszt": "_tests/integration/test-int-tenant.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-006",
+      "nev": "Nevsor (roster) lekerese",
+      "fe": [
+        [
+          "rpw-login.html",
+          "rpw2_roster"
+        ]
+      ],
+      "be": [
+        "rpw2_roster"
+      ],
+      "teszt": "_tests/integration/test-int-tenant.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-007",
+      "nev": "Dolgozo mentese",
+      "fe": [
+        [
+          "index.html",
+          "rpw2_employee_save"
+        ]
+      ],
+      "be": [
+        "rpw2_employee_save"
+      ],
+      "teszt": "_tests/integration/test-int-tenant.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-008",
+      "nev": "Szerepkor mentese",
+      "fe": [
+        [
+          "index.html",
+          "rpw2_role_save"
+        ]
+      ],
+      "be": [
+        "rpw2_role_save"
+      ],
+      "teszt": "_tests/integration/test-int-tenant.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-009",
+      "nev": "Jogosultsag-kerdes (mit szabad?)",
+      "fe": [],
+      "be": [
+        "rpw2_can"
+      ],
+      "teszt": "_tests/integration/test-int-tenant.js",
+      "allapot": "csak-backend"
+    },
+    {
+      "id": "F-010",
+      "nev": "PIN beallitasa",
+      "fe": [
+        [
+          "index.html",
+          "rpw2_pin_set"
+        ]
+      ],
+      "be": [
+        "rpw2_pin_set"
+      ],
+      "teszt": "_tests/integration/test-int-tenant.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-011",
+      "nev": "PIN allapot (hanyadik hibas probalkozas, zarolva?)",
+      "fe": [
+        [
+          "index.html",
+          "rpw2_pin_status"
+        ]
+      ],
+      "be": [
+        "rpw2_pin_status"
+      ],
+      "teszt": "_tests/integration/test-int-tenant.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-012",
+      "nev": "PIN zarolas feloldasa adminkent",
+      "fe": [
+        [
+          "index.html",
+          "rpw2_pin_unlock"
+        ]
+      ],
+      "be": [
+        "rpw2_pin_unlock"
+      ],
+      "teszt": "_tests/integration/test-int-tenant.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-013",
+      "nev": "Gyenge PIN elutasitasa (1234, 0000, 111111)",
+      "fe": [],
+      "be": [
+        "rpw__pin_weak"
+      ],
+      "teszt": "_tests/integration/test-int-tenant.js",
+      "allapot": "csak-backend"
+    },
+    {
+      "id": "F-014",
+      "nev": "Admin mod kapcsolo a fooldalon",
+      "fe": [
+        [
+          "index.html",
+          "window.toggleAdmin"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-p0-5-admin.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-015",
+      "nev": "Dolgozo/szerepkor/PIN admin ablak",
+      "fe": [
+        [
+          "index.html",
+          "window.ecEmp"
+        ],
+        [
+          "index.html",
+          "window.ecRole"
+        ],
+        [
+          "index.html",
+          "window.ecPin"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-pin-dialog.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-016",
+      "nev": "Belepes uj uton (rpw2_login, tokenes munkamenet)",
+      "fe": [
+        [
+          "rpw-auth.js",
+          "rpw2_login"
+        ]
+      ],
+      "be": [
+        "rpw2_login"
+      ],
+      "teszt": "_tests/integration/test-int-tenant.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-101",
+      "nev": "Uj munkalap: Lucrare noua (urlap nelkul, egyenesen a recepciora)",
+      "fe": [
+        [
+          "index.html",
+          "window.lucrareAcum"
+        ],
+        [
+          "index.html",
+          "onclick=\"lucrareAcum()\""
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-panou.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-102",
+      "nev": "Rendszam bevitel es normalizalas",
+      "fe": [
+        [
+          "index.html",
+          "window.njPlate"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-case.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-121",
+      "nev": "Elojegyzes urlap (Programare noua): ket tipus (Dauna asigurare / Dauna auto), a biztositosnal ket dosszie-ag (Avizare dauna / Dosar dauna deschis); a nev es az auto LATSZIK, de nem kotelezo",
+      "fe": [
+        [
+          "index.html",
+          "window.openNewJob"
+        ],
+        [
+          "index.html",
+          "function njMissing"
+        ],
+        [
+          "index.html",
+          "nj_optional"
+        ],
+        [
+          "index.html",
+          "id=\"iAuto\""
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-urlap.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-122",
+      "nev": "Kapcsolat oszlop a foablakon: a VALODI WhatsApp jel (zold=egyeztetve, sotet=meg nem, tompa=nincs telefon)",
+      "fe": [
+        [
+          "index.html",
+          "wa-btn"
+        ],
+        [
+          "index.html",
+          "clickWhatsApp"
+        ],
+        [
+          "index.html",
+          "wa-btn nofon"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-panou.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-123",
+      "nev": "Sor-ikonok a foablakon (naptar/ora/mappa/ceruza/kuka) — vonalas SVG, mindegyiken title ES aria-label",
+      "fe": [
+        [
+          "index.html",
+          "var RPW_ICO"
+        ],
+        [
+          "index.html",
+          "function ico(n)"
+        ],
+        [
+          "index.html",
+          "eb-ico"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-panou.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-124",
+      "nev": "A soron a mappa CSAK ott, ahol van dosszie-munka (Avizare dauna); magankaron es mar nyitott dossziénal a RECEPCIO az ut — a mappa mellett a dossziegyujto soron is ott a recepcio",
+      "fe": [
+        [
+          "index.html",
+          "var _dosszieMunka"
+        ],
+        [
+          "index.html",
+          "wrench"
+        ],
+        [
+          "index.html",
+          "var _slot"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-panou.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-125",
+      "nev": "Folyamatjelzo: negy lanc egy savban (dosszie / varakozas / ratat / javitas); a statusz es a folyamat EGY oszlopban, minden fulon egyforma logikaval",
+      "fe": [
+        [
+          "rpw-progres.js",
+          "function chain"
+        ],
+        [
+          "rpw-progres.js",
+          "function procName"
+        ],
+        [
+          "rpw-progres.js",
+          "pr-skip"
+        ],
+        [
+          "rpw-progres.js",
+          "j.sosire==='ratat'"
+        ],
+        [
+          "index.html",
+          "RPWProgres.html"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-progres.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-103",
+      "nev": "Kovetkezo munkalapszam kerese a szervertol",
+      "fe": [
+        [
+          "index.html",
+          "rpw_next_job_number"
+        ]
+      ],
+      "be": [
+        "rpw_next_job_number",
+        "rpw_job_number"
+      ],
+      "teszt": "_tests/integration/test-int-workflow.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-104",
+      "nev": "Munkalapok listaja",
+      "fe": [
+        [
+          "rpw-db.js",
+          "rpw_jobs_list"
+        ]
+      ],
+      "be": [
+        "rpw_jobs_list"
+      ],
+      "teszt": "_tests/integration/test-int-workflow.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-105",
+      "nev": "Egy munkalap betoltese",
+      "fe": [
+        [
+          "rpw-db.js",
+          "rpw_job_get"
+        ]
+      ],
+      "be": [
+        "rpw_job_get"
+      ],
+      "teszt": "_tests/integration/test-int-workflow.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-106",
+      "nev": "Mentes regi uton (v2, vedelem nelkul)",
+      "fe": [
+        [
+          "rpw-db.js",
+          "rpw_patch"
+        ]
+      ],
+      "be": [
+        "rpw_patch"
+      ],
+      "teszt": "_tests/unit/test-rpc-consistency.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-107",
+      "nev": "Mentes vedett uton (v3, munkafolyamat-mezok tiltva)",
+      "fe": [
+        [
+          "rpw-db.js",
+          "rpw_patch_v3"
+        ],
+        [
+          "rpw-config.js",
+          "PATCH_RPC"
+        ]
+      ],
+      "be": [
+        "rpw_patch_v3"
+      ],
+      "teszt": "_tests/integration/test-int-workflow.js",
+      "allapot": "nincs-bekotve"
+    },
+    {
+      "id": "F-108",
+      "nev": "Verzioutkozes kezelese (ketten irtak egyszerre)",
+      "fe": [
+        [
+          "rpw-conflict.js",
+          "conflict"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-conflict.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-109",
+      "nev": "Vedett mezok kiszurese mentes elott",
+      "fe": [
+        [
+          "rpw-save.js",
+          "function stripProtected"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/integration/test-int-workflow.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-110",
+      "nev": "Szerveroldali elutasitas felismerese (nem nemul el a hiba)",
+      "fe": [
+        [
+          "rpw-save.js",
+          "function serverRejection"
+        ]
+      ],
+      "be": [],
+      "teszt": null,
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-111",
+      "nev": "Fazisvaltas (recepcio -> evaluare -> ...)",
+      "fe": [
+        [
+          "rpw-workflow.js",
+          "phase"
+        ]
+      ],
+      "be": [
+        "rpw_transition"
+      ],
+      "teszt": "_tests/integration/test-int-workflow.js",
+      "allapot": "nincs-bekotve"
+    },
+    {
+      "id": "F-112",
+      "nev": "Fazis-kovetelmenyek (mi hianyzik meg a tovabblepeshez)",
+      "fe": [
+        [
+          "rpw-workflow.js",
+          "need"
+        ]
+      ],
+      "be": [
+        "rpw_requirements"
+      ],
+      "teszt": "_tests/integration/test-int-workflow.js",
+      "allapot": "nincs-bekotve"
+    },
+    {
+      "id": "F-113",
+      "nev": "Lezarhato-e a munkalap",
+      "fe": [],
+      "be": [
+        "rpw_can_complete"
+      ],
+      "teszt": "_tests/integration/test-int-workflow.js",
+      "allapot": "csak-backend"
+    },
+    {
+      "id": "F-114",
+      "nev": "Munkalap kukaba dobasa",
+      "fe": [
+        [
+          "rpw-db.js",
+          "rpw_job_trash"
+        ]
+      ],
+      "be": [
+        "rpw_job_trash"
+      ],
+      "teszt": "_tests/unit/test-delete.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-115",
+      "nev": "Visszaallitas a kukabol",
+      "fe": [
+        [
+          "rpw-db.js",
+          "rpw_job_restore"
+        ]
+      ],
+      "be": [
+        "rpw_job_restore"
+      ],
+      "teszt": "_tests/unit/test-delete.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-116",
+      "nev": "Vegleges torles",
+      "fe": [
+        [
+          "rpw-db.js",
+          "rpw_job_purge"
+        ]
+      ],
+      "be": [
+        "rpw_job_purge"
+      ],
+      "teszt": "_tests/unit/test-delete.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-117",
+      "nev": "Meglevo munkalap szerkesztese",
+      "fe": [
+        [
+          "index.html",
+          "window.openEditJob"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-edit.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-118",
+      "nev": "Idopont (programare) ablak",
+      "fe": [
+        [
+          "index.html",
+          "window.openProgModal"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-prog.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-119",
+      "nev": "Idopont-athelyezes (reprogramare)",
+      "fe": [
+        [
+          "index.html",
+          "window.openRepro"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-acceptance.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-201",
+      "nev": "Avizare dauna: a fejlec gombja EGYENESEN dossziet nyit; a dossziek a KOZOS listaban; a dosszie allapota a folyamat-sav feliratanak elotagja",
+      "fe": [
+        [
+          "index.html",
+          "onclick=\"dosarTarziu()\""
+        ],
+        [
+          "index.html",
+          "row-dd"
+        ],
+        [
+          "rpw-progres.js",
+          "function procName"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-panou.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-202",
+      "nev": "Deschide dosar dauna - a dossziet MI nyitjuk (urlap nelkul, egybol a dosszie lapra)",
+      "fe": [
+        [
+          "index.html",
+          "window.dosarTarziu"
+        ],
+        [
+          "index.html",
+          "dosar_tarziu"
+        ],
+        [
+          "index.html",
+          "deschideDosar(j.id)"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-entry.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-203",
+      "nev": "Preluare dosar dauna - meglevo dosszie atvetele fajlbol",
+      "fe": [
+        [
+          "index.html",
+          "window.dosarFisier"
+        ],
+        [
+          "index.html",
+          "dosar_fisier"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-dosare.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-215",
+      "nev": "Duplikatum-figyelmeztetes a dosszie lapon (ugyanaz a rendszam + biztosito + karszam)",
+      "fe": [
+        [
+          "rpw-dosar.html",
+          "window.dosarDupCheck"
+        ],
+        [
+          "rpw-dosar.html",
+          "dup-warn"
+        ]
+      ],
+      "be": [
+        "rpw_jobs_list"
+      ],
+      "teszt": "_tests/unit/test-dup-dosar.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-204",
+      "nev": "Dosszie oldal iratrekeszekkel",
+      "fe": [
+        [
+          "rpw-dosar.html",
+          "RPW_DAUNA_DOCS"
+        ],
+        [
+          "rpw-dosar.html",
+          "window.acteCountFor"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-dosarflux.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-205",
+      "nev": "Irat feltoltese egy rekeszbe",
+      "fe": [
+        [
+          "rpw-dosar.html",
+          "_uploadFileToSlot"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-classify.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-206",
+      "nev": "Irat torlese a rekeszbol",
+      "fe": [
+        [
+          "rpw-dosar.html",
+          "_stergeActaGo"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-dialogs.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-207",
+      "nev": "Iratszamlalo (hany irat van meg)",
+      "fe": [
+        [
+          "index.html",
+          "window.acteCount"
+        ],
+        [
+          "rpw-dosar.html",
+          "window.acteCountFor"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-dosare.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-208",
+      "nev": "Tomeges feltoltes - sok kep egyszerre",
+      "fe": [
+        [
+          "rpw-dosar.html",
+          "bulkActe"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-classify.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-209",
+      "nev": "AI iratbesorolas - javaslat a rekeszre",
+      "fe": [
+        [
+          "rpw-classify.js",
+          "function suggestSlot"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-classify.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-210",
+      "nev": "AI iratbesorolas - szerver oldal (Claude)",
+      "fe": [
+        [
+          "rpw-classify.js",
+          "/.netlify/functions/classify"
+        ],
+        [
+          "functions/classify.js",
+          "anthropic"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-p0-7-functions.js",
+      "allapot": "nincs-bekotve"
+    },
+    {
+      "id": "F-211",
+      "nev": "OCR - szoveg kiolvasasa kepbol",
+      "fe": [
+        [
+          "functions/ocr.js",
+          "anthropic"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-p0-7-functions.js",
+      "allapot": "nincs-bekotve"
+    },
+    {
+      "id": "F-212",
+      "nev": "Feltoltesi link kuldese az ugyfelnek",
+      "fe": [
+        [
+          "rpw-dosar.html",
+          "window.trimiteLinkUpload"
+        ]
+      ],
+      "be": [],
+      "teszt": null,
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-126",
+      "nev": "Ugyfel-mezok a dosszie-lapon (nev / telefon / megjegyzes) — kesleltetett szeletes mentes; a gepelt ertek TULELI a keson erkezo szerver-valaszt; a WhatsApp gomb telefon nelkul tiltott",
+      "fe": [
+        [
+          "rpw-dosar.html",
+          "window.setDosarClient"
+        ],
+        [
+          "rpw-dosar.html",
+          "id=\"clTel\""
+        ],
+        [
+          "rpw-dosar.html",
+          "function _clReapply"
+        ],
+        [
+          "rpw-dosar.html",
+          "wa_need_ph"
+        ],
+        [
+          "index.html",
+          "wa_go_dosar"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-dosar.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-213",
+      "nev": "Fotok kezelese (tomorites, tarolas)",
+      "fe": [
+        [
+          "rpw-photos.js",
+          "photo"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-p0-6-storage.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-214",
+      "nev": "Regi base64 kepek atkoltoztetese",
+      "fe": [
+        [
+          "rpw-base64-migrate.js",
+          "base64"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-p0-6-storage.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-301",
+      "nev": "Offline sor - a mentes akkor is megmarad, ha nincs net",
+      "fe": [
+        [
+          "rpw-queue.js",
+          "function create"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-queue.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-302",
+      "nev": "Kozos sor-peldany (mindenki ugyanabba a sorba ir)",
+      "fe": [
+        [
+          "rpw-queue.js",
+          "shared"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-queue.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-303",
+      "nev": "Sor ujraindul oldal-ujratoltes utan",
+      "fe": [
+        [
+          "rpw-data.js",
+          "_resume"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-queue.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-304",
+      "nev": "Szinkron-allapot kijelzese (mentve / var / hiba)",
+      "fe": [
+        [
+          "rpw-save.js",
+          "getSyncState"
+        ]
+      ],
+      "be": [],
+      "teszt": null,
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-305",
+      "nev": "Helyi gyorsitotar (offline is latszik a munkalap)",
+      "fe": [
+        [
+          "rpw-cache.js",
+          "function setJob"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-delete.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-306",
+      "nev": "Regi kulcsok takaritasa induláskor",
+      "fe": [
+        [
+          "rpw-cache.js",
+          "function migrateLegacy"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-delete.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-307",
+      "nev": "Belepesi kulcsok VEDELME a takaritastol",
+      "fe": [
+        [
+          "rpw-cache.js",
+          "LEGACY_SESSION"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-delete.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-308",
+      "nev": "Rendszam maszkolasa a gyorsitotarban",
+      "fe": [
+        [
+          "rpw-cache.js",
+          "function maskPlate"
+        ]
+      ],
+      "be": [],
+      "teszt": null,
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-309",
+      "nev": "Figyelmeztetes kilepeskor, ha van mentetlen adat",
+      "fe": [
+        [
+          "rpw-save.js",
+          "function bindBeforeUnload"
+        ]
+      ],
+      "be": [],
+      "teszt": null,
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-401",
+      "nev": "Recepcio fazis oldal",
+      "fe": [
+        [
+          "rpw-recepcio-red.html",
+          "window.goPhase"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-transition.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-402",
+      "nev": "Evaluare fazis oldal",
+      "fe": [
+        [
+          "rpw-evaluare-red.html",
+          "window.goPhase"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-transition.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-403",
+      "nev": "Tinichigerie fazis oldal",
+      "fe": [
+        [
+          "rpw-tinichigerie-red.html",
+          "window.goPhase"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-transition.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-404",
+      "nev": "Vopsitorie fazis oldal",
+      "fe": [
+        [
+          "rpw-vopsitorie-red.html",
+          "window.goPhase"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-transition.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-405",
+      "nev": "Reconstatare fazis oldal",
+      "fe": [
+        [
+          "rpw-reconstatare-red.html",
+          "window.goPhase"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-transition.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-406",
+      "nev": "Control fazis oldal",
+      "fe": [
+        [
+          "rpw-control-red.html",
+          "window.goPhase"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-transition.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-407",
+      "nev": "Inchidere (lezaras) fazis oldal",
+      "fe": [
+        [
+          "rpw-inchidere-red.html",
+          "window.goPhase"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-transition.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-408",
+      "nev": "Audatex arajanlat importalasa",
+      "fe": [
+        [
+          "rpw-evaluare-red.html",
+          "window.importAudatex"
+        ]
+      ],
+      "be": [],
+      "teszt": null,
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-409",
+      "nev": "Dosszie exportalasa lezaraskor",
+      "fe": [
+        [
+          "rpw-inchidere-red.html",
+          "window.exportDosar"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-oneway.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-410",
+      "nev": "WhatsApp ertesites kuldese",
+      "fe": [
+        [
+          "rpw-evaluare-red.html",
+          "window.sendWA"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-wa.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-411",
+      "nev": "E-mail kuldes (biztosito, ugyfel)",
+      "fe": [
+        [
+          "rpw-evaluare-red.html",
+          "window.sendMail"
+        ],
+        [
+          "functions/sendmail.js",
+          "sendmail"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-p0-7-functions.js",
+      "allapot": "nincs-bekotve"
+    },
+    {
+      "id": "F-501",
+      "nev": "Takaritas: mi torolheto",
+      "fe": [
+        [
+          "rpw-cleanup.html",
+          "rpw_cleanup_list"
+        ]
+      ],
+      "be": [
+        "rpw_cleanup_list"
+      ],
+      "teszt": "_tests/unit/test-delete.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-502",
+      "nev": "Takaritas: vegleges torles",
+      "fe": [
+        [
+          "rpw-cleanup.html",
+          "rpw_cleanup_hard_delete"
+        ]
+      ],
+      "be": [
+        "rpw_cleanup_hard_delete"
+      ],
+      "teszt": "_tests/unit/test-delete.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-503",
+      "nev": "Takaritas szaraz futasa (csak megmutatja, nem torol)",
+      "fe": [
+        [
+          "rpw-cleanup.html",
+          "window.dryRunMigrate"
+        ]
+      ],
+      "be": [],
+      "teszt": null,
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-504",
+      "nev": "Munkaallomasok (posturi) lekerese",
+      "fe": [
+        [
+          "index.html",
+          "rpw_posts_get"
+        ]
+      ],
+      "be": [
+        "rpw_posts_get"
+      ],
+      "teszt": "_tests/integration/test-int-workflow.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-505",
+      "nev": "Munkaallomas mentese",
+      "fe": [
+        [
+          "index.html",
+          "rpw_post_upsert"
+        ]
+      ],
+      "be": [
+        "rpw_post_upsert"
+      ],
+      "teszt": "_tests/integration/test-int-workflow.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-506",
+      "nev": "Munkalap hozzarendelese munkaallomashoz",
+      "fe": [
+        [
+          "index.html",
+          "rpw_post_assign"
+        ]
+      ],
+      "be": [
+        "rpw_post_assign"
+      ],
+      "teszt": "_tests/integration/test-int-workflow.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-901",
+      "nev": "Szerver-kepesseg ellenorzes (egyezik-e a kliens es a szerver)",
+      "fe": [
+        [
+          "rpw-guard.js",
+          "rpw_server_capabilities"
+        ]
+      ],
+      "be": [
+        "rpw_server_capabilities"
+      ],
+      "teszt": "_tests/unit/test-p0-1-guard.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-902",
+      "nev": "Vesz-leallitas, ha a szerver nem felel meg",
+      "fe": [
+        [
+          "rpw-guard.js",
+          "function halt"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-p0-1-guard.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-903",
+      "nev": "Szigoru mod feltetele (mikor allitunk le tenyleg)",
+      "fe": [
+        [
+          "rpw-guard.js",
+          "function strictNeeded"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-p0-1-guard.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-904",
+      "nev": "Kliens konfiguracio",
+      "fe": [
+        [
+          "rpw-config.js",
+          "PATCH_RPC"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-p0-1-guard.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-905",
+      "nev": "Belso fajlok kizarasa a nyilvanos deploybol",
+      "fe": [
+        [
+          "netlify.toml",
+          "force = true"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-deploy.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-906",
+      "nev": "JSON melysegi osszefesules a mentesnel",
+      "fe": [
+        [
+          "rpw-queue.js",
+          "function deepMerge"
+        ]
+      ],
+      "be": [
+        "jsonb_deep_merge"
+      ],
+      "teszt": "_tests/unit/test-queue.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-127",
+      "nev": "Ikon-sav: az oldalsav 74px-es ikon-savkent indul es kinyithato 240px-re; a kinyito gomb a sav TETEJEN all; kis kepernyon is elerheto, ott a kinyitott sav RATAKAR a tartalomra es valasztaskor becsukodik; az allapot a bongeszoben marad, a valtas NEM rajzol ujra (Ferenc G-3)",
+      "fe": [
+        [
+          "index.html",
+          "function sbRail"
+        ],
+        [
+          "index.html",
+          "function sbApply"
+        ],
+        [
+          "index.html",
+          "window.toggleSidebar"
+        ],
+        [
+          "index.html",
+          "window.sbGo"
+        ],
+        [
+          "index.html",
+          "class=\"sb-toggle\""
+        ],
+        [
+          "index.html",
+          "html:not([data-sb=\"wide\"]) .sb-item span{display:none}"
+        ],
+        [
+          "index.html",
+          "html[data-sb=\"wide\"]{--sbw:56px;--sbo:240px}"
+        ],
+        [
+          "index.html",
+          "sb_open"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-panou.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-128",
+      "nev": "A panel a RedAssistance iranyitopult formajaban: piros elonev + nagy vekony cim, a belepo gombok a cim ALATT, lekerekitett pill-fulek kerek darabszam-jelvennyel, PIROS oszlopfejlecek — a Lucrari lapon is ugyanigy (Ferenc G-1); a felso piros 'Paint Workflow' sav kivezetve mind az ot kepernyorol; a negy belepo gomb feher alapon, sajat szinevel keretezve — lenyomasra szinesedik",
+      "fe": [
+        [
+          "index.html",
+          ".panou-hdr-actions{display:flex;flex-direction:column"
+        ],
+        [
+          "index.html",
+          ".panou-title{font-size:30px;font-weight:400"
+        ],
+        [
+          "index.html",
+          ".panou-tbl th{text-align:left;padding:10px 12px 12px;font-size:12.5px;font-weight:700;color:var(--r)"
+        ],
+        [
+          "index.html",
+          ".tbl thead th{padding:12px 16px;text-align:left;font-size:12.5px;font-weight:700;color:var(--r)"
+        ],
+        [
+          "index.html",
+          ".page-hdr{padding:22px 26px;display:flex;flex-direction:column"
+        ],
+        [
+          "index.html",
+          ".btn-prog-new:active,.btn-prog-new:focus-visible{background:var(--c,var(--r))"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-panou.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-129",
+      "nev": "A recepcio nem bujik el: MINDEN varakozo soron ott a piros 'Receptie auto' gomb rajzzal. Ket allapota van (telt piros = egyeztetve, keretes piros = meg nem), de egyik sem nema: megnyomva megmondja, mi hianyzik (Ferenc: 'eldugott funkcio, nem logikus')",
+      "fe": [
+        [
+          "index.html",
+          "var _rec='<button class=\"edit-btn eb-rec'"
+        ],
+        [
+          "index.html",
+          ".edit-btn.eb-rec{background:var(--r);color:#fff"
+        ],
+        [
+          "index.html",
+          ".edit-btn.eb-rec.eb-rec-var{background:var(--w);color:var(--r)}"
+        ],
+        [
+          "index.html",
+          "window.deschideLucrare"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-panou.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-130",
+      "nev": "Az ugyfel kuldemenye LATSZIK a soron: zold jelveny a Kapcsolat oszlopban, a beerkezett fajlok szamaval. Csak a src='whatsapp' belyegu fajlokat szamolja (a szervizet nem), a szabad fotokat es a nevesitett irat-helyeket egyutt",
+      "fe": [
+        [
+          "index.html",
+          "window.clientSent"
+        ],
+        [
+          "index.html",
+          "class=\"cl-sent\""
+        ],
+        [
+          "index.html",
+          ".cl-sent{display:inline-flex"
+        ],
+        [
+          "index.html",
+          "cl_sent"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-panou.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-131",
+      "nev": "Ha a kotelezo iratok osszegyultek, a folyamat-sav felirata KIMONDJA (zolden, 'Acte complete'); a lepes maga meg nem kesz, mert a dossziet meg nem adtuk at. Katalogus nelkul (0/0) NEM allit keszet",
+      "fe": [
+        [
+          "rpw-progres.js",
+          "gata = (ac.total>0 && (ac.done||0)>=ac.total)"
+        ],
+        [
+          "rpw-progres.js",
+          "ready: gata"
+        ],
+        [
+          "rpw-progres.js",
+          ".pr-lbl.pr-l-ok{color:#166534}"
+        ],
+        [
+          "index.html",
+          "acte_gata"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-progres.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-132",
+      "nev": "A nevtelen sor is kap arcot: ha nincs se nev, se rendszam, a MUNKASZAM a focim (mono), ala pedig odakerul, hogy a nev az, ami hianyzik",
+      "fe": [
+        [
+          "index.html",
+          "var _nev=j.client||j.proprietar||j.proprietarDosar||''"
+        ],
+        [
+          "index.html",
+          "no_name"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-panou.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-133",
+      "nev": "Betoltes: eloszor HELYRE TESSZUK a munkat (migrateState), csak utana szurunk. Korabban forditva volt, ezert minden `phase` nelkul erkezett munka nemán kiesett a listabol — Ferenc adataiban 19 darab, koztuk minden telefonrol feltoltott kardosszie",
+      "fe": [
+        [
+          "index.html",
+          "}).map(migrateState).filter(function(d){return d&&typeof d==='object'});"
+        ],
+        [
+          "index.html",
+          "if(j&&j.id&&migrateState(j)){"
+        ],
+        [
+          "index.html",
+          "if(typeof job.phase!=='number'||job.phase<1)job.phase=1;"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-load.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-134",
+      "nev": "A tarolt kep-link egy ora utan lejar, ezert megjeleniteskor MINDIG friss alairas keszul a path-bol — kepre az src, linkre a href. Az 'Documente client' blokk eddig kimaradt ebbol (halott linkek), es a ZIP-export is a tarolt linkrol toltott",
+      "fe": [
+        [
+          "rpw-photos.js",
+          "var el=document.querySelectorAll('[data-rpw-path]:not([data-rpw-done])');"
+        ],
+        [
+          "rpw-photos.js",
+          "if(u){ if(n.tagName==='IMG') n.src=u; else n.href=u; }"
+        ],
+        [
+          "rpw-dosar.html",
+          "RPWPhotos.signedUrl(sb,u.path)"
+        ],
+        [
+          "rpw-dosar.html",
+          "RPWPhotos.hydrate(sb)"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-foto-lejarat.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-135",
+      "nev": "Az ugyfel feltolto lapjanak elolapja marka es rendszam nelkul is megmondja, MELYIK dossziehoz tolt fel: eddig a szo szerinti 'Autovehicul' tartalek-szoveg allt ott, most a dossziészam a focim",
+      "fe": [
+        [
+          "rpw-upload.html",
+          "var cim = brand || nr;"
+        ],
+        [
+          "rpw-upload.html",
+          "+(cim===nr?'Dosar de daună':'Dosar: '+escH(nr))"
+        ],
+        [
+          "rpw-upload.html",
+          "Adăugați pozele și actele cerute mai jos."
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-upload.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-136",
+      "nev": "'Trimite' gomb az ugyfel feltolto lapjan: a fajlok eddig is azonnal mentodtek, de az ugyfelnek nem volt egy pillanata, amikor kimondhatta, hogy kesz — es visszaigazolast sem kapott. A gomb clientGata{at,files}-t ir client_whatsapp neveben, hianyos dossziénél is kuldheto, sikertelen mentesnel visszagorgul",
+      "fe": [
+        [
+          "rpw-upload.html",
+          "var kuldve = !!(JOB.clientGata && JOB.clientGata.at);"
+        ],
+        [
+          "rpw-upload.html",
+          "'<button type=\"button\" class=\"send'+(allOk?'':' warn')+'\" onclick=\"window.__gata()\">'"
+        ],
+        [
+          "rpw-upload.html",
+          "JOB.clientGata={at:most,files:db};"
+        ],
+        [
+          "rpw-upload.html",
+          "{clientGata:JOB.clientGata},{actor:'client_whatsapp'}"
+        ],
+        [
+          "rpw-upload.html",
+          "JOB.clientGata=null; render(); }"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-upload.js",
+      "allapot": "csak-frontend"
+    }
+  ]
 }
