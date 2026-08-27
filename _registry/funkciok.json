@@ -1495,6 +1495,27 @@
    "be": [],
    "teszt": "_tests/frontend/test-fe-panou.js",
    "allapot": "csak-frontend"
+  },
+  {
+   "id": "F-133",
+   "nev": "Betoltes: eloszor HELYRE TESSZUK a munkat (migrateState), csak utana szurunk. Korabban forditva volt, ezert minden `phase` nelkul erkezett munka nemán kiesett a listabol — Ferenc adataiban 19 darab, koztuk minden telefonrol feltoltott kardosszie",
+   "fe": [
+    [
+     "index.html",
+     "}).map(migrateState).filter(function(d){return d&&typeof d==='object'});"
+    ],
+    [
+     "index.html",
+     "if(j&&j.id&&migrateState(j)){"
+    ],
+    [
+     "index.html",
+     "if(typeof job.phase!=='number'||job.phase<1)job.phase=1;"
+    ]
+   ],
+   "be": [],
+   "teszt": "_tests/unit/test-load.js",
+   "allapot": "csak-frontend"
   }
  ]
 }

@@ -498,7 +498,9 @@ async function loadJobs(){
     if(k.indexOf('rpw_job_'===0||k.startsWith('rpw_job_'))&&k!=='rpw_jobs_list'){
       try{
         var j=JSON.parse(localStorage.getItem(k));
-        if(j&&j.id&&typeof j.phase==='number'){
+        // Ugyanaz a hiba, mint a szerver-agon: eloszor helyre tesszuk,
+        // csak utana dontunk rola.
+        if(j&&j.id&&migrateState(j)){
           var exists=JOBS.some(function(x){return x.id===j.id});
           if(!exists)JOBS.push(j);
         }
@@ -516,7 +518,13 @@ async function loadJobs(){
       // kötelezően kéri — enélkül minden mentés `expected_version_required`.
       var sbJobs=(res.data||[]).map(function(r){
         var d=r.data; if(d && r.version!=null) d.version=r.version; return d;
-      }).filter(function(d){return d&&typeof d.phase==='number'}).map(migrateState);
+      // ── A SORREND SZAMIT (Ferenc, 2026-08-27) ────────────────────
+      // Eddig a szuro FUTOTT ELOSZOR, es eldobott minden munkat, amiben
+      // nem volt `phase`. A migrateState pont azt teszi helyre — de mar
+      // nem volt kit: 19 munka (MS-26-059-tol felfele, koztuk a
+      // telefonrol feltoltott dossziek) SOHA nem jutott be a listaba.
+      // Eloszor helyre tesszuk, utana szurunk.
+      }).map(migrateState).filter(function(d){return d&&typeof d==='object'});
       sbJobs.forEach(function(sj){
         var idx=JOBS.findIndex(function(x){return x.id===sj.id});
         if(idx>=0)JOBS[idx]=sj;else JOBS.push(sj);

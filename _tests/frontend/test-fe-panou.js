@@ -53,6 +53,12 @@ const JOBS=[
   dosarActe:{foto_fata:[{src:'whatsapp'},{src:'whatsapp'}],vin_talon:{src:'whatsapp'}},
   clientUploads:[{src:'whatsapp'},{src:'service'}],
   phase:1,phases:{},inchis:false,created:'2026-08-27',programare:{}},
+ // A szerver-oldali letrehozas ota a munkakban NINCS `phase` mezo.
+ // 19 ilyen munka volt Ferenc adataiban — es EGYIK sem latszott.
+ {id:'NP',number:'MS-26-074',plate:'',client:'',flux:'doar_dosar',doarDosar:true,
+  damageType:'asig',dosarStatus:'deschid',sosire:'programat',
+  dosarActe:{foto_fata:[{src:'whatsapp'}]},inchis:false,
+  created:'2026-08-26',programare:{date:null,time:null,status:'viitor'}},
  {id:'R1',number:'MS-26-064',plate:'MS-77-EEE',client:'Ratat Dezso',flux:'reparatie',damageType:'auto',
   sosire:'ratat',phase:1,phases:{},inchis:false,phone:'0740555666',
   programare:{date:'2026-08-20',time:'08:00'},conditions:{}},
@@ -82,7 +88,7 @@ const dom=new JSDOM(inline(raw),{virtualConsole:vc, url:'https://rpw.teszt/index
   w.Chart=function(){this.destroy=()=>{}};
  }});
 const w=dom.window;
-for(let i=0;i<60 && !(w.JOBS&&w.JOBS.length===9);i++) await sleep(25);
+for(let i=0;i<60 && !(w.JOBS&&w.JOBS.length===10);i++) await sleep(25);
 // ── Ferenc, 2026-08-26: az app a PROGRAMARI lapon indul ─────────────
 ok(w.S.screen==='panou','indulaskor a Programari lap nyilik (nem a Lucrari)');
 ok(/panou-tbl|panou-hdr-actions/.test(w.document.getElementById('app').innerHTML),
@@ -95,7 +101,7 @@ const app=()=>w.document.getElementById('app').innerHTML;
 console.log('\n1. Viitoare fül — a kétállapotú jelvény (K-19)');
 {
   const h=app();
-  ok(w.JOBS.length===9,'a 9 teszt-munka betöltődött');
+  ok(w.JOBS.length===10,'a 10 teszt-munka betöltődött');
   const v1=h.split('<tr').filter(s=>/MS-22-BBB/.test(s))[0]||'';
   const v2=h.split('<tr').filter(s=>/MS-33-CCC/.test(s))[0]||'';
   const v3=h.split('<tr').filter(s=>/MS-44-DDD/.test(s))[0]||'';
@@ -510,6 +516,25 @@ console.log('\n6h. A RECEPCIO NEM BUJIK EL (Ferenc: "eldugott funkcio")');
   const gyujt=R('MS-33-CCC');
   ok(/deschideDosar/.test(gyujt.innerHTML) && !!gyujt.querySelector('.eb-rec'),
      'a dossziegyujto soron a mappa MELLETT is ott a recepcio');
+}
+
+console.log('\n6j. A `phase` NELKULI munka is bejut a listaba (Ferenc valodi esete)');
+{
+  // Ez volt az igazi hiba: a betoltes eloszor SZURT, es csak utana
+  // javitott. Minden munka, amiben nem volt `phase`, nemán eltunt —
+  // Ferenc adataiban 19 darab, koztuk minden telefonrol feltoltott
+  // dosszie. A jelvenyek es a feliratok hibatlanok voltak; csak a SOR
+  // nem letezett.
+  const d=w.document;
+  const np=w.JOBS.find(j=>j.id==='NP');
+  ok(!!np,'a `phase` nelkul erkezett munka BENNE van a listaban');
+  ok(np && np.phase===1,'  es kapott ervenyes fazist  ('+(np?np.phase:'?')+')');
+  ok(w.categorizeJob(np)==='viitoare',
+     '  a kozos listaba kerul  ("'+w.categorizeJob(np)+'")');
+  const sor=[].slice.call(d.querySelectorAll('tr.panou-row'))
+              .find(r=>r.textContent.indexOf('MS-26-074')>=0);
+  ok(!!sor,'  es TENYLEG ki is rajzolodik a panelen');
+  ok(sor && sor.querySelector('.cl-sent'),'  a jelvenyevel egyutt');
 }
 
 console.log('\n6i. AMIT AZ UGYFEL KULDOTT, AZ LATSZIK (Ferenc, valodi eset)');

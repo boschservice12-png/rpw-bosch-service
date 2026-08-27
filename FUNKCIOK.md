@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 94 | 27 | 58 | 3 | 6 | 7 |
+| 95 | 27 | 59 | 3 | 6 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -67,6 +67,7 @@ szám nélkül, azt is megmondja.
 | **F-130** | Az ugyfel kuldemenye LATSZIK a soron: zold jelveny a Kapcsolat oszlopban, a beerkezett fajlok szamaval. Csak a src='whatsapp' belyegu fajlokat szamolja (a szervizet nem), a szabad fotokat es a nevesitett irat-helyeket egyutt | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-131** | Ha a kotelezo iratok osszegyultek, a folyamat-sav felirata KIMONDJA (zolden, 'Acte complete'); a lepes maga meg nem kesz, mert a dossziet meg nem adtuk at. Katalogus nelkul (0/0) NEM allit keszet | `rpw-progres.js` `index.html` | — | `unit/test-progres.js` | 🟦 csak frontend |
 | **F-132** | A nevtelen sor is kap arcot: ha nincs se nev, se rendszam, a MUNKASZAM a focim (mono), ala pedig odakerul, hogy a nev az, ami hianyzik | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-133** | Betoltes: eloszor HELYRE TESSZUK a munkat (migrateState), csak utana szurunk. Korabban forditva volt, ezert minden `phase` nelkul erkezett munka nemán kiesett a listabol — Ferenc adataiban 19 darab, koztuk minden telefonrol feltoltott kardosszie | `index.html` | — | `unit/test-load.js` | 🟦 csak frontend |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 
