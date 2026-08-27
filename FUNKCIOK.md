@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 95 | 27 | 59 | 3 | 6 | 7 |
+| 96 | 27 | 60 | 3 | 6 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -68,6 +68,7 @@ szám nélkül, azt is megmondja.
 | **F-131** | Ha a kotelezo iratok osszegyultek, a folyamat-sav felirata KIMONDJA (zolden, 'Acte complete'); a lepes maga meg nem kesz, mert a dossziet meg nem adtuk at. Katalogus nelkul (0/0) NEM allit keszet | `rpw-progres.js` `index.html` | — | `unit/test-progres.js` | 🟦 csak frontend |
 | **F-132** | A nevtelen sor is kap arcot: ha nincs se nev, se rendszam, a MUNKASZAM a focim (mono), ala pedig odakerul, hogy a nev az, ami hianyzik | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-133** | Betoltes: eloszor HELYRE TESSZUK a munkat (migrateState), csak utana szurunk. Korabban forditva volt, ezert minden `phase` nelkul erkezett munka nemán kiesett a listabol — Ferenc adataiban 19 darab, koztuk minden telefonrol feltoltott kardosszie | `index.html` | — | `unit/test-load.js` | 🟦 csak frontend |
+| **F-134** | A tarolt kep-link egy ora utan lejar, ezert megjeleniteskor MINDIG friss alairas keszul a path-bol — kepre az src, linkre a href. Az 'Documente client' blokk eddig kimaradt ebbol (halott linkek), es a ZIP-export is a tarolt linkrol toltott | `rpw-photos.js` `rpw-dosar.html` | — | `unit/test-foto-lejarat.js` | 🟦 csak frontend |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 

@@ -421,7 +421,7 @@ function render(){
   // onnantol sima kapcsolo (kulonben a tS() elso kattintasa nem tenne semmit).
   if(S.sec.cliup===null) S.sec.cliup = (_cu.length===0) ? 1 : 0;
   h+='<div class="sec"><div class="sec-h" onclick="tS(\'cliup\')"><div class="sec-t"><span class="step-n">📎</span> Documente client</div><span class="sec-badge '+(_cu.length?'sb-ok':'sb-nd')+'">'+_cu.length+'</span></div><div class="sec-bd '+(S.sec.cliup?'open':'')+'"><button id="waLink" class="'+(job.phone?'':'wa-off')+'" style="width:100%;padding:11px;border:none;border-radius:10px;background:#1E9D55;color:#fff;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:10px" '+(job.phone?'':'disabled')+' onclick="trimiteLinkUpload()">📲 '+(job.phone?T('wa_send'):T('wa_need_ph'))+'</button>';
-  if(_cu.length){h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';_cu.forEach(function(u){var im=/\.(jpg|jpeg|png|webp)(\?|$)/i.test(u.url||'');h+='<a href="'+escU(u.url)+'" target="_blank" style="aspect-ratio:1;border:1px solid var(--b);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#eef2f7;text-decoration:none;color:#374151;font-size:11px;font-weight:700;text-align:center;padding:6px">'+(im?'<img src="'+escU(u.url)+'" style="width:100%;height:100%;object-fit:cover">':'📄 '+escH(u.name||'doc'))+'</a>';});h+='</div>';}
+  if(_cu.length){h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';_cu.forEach(function(u){var im=/\.(jpg|jpeg|png|webp)(\?|$)/i.test(u.url||'')||(u.type||'').indexOf('image')===0;h+='<a href="'+escU(u.url)+'" data-rpw-path="'+escA(u.path||'')+'" target="_blank" style="aspect-ratio:1;border:1px solid var(--b);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#eef2f7;text-decoration:none;color:#374151;font-size:11px;font-weight:700;text-align:center;padding:6px">'+(im?'<img src="'+escU(u.url)+'" data-rpw-path="'+escA(u.path||'')+'" style="width:100%;height:100%;object-fit:cover">':'📄 '+escH(u.name||'doc'))+'</a>';});h+='</div>';}
   else h+='<div style="color:var(--t3);font-size:12px">Niciun fișier de la client încă.</div>';
   h+='</div></div>';
 
@@ -464,7 +464,7 @@ function render(){
         if(has){
           h+='<div class="acte-thumbs">';
           fs.forEach(function(u,ix){var im=/\.(jpg|jpeg|png|webp)(\?|$)/i.test(u.url||'')||(u.type||'').indexOf('image')===0;
-            h+='<div class="acte-th">'+(im?'<img src="'+escU(u.url)+'" data-rpw-path="'+escA(u.path||'')+'" onclick="openLB(this.src)">':'<a href="'+escU(u.url)+'" target="_blank" class="acte-doc">📄 PDF</a>')+'<span class="acte-del" onclick="delActa(\''+it.key+'\','+ix+')">×</span></div>';});
+            h+='<div class="acte-th">'+(im?'<img src="'+escU(u.url)+'" data-rpw-path="'+escA(u.path||'')+'" onclick="openLB(this.src)">':'<a href="'+escU(u.url)+'" data-rpw-path="'+escA(u.path||'')+'" target="_blank" class="acte-doc">📄 PDF</a>')+'<span class="acte-del" onclick="delActa(\''+it.key+'\','+ix+')">×</span></div>';});
           h+='</div>';
         }
         h+='</div>';
@@ -1142,7 +1142,11 @@ window.exportDosarZip=async function(missing){
   var n=0,errs=0;
   async function add(folder,base,u){
     try{
-      var r=await fetch(u.url);if(!r.ok)throw new Error('HTTP '+r.status);
+      // A rekordban tarolt link egy ora utan halott — a letoltes elott
+      // ujra alairjuk a path-bol, kulonben az export ures mappat ad.
+      var src=u.url;
+      try{ if(u.path && window.RPWPhotos) src=(await RPWPhotos.signedUrl(sb,u.path))||u.url; }catch(e){}
+      var r=await fetch(src);if(!r.ok)throw new Error('HTTP '+r.status);
       var b=await r.blob();
       var name=folder+'/'+base+'.'+extOf(u);
       zip.file(name,b);index.push('OK  '+name);n++;
