@@ -203,6 +203,64 @@ console.log('\n6. AKI MAR ELKULDTE, ujranyitaskor is a visszaigazolast latja');
   L.w.close();
 }
 
+console.log('\n7. EGYETLEN DOBOZ SEM SOR-KOZI (Ferenc: "aranytalan")');
+{
+  // A <label class="drop"> alapertelmezesben SOR-KOZI elem volt. A sor-kozi
+  // doboz fuggoleges bela- es keretmerete NEM tolja arrebb a szomszedait:
+  // ratakar rajuk. Chromiumban meg is mertem: a szaggatott keret 14px-t
+  // benyult a "Alte fisiere" cim ala, es 7px-t a kepek koze.
+  //
+  // Ez nem egy elirasra vonatkozo szabaly: MINDEN olyan dobozra all, aminek
+  // kerete ES belso margoja van. Ezert nem a .drop-ot nezzuk, hanem
+  // vegigmegyunk a lap SAJAT stiluslapjan, es minden ilyen szabalyt
+  // ellenorzunk a KIRAJZOLT lapon.
+  const L=await lap(ujJob());
+  const w=L.w, D=w.document;
+  const dobozok=[];
+  for(const sheet of D.styleSheets){
+    let szabalyok; try{ szabalyok=sheet.cssRules }catch(e){ continue }
+    if(!szabalyok) continue;
+    for(const r of szabalyok){
+      if(!r.style || !r.selectorText) continue;
+      const keret=r.style.getPropertyValue('border')||r.style.getPropertyValue('border-width');
+      const belso=r.style.getPropertyValue('padding');
+      if(keret && belso && !/none|^0/.test(keret)) dobozok.push(r.selectorText);
+    }
+  }
+  ok(dobozok.length>=3,'a stiluslapon '+dobozok.length+' keretes-belsomargos doboz van');
+  let sorkozi=[];
+  dobozok.forEach(function(sel){
+    let el; try{ el=D.querySelectorAll(sel) }catch(e){ return }
+    for(const e of el){ if(w.getComputedStyle(e).display==='inline') sorkozi.push(sel); }
+  });
+  ok(sorkozi.length===0,
+     'egyik keretes doboz sem sor-kozi — kulonben ratakarna a szomszedaira'
+     +(sorkozi.length?('  [' + [...new Set(sorkozi)].join(', ') + ']'):''));
+
+  // A konkret bunos, nevesitve — hogy a hibauzenet magaert beszeljen
+  const drop=D.querySelector('.drop');
+  ok(!!drop,'az "Adaugă alte poze / documente" mezo a lapon van');
+  ok(!!drop && w.getComputedStyle(drop).display!=='inline',
+     '  es NEM sor-kozi  (kapott: '+(drop?w.getComputedStyle(drop).display:'—')+')');
+  L.w.close();
+}
+
+console.log('\n7b. A kepkockak egyforma meretuek a lap ket felen');
+{
+  // A "Documente necesare" 4 kockat rak egy sorba, a "Alte fisiere" 3-at —
+  // ugyanaz a kep ket kulonbozo meretben allt ugyanazon a lapon.
+  const fs2=require('fs');
+  const st=fs2.readFileSync(path.join(ROOT,'rpw-upload.html'),'utf8')
+             .match(/<style>([\s\S]*?)<\/style>/)[1];
+  const oszlop=function(osztaly){
+    const m=st.match(new RegExp('\\.'+osztaly+'\\{[^}]*grid-template-columns:repeat\\((\\d+)'));
+    return m?+m[1]:null;
+  };
+  const a=oszlop('thumbs'), b=oszlop('list');
+  ok(a!==null && b!==null,'mindket kockarács oszlopszama kiolvashato  (thumbs='+a+', list='+b+')');
+  ok(a===b,'a ket racs UGYANANNYI oszlopos — a kockak egyformak  ('+a+' vs '+b+')');
+}
+
 console.log('\n'+(fail?'✗ ':'OK ')+pass+' pass / '+fail+' fail');
 process.exit(fail?1:0);
 })().catch(e=>{console.error(e);process.exit(1)});
