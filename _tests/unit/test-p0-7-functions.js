@@ -147,6 +147,37 @@ console.log('\n9. A CORS önmagában nem jogosultság');
   ok(/allowedOrigins/.test(s),'  a CORS attól még megvan');
 }
 
+// ── 2026-08-29 — MINDKET ELO CIM AZ ENGEDELYLISTAN ────────────────
+// A csapatban ket Netlify-oldal all ugyanerre a repora. A lista eddig
+// CSAK a regit ismerte, ezert az uj cimen az OCR / classify / levelkuldes
+// NEMAN elhalt volna: a bongeszo blokkolja a valaszt, nem a szerver ad hibat.
+console.log('\nQ. Mindket elo cim hivhatja a funkciokat');
+{
+  const H = require(path.join(ROOT,'functions','_shared.js'));
+  const enged = o => H.corsHeaders({headers:{origin:o}})['Access-Control-Allow-Origin'] === o;
+  ok(enged('https://rpw-bosch-service.netlify.app'),
+     'a jelenleg epulo cim engedve');
+  ok(enged('https://main--rpw-bosch-service.netlify.app'),
+     '  az ag-valtozata is');
+  ok(enged('https://beamish-arithmetic-e52bce.netlify.app'),
+     'a regi cim TOVABBRA IS engedve (nem torunk el semmit)');
+  ok(!enged('https://tamado.example.com'),
+     'idegen cim tovabbra is BLOKKOLVA — a lista nem lett szabad ker');
+
+  // ── EGY IGAZSAG: amit a rendszer ELESKENT HIRDET, az legyen az ELSO ──
+  // 2026-08-29-en pont ez csuszott szet: a config a REGI cimre kuldte a
+  // felhasznalot, mikozben a kod az UJRA epult. Ferenc a gepen a kilenc
+  // napos valtozatot latta, es a feltoltese "eltunt". Ez a ket allitas
+  // azt orzi, hogy a ket hely soha tobbe ne mondjon mast.
+  const cfg = R('rpw-config.js');
+  const hirdetett = (cfg.match(/href="(https:\/\/[a-z0-9.-]*netlify\.app)\/?"/)||[])[1];
+  ok(!!hirdetett, 'a config megnevezi az elo cimet  ('+(hirdetett||'NINCS')+')');
+  const elso = H.corsHeaders({headers:{origin:'https://ismeretlen.pelda'}})['Access-Control-Allow-Origin'];
+  ok(hirdetett === elso,
+     '  es UGYANAZ all a CORS-lista elen  (config: '+hirdetett+' / CORS: '+elso+')');
+  ok(enged(hirdetett), '  a hirdetett cim hivhatja is a funkciokat');
+}
+
 console.log('\n'+(fail?'✗ ':'✓ ')+pass+' pass / '+fail+' fail');
 process.exit(fail?1:0);
 })();

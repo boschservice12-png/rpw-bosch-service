@@ -3,7 +3,21 @@
 // CORS-allowlist, méret/typus-validáció, biztonságos hiba, e-mail/melléklet ellenőrzés,
 // magic-byte média-detektálás, best-effort rate-limit, opcionális JWT-auth hook.
 
+// ── 2026-08-29 — KET ELO OLDAL VAN, MINDKETTOT ISMERNI KELL ─────
+// A csapatban ket Netlify-oldal all ugyanerre a repora:
+//   beamish-arithmetic-e52bce  (regi cim, a config is ezt hirdeti)
+//   rpw-bosch-service          (ide epul ma a main)
+// A lista eddig CSAK a regit ismerte, ezert az uj cimen az OCR, a
+// classify es a levelkuldes CORS-hibaval elhalt volna — nemán, mert a
+// bongeszo blokkolja, nem a szerver. Amig el nem dol, melyik marad,
+// mindketto rajta van. (Az ALLOWED_ORIGINS kornyezeti valtozo felulirja.)
 const DEFAULT_ORIGINS = [
+  // ELSO = az ELO cim. Ismeretlen origin eseten ezt tukrozzuk vissza,
+  // amitol a bongeszo blokkol — tehat a sorrend nem kozombos.
+  'https://rpw-bosch-service.netlify.app',
+  'https://main--rpw-bosch-service.netlify.app',
+  // ATMENETI: a regi cim, amig le nem all. Ne ragadjon be senki, aki
+  // meg a regi konyvjelzot nyitja meg. Ha a regi oldal megszunt, torolheto.
   'https://beamish-arithmetic-e52bce.netlify.app',
   'https://main--beamish-arithmetic-e52bce.netlify.app'
 ];

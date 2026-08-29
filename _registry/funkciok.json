@@ -1820,6 +1820,27 @@
       ],
       "teszt": "_tests/integration/test-int-rls-live.js",
       "allapot": "el"
+    },
+    {
+      "id": "F-147",
+      "nev": "Egy igazsag az ELO cimrol: amit a rendszer eleskent hirdet (a file://-or linkje a rpw-config.js-ben), az all a Netlify-funkciok CORS-listajanak elen is. 2026-08-29-en pont ez csuszott szet — a config a REGI cimre kuldott, mikozben a kod az UJRA epult, es a muhelyben a kilenc napos valtozat futott. Az elo cim: rpw-bosch-service.netlify.app",
+      "fe": [
+        [
+          "rpw-config.js",
+          "https://rpw-bosch-service.netlify.app/"
+        ],
+        [
+          "functions/_shared.js",
+          "'https://rpw-bosch-service.netlify.app',"
+        ],
+        [
+          "functions/_shared.js",
+          "var use = allow.indexOf(origin) >= 0 ? origin : allow[0];"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-p0-7-functions.js",
+      "allapot": "el"
     }
   ]
 }

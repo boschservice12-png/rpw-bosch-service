@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 108 | 28 | 69 | 3 | 8 | 7 |
+| 109 | 29 | 69 | 3 | 8 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -81,6 +81,7 @@ szám nélkül, azt is megmondja.
 | **F-144** | RPW-002: a 008 elofeltetel-ellenorzese es visszaallitasa. Ha barmelyik szukseges fuggveny hianyzik, a migracio megszakad, es felbehagyott allapot nem marad (a tranzakcio visszagordul). A 008_rollback.sql masodpercek alatt visszaadja a regi mukodest — ez az azonnali kiut, ha a lezaras utan megall a munka | `_migrations/008_rls_lockdown_live.sql` `_migrations/008_rollback.sql` | — | `integration/test-int-rls-live.js` | ⚠️ nincs bekötve |
 | **F-145** | Az ugyfel WhatsApp-feltolto lapja KIFEJEZETTEN nyilatkozik magarol (RPW_PUBLIC_PAGE), es csak ezzel mentesul az RPW-001 adatreteg-zara alol. Enelkul az AUTH_REQUIRED=true bekapcsolasa NEMAN megbenitotta volna a teljes ugyfel-feltoltest: az a lap szandekosan PIN nelkuli, a zar viszont minden olvasast es irast tiltott. A mentesseg nem talalgatas — dolgozoi lap nem nyilatkozhat igy | `rpw-upload.html` `rpw-db.js` | — | `unit/test-rpw001-auth-gate.js` | 🟦 csak frontend |
 | **F-146** | Szuk ugyfel-ut (009): az ugyfel a WhatsApp-linkrol PIN nelkul tolt fel, ezert a 008 lezaras elvagta volna. Ket szuk fuggveny lep a helyere. rpw_client_job_get CSAK azt adja vissza, amit a feltolto lap kirajzol (dossziészam, rendszam, marka, iratok, feltoltesek) — telefonszamot, ugyfelnevet, belso jegyzetet, fazisallapotot NEM; ez adatvedelmi szigoritas is, mert ma a lap a TELJES sort megkapja. rpw_client_upload CSAK harom kulcsot ir (clientUploads, dosarActe, clientGata), minden mas mezot forbidden_field-del elutasit. Kliensoldalon a CLIENT_RPC kapcsolo vedi, hogy a mai uzem ne torjon el a migracio alkalmazasa elott | `rpw-db.js` `rpw-config.js` | `rpw_client_job_get` `rpw_client_upload` | `integration/test-int-rls-live.js` | ✅ él |
+| **F-147** | Egy igazsag az ELO cimrol: amit a rendszer eleskent hirdet (a file://-or linkje a rpw-config.js-ben), az all a Netlify-funkciok CORS-listajanak elen is. 2026-08-29-en pont ez csuszott szet — a config a REGI cimre kuldott, mikozben a kod az UJRA epult, es a muhelyben a kilenc napos valtozat futott. Az elo cim: rpw-bosch-service.netlify.app | `rpw-config.js` `functions/_shared.js` | — | `unit/test-p0-7-functions.js` | ✅ él |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 
