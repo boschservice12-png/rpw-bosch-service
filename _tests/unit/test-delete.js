@@ -88,7 +88,17 @@ function bootPanel(opts){
     from: () => ({ select: () => ({ order: () => Promise.resolve({data:[],error:null}) }), update:update }),
     storage: { from: () => ({}) } }) };
 
-  for (const m of html.matchAll(/<script src="(rpw-[^"]+)"><\/script>/g)) { try { w.eval(R(m[1])) } catch(e) {} }
+  for (const m of html.matchAll(/<script src="(rpw-[^"]+)"><\/script>/g)) {
+    try { w.eval(R(m[1])) } catch(e) {}
+    // A BELEPTETES egy UZEMI KAPCSOLO: 2026-08-29-en ki-, majd be kapcsoltuk.
+    // Ha a teszt a rpw-config.js MAI ertekere tamaszkodna, minden kapcsolassal
+    // elszinezodne — es epp azt nem mondana meg, amit tudni akarunk: MINDKET
+    // allasban helyes-e a viselkedes. Ezert a teszt allitja be, a config utan,
+    // meg az OR (rpw-guard.js) elott.
+    if (m[1] === 'rpw-config.js' && opts.cfg) {
+      try { Object.keys(opts.cfg).forEach(k => { w.RPW_CFG[k] = opts.cfg[k] }) } catch(e) {}
+    }
+  }
   for (const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) { try { w.eval(m[1]) } catch(e) {} }
   return { w, SZERVER, dom };
 }
@@ -97,9 +107,9 @@ const varj = ms => new Promise(r => setTimeout(r, ms));
 
 (async () => {
 
-console.log('\n2. Bejelentkezett vezető: a törlés VÉGIGMEGY a szerverig');
+console.log('\n2a. Bekapcsolt beléptetés: a törlés a TOKENES úton megy a szerverig');
 {
-  const { w, SZERVER, dom } = bootPanel({});
+  const { w, SZERVER, dom } = bootPanel({ cfg:{ AUTH_REQUIRED:true } });
   await varj(300);
   ok(!!w.RPWAuth.session(), 'a munkamenet a betöltés után is él');
   ok(w.eval('isAdmin()') === true, 'isAdmin() igaz');
@@ -128,11 +138,54 @@ console.log('\n3a. Bejelentkezés nélkül a panel EL SEM INDUL (RPW-001 óta)')
   // sajat ellenorzese allitotta meg. Az AUTH_REQUIRED bekapcsolasa ota az
   // or MAR AZ ELSO KEPKOCKA ELOTT megallitja a lapot es a loginra kuld —
   // igy a torles kerdese fel sem merul.
-  const { w, SZERVER, dom } = bootPanel({ session:false });
+  const { w, SZERVER, dom } = bootPanel({ session:false, cfg:{ AUTH_REQUIRED:true } });
   await varj(300);
   ok(w.RPWAuth.blocked() === true, 'az őr megállította a lapot');
   ok(!!w.document.querySelector('style[data-rpw-block]'), '  a lap el van rejtve');
   eq(SZERVER.length, 0, '  és semmi nem ment a szerverre');
+  try{ dom.window.close() }catch(e){}
+}
+
+console.log('\n2b. KIKAPCSOLT beléptetés (a mai éles üzem): a törlés akkor is a szerverig ér');
+{
+  // 2026-08-29: a beleptetest vissza kellett kapcsolni, mert a munkamenet
+  // ket vonala szetcsuszott (010). A kapcsolo AKKOR IS csak a HITELESITESI
+  // UTAT valtoztatja meg — a torlesnek ilyenkor is el kell jutnia a
+  // szerverig, kulonben a muhelyben nemai kudarc lenne belole.
+  const { w, SZERVER, dom } = bootPanel({ cfg:{ AUTH_REQUIRED:false } });
+  await varj(300);
+  ok(w.eval('isAdmin()') === true, 'isAdmin() igaz');
+  const uz = []; w.__uz = uz;
+  w.eval('window.toast=function(m){window.__uz.push(m)}');
+  w.eval('window.RPWWorkflow.ask=function(o){ o.onConfirm(); }');
+  w.eval('JOBS.length=0; JOBS.push({id:"J1",number:"1",plate:"MS-01-AAA",phase:7,inchis:true,' +
+         'sosire:"sosit",flux:"reparatie",phases:{},programare:{}})');
+  w.dJ('J1');
+  await varj(250);
+  eq(SZERVER.length, 1, 'pontosan egy szerverhívás történt');
+  ok(SZERVER[0] && !!SZERVER[0].deleted_at, '  és az a kosárba tette (deleted_at)');
+  ok(uz.join(' ').length > 0, 'a felhasználó visszajelzést kapott');
+  try{ dom.window.close() }catch(e){}
+}
+
+console.log('\n3a2. KIKAPCSOLT beléptetés, munkamenet NÉLKÜL: a lap elindul, de nem töröl');
+{
+  // Ez a RPW-001 ELOTTI vedelem: nem az or all utban, hanem a lap sajat
+  // jog-ellenorzese. Amig a kapcsolo ki van kapcsolva, EZ az egyetlen
+  // akadaly a torles elott — ezert kulon allitas orzi.
+  const { w, SZERVER, dom } = bootPanel({ session:false, cfg:{ AUTH_REQUIRED:false } });
+  await varj(300);
+  ok(w.RPWAuth.blocked() !== true, 'az őr NEM állítja meg (a kapcsoló ki van kapcsolva)');
+  ok(w.eval('isAdmin()') === false, '  de munkamenet nélkül isAdmin() hamis');
+  const uz = []; w.__uz = uz;
+  w.eval('window.toast=function(m){window.__uz.push(m)}');
+  w.eval('window.RPWWorkflow.ask=function(o){ o.onConfirm(); }');
+  w.eval('JOBS.length=0; JOBS.push({id:"J1",number:"1",plate:"MS-01-AAA",phase:7,inchis:true,' +
+         'sosire:"sosit",flux:"reparatie",phases:{},programare:{}})');
+  w.dJ('J1');
+  await varj(250);
+  eq(SZERVER.length, 0, 'semmi nem ment a szerverre');
+  ok(uz.length > 0, '  és a felhasználó üzenetet kapott, nem néma kudarcot');
   try{ dom.window.close() }catch(e){}
 }
 

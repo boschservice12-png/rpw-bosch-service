@@ -1866,6 +1866,16 @@
       "be": [],
       "teszt": "_tests/unit/test-rpw001-auth-gate.js",
       "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-149",
+      "nev": "A munkamenet KET vonala. Az app_session tablan ket szemelyzeti vonal fut egymas mellett: a regi ERP (employee_id -> employees) es az RPW2 sajat (rpw_employee_id -> rpw_employees). A belepo lap a rpw2_login-t hivja, ami az UJ vonalra ir, employee_id NULL-lal. A rpw_session — amin a rpw__ctx, es rajta keresztul a rpw_jobs_list / rpw_job_get / rpw_patch_v3 all — CSAK a regi vonalat ismerte, ezert az ervenyes munkamenetet sem talalta meg: 2026-08-29-en a bekapcsolt belepetes utan URES lett a panel. A 010 a regi utat valtozatlanul hagyja, es csak akkor lep a masodik agra, ha az elso nem talalt. A szerep a rpw_roles LABEL-je (pl. 'Muszakvezeto'), mert a kliens RPWRoles.mapEmployeeRole ezt a magyar munkakort varja. A hiba KIZAROLAG bekapcsolt belepetesnel jelentkezik — ezert maradt rejtve",
+      "fe": [],
+      "be": [
+        "rpw_session"
+      ],
+      "teszt": "_tests/integration/test-int-session-lineage.js",
+      "allapot": "csak-backend"
     }
   ]
 }
