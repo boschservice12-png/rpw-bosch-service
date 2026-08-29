@@ -29,8 +29,14 @@
     'Karosszéria':'tinichigiu',
     'Festő':'vopsitor',
     'Műszakvezető':'manager',
-    'Irodavezető':'admin'
-    // Szerelő / Gyakorló / Sofőr / RENT A CAR → nincs (null)
+    'Irodavezető':'admin',
+    // ── 2026-08-29 — Ferenc dontese ──────────────────────────────
+    // A szerelok HASZNALJAK a panelt (tajekozodasra: mi a mai dolog, hol
+    // tart egy auto), de fazist NEM leptetnek. Az `auditor` pontosan ezt
+    // jelenti a rendszerben: belep, mindent lat, semmit nem ir.
+    // Enelkul a belepetes kizarta volna oket (11 emberbol 6-ot).
+    'Szerelő':'auditor'
+    // Gyakorló / Sofőr / RENT A CAR / Egyéb → tovabbra sincs (null)
   };
   function mapEmployeeRole(realRole){
     if(realRole==null) return null;

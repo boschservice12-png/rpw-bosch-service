@@ -51,7 +51,9 @@ function kornyezet(cfg, sessionRaw, opts){
              return {select:()=>q(), update:()=>q(), delete:()=>q()} } };
   const g=global; const mento={self:g.self,window:g.window,document:g.document};
   g.self=w; g.window=w; g.document=w.document;
-  ['rpw-auth.js','rpw-db.js','rpw-guard.js'].forEach(function(f){
+  const modulok = opts.roles ? ['rpw-roles.js','rpw-auth.js','rpw-db.js','rpw-guard.js']
+                             : ['rpw-auth.js','rpw-db.js','rpw-guard.js'];
+  modulok.forEach(function(f){
     delete require.cache[require.resolve(path.join(ROOT,f))];
     require(path.join(ROOT,f));
   });
@@ -189,6 +191,56 @@ console.log('\n3e. A SZUK UGYFEL-UT csak a kapcsolo bekapcsolasa utan aktiv (009
   ok(dolg.__hivas.every(h=>!/rpw_client_/.test(h)),
      'dolgozoi lap SOHA nem megy a szuk ugyfel-uton  ['+dolg.__hivas.join(', ')+']');
   dolg.close();
+}
+
+console.log('\n3f. A SZERELOK LATNAK MINDENT, DE NEM MODOSITANAK (Ferenc, 2026-08-29)');
+{
+  // A belepetes 11 emberbol 6-ot kizart volna, mert a szerep-lekepezes nem
+  // ismerte a "Szerelo" munkakort. Ferenc dontese: hasznaljak a panelt
+  // tajekozodasra, de fazist ne leptessenek. Az `auditor` pontosan ez.
+  //
+  // A tiltas az ADATRETEGBEN all, mert a panel a fazis-muveleteket nem koti
+  // szerephez, az elo rpw_patch_v3 pedig egyaltalan nem nez szerepet.
+  const kornyezetSzereppel = (szerep) => {
+    const rec = JSON.stringify({token:TOKEN, role:szerep, name:'T', employeeId:'E1',
+      shopId:'S1', can:{work:true}, exp:Date.now()+9e6});
+    return kornyezet({AUTH_REQUIRED:true}, rec, {roles:true});
+  };
+
+  const olvaso = kornyezetSzereppel('auditor');
+  const r1 = await olvaso.RPWDb.listActive(olvaso.__sb);
+  const r2 = await olvaso.RPWDb.getRow(olvaso.__sb,'J1');
+  ok(!(r1.error), 'a szerelo LATJA a listat');
+  ok(!(r2.error), '  es megnyithat egy munkat');
+  for(const [nev,fn] of [
+    ['mentes',      ()=>olvaso.RPWDb.patchV2(olvaso.__sb,'J1',{client:'x'})],
+    ['teljes patch',()=>olvaso.RPWDb.patch(olvaso.__sb,{id:'J1'})],
+    ['kosarba',     ()=>olvaso.RPWDb.softDelete(olvaso.__sb,'J1')],
+    ['visszaallitas',()=>olvaso.RPWDb.restore(olvaso.__sb,'J1')],
+    ['vegleges torles',()=>olvaso.RPWDb.purge(olvaso.__sb,'J1')]]){
+    const r = await fn();
+    ok(r && r.error && r.error.code==='read_only',
+       '  '+nev+' ELUTASITVA  (kapott: '+((r&&r.error&&r.error.code)||'SIKER!')+')');
+  }
+  const irasok = olvaso.__hivas.filter(h=>/patch|trash|restore|purge/.test(h));
+  ok(irasok.length===0,
+     '  egyetlen iras sem indult el a halozatra  ['+irasok.join(', ')+']');
+  olvaso.close();
+
+  // A TOBBI szerep valtozatlanul irhat — nem zartuk ki oket veletlenul.
+  const festo = kornyezetSzereppel('vopsitor');
+  const w = await festo.RPWDb.patchV2(festo.__sb,'J1',{client:'x'});
+  ok(!(w.error && w.error.code==='read_only'), 'a festo TOVABBRA IS menthet');
+  festo.close();
+
+  // A lekepezes: a Szerelo bekerult, es csak-olvasokent.
+  const RR = require(path.join(ROOT,'rpw-roles.js'));
+  ok(RR.mapEmployeeRole('Szerelő')==='auditor',
+     'a "Szerelő" munkakor auditor szerepet kap  ('+RR.mapEmployeeRole('Szerelő')+')');
+  ok(RR.isReadOnly('auditor')===true,'  es az auditor csak olvas');
+  ['Recepció','Karosszéria','Festő','Műszakvezető','Irodavezető'].forEach(function(m){
+    ok(RR.isReadOnly(RR.mapEmployeeRole(m))===false, '  a '+m+' tovabbra is dolgozhat');
+  });
 }
 
 console.log('\n4. A KEPESSEG-KOVETELMENY A MODHOZ IGAZODIK (nem benitja meg az uzemet)');

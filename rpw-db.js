@@ -39,6 +39,32 @@
   }
   var ZAR_HIBA={ code:'auth_required',
                  message:'Sesiune expirată. Autentificați-vă din nou.' };
+
+  // ── CSAK-OLVASO SZEREP (2026-08-29) ──────────────────────────────
+  // Ferenc dontese: a szerelok lassanak mindent, de ne modositsanak.
+  // A panel a fazis-muveleteket NEM koti szerephez (csak a csapat-kepernyot),
+  // az elo rpw_patch_v3 pedig egyaltalan nem nez szerepet — ellenorizve.
+  // Ezert a tiltas ide kerul: ez az EGYETLEN belepesi pont az adatbazishoz,
+  // igy minden lap minden irasa athalad rajta.
+  //
+  // FIGYELEM: ez KLIENSOLDALI korlat. Aki megkeruli az alkalmazast, a
+  // szerveren ma nem utkozik szerep-ellenorzesbe (ez az RPW-003 targya).
+  function csakOlvaso(){
+    try{
+      var a=auth(); if(!a || !a.role) return false;
+      var R=root.RPWRoles;
+      return !!(R && R.isReadOnly && R.isReadOnly(a.role()));
+    }catch(e){ return false; }
+  }
+  var OLVASO_HIBA={ code:'read_only',
+                    message:'Rol doar-citire: nu puteți modifica lucrarea.' };
+  function irasZart(fn){
+    return async function(){
+      if(zarva())      return { data:null, error:ZAR_HIBA };
+      if(csakOlvaso()) return { data:null, error:OLVASO_HIBA };
+      return await fn.apply(null, arguments);
+    };
+  }
   function zart(fn){
     return async function(){
       if(zarva()) return { data:null, error:ZAR_HIBA };
@@ -259,15 +285,18 @@
   // (shopId, actorOf, ...) nem nyulnak adathoz, azok valtozatlanok.
   var API={ shopId:shopId, actorOf:actorOf, useV3:useV3, tokenOf:tokenOf, useSecure:useSecure,
             zarva:zarva,
-            patch:          zart(patch),
-            patchV2:        zart(patchV2),
+            csakOlvaso:csakOlvaso,
+            // OLVASAS: munkamenet kell hozza, de a csak-olvaso szerep is lathatja
             getRow:         zart(getRow),
             listActive:     zart(listActive),
             listTrashed:    zart(listTrashed),
-            softDelete:     zart(softDelete),
-            restore:        zart(restore),
-            purge:          zart(purge),
-            purgeAllTrashed:zart(purgeAllTrashed) };
+            // IRAS: a csak-olvaso szerep ide mar nem jut be
+            patch:          irasZart(patch),
+            patchV2:        irasZart(patchV2),
+            softDelete:     irasZart(softDelete),
+            restore:        irasZart(restore),
+            purge:          irasZart(purge),
+            purgeAllTrashed:irasZart(purgeAllTrashed) };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWDb=API;
 })(typeof self!=='undefined'?self:(typeof window!=='undefined'?window:globalThis));
