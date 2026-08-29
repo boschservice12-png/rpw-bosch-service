@@ -115,6 +115,14 @@ console.log('\n4. Amit NEM szabad elrontani');
   // inaktivált dolgozó
   await c.query('update public.rpw_employees set active=false where id=$1',[RPW2]);
   eq((await hivas(c, T_RPW2)).error, 'inactive', 'kilépett dolgozó munkamenete elutasítva');
+
+  // ISMERETLEN (NULL) allapot — a ketes esetnek is ZARVA kell lennie.
+  // Ma az `active` NOT NULL DEFAULT true, tehat ez nem fordulhat elo; a
+  // vedelem viszont nem tamaszkodhat egy masik tabla kenyszerere. A
+  // rpw2_session ugyanigy zar (coalesce(active,false)).
+  await c.query('update public.rpw_employees set active=null where id=$1',[RPW2]);
+  eq((await hivas(c, T_RPW2)).error, 'inactive',
+     'ISMERETLEN (NULL) allapotu dolgozo is elutasitva — nem fail-open');
   await c.query('update public.rpw_employees set active=true where id=$1',[RPW2]);
 }
 

@@ -70,9 +70,15 @@ begin
   -- A szerep a rpw_roles LABEL-je (pl. 'Műszakvezető'), mert a kliens
   -- szerep-leképezése (RPWRoles.mapEmployeeRole) ezt a magyar munkakört
   -- várja — ugyanazt, amit a rpw2_roster és a rpw2_login is ad.
+  --
+  -- Az `active` NYERSEN megy tovább (nem coalesce-oljuk true-ra): lentebb a
+  -- `coalesce(v_active,false)=false` ellenőrzés a NULL-t is ELUTASÍTJA. Így
+  -- ugyanaz a szigor, mint a régi ERP ágon és a rpw2_session-ben. Ma az
+  -- `active` NOT NULL DEFAULT true, tehát nem fordulhat elő — de a védelem
+  -- nem támaszkodhat egy másik tábla kényszerére, ami holnap eltűnhet.
   if v_emp_id is null then
     select a.rpw_employee_id, a.shop_id, a.expires_at,
-           re.name, coalesce(rr.label, re.role_code), null::text, coalesce(re.active, true)
+           re.name, coalesce(rr.label, re.role_code), null::text, re.active
       into v_emp_id, v_shop_id, v_exp, v_name, v_role, v_dept, v_active
     from app_session a
     join rpw_employees re on re.id = a.rpw_employee_id
