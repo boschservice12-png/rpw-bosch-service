@@ -70,10 +70,13 @@ többi táblán ma **nem** jelent elérhetőséget, mert nincs hozzájuk
 grant; de ez egyetlen elgépelt `grant`-tól függ. A 008 mindkettőt
 rendezi: elveszi a grantet **és** bekapcsolja/kényszeríti az RLS-t.
 
-**Négy régi mentés-tábla ül a `public` sémában** (`rpw_jobs_backup_*`),
-kikapcsolt RLS-sel. Ma nem elérhetők. Ezek korábbi munkamásolatok;
-érdemes lenne áthelyezni egy zárt sémába vagy eldobni — **nem tettem
-meg, mert nem az én munkám része, és adat.**
+**Négy régi mentés-tábla ült a `public` sémában** (`rpw_jobs_backup_*`),
+kikapcsolt RLS-sel, összesen 87 munkasorral. Ma nem voltak elérhetők,
+de egyetlen elgépelt `grant` elég lett volna hozzá.
+
+→ **ELINTÉZVE (011, 2026-08-29):** átkerültek a zárt `rpw_archiv` sémába.
+Nem törölve — visszahozhatók. A `public` sémában ezzel nem maradt RLS
+nélküli munkamásolat.
 
 ## 4. Függvények — a lezárás ELŐTT
 

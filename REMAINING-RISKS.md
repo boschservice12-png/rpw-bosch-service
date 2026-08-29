@@ -279,3 +279,25 @@ ellenőrzés nem végezhető el biztonságosan — ezért maradt „NEM IGAZOLT"
 | **Mi a kockázat** | A staging-próba éles adatot módosítana |
 | **Mi oldja meg** | Külön Supabase-projekt stagingre (Ferenc döntése — költség és idő) |
 | **Igazolva** | `rpw-config.js` és `rpw-config.staging.js` `SB_URL`-je azonos; a `test-deploy.js` 6. szakasza rögzíti, hogy **egy** projekt van |
+
+### ~~Régi munkamásolatok a kiszolgált sémában~~ — ✅ ELINTÉZVE (011)
+
+Négy `rpw_jobs_backup_*` tábla ült a `public` sémában, kikapcsolt
+RLS-sel, összesen 87 munkasorral — ügyféladatostul. Elérhetők nem
+voltak (nem volt rájuk grant, ezt megmértem), de a `public` sémát a
+PostgREST kiszolgálja: egyetlen elgépelt `grant` elég lett volna.
+
+2026-08-29: átkerültek a zárt `rpw_archiv` sémába (`011`). Nem törölve —
+egy `alter table ... set schema public` visszahozza őket. A törlés külön
+döntés, külön napon.
+
+### A régi `foto` tároló 11 árva fájlja — nyitott, kis súly
+
+A Bosch projektben két tároló van: `rpw-photos` (296 fájl, ez az élő) és
+`foto` (11 fájl, **utoljára 2026-02-25-én írva**, 20 MB). Mindkettő privát.
+
+Megmértem: a 35 munka közül **egyetlen sem** hivatkozik a `foto` tárolóra.
+A 11 fájl tehát árva.
+
+**Nem töröltem.** Fényképek törlése visszafordíthatatlan, és nem tudom,
+mi van rajtuk — februári kárfelvételek is lehetnek. Ferenc döntése.
