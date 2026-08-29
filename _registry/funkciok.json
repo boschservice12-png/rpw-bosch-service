@@ -1876,6 +1876,21 @@
       ],
       "teszt": "_tests/integration/test-int-session-lineage.js",
       "allapot": "csak-backend"
+    },
+    {
+      "id": "F-150",
+      "nev": "A bero-ellenorzes nelkuli irasi utak lezarva (012). A rpw_patch es a rpw_patch_v2 SECURITY DEFINER, de NEM ker tokent es NEM nez szervizt — miközben minden mas irasi ut igen. Amig az anon futtathatta oket, a lapban levo kulcs + egy munkaazonosito BELEPES NELKUL is irasi jog volt, tehat a 2026-08-29-en bekapcsolt beleptetes megkerulheto maradt. A 012 elveszi a jogot — a PUBLIC-tol IS, mert Postgresben a fuggvenyek alapbol PUBLIC-futtathatok, es az elso nekifutasom ezt kihagyta (az ellenorzo lekerdezes fogta meg). Merve: 24 ora alatt egyszer sem hivta oket senki. FIGYELEM: a visszaallas mostantol ket lepes — AUTH_REQUIRED=false vagy CLIENT_RPC=false eseten a 012_rollback.sql-t is futtatni kell, kulonben a mentes neman elhal",
+      "fe": [
+        [
+          "rpw-config.js",
+          "_migrations/012_rollback.sql futtatasa"
+        ]
+      ],
+      "be": [
+        "rpw_patch_v2"
+      ],
+      "teszt": "_tests/unit/test-rpc-consistency.js",
+      "allapot": "csak-backend"
     }
   ]
 }

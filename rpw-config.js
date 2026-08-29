@@ -35,7 +35,17 @@ window.RPW_CFG = {
   // SERVER_TRANSITIONS!=true, PATCH_RPC!='rpw_patch_v3'). Ha ezek
   // barmelyike valtozik, a lap MEGALL — szandekosan.
   //
-  // Visszaallas: ez az egy sor false-ra, es kitelepites.
+  // ⚠ VISSZAALLAS: MOSTANTOL KET LEPES ⚠
+  // A 012 migracio elvette az anon-tol a rpw_patch es a rpw_patch_v2
+  // futtatasi jogat (bero-ellenorzes nelkuli irasi utak voltak). Belepve
+  // a mentes a rpw_patch_v3-ra megy, tehat ez ma nem zavar semmit — DE
+  // ha ezt a sort false-ra allitod, a mentes visszaesne a v2-re, amihez
+  // mar nincs jog, es NEMAN elhalna. Ezert:
+  //
+  //     1. _migrations/012_rollback.sql futtatasa
+  //     2. AUTH_REQUIRED: false, es kitelepites
+  //
+  // Ugyanez all a CLIENT_RPC visszaallitasara is.
   AUTH_REQUIRED: true,
   // Privát Storage kapcsoló (P0 #11). ALAPBÓL KI (false) → a fotó-URL réteg
   // szükség esetén publikus URL-re esik vissza (a bucket ma publikus).

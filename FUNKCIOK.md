@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 111 | 29 | 70 | 4 | 8 | 7 |
+| 112 | 29 | 70 | 5 | 8 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -84,6 +84,7 @@ szám nélkül, azt is megmondja.
 | **F-147** | Egy igazsag az ELO cimrol: amit a rendszer eleskent hirdet (a file://-or linkje a rpw-config.js-ben), az all a Netlify-funkciok CORS-listajanak elen is. 2026-08-29-en pont ez csuszott szet — a config a REGI cimre kuldott, mikozben a kod az UJRA epult, es a muhelyben a kilenc napos valtozat futott. Az elo cim: rpw-bosch-service.netlify.app | `rpw-config.js` `functions/_shared.js` | — | `unit/test-p0-7-functions.js` | ✅ él |
 | **F-148** | A szerelok belephetnek a panelbe, de nem modosithatnak. A szerep-lekepezes nem ismerte a 'Szerelo' munkakort, ezert a belepetes 11 emberbol 6-ot kizart volna. Ferenc dontese: lassanak mindent, de fazist ne leptessenek — ez az 'auditor' szerep. A tiltas az ADATRETEGBEN all (a panel a fazis-muveleteket nem koti szerephez, es az elo rpw_patch_v3 egyaltalan nem nez szerepet): olvasas atmegy, minden iras read_only-val elutasitva. FIGYELEM: kliensoldali korlat, a szerver ma nem ellenoriz szerepet | `rpw-roles.js` `rpw-db.js` | — | `unit/test-rpw001-auth-gate.js` | 🟦 csak frontend |
 | **F-149** | A munkamenet KET vonala. Az app_session tablan ket szemelyzeti vonal fut egymas mellett: a regi ERP (employee_id -> employees) es az RPW2 sajat (rpw_employee_id -> rpw_employees). A belepo lap a rpw2_login-t hivja, ami az UJ vonalra ir, employee_id NULL-lal. A rpw_session — amin a rpw__ctx, es rajta keresztul a rpw_jobs_list / rpw_job_get / rpw_patch_v3 all — CSAK a regi vonalat ismerte, ezert az ervenyes munkamenetet sem talalta meg: 2026-08-29-en a bekapcsolt belepetes utan URES lett a panel. A 010 a regi utat valtozatlanul hagyja, es csak akkor lep a masodik agra, ha az elso nem talalt. A szerep a rpw_roles LABEL-je (pl. 'Muszakvezeto'), mert a kliens RPWRoles.mapEmployeeRole ezt a magyar munkakort varja. A hiba KIZAROLAG bekapcsolt belepetesnel jelentkezik — ezert maradt rejtve | — | `rpw_session` | `integration/test-int-session-lineage.js` | 🟧 csak backend |
+| **F-150** | A bero-ellenorzes nelkuli irasi utak lezarva (012). A rpw_patch es a rpw_patch_v2 SECURITY DEFINER, de NEM ker tokent es NEM nez szervizt — miközben minden mas irasi ut igen. Amig az anon futtathatta oket, a lapban levo kulcs + egy munkaazonosito BELEPES NELKUL is irasi jog volt, tehat a 2026-08-29-en bekapcsolt beleptetes megkerulheto maradt. A 012 elveszi a jogot — a PUBLIC-tol IS, mert Postgresben a fuggvenyek alapbol PUBLIC-futtathatok, es az elso nekifutasom ezt kihagyta (az ellenorzo lekerdezes fogta meg). Merve: 24 ora alatt egyszer sem hivta oket senki. FIGYELEM: a visszaallas mostantol ket lepes — AUTH_REQUIRED=false vagy CLIENT_RPC=false eseten a 012_rollback.sql-t is futtatni kell, kulonben a mentes neman elhal | `rpw-config.js` | `rpw_patch_v2` | `unit/test-rpc-consistency.js` | 🟧 csak backend |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 
