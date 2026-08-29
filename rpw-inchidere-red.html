@@ -239,7 +239,7 @@ async function saveZipToDir(blob, fileName){
     var writable=await fileH.createWritable();
     await writable.write(blob);
     await writable.close();
-    return {ok:true, path:year+'\\'+month+'\\'+fileName};
+    return {ok:true, path:year+'/'+month+'/'+fileName};   // KODREVIEW #20: hordozhato megjelenites
   }catch(e){
     console.error('saveZipToDir',e);
     return {ok:false, error:e.message||String(e)};
@@ -668,9 +668,15 @@ function getElementPhotoBlob(e){
 // ════════════════════════════════════════════════════════════════
 // HTML GENERAL HELPERS (a 6 modul jelenteseinek kozos sablonja)
 // ════════════════════════════════════════════════════════════════
+// KODREVIEW #16: az aposztrof kimaradt. Ma csak elem-tartalomban
+// hasznaljuk, ahol nem szamit — de egy atalakitassal barmikor
+// attributumban kot ki, es akkor mar keso. Ugyanaz a terkep, mint az
+// escH-ben, hogy a ket helyen ne mondjon mast.
 function escHtml(s){
   if(s===null||s===undefined)return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
 }
 function htmlHeader(title){
   var plate=JOB.plate||'', nr=JOB.number||JOB.id||'';
