@@ -16,6 +16,35 @@
 (function(root){
   'use strict';
   function auth(){ return root.RPWAuth || null; }
+
+  // ── RPW-001 (2026-08-29) — AZ ADATREEG FAIL-CLOSED ───────────────
+  // Ez a fajl az EGYETLEN belepesi pont az adatbazishoz. Eddig, ha a
+  // munkamenet-or elbukott, az oldal az atiranyitas alatt MEG lefuttatta
+  // a listazast es a mentest — a halozaton tehat elment a keres, es a
+  // valasz meg is erkezett. Mostantol: nincs munkamenet, nincs egyetlen
+  // olvasas es egyetlen iras sem. Egy helyen, minden oldalra.
+  //
+  // FONTOS: ez KLIENSOLDALI zar. Nem helyettesiti az adatbazis-oldali
+  // vedelmet (RLS) — csak azt garantalja, hogy az ALKALMAZAS nem ad ki
+  // adatot bejelentkezes nelkul.
+  function zarva(){
+    try{
+      // Az UGYFEL-lap (rpw-upload.html) szandekosan PIN nelkuli: az ugyfel a
+      // WhatsApp-linkrol nyitja meg. Az a lap KIFEJEZETTEN nyilatkozik errol
+      // (RPW_PUBLIC_PAGE), es csak ezzel a nyilatkozattal mentesul. A dolgozoi
+      // lapok egyike sem allitja be — ott a zar valtozatlanul all.
+      if(root.RPW_PUBLIC_PAGE === true) return false;
+      var a=auth(); return !!(a && a.required() && !a.session());
+    }catch(e){ return false; }
+  }
+  var ZAR_HIBA={ code:'auth_required',
+                 message:'Sesiune expirată. Autentificați-vă din nou.' };
+  function zart(fn){
+    return async function(){
+      if(zarva()) return { data:null, error:ZAR_HIBA };
+      return await fn.apply(null, arguments);
+    };
+  }
   // ── EGYESÍTETT BIZTONSÁGOS ÚT (2026-08-24) ──────────────────────
   // KÉT párhuzamos „secure" ág volt ebben a fájlban:
   //   · useSecure() → rpw_patch_secure / rpw_soft_delete / rpw_restore / rpw_purge
@@ -107,6 +136,11 @@
   }
   async function patchV2(sb, id, partial, opts){
     opts=opts||{};
+    if(ugyfelUt()){
+      var rc=unwrap(await sb.rpc('rpw_client_upload',{p_job_id:id, p_patch:partial}));
+      if(rc.error) return {data:null, error:rc.error};
+      return {data:rc.data, error:null};
+    }
     // J: a hitelesített út verziózárral és unwrap-pel (lásd a v3 ágat lentebb)
     // A v3 MAS szignaturaju: tokent var, es az actort/shop_id-t maga vezeti le.
     // A v2 megmarad valtozatlanul — igy a visszaallas egy config-sor.
@@ -134,9 +168,27 @@
     return sid ? q.eq('shop_id', sid) : q;
   }
 
+  // ── SZŰK ÜGYFÉL-ÚT (009) ─────────────────────────────────────────
+  // Az ügyfél-feltöltő lapnak nincs és nem is lehet tokenje. Ma a TELJES
+  // munkasort olvassa közvetlenül a tábláról, és rpw_patch_v2-vel ír —
+  // a 008 lezárás mindkettőt megszünteti. Ez a két szűk függvény a
+  // legitim ügyfél-út: az olvasás csak a feltöltő lap mezőit adja vissza
+  // (telefonszámot, belső jegyzetet NEM), az írás pedig csak három
+  // kulcsot fogad el. A kapcsoló addig false, amíg a 009 nincs alkalmazva.
+  function ugyfelUt(){
+    try{ return root.RPW_PUBLIC_PAGE===true && (root.RPW_CFG&&root.RPW_CFG.CLIENT_RPC)===true }
+    catch(e){ return false }
+  }
+
   // ── OLVASÁS ──
   // Egy sor lekérése (a supabase .single() alakot adja vissza: {data:row, error})
   async function getRow(sb, id, cols){
+    if(ugyfelUt()){
+      var ru=unwrap(await sb.rpc('rpw_client_job_get',{p_job_id:id}));
+      if(ru.error) return {data:null, error:ru.error};
+      return {data:{id:ru.data.id, data:ru.data.data, version:ru.data.version,
+                    updated_at:null}, error:null};
+    }
     // A régi useSecure() ág eltávolítva: nem unwrap-elt, és saját
     // hibaszöveget gyártott a szerveré helyett. EGY út maradt.
     if(secureOn()){
@@ -203,8 +255,19 @@
     return await scoped(sb.from('rpw_jobs').delete().not('deleted_at','is',null));
   }
 
-  var API={ shopId:shopId, actorOf:actorOf, useV3:useV3, tokenOf:tokenOf, useSecure:useSecure, patch:patch, patchV2:patchV2, getRow:getRow, listActive:listActive,
-            listTrashed:listTrashed, softDelete:softDelete, restore:restore, purge:purge, purgeAllTrashed:purgeAllTrashed };
+  // Minden adatmuvelet a zaron keresztul megy ki. A segedfuggvenyek
+  // (shopId, actorOf, ...) nem nyulnak adathoz, azok valtozatlanok.
+  var API={ shopId:shopId, actorOf:actorOf, useV3:useV3, tokenOf:tokenOf, useSecure:useSecure,
+            zarva:zarva,
+            patch:          zart(patch),
+            patchV2:        zart(patchV2),
+            getRow:         zart(getRow),
+            listActive:     zart(listActive),
+            listTrashed:    zart(listTrashed),
+            softDelete:     zart(softDelete),
+            restore:        zart(restore),
+            purge:          zart(purge),
+            purgeAllTrashed:zart(purgeAllTrashed) };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWDb=API;
 })(typeof self!=='undefined'?self:(typeof window!=='undefined'?window:globalThis));

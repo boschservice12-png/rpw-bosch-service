@@ -40,6 +40,24 @@
                        'rpw2_session','rpw2_login','rpw_requirements'];
   var MIN_SCHEMA = '005';
 
+  // ── RPW-001 (2026-08-29) — CSAK AZT KOVETELJUK, AMIT HASZNALUNK ──
+  // A fenti lista FIXEN kovetelte a rpw_transition-t es a rpw_requirements-t
+  // is. Az ELO szerveren (2026-08-29-en ellenorizve) egyik SEM letezik.
+  // Mivel a AUTH_REQUIRED=true azonnal szigoru modba kapcsol (strictNeeded),
+  // a kapcsolo atallitasa a TELJES muhelyt megallitotta volna (halt) — pedig
+  // a kliens ezeket az utakat csak SERVER_TRANSITIONS=true mellett hasznalja.
+  // Ugyanez a hiba egyszer mar megbenitotta az uzemet (lasd lentebb).
+  // Mostantol a kovetelmeny a TENYLEGES uzemmodhoz igazodik.
+  function requiredRpcs(cfg){
+    cfg = cfg || root.RPW_CFG || {};
+    // Ezeket a kliens minden modban hasznalja (olvasas + kosar).
+    var need = ['rpw_jobs_list','rpw_job_get','rpw_job_trash','rpw_job_restore','rpw_job_purge'];
+    if(cfg.AUTH_REQUIRED === true)        need.push('rpw2_session','rpw2_login');
+    if(cfg.PATCH_RPC === 'rpw_patch_v3')  need.push('rpw_patch_v3');
+    if(cfg.SERVER_TRANSITIONS === true)   need.push('rpw_transition','rpw_requirements');
+    return need;
+  }
+
   function checkCapabilities(cap, cfg){
     cfg = cfg || root.RPW_CFG || {};
     var problems = [];
@@ -51,7 +69,7 @@
       problems.push('schema_version:' + cap.schema_version + '<' + MIN_SCHEMA);
     }
     var have = cap.rpcs || [];
-    REQUIRED_RPCS.forEach(function(r){
+    requiredRpcs(cfg).forEach(function(r){
       if(have.indexOf(r) < 0) problems.push('missing_rpc:' + r);
     });
     if(cfg.PRODUCTION === true){
@@ -107,7 +125,23 @@
       // MEGÁLLT — pedig egyetlen olyan funkciót sem használt, ami hiányzott.
       // Fail-closed maradunk ott, ahol tényleg kockázat van.
       if(!r.ok){
-        if(strictNeeded(cfg)) halt(r.message, r.problems);
+        // ── RPW-001 (2026-08-29) — A DIAGNOSZTIKA HIANYA NEM BIZONYITEK ──
+        // A `rpw_server_capabilities` maga csak JELENTO fuggveny; a hianya
+        // nem mond semmit arrol, hogy a rpw2_session mukodik-e. Ha egyedul
+        // ez hianyzik es NEM vagyunk production modban, akkor nem allunk le
+        // — a valodi utak (rpw2_session, rpw_patch_v3) sajat hibat adnanak,
+        // ha nem lennenek. PRODUCTION-ban a megallas VALTOZATLAN: ott azt is
+        // bizonyitani kell, hogy a szerver az, aminek mondja magat.
+        // A tolerancia CSAK akkor all fenn, ha a szigorusag EGYEDUL az
+        // auth-kenyszerbol jon. SERVER_TRANSITIONS vagy v3-patch mellett a
+        // kliens tenylegesen hivna olyan fuggvenyt, aminek a letezeset nem
+        // tudtuk igazolni — ott a megallas VALTOZATLANUL kotelezo.
+        // (Ezt a sajat p0-1 tesztunk kapta el: az elso szukitesem tul tag volt.)
+        var csakDiag  = (r.problems||[]).length===1 && r.problems[0]==='no_capabilities';
+        var csakAuth  = cfg.PRODUCTION!==true
+                     && cfg.SERVER_TRANSITIONS!==true
+                     && cfg.PATCH_RPC!=='rpw_patch_v3';
+        if(!(csakDiag && csakAuth) && strictNeeded(cfg)) halt(r.message, r.problems);
         else { try{ console.warn('RPW: a szerver régebbi, mint a kliens — óvatos módban futunk tovább.',
                                  r.problems); }catch(e){} }
       }
@@ -131,7 +165,13 @@
   }
 
   function halt(message, problems){
-    if(typeof document === 'undefined') return;
+    // ── RPW-001 (2026-08-29) — ELOSZOR ZARUNK, AZTAN RAJZOLUNK ──────
+    // Eddig a fuggveny DOM hianyaban AZONNAL visszatert — a configot sem
+    // nullazta, tehat a "megallas" el sem kezdodott. A lezaras a lenyeg,
+    // a kepernyo-uzenet csak tajekoztatas.
+    root.RPW_CFG = null;      // nincs config -> nincs DB-kliens
+    var document = root.document || (typeof globalThis!=='undefined' ? globalThis.document : null);
+    if(!document) return;
     var paint = function(){
       if(!document.body) return;
       var wrap = document.createElement('div');
@@ -148,15 +188,17 @@
       box.appendChild(t1); box.appendChild(t2); box.appendChild(t3);
       wrap.appendChild(box); document.body.appendChild(wrap);
     };
-    root.RPW_CFG = null;   // nincs config → nincs DB-kliens
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',paint);
     else paint();
   }
   // Böngésző: ha prod-config érvénytelen, HARD FAIL (nem indul silent insecure módban).
   function enforce(){
-    if(typeof location!=='undefined' && location.protocol==='file:') return {ok:true};
+    var location = root.location;
+    var document = root.document || (typeof globalThis!=='undefined' ? globalThis.document : null);
+    if(location && location.protocol==='file:') return {ok:true};
     var r=productionSafety(root.RPW_CFG);
-    if(!r.ok && typeof document!=='undefined'){
+    if(!r.ok) root.RPW_CFG=null;   // a semlegesites DOM nelkul is megtortenik
+    if(!r.ok && document){
       var msg='PRODUCTION CONFIGURATION INVALID: '+r.invalid.join(', ');
       var paint=function(){ if(document.body){ document.body.innerHTML=
         '<div style="position:fixed;inset:0;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;font-family:system-ui,Arial;padding:24px;z-index:2147483647">'
@@ -171,9 +213,10 @@
   }
   var API={ productionSafety:productionSafety, enforce:enforce, strictNeeded:strictNeeded,
             checkCapabilities:checkCapabilities, verifyServer:verifyServer,
+            requiredRpcs:requiredRpcs,
             REQUIRED_RPCS:REQUIRED_RPCS, MIN_SCHEMA:MIN_SCHEMA };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWGuard=API;
   // Böngészőben AZONNAL érvényesít (Node-ban nincs document → kihagyja).
-  try{ if(typeof document!=='undefined') enforce(); }catch(e){}
+  try{ if(root.document) enforce(); }catch(e){}
 })(typeof self!=='undefined'?self:(typeof window!=='undefined'?window:globalThis));

@@ -23,7 +23,9 @@ function makeEnv(cfg, sessionRec, nowMs){
   let navigated=null;
   const win={ RPW_CFG:cfg, localStorage:ls,
               location:{ pathname:'/rpw-cos.html', search:'?job=X', protocol:'https:',
-                         assign:u=>{navigated=u} } };
+                         // RPW-001 (2026-08-29): az or mar `replace`-szel iranyit at,
+                         // hogy a Vissza gomb ne vigyen a vedett lapra.
+                         assign:u=>{navigated=u}, replace:u=>{navigated=u} } };
   win.self=win; win.window=win;
   const g=global;
   const old={window:g.window,self:g.self,localStorage:g.localStorage,location:g.location,Date:g.Date};

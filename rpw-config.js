@@ -22,6 +22,13 @@ window.RPW_CFG = {
   // P0.6 (2026-08-23): a bucket PRIVÁT. Minden fájlelérés időkorlátos
   // aláírt URL-lel megy; publikus fallback NINCS.
   STORAGE_PRIVATE: true,
+  // ── SZŰK ÜGYFÉL-ÚT (009) ─────────────────────────────────────────
+  // ALAPBÓL KI (false) → az ügyfél-feltöltő a mai úton dolgozik
+  // (közvetlen tábla-olvasás + rpw_patch_v2). true-ra állítás CSAK a
+  // 009_client_upload_path.sql alkalmazása UTÁN: ekkor az ügyfél a két
+  // szűk függvényen megy, és a 008 lezárás sem vágja el.
+  // 2026-08-29: a 009 ELESBEN alkalmazva es ellenorizve -> bekapcsolva.
+  CLIENT_RPC: true,
   // A slice-patch RPC neve (Sprint 1). ALAP: rpw_patch_v2 (0006, alkalmazott).
   // A valódi verzió-zárhoz: 0013 (rpw_patch_v3) alkalmazása UTÁN → 'rpw_patch_v3'.
   PATCH_RPC: 'rpw_patch_v2',

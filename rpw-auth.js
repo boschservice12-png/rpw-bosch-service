@@ -14,11 +14,13 @@
   'use strict';
   var KEY='rpw_auth';
 
+  // A tarolot is a `root`-on keresztul erjuk el (self===window a bongeszoben).
+  function ls(){ try{ return root.localStorage||null }catch(e){ return null } }
   function defStore(){
     return {
-      get:function(k){ try{ return (typeof localStorage!=='undefined')?localStorage.getItem(k):null; }catch(e){ return null; } },
-      set:function(k,v){ try{ if(typeof localStorage!=='undefined') localStorage.setItem(k,v); }catch(e){} },
-      del:function(k){ try{ if(typeof localStorage!=='undefined') localStorage.removeItem(k); }catch(e){} }
+      get:function(k){ try{ var s=ls(); return s?s.getItem(k):null; }catch(e){ return null; } },
+      set:function(k,v){ try{ var s=ls(); if(s) s.setItem(k,v); }catch(e){} },
+      del:function(k){ try{ var s=ls(); if(s) s.removeItem(k); }catch(e){} }
     };
   }
   function nowMs(opts){ return (opts&&opts.now)?opts.now():Date.now(); }
@@ -128,15 +130,63 @@
     }catch(e){ return {ok:false, error:'network'}; }
   }
 
+  // ── RPW-001 (2026-08-29) — A BUKOTT OR ALLITSA MEG A LAPOT ───────
+  // Eddig a guard() csak ELINDITOTTA az atiranyitast es visszaadott
+  // false-t — amit egyetlen hivo sem nezett meg (`try{...}catch(e){}`).
+  // Az atiranyitas viszont NEM azonnali: a lap tovabb futott, felepitette
+  // a Supabase-klienst, lekerte a listat es kirajzolta az ugyfeleket.
+  // Lassu halon ez masodpercekig lathato volt. Mostantol a bukott or
+  // elrejti a lapot MEG az elso kepkocka elott, es megjelol egy allapotot,
+  // amire az adatreteg (rpw-db.js) is fail-closed modon reagal.
+  var _blocked=false;
+  function blocked(){ return _blocked===true; }
+  // A `root`-on keresztul hivatkozunk a lapra: bongeszoben ez ugyanaz az
+  // objektum (self===window), teszteles kozben viszont kovetheto.
+  function hidePage(){
+    var doc = root.document; if(!doc) return;
+    // A `html{display:none}` mar a <head>-ben hat: nincs mit kirajzolni.
+    try{
+      var st=doc.createElement('style');
+      st.setAttribute('data-rpw-block','1');
+      st.textContent='html{display:none!important}';
+      (doc.head||doc.documentElement).appendChild(st);
+    }catch(e){}
+    // Azonnal urit, HA mar van torzs; es a betoltes vegen ujra, mert a
+    // parszolas kozben meg erkezhet tartalom a hallgato lefutasa elott.
+    var urit=function(){ try{ if(doc.body) doc.body.textContent=''; }catch(e){} };
+    urit();
+    if(doc.readyState==='loading') doc.addEventListener('DOMContentLoaded',urit);
+  }
   // Böngésző-őr: ha kötelező az auth és nincs (érvényes) munkamenet → login oldalra.
   function guard(opts){
     opts=opts||{};
     if(!required(opts)) return true;             // KI → nincs hatás
     if(session(opts)) return true;
-    if(typeof location!=='undefined'){
-      try{ location.assign('rpw-login.html?next='+encodeURIComponent(location.pathname+location.search)); }catch(e){}
+    _blocked=true;
+    hidePage();
+    // Az `opts.location` ugyanaz a befecskendezheto minta, mint az
+    // `opts.store` es az `opts.now` — igy a lezaras tesztelheto.
+    var loc = (opts && opts.location) || root.location;
+    if(loc){
+      // `replace`, nem `assign`: a Vissza gomb ne vigyen a vedett lapra.
+      try{ loc.replace('rpw-login.html?next='+encodeURIComponent(loc.pathname+loc.search)); }catch(e){}
     }
     return false;
+  }
+
+  // ── RPW-001 — LEJART VAGY VISSZAVONT TOKEN: AZONNALI KILEPTETES ──
+  // A verify() letezett, de SEHOL nem hivtuk meg. Egy szerveren mar
+  // visszavont token igy a helyi 12 oras lejaratig ervenyes maradt.
+  // Halozati hibanal szandekosan NEM leptetunk ki (offline munka),
+  // csak akkor, ha a szerver hatarozottan ervenytelennek mondja.
+  async function enforceSession(sb, opts){
+    if(!required(opts)) return {ok:true, skipped:true};
+    if(!session(opts)){ guard(opts); return {ok:false, error:'no_session'}; }
+    var r=await verify(sb, opts);
+    if(r && r.ok) return r;                      // offline eseten is ervenyes
+    logout(opts);                                // a verify mar torolt, de legyen biztos
+    guard(opts);
+    return {ok:false, error:(r&&r.error)||'invalid'};
   }
 
   // Az AUDIT szereploje: a bejelentkezett ember NEVE. Ha nincs bejelentkezve,
@@ -165,6 +215,7 @@
 
   var API={ required:required, session:session, role:role, rawRole:rawRole, name:name, token:token,
             employeeId:employeeId, shopId:shopId, login:login, logout:logout, guard:guard,
+            blocked:blocked, enforceSession:enforceSession,
             logoutServer:logoutServer, verify:verify, team:team, actor:actor, can:can, perms:perms, fnHeaders:fnHeaders, KEY:KEY };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWAuth=API;

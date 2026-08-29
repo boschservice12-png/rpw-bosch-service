@@ -112,8 +112,9 @@ console.log('\n4. Előfeltétel-ellenőrzés: hiányzó függőségnél MEGSZAKA
 
 console.log('\n5. Rollback FORDÍTOTT sorrendben');
 {
-  for (const f of ['007_rollback.sql','006_rollback.sql','005_rollback.sql','004_rollback.sql',
-                   '003_rollback.sql','002_rollback.sql']) {
+  // A 009 (szuk ugyfel-ut) a lanc vegen fut, ezert visszafele ELSOKENT jon.
+  for (const f of ['009_rollback.sql','007_rollback.sql','006_rollback.sql','005_rollback.sql',
+                   '004_rollback.sql','003_rollback.sql','002_rollback.sql']) {
     try { await D.rollback(c, f); ok(true, '  ' + f); }
     catch (e) { ok(false, '  ' + f + ' — ' + e.message.slice(0,120)); }
   }

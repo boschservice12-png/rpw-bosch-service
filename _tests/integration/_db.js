@@ -42,8 +42,14 @@ async function rollback(c, file){
   const { body } = split(sql);
   await c.query(body);
 }
+// A 009 (szuk ugyfel-ut) valodi elore-migracio: a lancban a helye a 005
+// UTAN van, kulonben a 005 vegigsopro `revoke all on function` visszavonna
+// a grantjait.
+// A 008 SZANDEKOSAN NINCS a lancban: az az ELO adatbazis alakjara szabott
+// lezaras (app_session, hianyzo rpw_transition...), a sajat tesztje a
+// _tests/integration/test-int-rls-live.js.
 const ALL = ['001_base_schema.sql','002_server_rpc.sql','003_business_requirements.sql',
              '004_staff_posts_legacy.sql','005_rls_lockdown.sql','006_workflow_enforcement.sql',
-             '007_pin_lockout_admin.sql'];
+             '007_pin_lockout_admin.sql','009_client_upload_path.sql'];
 
 module.exports = { start, stop, migrate, rollback, ALL, split };

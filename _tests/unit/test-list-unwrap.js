@@ -100,13 +100,31 @@ console.log('\n5. listActive — p_trashed=false');
 
 console.log('\n6. Lejárt és visszavont token');
 {
+  // ── RPW-001 (2026-08-29) — A SZERZODES SZIGORODOTT ──────────────
+  // Eddig itt az allt, hogy lejart munkamenettel a kliens MEGIS kikuldi a
+  // kerest `p_token:null`-lal, es a szerver utasitja el. Ez ket dolgot
+  // jelentett: a keres elment a halozaton, es a lap az atiranyitas alatt
+  // meg dolgozott. Mostantol a kliens EL SEM INDITJA a kerest.
+  // A szerveroldali elutasitas lefedettsege NEM veszett el: lentebb a
+  // VISSZAVONT token esete meri, ahol a munkamenet helyben ervenyes, de a
+  // szerver mondja ki, hogy nem az.
   mem['rpw_auth'] = JSON.stringify({ token:TOKEN, can:{}, employeeId:'E1',
                                      shopId:'SHOP-A', exp:Date.now()-1000 });
   RPC=[];
   RESP = { rpw_jobs_list: { data:{ ok:false, error:'unauthorized', message:'x' }, error:null } };
   const r = await DB.listActive(sb);
-  eq(RPC[0][1].p_token, null, 'lejárt: nem küld tokent');
-  eq(r.error.code, 'unauthorized', '  a szerver elutasítja');
+  eq(RPC.length, 0, 'lejárt: EL SEM INDÍTJA a kérést (nem megy ki a hálózatra)');
+  eq(r.error.code, 'auth_required', '  a kliens maga utasítja el');
+
+  // VISSZAVONT token: helyben ervenyes munkamenet, a szerver mondja ki a nemet.
+  // Ez tartja eletben a szerver-elutasitas es az unwrap utjat.
+  login();
+  RPC=[];
+  RESP = { rpw_jobs_list: { data:{ ok:false, error:'unauthorized', message:'x' }, error:null } };
+  const r2 = await DB.listActive(sb);
+  eq(RPC.length, 1, 'visszavont: a kérés KIMEGY (helyben még érvényesnek látszik)');
+  eq(RPC[0][1].p_token, TOKEN, '  a saját tokennel');
+  eq(r2.error.code, 'unauthorized', '  és a SZERVER utasítja el — ez a döntő szó');
   login();
 }
 

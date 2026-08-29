@@ -1641,6 +1641,185 @@
       "be": [],
       "teszt": "_tests/frontend/test-fe-upload.js",
       "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-139",
+      "nev": "RPW-001: a bukott munkamenet-or MEGALLITJA a lapot, nem csak atiranyit. Eddig a guard() elinditotta az atiranyitast es false-t adott vissza, amit egyetlen hivo sem nezett meg — a lap kozben tovabb futott es kirajzolta az ugyfeleket. Most a lap mar az elso kepkocka elott elrejtodik, a torzs urul, es `replace`-szel megyunk a loginra, hogy a Vissza gomb ne vigyen a vedett lapra",
+      "fe": [
+        [
+          "rpw-auth.js",
+          "function hidePage(){"
+        ],
+        [
+          "rpw-auth.js",
+          "st.textContent='html{display:none!important}';"
+        ],
+        [
+          "rpw-auth.js",
+          "loc.replace('rpw-login.html?next='"
+        ],
+        [
+          "rpw-auth.js",
+          "function blocked(){ return _blocked===true; }"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-rpw001-auth-gate.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-140",
+      "nev": "RPW-001: az adatreteg fail-closed. A rpw-db.js az egyetlen belepesi pont az adatbazishoz; munkamenet nelkul most egyetlen olvasas es egyetlen iras sem indul el (auth_required). Eddig a keres az atiranyitas alatt is kiment a halozatra. FIGYELEM: ez KLIENSOLDALI zar, nem helyettesiti az RLS-t",
+      "fe": [
+        [
+          "rpw-db.js",
+          "function zarva(){"
+        ],
+        [
+          "rpw-db.js",
+          "function zart(fn){"
+        ],
+        [
+          "rpw-db.js",
+          "listActive:     zart(listActive),"
+        ],
+        [
+          "rpw-db.js",
+          "code:'auth_required'"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-rpw001-auth-gate.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-141",
+      "nev": "RPW-001: a lejart vagy VISSZAVONT token azonnali kilepteteshez vezet (enforceSession). A verify() letezett, de sehol nem hivtuk meg, igy egy szerveren mar visszavont token a helyi 12 oras lejaratig ervenyes maradt. Halozati hibanal szandekosan NEM leptetunk ki — az offline munka megmarad",
+      "fe": [
+        [
+          "rpw-auth.js",
+          "async function enforceSession(sb, opts){"
+        ],
+        [
+          "rpw-auth.js",
+          "logout(opts);                                // a verify mar torolt, de legyen biztos"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-rpw001-auth-gate.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-142",
+      "nev": "RPW-001: a szerver-kepesseg kovetelmeny a TENYLEGES uzemmodhoz igazodik. A lista fixen kovetelte a rpw_transition / rpw_requirements fuggvenyeket, amelyek az elo szerveren nem leteznek — igy az AUTH_REQUIRED=true bekapcsolasa halt()-tal megallitotta volna a teljes muhelyt. A diagnosztikai rpw_server_capabilities hianya csak akkor tolerálhato, ha a szigorusag EGYEDUL az auth-kenyszerbol jon; PRODUCTION, szerveroldali atmenet vagy v3-patch mellett a megallas valtozatlan. A halt() ezentul DOM nelkul is lezar",
+      "fe": [
+        [
+          "rpw-guard.js",
+          "function requiredRpcs(cfg){"
+        ],
+        [
+          "rpw-guard.js",
+          "if(cfg.SERVER_TRANSITIONS === true)   need.push('rpw_transition','rpw_requirements');"
+        ],
+        [
+          "rpw-guard.js",
+          "if(!(csakDiag && csakAuth) && strictNeeded(cfg)) halt(r.message, r.problems);"
+        ],
+        [
+          "rpw-guard.js",
+          "root.RPW_CFG = null;      // nincs config -> nincs DB-kliens"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-p0-1-guard.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-143",
+      "nev": "RPW-002: RLS-lezaras az ELO adatbazis alakjara (008). A teljes kitettseg egyetlen objektumon allt: a 'rpw_jobs anon rw' policy (USING true) plusz az anon SELECT/INSERT/UPDATE/DELETE jog — barki, aki ismerte a nyilvanos anon kulcsot, olvashatta, irhatta es torolhette mind a 33 elo munkat. A migracio megszunteti a policy-t, visszavonja a tabla-jogokat, kikenyszeriti az RLS-t, es NEVRE SZOLOAN csak a tenant-biztos, tokenre epulo RPC-knek ad EXECUTE-ot",
+      "fe": [
+        [
+          "_migrations/008_rls_lockdown_live.sql",
+          "drop policy if exists \"rpw_jobs anon rw\" on public.rpw_jobs;"
+        ],
+        [
+          "_migrations/008_rls_lockdown_live.sql",
+          "execute format('revoke all on public.%I from anon, authenticated', t);"
+        ],
+        [
+          "_migrations/008_rls_lockdown_live.sql",
+          "execute format('alter table public.%I force  row level security', t);"
+        ],
+        [
+          "_migrations/008_rls_lockdown_live.sql",
+          "execute format('revoke all on function %s from public, anon, authenticated', r.sig);"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/integration/test-int-rls-live.js",
+      "allapot": "nincs-bekotve"
+    },
+    {
+      "id": "F-144",
+      "nev": "RPW-002: a 008 elofeltetel-ellenorzese es visszaallitasa. Ha barmelyik szukseges fuggveny hianyzik, a migracio megszakad, es felbehagyott allapot nem marad (a tranzakcio visszagordul). A 008_rollback.sql masodpercek alatt visszaadja a regi mukodest — ez az azonnali kiut, ha a lezaras utan megall a munka",
+      "fe": [
+        [
+          "_migrations/008_rls_lockdown_live.sql",
+          "raise exception 'ELŐFELTÉTEL HIÁNYZIK: % — a lezárás megszakadt, semmi nem változott', f;"
+        ],
+        [
+          "_migrations/008_rollback.sql",
+          "grant select, insert, update, delete on public.rpw_jobs to anon, authenticated;"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/integration/test-int-rls-live.js",
+      "allapot": "nincs-bekotve"
+    },
+    {
+      "id": "F-145",
+      "nev": "Az ugyfel WhatsApp-feltolto lapja KIFEJEZETTEN nyilatkozik magarol (RPW_PUBLIC_PAGE), es csak ezzel mentesul az RPW-001 adatreteg-zara alol. Enelkul az AUTH_REQUIRED=true bekapcsolasa NEMAN megbenitotta volna a teljes ugyfel-feltoltest: az a lap szandekosan PIN nelkuli, a zar viszont minden olvasast es irast tiltott. A mentesseg nem talalgatas — dolgozoi lap nem nyilatkozhat igy",
+      "fe": [
+        [
+          "rpw-upload.html",
+          "window.RPW_PUBLIC_PAGE = true;"
+        ],
+        [
+          "rpw-db.js",
+          "if(root.RPW_PUBLIC_PAGE === true) return false;"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-rpw001-auth-gate.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-146",
+      "nev": "Szuk ugyfel-ut (009): az ugyfel a WhatsApp-linkrol PIN nelkul tolt fel, ezert a 008 lezaras elvagta volna. Ket szuk fuggveny lep a helyere. rpw_client_job_get CSAK azt adja vissza, amit a feltolto lap kirajzol (dossziészam, rendszam, marka, iratok, feltoltesek) — telefonszamot, ugyfelnevet, belso jegyzetet, fazisallapotot NEM; ez adatvedelmi szigoritas is, mert ma a lap a TELJES sort megkapja. rpw_client_upload CSAK harom kulcsot ir (clientUploads, dosarActe, clientGata), minden mas mezot forbidden_field-del elutasit. Kliensoldalon a CLIENT_RPC kapcsolo vedi, hogy a mai uzem ne torjon el a migracio alkalmazasa elott",
+      "fe": [
+        [
+          "rpw-db.js",
+          "function ugyfelUt(){"
+        ],
+        [
+          "rpw-db.js",
+          "sb.rpc('rpw_client_job_get',{p_job_id:id})"
+        ],
+        [
+          "rpw-db.js",
+          "sb.rpc('rpw_client_upload',{p_job_id:id, p_patch:partial})"
+        ],
+        [
+          "rpw-config.js",
+          "CLIENT_RPC: true,"
+        ]
+      ],
+      "be": [
+        "rpw_client_job_get",
+        "rpw_client_upload"
+      ],
+      "teszt": "_tests/integration/test-int-rls-live.js",
+      "allapot": "el"
     }
   ]
 }
