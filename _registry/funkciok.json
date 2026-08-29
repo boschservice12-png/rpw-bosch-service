@@ -1733,6 +1733,48 @@
       "be": [],
       "teszt": "_tests/unit/test-p0-1-guard.js",
       "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-143",
+      "nev": "RPW-002: RLS-lezaras az ELO adatbazis alakjara (008). A teljes kitettseg egyetlen objektumon allt: a 'rpw_jobs anon rw' policy (USING true) plusz az anon SELECT/INSERT/UPDATE/DELETE jog — barki, aki ismerte a nyilvanos anon kulcsot, olvashatta, irhatta es torolhette mind a 33 elo munkat. A migracio megszunteti a policy-t, visszavonja a tabla-jogokat, kikenyszeriti az RLS-t, es NEVRE SZOLOAN csak a tenant-biztos, tokenre epulo RPC-knek ad EXECUTE-ot",
+      "fe": [
+        [
+          "_migrations/008_rls_lockdown_live.sql",
+          "drop policy if exists \"rpw_jobs anon rw\" on public.rpw_jobs;"
+        ],
+        [
+          "_migrations/008_rls_lockdown_live.sql",
+          "execute format('revoke all on public.%I from anon, authenticated', t);"
+        ],
+        [
+          "_migrations/008_rls_lockdown_live.sql",
+          "execute format('alter table public.%I force  row level security', t);"
+        ],
+        [
+          "_migrations/008_rls_lockdown_live.sql",
+          "execute format('revoke all on function %s from public, anon, authenticated', r.sig);"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/integration/test-int-rls-live.js",
+      "allapot": "nincs-bekotve"
+    },
+    {
+      "id": "F-144",
+      "nev": "RPW-002: a 008 elofeltetel-ellenorzese es visszaallitasa. Ha barmelyik szukseges fuggveny hianyzik, a migracio megszakad, es felbehagyott allapot nem marad (a tranzakcio visszagordul). A 008_rollback.sql masodpercek alatt visszaadja a regi mukodest — ez az azonnali kiut, ha a lezaras utan megall a munka",
+      "fe": [
+        [
+          "_migrations/008_rls_lockdown_live.sql",
+          "raise exception 'ELŐFELTÉTEL HIÁNYZIK: % — a lezárás megszakadt, semmi nem változott', f;"
+        ],
+        [
+          "_migrations/008_rollback.sql",
+          "grant select, insert, update, delete on public.rpw_jobs to anon, authenticated;"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/integration/test-int-rls-live.js",
+      "allapot": "nincs-bekotve"
     }
   ]
 }

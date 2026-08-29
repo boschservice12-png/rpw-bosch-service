@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 104 | 27 | 68 | 3 | 6 | 7 |
+| 106 | 27 | 68 | 3 | 8 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -77,6 +77,8 @@ szám nélkül, azt is megmondja.
 | **F-140** | RPW-001: az adatreteg fail-closed. A rpw-db.js az egyetlen belepesi pont az adatbazishoz; munkamenet nelkul most egyetlen olvasas es egyetlen iras sem indul el (auth_required). Eddig a keres az atiranyitas alatt is kiment a halozatra. FIGYELEM: ez KLIENSOLDALI zar, nem helyettesiti az RLS-t | `rpw-db.js` | — | `unit/test-rpw001-auth-gate.js` | 🟦 csak frontend |
 | **F-141** | RPW-001: a lejart vagy VISSZAVONT token azonnali kilepteteshez vezet (enforceSession). A verify() letezett, de sehol nem hivtuk meg, igy egy szerveren mar visszavont token a helyi 12 oras lejaratig ervenyes maradt. Halozati hibanal szandekosan NEM leptetunk ki — az offline munka megmarad | `rpw-auth.js` | — | `unit/test-rpw001-auth-gate.js` | 🟦 csak frontend |
 | **F-142** | RPW-001: a szerver-kepesseg kovetelmeny a TENYLEGES uzemmodhoz igazodik. A lista fixen kovetelte a rpw_transition / rpw_requirements fuggvenyeket, amelyek az elo szerveren nem leteznek — igy az AUTH_REQUIRED=true bekapcsolasa halt()-tal megallitotta volna a teljes muhelyt. A diagnosztikai rpw_server_capabilities hianya csak akkor tolerálhato, ha a szigorusag EGYEDUL az auth-kenyszerbol jon; PRODUCTION, szerveroldali atmenet vagy v3-patch mellett a megallas valtozatlan. A halt() ezentul DOM nelkul is lezar | `rpw-guard.js` | — | `unit/test-p0-1-guard.js` | 🟦 csak frontend |
+| **F-143** | RPW-002: RLS-lezaras az ELO adatbazis alakjara (008). A teljes kitettseg egyetlen objektumon allt: a 'rpw_jobs anon rw' policy (USING true) plusz az anon SELECT/INSERT/UPDATE/DELETE jog — barki, aki ismerte a nyilvanos anon kulcsot, olvashatta, irhatta es torolhette mind a 33 elo munkat. A migracio megszunteti a policy-t, visszavonja a tabla-jogokat, kikenyszeriti az RLS-t, es NEVRE SZOLOAN csak a tenant-biztos, tokenre epulo RPC-knek ad EXECUTE-ot | `_migrations/008_rls_lockdown_live.sql` | — | `integration/test-int-rls-live.js` | ⚠️ nincs bekötve |
+| **F-144** | RPW-002: a 008 elofeltetel-ellenorzese es visszaallitasa. Ha barmelyik szukseges fuggveny hianyzik, a migracio megszakad, es felbehagyott allapot nem marad (a tranzakcio visszagordul). A 008_rollback.sql masodpercek alatt visszaadja a regi mukodest — ez az azonnali kiut, ha a lezaras utan megall a munka | `_migrations/008_rls_lockdown_live.sql` `_migrations/008_rollback.sql` | — | `integration/test-int-rls-live.js` | ⚠️ nincs bekötve |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 
