@@ -88,7 +88,12 @@ A mai kliens `AUTH_REQUIRED=false` mellett **közvetlen tábla-olvasással** dol
            tölts fel egy fotót, és nézd meg, hogy megérkezik-e.
            Visszaállás: egy sor (percek).
 
-3. lépés   rpw-config.js:  AUTH_REQUIRED = true
+3. lépés   rpw-config.js:  AUTH_REQUIRED = true      ⛔ BLOKKOLVA
+           2026-08-29: a kitétel 11 emberből 6-ot kizárna a panelből
+           (4 Szerelő, 1 Sofőr, 1 Egyéb — nincsenek a szerep-leképezésben).
+           Ferenc döntése: MOST NE menjen ki. Részletek és a feloldás:
+           REMAINING-RISKS.md — "A beléptetés 11 emberből 6-ot kizárna".
+           Az 1. és 2. lépés ettől függetlenül ÉLESBEN VAN és működik.
            A PATCH_RPC-t NEM kell átállítani: bejelentkezve az adatréteg
            magától a rpw_patch_v3-ra megy. (Ha 'rpw_patch_v3'-ra állítanád,
            a hiányzó rpw_server_capabilities miatt a kliens MEGÁLLNA.)
@@ -164,7 +169,24 @@ alakjára épített fixture-rel. 32 állítás:
 kap · nincs előfeltétel-ellenőrzés · nincs visszavonás · a rollback nem állít vissza)
 — **mind a hét elbukott**, ahogy kell.
 
-## 8. Megmaradt kockázat
+## 8. Hol tart a bevezetés (2026-08-29)
+
+| lépés | állapot |
+|---|---|
+| 1. `009` szűk ügyfél-út | **élesben, ellenőrizve** |
+| 2. `CLIENT_RPC=true` | **élesben; Ferenc telefonon kipróbálta, 19 irat megérkezett** |
+| 3. `AUTH_REQUIRED=true` | ⛔ **blokkolva** — a szerep-leképezés 6 embert kizárna |
+| 4. mentés | vár a 3-ra |
+| 5. `008` lezárás | vár a 3-ra |
+
+Ellenőrizve a 3. lépéshez, és rendben van: a `rpw2_roster` 11 dolgozót ad
+a lap által várt alakban; a `rpw2_login` tokent, `can`-t és szerepet ad; a
+`rpw_jobs_list` / `rpw_job_get` / `rpw_patch_v3` válasz-alakja egyezik a
+klienssel; a config `SHOP_ID`, a dolgozók és a munkák szervize **mind
+ugyanaz** (`bc39e3c1…`), tehát belépés után mind a 33 munka látszana.
+Egyedül a szerep-kérdés maradt.
+
+## 9. Megmaradt kockázat
 
 - **A lezárás élesben még nem futott le.** Amíg nem fut, a 33 munka bárki számára
   elérhető marad az anon kulccsal.
