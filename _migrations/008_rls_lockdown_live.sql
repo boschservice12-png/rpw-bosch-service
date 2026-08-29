@@ -130,7 +130,11 @@ begin
     'public.rpw2_employee_save(text,uuid,text,text,text,boolean)',
     'public.rpw2_pin_set(text,uuid,text)',
     'public.rpw2_role_save(text,text,text,jsonb,int,boolean)',
-    'public.rpw2_pin_unlock(text,uuid)'
+    'public.rpw2_pin_unlock(text,uuid)',
+    -- a szuk ugyfel-ut (009): token nelkul hivhato, de csak a sajat
+    -- dossziera es csak a harom feltoltesi kulcsra
+    'public.rpw_client_job_get(text)',
+    'public.rpw_client_upload(text,jsonb)'
   ] loop
     if to_regprocedure(f) is not null then
       execute format('grant execute on function %s to anon, authenticated', f);

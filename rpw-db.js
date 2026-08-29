@@ -136,6 +136,11 @@
   }
   async function patchV2(sb, id, partial, opts){
     opts=opts||{};
+    if(ugyfelUt()){
+      var rc=unwrap(await sb.rpc('rpw_client_upload',{p_job_id:id, p_patch:partial}));
+      if(rc.error) return {data:null, error:rc.error};
+      return {data:rc.data, error:null};
+    }
     // J: a hitelesített út verziózárral és unwrap-pel (lásd a v3 ágat lentebb)
     // A v3 MAS szignaturaju: tokent var, es az actort/shop_id-t maga vezeti le.
     // A v2 megmarad valtozatlanul — igy a visszaallas egy config-sor.
@@ -163,9 +168,27 @@
     return sid ? q.eq('shop_id', sid) : q;
   }
 
+  // ── SZŰK ÜGYFÉL-ÚT (009) ─────────────────────────────────────────
+  // Az ügyfél-feltöltő lapnak nincs és nem is lehet tokenje. Ma a TELJES
+  // munkasort olvassa közvetlenül a tábláról, és rpw_patch_v2-vel ír —
+  // a 008 lezárás mindkettőt megszünteti. Ez a két szűk függvény a
+  // legitim ügyfél-út: az olvasás csak a feltöltő lap mezőit adja vissza
+  // (telefonszámot, belső jegyzetet NEM), az írás pedig csak három
+  // kulcsot fogad el. A kapcsoló addig false, amíg a 009 nincs alkalmazva.
+  function ugyfelUt(){
+    try{ return root.RPW_PUBLIC_PAGE===true && (root.RPW_CFG&&root.RPW_CFG.CLIENT_RPC)===true }
+    catch(e){ return false }
+  }
+
   // ── OLVASÁS ──
   // Egy sor lekérése (a supabase .single() alakot adja vissza: {data:row, error})
   async function getRow(sb, id, cols){
+    if(ugyfelUt()){
+      var ru=unwrap(await sb.rpc('rpw_client_job_get',{p_job_id:id}));
+      if(ru.error) return {data:null, error:ru.error};
+      return {data:{id:ru.data.id, data:ru.data.data, version:ru.data.version,
+                    updated_at:null}, error:null};
+    }
     // A régi useSecure() ág eltávolítva: nem unwrap-elt, és saját
     // hibaszöveget gyártott a szerveré helyett. EGY út maradt.
     if(secureOn()){

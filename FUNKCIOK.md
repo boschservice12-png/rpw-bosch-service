@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 107 | 27 | 69 | 3 | 8 | 7 |
+| 108 | 27 | 69 | 3 | 9 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -80,6 +80,7 @@ szám nélkül, azt is megmondja.
 | **F-143** | RPW-002: RLS-lezaras az ELO adatbazis alakjara (008). A teljes kitettseg egyetlen objektumon allt: a 'rpw_jobs anon rw' policy (USING true) plusz az anon SELECT/INSERT/UPDATE/DELETE jog — barki, aki ismerte a nyilvanos anon kulcsot, olvashatta, irhatta es torolhette mind a 33 elo munkat. A migracio megszunteti a policy-t, visszavonja a tabla-jogokat, kikenyszeriti az RLS-t, es NEVRE SZOLOAN csak a tenant-biztos, tokenre epulo RPC-knek ad EXECUTE-ot | `_migrations/008_rls_lockdown_live.sql` | — | `integration/test-int-rls-live.js` | ⚠️ nincs bekötve |
 | **F-144** | RPW-002: a 008 elofeltetel-ellenorzese es visszaallitasa. Ha barmelyik szukseges fuggveny hianyzik, a migracio megszakad, es felbehagyott allapot nem marad (a tranzakcio visszagordul). A 008_rollback.sql masodpercek alatt visszaadja a regi mukodest — ez az azonnali kiut, ha a lezaras utan megall a munka | `_migrations/008_rls_lockdown_live.sql` `_migrations/008_rollback.sql` | — | `integration/test-int-rls-live.js` | ⚠️ nincs bekötve |
 | **F-145** | Az ugyfel WhatsApp-feltolto lapja KIFEJEZETTEN nyilatkozik magarol (RPW_PUBLIC_PAGE), es csak ezzel mentesul az RPW-001 adatreteg-zara alol. Enelkul az AUTH_REQUIRED=true bekapcsolasa NEMAN megbenitotta volna a teljes ugyfel-feltoltest: az a lap szandekosan PIN nelkuli, a zar viszont minden olvasast es irast tiltott. A mentesseg nem talalgatas — dolgozoi lap nem nyilatkozhat igy | `rpw-upload.html` `rpw-db.js` | — | `unit/test-rpw001-auth-gate.js` | 🟦 csak frontend |
+| **F-146** | Szuk ugyfel-ut (009): az ugyfel a WhatsApp-linkrol PIN nelkul tolt fel, ezert a 008 lezaras elvagta volna. Ket szuk fuggveny lep a helyere. rpw_client_job_get CSAK azt adja vissza, amit a feltolto lap kirajzol (dossziészam, rendszam, marka, iratok, feltoltesek) — telefonszamot, ugyfelnevet, belso jegyzetet, fazisallapotot NEM; ez adatvedelmi szigoritas is, mert ma a lap a TELJES sort megkapja. rpw_client_upload CSAK harom kulcsot ir (clientUploads, dosarActe, clientGata), minden mas mezot forbidden_field-del elutasit. Kliensoldalon a CLIENT_RPC kapcsolo vedi, hogy a mai uzem ne torjon el a migracio alkalmazasa elott | `rpw-db.js` `rpw-config.js` | `rpw_client_job_get` `rpw_client_upload` | `integration/test-int-rls-live.js` | ⚠️ nincs bekötve |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 

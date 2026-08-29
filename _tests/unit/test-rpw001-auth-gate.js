@@ -162,6 +162,35 @@ console.log('\n3d. AZ UGYFEL FELTOLTO LAPJA NEM ESIK A ZAR ALA');
      'pontosan EGY lap mentesul, es az az ugyfel-feltolto  ['+lapok.join(', ')+']');
 }
 
+console.log('\n3e. A SZUK UGYFEL-UT csak a kapcsolo bekapcsolasa utan aktiv (009)');
+{
+  // A 009 migracio ket szuk fuggvenyt hoz letre. Amig az nincs alkalmazva
+  // az ELO adatbazison, a kliens NEM hivhatja oket — kulonben a mai
+  // ugyfel-feltoltes azonnal eltorne. Ezert kapcsolo vedi.
+  const ki=kornyezet({AUTH_REQUIRED:true, CLIENT_RPC:false}, null, {publikus:true});
+  await ki.RPWDb.getRow(ki.__sb,'J1');
+  await ki.RPWDb.patchV2(ki.__sb,'J1',{clientUploads:[]},{});
+  ok(ki.__hivas.every(h=>!/rpw_client_/.test(h)),
+     'kapcsolo NELKUL a regi uton megy  ['+ki.__hivas.join(', ')+']');
+  ki.close();
+
+  const be=kornyezet({AUTH_REQUIRED:true, CLIENT_RPC:true}, null, {publikus:true});
+  await be.RPWDb.getRow(be.__sb,'J1');
+  await be.RPWDb.patchV2(be.__sb,'J1',{clientUploads:[]},{});
+  ok(be.__hivas.indexOf('rpc:rpw_client_job_get')>=0,'kapcsoloval az olvasas a szuk uton megy');
+  ok(be.__hivas.indexOf('rpc:rpw_client_upload')>=0,'  es az iras is');
+  ok(be.__hivas.every(h=>!/rpw_patch_v2|from:rpw_jobs/.test(h)),
+     '  a regi, tag utakat mar nem hasznalja  ['+be.__hivas.join(', ')+']');
+  be.close();
+
+  // Dolgozoi lapon a szuk ut SOHA nem aktiv, meg bekapcsolt kapcsoloval sem.
+  const dolg=kornyezet({AUTH_REQUIRED:true, CLIENT_RPC:true}, ervenyesSession());
+  await dolg.RPWDb.getRow(dolg.__sb,'J1');
+  ok(dolg.__hivas.every(h=>!/rpw_client_/.test(h)),
+     'dolgozoi lap SOHA nem megy a szuk ugyfel-uton  ['+dolg.__hivas.join(', ')+']');
+  dolg.close();
+}
+
 console.log('\n4. A KEPESSEG-KOVETELMENY A MODHOZ IGAZODIK (nem benitja meg az uzemet)');
 {
   const w=kornyezet({AUTH_REQUIRED:false}, null);

@@ -46,24 +46,65 @@ dolgozót kiléptetne**, és a belépés utána sem működne.
 Ezért készült a **`008_rls_lockdown_live.sql`**, amely azt zárja le, ami élesben
 ténylegesen nyitva van, és csak arra ad jogot, ami élesben ténylegesen létezik.
 
+## 2b. Az ügyfél-feltöltő: külön blokkoló, külön megoldás
+
+A lezárás **elvágná az ügyfél WhatsApp-feltöltőjét**. Az a lap szándékosan
+PIN nélküli, és ma két olyan úton dolgozik, amelyet a 008 megszüntet:
+
+| | ma | 008 után |
+|---|---|---|
+| dosszié beolvasása | közvetlen `rpw_jobs` tábla-olvasás (a **teljes** sort) | visszavonva |
+| feltöltés mentése | `rpw_patch_v2`, token nélkül | nem kap EXECUTE-ot |
+
+Erre készült a **`009_client_upload_path.sql`**: két szűk függvény,
+munkaazonosítóra épülve.
+
+- `rpw_client_job_get` — **csak** amit a feltöltő lap kirajzol: dossziészám,
+  rendszám, márka, iratok, feltöltések. Telefonszámot, ügyfélnevet, belső
+  jegyzetet, fázisállapotot **nem ad ki**. Ez adatvédelmi szigorítás is:
+  ma a lap a *teljes* munkasort megkapja.
+- `rpw_client_upload` — **csak** három kulcsot ír: `clientUploads`,
+  `dosarActe`, `clientGata`. Minden más mező `forbidden_field`.
+
+**Amit ez nem old meg:** a hozzáférést továbbra is a munkaazonosító adja.
+Aki kitalál egy létező azonosítót, egy dosszié *feltöltő-nézetét* látja.
+A teljes megoldás a dossziénkénti feltöltő-token — külön feladat. A mai
+állapothoz képest viszont ez nagy szigorítás: **ma az anon kulccsal
+minden munka egyben letölthető és törölhető.**
+
 ## 3. Kötelező sorrend — enélkül a műhely megáll
 
 A mai kliens `AUTH_REQUIRED=false` mellett **közvetlen tábla-olvasással** dolgozik
 (`sb.from('rpw_jobs')`). Ha a lezárás előbb fut le, a panel azonnal üres lesz.
 
 ```
-1. lépés   rpw-config.js:  AUTH_REQUIRED = true
-                           PATCH_RPC     = 'rpw_patch_v3'
-           → kitesszük élesbe, és MEGVÁRJUK, amíg egy dolgozó belép,
-             lát listát, megnyit egy munkát és ment egyet.
-           Visszaállás, ha baj van: a két sor visszaírása (percek).
+1. lépés   009_client_upload_path.sql  alkalmazása
+           Semmit nem zár le, csak létrehozza a két szűk ügyfél-függvényt.
+           A mai működés VÁLTOZATLAN marad.
 
-2. lépés   MENTÉS  (lásd 4. pont)
+2. lépés   rpw-config.js:  CLIENT_RPC = true
+           → az ügyfél-feltöltő átáll a szűk útra.
+           ELLENŐRZÉS: nyiss meg egy valódi WhatsApp-linket telefonon,
+           tölts fel egy fotót, és nézd meg, hogy megérkezik-e.
+           Visszaállás: egy sor (percek).
 
-3. lépés   008_rls_lockdown_live.sql  alkalmazása
+3. lépés   rpw-config.js:  AUTH_REQUIRED = true
+           A PATCH_RPC-t NEM kell átállítani: bejelentkezve az adatréteg
+           magától a rpw_patch_v3-ra megy. (Ha 'rpw_patch_v3'-ra állítanád,
+           a hiányzó rpw_server_capabilities miatt a kliens MEGÁLLNA.)
+           ELLENŐRZÉS: egy dolgozó lépjen be PIN-nel, lásson listát,
+           nyisson meg egy munkát és mentsen egyet.
+           Visszaállás: egy sor (percek).
 
-4. lépés   ellenőrzés (lásd 5. pont)
+4. lépés   MENTÉS  (lásd 4. pont)
+
+5. lépés   008_rls_lockdown_live.sql  alkalmazása
+
+6. lépés   ellenőrzés (lásd 5. pont)
 ```
+
+Minden lépés után **meg kell állni és ellenőrizni**. Két lépést egyszerre
+kitenni azért veszélyes, mert bukásnál nem tudni, melyik okozta.
 
 A 11 aktív dolgozó **mindegyikének van PIN-je** (0 PIN nélkül) — az 1. lépés
 emiatt nem akad el a beléptetésen.
@@ -86,7 +127,8 @@ mégis kötelező, mert a 3. lépés előtti állapotot vissza kell tudni állí
 | 2 | A lista megjelenik, a 33 munka látszik | igen |
 | 3 | Egy munka megnyitása és mentése | sikeres |
 | 4 | Recepció → fázisindítás | sikeres |
-| 5 | Az ügyfél WhatsApp-linkje (feltöltő lap) | működik |
+| 5 | Az ügyfél WhatsApp-linkje: fotó feltöltése telefonról | **működik** |
+| 5b | Az ügyfél-lapon NEM látszik telefonszám / belső jegyzet | igen |
 | 6 | Anon kulccsal közvetlen `rpw_jobs` lekérés | **elutasítva** |
 
 Bármelyik 1–5 pont bukása → **NO-GO** → azonnal `008_rollback.sql`.

@@ -32,6 +32,17 @@ const eq = (g, e, m) => ok(JSON.stringify(g) === JSON.stringify(e), m + '  got='
 const SHOP_A = '11111111-1111-1111-1111-111111111111';
 
 // Egy művelet megkísérlése anon szerepként. 'ENGEDVE' / 'TILTVA'.
+// Anon hivas, amely a VALASZT adja vissza; jogosultsagi hibanal null.
+// Igy a hianyzo EXECUTE tiszta bukas lesz, nem osszeomlas.
+async function anonValasz(c, sql, params){
+  await c.query('set role anon');
+  let out = null;
+  try { const r = await c.query(sql, params||[]); out = r.rows[0]; }
+  catch(e){ out = null; }
+  await c.query('reset role');
+  return out;
+}
+
 async function anonKent(c, sql, params){
   await c.query('set role anon');
   let r = 'ENGEDVE';
@@ -120,6 +131,12 @@ console.log('\n0. Az ÉLŐ alak felépítése (fixture)');
   ok(true, 'az élő alak felépült');
 }
 
+console.log('\n0b. A szűk ügyfél-út felépítése (009)');
+{
+  await D.migrate(c, '009_client_upload_path.sql');
+  ok(true, 'a 009 lefutott');
+}
+
 console.log('\n1. A fixture reprodukálja a MAI kitettséget (a lezárás ELŐTT)');
 {
   eq(await anonKent(c,'select * from public.rpw_jobs'), 'ENGEDVE', 'anon OLVASHATJA a munkákat');
@@ -186,6 +203,51 @@ console.log('\n5. A tokenből jön a shop — hamisítani nem lehet');
   eq(ids, ['J1'], 'SHOP_A csak a SAJÁT munkáját listázza');
   eq(egy.rows[0].r.ok, false, 'SHOP_A nem nyithatja meg SHOP_B munkáját');
   eq(egy.rows[0].r.error, 'not_found', '  a válasz not_found — a létezést sem szivárogtatja');
+}
+
+console.log('\n5b. A LEZÁRÁS UTÁN is működik az ügyfél-feltöltés — de csak szűken');
+{
+  await c.query("update public.rpw_jobs set data = data || '{\"number\":\"MS-1\",\"plate\":\"AB-12\",\"phone\":\"0740111222\",\"client\":\"Nev Elek\",\"note\":\"belso megjegyzes\",\"phase\":2}'::jsonb where id='J1'");
+
+  // OLVASÁS: az ügyfél megkapja a sajátját...
+  const sor = await anonValasz(c, "select public.rpw_client_job_get('J1') as r");
+  ok(!!sor, 'az ügyfél HÍVHATJA a szűk olvasó függvényt (van rá EXECUTE joga)');
+  eq(sor && sor.r && sor.r.ok, true, '  és megkapja a saját dossziéját');
+  const d = (sor && sor.r && sor.r.data) || {};
+  eq(d.number, 'MS-1', '  megkapja a dossziészámot (ez kell a lap fejlécére)');
+  // ...de a SZEMÉLYES és belső mezőket NEM
+  ok(!('phone'  in d), '  telefonszámot NEM kap  (' + JSON.stringify(Object.keys(d)) + ')');
+  ok(!('client' in d), '  ügyfélnevet sem');
+  ok(!('note'   in d), '  belső jegyzetet sem');
+  ok(!('phase'  in d), '  fázisállapotot sem');
+
+  // ÍRÁS: a három engedett kulcs megy...
+  eq(await anonKent(c, "select public.rpw_client_upload('J1','{\"clientUploads\":[{\"url\":\"x\"}]}'::jsonb)"),
+     'ENGEDVE', 'fotót fel tud tölteni');
+  const v = await c.query("select data->'clientUploads' as u from public.rpw_jobs where id='J1'");
+  ok(JSON.stringify(v.rows[0].u).indexOf('x') >= 0, '  és a feltöltés tényleg elmentődött');
+
+  // ...minden más ELUTASÍTVA
+  for (const [mezo, patch] of [
+    ['phase',        '{"phase":5}'],
+    ['inchis',       '{"inchis":true}'],
+    ['phases',       '{"phases":{}}'],
+    ['phone',        '{"phone":"0700000000"}'],
+    ['client',       '{"client":"Mas Ember"}'],
+    ['vegyes',       '{"clientUploads":[],"phase":5}']]) {
+    const x = await anonValasz(c, "select public.rpw_client_upload('J1',$1::jsonb) as r", [patch]);
+    eq(x && x.r && x.r.ok, false, '  ' + mezo + ' írása elutasítva');
+    eq(x && x.r && x.r.error, 'forbidden_field', '    error=forbidden_field');
+  }
+  const f = await c.query("select data->>'phase' as p, data->>'phone' as t from public.rpw_jobs where id='J1'");
+  eq(f.rows[0].p, '2',            '  a fázis változatlan maradt');
+  eq(f.rows[0].t, '0740111222',   '  a telefonszám is');
+
+  // A TÖMEGES letöltés útja továbbra is zárva
+  eq(await anonKent(c,'select * from public.rpw_jobs'), 'TILTVA',
+     'az ügyfél-út MEGNYITÁSA nem nyitotta vissza a szekrényt');
+  const nincs = await anonValasz(c, "select public.rpw_client_job_get('NINCS') as r");
+  eq(nincs && nincs.r && nincs.r.ok, false, 'nem létező azonosítóra not_found');
 }
 
 console.log('\n6. A rollback másodpercek alatt visszaállít');

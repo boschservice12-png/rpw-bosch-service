@@ -1792,6 +1792,34 @@
       "be": [],
       "teszt": "_tests/unit/test-rpw001-auth-gate.js",
       "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-146",
+      "nev": "Szuk ugyfel-ut (009): az ugyfel a WhatsApp-linkrol PIN nelkul tolt fel, ezert a 008 lezaras elvagta volna. Ket szuk fuggveny lep a helyere. rpw_client_job_get CSAK azt adja vissza, amit a feltolto lap kirajzol (dossziészam, rendszam, marka, iratok, feltoltesek) — telefonszamot, ugyfelnevet, belso jegyzetet, fazisallapotot NEM; ez adatvedelmi szigoritas is, mert ma a lap a TELJES sort megkapja. rpw_client_upload CSAK harom kulcsot ir (clientUploads, dosarActe, clientGata), minden mas mezot forbidden_field-del elutasit. Kliensoldalon a CLIENT_RPC kapcsolo vedi, hogy a mai uzem ne torjon el a migracio alkalmazasa elott",
+      "fe": [
+        [
+          "rpw-db.js",
+          "function ugyfelUt(){"
+        ],
+        [
+          "rpw-db.js",
+          "sb.rpc('rpw_client_job_get',{p_job_id:id})"
+        ],
+        [
+          "rpw-db.js",
+          "sb.rpc('rpw_client_upload',{p_job_id:id, p_patch:partial})"
+        ],
+        [
+          "rpw-config.js",
+          "CLIENT_RPC: false,"
+        ]
+      ],
+      "be": [
+        "rpw_client_job_get",
+        "rpw_client_upload"
+      ],
+      "teszt": "_tests/integration/test-int-rls-live.js",
+      "allapot": "nincs-bekotve"
     }
   ]
 }
