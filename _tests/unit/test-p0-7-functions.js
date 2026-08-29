@@ -147,6 +147,24 @@ console.log('\n9. A CORS önmagában nem jogosultság');
   ok(/allowedOrigins/.test(s),'  a CORS attól még megvan');
 }
 
+// ── 2026-08-29 — MINDKET ELO CIM AZ ENGEDELYLISTAN ────────────────
+// A csapatban ket Netlify-oldal all ugyanerre a repora. A lista eddig
+// CSAK a regit ismerte, ezert az uj cimen az OCR / classify / levelkuldes
+// NEMAN elhalt volna: a bongeszo blokkolja a valaszt, nem a szerver ad hibat.
+console.log('\nQ. Mindket elo cim hivhatja a funkciokat');
+{
+  const H = require(path.join(ROOT,'functions','_shared.js'));
+  const enged = o => H.corsHeaders({headers:{origin:o}})['Access-Control-Allow-Origin'] === o;
+  ok(enged('https://rpw-bosch-service.netlify.app'),
+     'a jelenleg epulo cim engedve');
+  ok(enged('https://main--rpw-bosch-service.netlify.app'),
+     '  az ag-valtozata is');
+  ok(enged('https://beamish-arithmetic-e52bce.netlify.app'),
+     'a regi cim TOVABBRA IS engedve (nem torunk el semmit)');
+  ok(!enged('https://tamado.example.com'),
+     'idegen cim tovabbra is BLOKKOLVA — a lista nem lett szabad ker');
+}
+
 console.log('\n'+(fail?'✗ ':'✓ ')+pass+' pass / '+fail+' fail');
 process.exit(fail?1:0);
 })();

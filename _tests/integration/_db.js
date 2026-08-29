@@ -6,12 +6,29 @@ const MIG = path.resolve(__dirname, '..', '..', '_migrations');
 
 let pg = null, port = 55500 + Math.floor(Math.random()*400);
 
+// ── 2026-08-29 — PORTUTKOZES ELLEN ───────────────────────────────
+// A veletlen port utkozhet, ha tobb integracios teszt fut egymas mellett
+// (a negyedik teszt hozzaadasa utan ez elo is fordult egyszer). Nem
+// hagyjuk veletlenre: ha a port foglalt, uj portot probalunk.
 async function start(){
-  const dir = '/tmp/rpwpg-' + process.pid + '-' + port;
-  pg = new EmbeddedPostgres({ databaseDir:dir, user:'postgres', password:'pw',
-                              port, persistent:false, createPostgresUser:true });
-  await pg.initialise();
-  await pg.start();
+  let utolsoHiba = null;
+  for (let proba = 0; proba < 6; proba++) {
+    const dir = '/tmp/rpwpg-' + process.pid + '-' + port;
+    pg = new EmbeddedPostgres({ databaseDir:dir, user:'postgres', password:'pw',
+                                port, persistent:false, createPostgresUser:true });
+    try {
+      await pg.initialise();
+      await pg.start();
+      break;
+    } catch (e) {
+      utolsoHiba = e;
+      try { await pg.stop(); } catch(_) {}
+      pg = null;
+      port = 55500 + Math.floor(Math.random()*400);   // uj port, ujraprobalunk
+    }
+  }
+  if (!pg) throw new Error('Nem indult el a teszt-adatbazis 6 probalkozas utan: '
+                           + (utolsoHiba && utolsoHiba.message));
   const c = pg.getPgClient();
   await c.connect();
   // A Supabase `anon` és `authenticated` szerepei — a migrációk ezekre
