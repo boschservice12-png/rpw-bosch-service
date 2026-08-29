@@ -60,12 +60,17 @@ console.log('\n0. Az ÉLŐ alak felépítése (fixture)');
 {
   // Táblák — az élő oszlopnevekkel (deleted_at, version, shop_id)
   await c.query(`
+    -- Az ELO tabla alakja: shop_id ES tenant_id is van rajta.
     create table public.rpw_jobs(
-      id text primary key, shop_id uuid not null, data jsonb not null default '{}',
+      id text primary key, shop_id uuid not null, tenant_id uuid,
+      data jsonb not null default '{}',
       version int not null default 1, deleted_at timestamptz,
       updated_at timestamptz not null default now());
     create table public.rpw_audit(
-      id bigserial primary key, job_id text, actor text, at timestamptz default now());
+      id bigint generated always as identity primary key,
+      job_id text not null, tenant_id uuid, actor text, action text, phase text,
+      patch jsonb, prev_version int, new_version int,
+      at timestamptz not null default now());
     create table public.app_session(
       token text primary key, employee_id uuid, shop_id uuid,
       expires_at timestamptz not null default now()+interval '12 hours');
@@ -242,6 +247,18 @@ console.log('\n5b. A LEZÁRÁS UTÁN is működik az ügyfél-feltöltés — de
   const f = await c.query("select data->>'phase' as p, data->>'phone' as t from public.rpw_jobs where id='J1'");
   eq(f.rows[0].p, '2',            '  a fázis változatlan maradt');
   eq(f.rows[0].t, '0740111222',   '  a telefonszám is');
+
+  // Az ügyfél feltöltése NYOMOT HAGY — ugyanúgy, mint a dolgozóé
+  {
+    const au = await c.query("select actor, action, patch, prev_version, new_version"
+      + " from public.rpw_audit where job_id='J1' order by id desc limit 1");
+    ok(au.rows.length===1, 'a feltöltés auditba került');
+    const a0 = au.rows[0] || {};
+    eq(a0.actor,  'client_whatsapp', '  a szereplő az ügyfél');
+    eq(a0.action, 'client_upload',   '  a művelet megnevezve');
+    ok(a0.patch && JSON.stringify(a0.patch).indexOf('clientUploads')>=0, '  a MIT is rögzítve van');
+    ok(a0.new_version > a0.prev_version, '  és a MIRŐL MIRE  ('+a0.prev_version+' -> '+a0.new_version+')');
+  }
 
   // A TÖMEGES letöltés útja továbbra is zárva
   eq(await anonKent(c,'select * from public.rpw_jobs'), 'TILTVA',

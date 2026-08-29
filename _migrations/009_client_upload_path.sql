@@ -86,7 +86,9 @@ as $$
 declare
   engedett text[] := array['clientUploads','dosarActe','clientGata'];
   k text;
+  regi_version int;
   uj_version int;
+  tid uuid;
 begin
   if p_job_id is null or p_patch is null or jsonb_typeof(p_patch) <> 'object' then
     return jsonb_build_object('ok', false, 'error', 'bad_request');
@@ -99,6 +101,12 @@ begin
     end if;
   end loop;
 
+  select version, tenant_id into regi_version, tid
+    from public.rpw_jobs where id = p_job_id and deleted_at is null;
+  if regi_version is null then
+    return jsonb_build_object('ok', false, 'error', 'not_found');
+  end if;
+
   update public.rpw_jobs
      set data       = data || p_patch,
          version    = version + 1,
@@ -106,15 +114,17 @@ begin
    where id = p_job_id and deleted_at is null
    returning version into uj_version;
 
-  if uj_version is null then
-    return jsonb_build_object('ok', false, 'error', 'not_found');
-  end if;
-
-  -- Az ügyfél műveletei is auditáltak, a saját nevükön.
+  -- ── AZ ÜGYFÉL MŰVELETE UGYANOLYAN NYOMOT HAGY, MINT A DOLGOZÓÉ ──
+  -- A ház bevett audit-mintáját követjük (lásd rpw_patch_v3): nem elég a
+  -- job_id és a név — a MIT és a MIRŐL MIRE is kell, különben az ügyfél
+  -- feltöltése utólag nem rekonstruálható.
   if to_regclass('public.rpw_audit') is not null then
     begin
-      insert into public.rpw_audit(job_id, actor) values (p_job_id, 'client_whatsapp');
-    exception when others then null;   -- az audit séma-eltérése ne bukjon meg egy feltöltést
+      insert into public.rpw_audit(job_id, tenant_id, actor, action, patch,
+                                   prev_version, new_version)
+      values (p_job_id, tid, 'client_whatsapp', 'client_upload', p_patch,
+              regi_version, uj_version);
+    exception when others then null;   -- audit-séma eltérése ne bukjon meg egy feltöltést
     end;
   end if;
 
