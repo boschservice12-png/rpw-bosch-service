@@ -4,27 +4,44 @@ const _rd=fs.readFileSync; fs.readFileSync=function(p,e){try{return _rd(p,e)}cat
 const html=fs.readFileSync('index.html','utf8');
 
 // a valodi szurofeltetelek kivagasa a fajlbol
-const fSb=html.match(/\.filter\(function\(d\)\{return d&&([^}]+)\}\)/);
-const fLs=html.match(/if\(j&&j\.id&&([^)]+)\)\{/);
+// A TELJES feltetelt vagjuk ki, nem csak a vegét: a bevezeto "d&&" /
+// "j&&j.id&&" resz maga is szur (null, id nelkuli sor), es eddig
+// kimaradt a merésbol.
+const fSb=html.match(/\.filter\(function\(d\)\{return (d&&[^}]+)\}\)/);
+const fLs=html.match(/if\((j&&j\.id&&.+?)\)\{/);
 if(!fSb||!fLs){console.error('nem talalom a szuroket');process.exit(1)}
+// A feltetel a valodi migrateState-et hivja; a betoltesi ut szempontjabol
+// annyi szamit, hogy az mindig visszaadja a munkat (es helyre teszi).
 const keepSb=new Function('d','return '+fSb[1]);
-const keepLs=new Function('j','return '+fLs[1]);
+const keepLs=new Function('migrateState','j','return '+fLs[1]).bind(null,function(j){
+  if(typeof j.phase!=='number'||j.phase<1)j.phase=1; return j;});
 
 let pass=0,fail=0;
 const ok=(c,m)=>{c?pass++:(fail++,console.log('  x '+m))};
 
-console.log('\n1. Supabase-betolto szuro (ez dobta ki a programare-kat)');
-ok(keepSb({phase:0})===true,'phase 0 (programare, auto meg nincs itt) ATMEGY');
-ok(keepSb({phase:1})===true,'phase 1 (receptie) atmegy');
-ok(keepSb({phase:7})===true,'phase 7 (lezart) atmegy');
-ok(keepSb({})===false,'phase nelkuli sor kiesik');
-ok(keepSb({phase:null})===false,'phase:null kiesik');
-ok(keepSb({phase:'1'})===false,'string phase kiesik (hibas adat)');
+// ── 2026-08-27: EZ A SZABALY VOLT A ROSSZ ────────────────────────
+// A szuro eredetileg megkovetelte a szam tipusu `phase`-t. Kiderult,
+// hogy a szerver-oldali letrehozas ota a munkakban NINCS `phase`:
+// Ferenc adataiban 19 darab (MS-26-059-tol felfele, koztuk minden
+// telefonrol feltoltott karddosszie) NEMAN kiesett a listabol.
+// A `migrateState` pont ezt teszi helyre (phase>=1) — csak eddig a
+// szuro UTAN futott. A sorrend megfordult; a szuro mar csak azt nezi,
+// hogy egyaltalan objektum-e a sor.
+console.log('\n1. Supabase-betolto szuro — a `phase` mar NEM felteltel');
+ok(!!keepSb({phase:0}),'phase 0 atmegy');
+ok(!!keepSb({phase:1}),'phase 1 (receptie) atmegy');
+ok(!!keepSb({phase:7}),'phase 7 (lezart) atmegy');
+ok(!!keepSb({}),'phase NELKULI sor is atmegy (ez volt a hiba)');
+ok(!!keepSb({phase:null}),'  phase:null is');
+ok(!!keepSb({phase:'1'}),'  string phase is — a migrateState helyre teszi');
+ok(!keepSb(null),'de a null sor tovabbra sem megy at');
+ok(!keepSb('nem objektum'),'  es a nem-objektum sem');
 
-console.log('\n2. localStorage-betolto szuro');
-ok(keepLs({phase:0})===true,'phase 0 atmegy');
-ok(keepLs({phase:2})===true,'phase 2 atmegy');
-ok(keepLs({})===false,'phase nelkul kiesik');
+console.log('\n2. localStorage-betolto szuro — ugyanaz a szabaly');
+ok(!!keepLs({id:'A',phase:0}),'phase 0 atmegy');
+ok(!!keepLs({id:'A',phase:2}),'phase 2 atmegy');
+ok(!!keepLs({id:'A'}),'phase nelkul IS atmegy');
+ok(!keepLs({phase:2}),'id nelkul nem megy at');
 
 console.log('\n3. Regresszio: a 6 elo munkad mind phase 0');
 const eloMunkak=[

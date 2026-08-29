@@ -84,12 +84,20 @@
   // (A fázisoldalak kimenetébe elég a data-rpw-path attribútum — a megjelenítés nem változik.)
   async function hydrate(sb, opts){
     if(typeof document==='undefined') return;
-    var imgs=document.querySelectorAll('img[data-rpw-path]:not([data-rpw-done])');
-    for(var i=0;i<imgs.length;i++){
-      (function(img){
-        var p=img.getAttribute('data-rpw-path');
-        signedUrl(sb, p, opts).then(function(u){ if(u){ img.src=u; } img.setAttribute('data-rpw-done','1'); });
-      })(imgs[i]);
+    // KEPEK es LINKEK egyarant. A tarolt URL egy oraig el; a rekordban
+    // maradt link egy nap mulva mar halott. Ezert a megjelenitéskor
+    // MINDIG a path-bol irunk friss alairast — kepre az src-t, linkre
+    // a href-et. (Ferenc, 2026-08-27: "a fotok hianyoznak".)
+    var el=document.querySelectorAll('[data-rpw-path]:not([data-rpw-done])');
+    for(var i=0;i<el.length;i++){
+      (function(n){
+        var p=n.getAttribute('data-rpw-path');
+        if(!p){ n.setAttribute('data-rpw-done','1'); return; }
+        signedUrl(sb, p, opts).then(function(u){
+          if(u){ if(n.tagName==='IMG') n.src=u; else n.href=u; }
+          n.setAttribute('data-rpw-done','1');
+        });
+      })(el[i]);
     }
   }
 

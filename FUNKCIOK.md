@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 88 | 27 | 52 | 3 | 6 | 7 |
+| 100 | 27 | 64 | 3 | 6 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -41,7 +41,7 @@ szám nélkül, azt is megmondja.
 | **F-121** | Elojegyzes urlap (Programare noua): ket tipus (Dauna asigurare / Dauna auto), a biztositosnal ket dosszie-ag (Avizare dauna / Dosar dauna deschis); a nev es az auto LATSZIK, de nem kotelezo | `index.html` | — | `frontend/test-fe-urlap.js` | 🟦 csak frontend |
 | **F-122** | Kapcsolat oszlop a foablakon: a VALODI WhatsApp jel (zold=egyeztetve, sotet=meg nem, tompa=nincs telefon) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-123** | Sor-ikonok a foablakon (naptar/ora/mappa/ceruza/kuka) — vonalas SVG, mindegyiken title ES aria-label | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
-| **F-124** | A soron a mappa CSAK ott, ahol van dosszie-munka (Avizare dauna); magankaron es mar nyitott dossziénal a RECEPCIO az ut | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-124** | A soron a mappa CSAK ott, ahol van dosszie-munka (Avizare dauna); magankaron es mar nyitott dossziénal a RECEPCIO az ut — a mappa mellett a dossziegyujto soron is ott a recepcio | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
 | **F-125** | Folyamatjelzo: negy lanc egy savban (dosszie / varakozas / ratat / javitas); a statusz es a folyamat EGY oszlopban, minden fulon egyforma logikaval | `rpw-progres.js` `index.html` | — | `unit/test-progres.js` | 🟦 csak frontend |
 | **F-103** | Kovetkezo munkalapszam kerese a szervertol | `index.html` | `rpw_next_job_number` `rpw_job_number` | `integration/test-int-workflow.js` | ✅ él |
 | **F-104** | Munkalapok listaja | `rpw-db.js` | `rpw_jobs_list` | `integration/test-int-workflow.js` | ✅ él |
@@ -61,6 +61,18 @@ szám nélkül, azt is megmondja.
 | **F-118** | Idopont (programare) ablak | `index.html` | — | `unit/test-prog.js` | 🟦 csak frontend |
 | **F-119** | Idopont-athelyezes (reprogramare) | `index.html` | — | `unit/test-acceptance.js` | 🟦 csak frontend |
 | **F-126** | Ugyfel-mezok a dosszie-lapon (nev / telefon / megjegyzes) — kesleltetett szeletes mentes; a gepelt ertek TULELI a keson erkezo szerver-valaszt; a WhatsApp gomb telefon nelkul tiltott | `rpw-dosar.html` `index.html` | — | `frontend/test-fe-dosar.js` | 🟦 csak frontend |
+| **F-127** | Ikon-sav: az oldalsav 74px-es ikon-savkent indul es kinyithato 240px-re; a kinyito gomb a sav TETEJEN all; kis kepernyon is elerheto, ott a kinyitott sav RATAKAR a tartalomra es valasztaskor becsukodik; az allapot a bongeszoben marad, a valtas NEM rajzol ujra (Ferenc G-3) | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-128** | A panel a RedAssistance iranyitopult formajaban: piros elonev + nagy vekony cim, a belepo gombok a cim ALATT, lekerekitett pill-fulek kerek darabszam-jelvennyel, PIROS oszlopfejlecek — a Lucrari lapon is ugyanigy (Ferenc G-1); a felso piros 'Paint Workflow' sav kivezetve mind az ot kepernyorol; a negy belepo gomb feher alapon, sajat szinevel keretezve — lenyomasra szinesedik | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-129** | A recepcio nem bujik el: MINDEN varakozo soron ott a piros 'Receptie auto' gomb rajzzal. Ket allapota van (telt piros = egyeztetve, keretes piros = meg nem), de egyik sem nema: megnyomva megmondja, mi hianyzik (Ferenc: 'eldugott funkcio, nem logikus') | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-130** | Az ugyfel kuldemenye LATSZIK a soron: zold jelveny a Kapcsolat oszlopban, a beerkezett fajlok szamaval. Csak a src='whatsapp' belyegu fajlokat szamolja (a szervizet nem), a szabad fotokat es a nevesitett irat-helyeket egyutt | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-131** | Ha a kotelezo iratok osszegyultek, a folyamat-sav felirata KIMONDJA (zolden, 'Acte complete'); a lepes maga meg nem kesz, mert a dossziet meg nem adtuk at. Katalogus nelkul (0/0) NEM allit keszet | `rpw-progres.js` `index.html` | — | `unit/test-progres.js` | 🟦 csak frontend |
+| **F-132** | A nevtelen sor is kap arcot: ha nincs se nev, se rendszam, a MUNKASZAM a focim (mono), ala pedig odakerul, hogy a nev az, ami hianyzik | `index.html` | — | `frontend/test-fe-panou.js` | 🟦 csak frontend |
+| **F-133** | Betoltes: eloszor HELYRE TESSZUK a munkat (migrateState), csak utana szurunk. Korabban forditva volt, ezert minden `phase` nelkul erkezett munka nemán kiesett a listabol — Ferenc adataiban 19 darab, koztuk minden telefonrol feltoltott kardosszie | `index.html` | — | `unit/test-load.js` | 🟦 csak frontend |
+| **F-134** | A tarolt kep-link egy ora utan lejar, ezert megjeleniteskor MINDIG friss alairas keszul a path-bol — kepre az src, linkre a href. Az 'Documente client' blokk eddig kimaradt ebbol (halott linkek), es a ZIP-export is a tarolt linkrol toltott | `rpw-photos.js` `rpw-dosar.html` | — | `unit/test-foto-lejarat.js` | 🟦 csak frontend |
+| **F-135** | Az ugyfel feltolto lapjanak elolapja marka es rendszam nelkul is megmondja, MELYIK dossziehoz tolt fel: eddig a szo szerinti 'Autovehicul' tartalek-szoveg allt ott, most a dossziészam a focim | `rpw-upload.html` | — | `frontend/test-fe-upload.js` | 🟦 csak frontend |
+| **F-136** | 'Trimite' gomb az ugyfel feltolto lapjan: a fajlok eddig is azonnal mentodtek, de az ugyfelnek nem volt egy pillanata, amikor kimondhatta, hogy kesz — es visszaigazolast sem kapott. A gomb clientGata{at,files}-t ir client_whatsapp neveben, hianyos dossziénél is kuldheto, sikertelen mentesnel visszagorgul | `rpw-upload.html` | — | `frontend/test-fe-upload.js` | 🟦 csak frontend |
+| **F-137** | Az 'Adauga alte poze / documente' mezo sor-kozi (<label> display nelkul) doboz volt: a fuggoleges kerete es belso margoja nem tolta arrebb a szomszedait, hanem 14px-t ratakart a kartya cimere es 7px-t a kepekre. Emellett a mellekelt fajlok kockai 3 oszlopban alltak a kotelezo iratok 4 oszlopa helyett — ugyanaz a kep ket meretben | `rpw-upload.html` | — | `frontend/test-fe-upload.js` | 🟦 csak frontend |
+| **F-138** | A kuldes SOSEM automatikus: a lap harom helyen mondta a 'Trimis' szot, pedig csak mentes tortent (18/18 uzenet + minden egyes fajl utan), ezert az ugyfel azt hitte, mar elkuldte. Most a mentes 'incarcat'-ot mond, es csak a gomb 'Trimis'. Ha kuldes UTAN uj fajl kerul fel, a Trimite gomb visszajon, es megmondja, hany uj van | `rpw-upload.html` | — | `frontend/test-fe-upload.js` | 🟦 csak frontend |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 

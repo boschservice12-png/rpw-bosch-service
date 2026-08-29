@@ -34,6 +34,36 @@ console.log('\n1. Kardosszie — harom lepes, valtozo iratszammal');
   eq(P.chain({doarDosar:true},{T}).kind,'dosar','a regi doarDosar mezot is erti');
 }
 
+console.log('\n1b. Ha az iratok osszegyultek, azt KI KELL MONDANI (Ferenc)');
+{
+  // Valodi eset: az ugyfel feltoltotte az egesz dossziet, es a panel
+  // csak egy apro szurke szamlalot leptetett. Most a felirat is szol.
+  const foly=P.chain({flux:'doar_dosar'},{T,acteCount:()=>({done:9,total:17})});
+  eq(foly.label,'dd_s1','amig gyujtunk, a lepes neve latszik');
+  ok(!foly.ready,'  es nincs "kesz" jelzes');
+
+  const kesz=P.chain({flux:'doar_dosar'},{T,acteCount:()=>({done:17,total:17})});
+  eq(kesz.label,'acte_gata','ha megvan mind, a felirat KIMONDJA');
+  ok(kesz.ready===true,'  es a lanc is jelzi');
+  eq(kesz.counter,'17 / 17 pr_acte','  a szamlalo tovabbra is pontos');
+  eq(shape(kesz),'N..','  a LEPES viszont meg nem kesz — a dossziet meg nem adtuk at');
+
+  // tobb is lehet, mint a kotelezo minimum
+  ok(P.chain({flux:'doar_dosar'},{T,acteCount:()=>({done:18,total:17})}).ready===true,
+     'a kotelezonel tobb irat is "megvan"');
+  // ures dosszie NEM kesz
+  ok(!P.chain({flux:'doar_dosar'},{T,acteCount:()=>({done:0,total:17})}).ready,
+     'ures dosszie nem kesz');
+  // 0/0 sem kesz — kulonben a hianyzo katalogus "keszet" hazudna
+  ok(!P.chain({flux:'doar_dosar'},{T,acteCount:()=>({done:0,total:0})}).ready,
+     'katalogus nelkul NEM allitunk keszet');
+
+  const h=P.html({flux:'doar_dosar'},{T,acteCount:()=>({done:17,total:17})});
+  ok(/pr-l-ok/.test(h),'a rajzon is latszik (zold felirat)');
+  ok(!/pr-l-ok/.test(P.html({flux:'doar_dosar'},{T,acteCount:()=>({done:9,total:17})})),
+     '  felig kesz dossziera nem');
+}
+
 console.log('\n2. Varakozas — ot feltetel, EGY kapu');
 {
   const c=P.chain({sosire:'programat',conditions:{programare:true,loc:true}},{T});

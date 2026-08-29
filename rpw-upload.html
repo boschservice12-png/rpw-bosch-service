@@ -51,13 +51,20 @@ h2{font-size:15px;font-weight:800;margin-bottom:4px;display:flex;align-items:cen
 .th img{width:100%;height:100%;object-fit:cover}
 .th .doc{font-size:10px;font-weight:800;color:#E11D2E}
 .th .ok{position:absolute;top:3px;right:3px;background:#1E9D55;color:#fff;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
-.drop{border:2px dashed #E11D2E;border-radius:12px;background:#fff5f6;padding:18px 14px;text-align:center;cursor:pointer;position:relative}
+.drop{display:block;border:2px dashed #E11D2E;border-radius:12px;background:#fff5f6;padding:18px 14px;text-align:center;cursor:pointer;position:relative}
 .drop b{color:#E11D2E;font-size:14px}
 .drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
-.list{margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.list{margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#111;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:700;z-index:99;max-width:90%}
 .toast.err{background:#E11D2E}
 .done{text-align:center;color:#1E9D55;font-weight:800;font-size:13px;margin-top:8px}
+.sendbar{position:sticky;bottom:0;background:#f3f4f6;padding:12px 0 4px;margin-top:4px}
+.send{display:block;width:100%;border:0;border-radius:14px;padding:16px;font:800 17px inherit;
+  background:#E11D2E;color:#fff;cursor:pointer}
+.send:active{background:#b3141f}
+.send.warn{background:#fff;color:#E11D2E;border:2px solid #E11D2E}
+.sent{text-align:center;background:#e7f6ec;color:#1E9D55;border:1px solid #86efac;
+  border-radius:14px;padding:16px;font:800 17px inherit}
 .loading{text-align:center;padding:40px 16px;color:#6b7280}
 </style>
 </head>
@@ -89,6 +96,12 @@ window.__rpwServerReady = (async function(){
 
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
   function slotFiles(k){var a=acte[k];return a?(Array.isArray(a)?a:[a]):[]}
+  // Hany fajl van MOST a dossziéban. A render es a Trimite gomb ugyanezt
+  // szamolja, kulonben az "uj fajl a kuldes ota" merleg elcsuszna.
+  function fajlDb(){var n=uploads.length;
+    for(var k in acte){if(!Object.prototype.hasOwnProperty.call(acte,k))continue;
+      var a=acte[k];n+=(Array.isArray(a)?a.length:(a?1:0));}
+    return n;}
   function isImg(u){return /\.(jpg|jpeg|png|webp)(\?|$)/i.test(u.url||'')||(u.type||'').indexOf('image')===0}
 
   async function load(){
@@ -115,7 +128,19 @@ window.__rpwServerReady = (async function(){
 
     var h='';
     h+='<div class="hdr"><div class="brand"><span>Red</span>Assistance · SC Szkaliczki Service</div><div class="sub">Încărcare poze și documente pentru dosar daună</div></div>';
-    h+='<div class="card"><div class="veh">'+(plate?'<span class="plate">'+escH(plate)+'</span>':'')+'<div><div style="font-weight:800">'+escH(brand||'Autovehicul')+'</div><div class="muted">Dosar: '+escH(nr)+'</div></div></div></div>';
+    // ── AZ ELOLAP (Ferenc, 2026-08-27: "hibas az elolapja") ────────
+    // Frissen felvett dosszienal meg nincs se rendszam, se marka. Eddig
+    // ilyenkor a szo szerinti "Autovehicul" allt a kartyan — az ugyfel
+    // egy ures, semmitmondo fejlecet latott. Mostantol a DOSSZIESZAM a
+    // focim, es a kartya megmondja, mit kerunk tole.
+    var cim = brand || nr;
+    h+='<div class="card"><div class="veh">'
+      +(plate?'<span class="plate">'+escH(plate)+'</span>':'')
+      +'<div><div style="font-weight:800;font-size:17px">'+escH(cim)+'</div>'
+      +'<div class="muted">'+(cim===nr?'Dosar de daună':'Dosar: '+escH(nr))+'</div></div></div>'
+      +'<div class="muted" style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">'
+      +'Adăugați pozele și actele cerute mai jos. Se salvează automat, unul câte unul. '
+      +'La final apăsați butonul <b>Trimite</b>.</div></div>';
 
     // Structured required documents
     h+='<div class="card"><h2>📋 Documente necesare <span class="prog'+(allOk?' ok':'')+'">'+reqDone+'/'+reqTotal+'</span></h2><div class="muted" style="margin-bottom:10px">Apăsați pe fiecare rând și alegeți poza sau documentul.</div>';
@@ -130,7 +155,10 @@ window.__rpwServerReady = (async function(){
       });
       h+='</div>';
     });
-    if(allOk)h+='<div class="done">✓ Toate documentele necesare au fost trimise. Mulțumim!</div>';
+    // Ferenc, 2026-08-27: "a kuldes ne legyen automatikus". Ez a sor eddig
+    // azt allitotta, hogy a papirok "au fost trimise" — pedig csak FELTOLTVE
+    // voltak. Az ugyfel ezert azt hitte, mar elment, es nem nyomta meg a gombot.
+    if(allOk)h+='<div class="done">✓ Toate documentele necesare sunt încărcate. Apăsați butonul Trimite de mai jos.</div>';
     h+='</div>';
 
     // Generic extra files
@@ -141,6 +169,39 @@ window.__rpwServerReady = (async function(){
       for(var i=0;i<uploads.length;i++){var u=uploads[i];
         h+='<div class="th" style="aspect-ratio:1">'+(isImg(u)?'<img src="'+esc(u.url)+'" data-rpw-path="'+esc(u.path||'')+'"/>':'<span class="doc">📄</span>')+'<span class="ok">✓</span></div>';}
       h+='</div>';
+    }
+    h+='</div>';
+
+    // ── A "TRIMITE" GOMB (Ferenc, 2026-08-27: "nincs trimite gomb") ─
+    // A fajlok kivalasztaskor azonnal mentodnek — de az ugyfelnek eddig
+    // NEM volt egy pillanat, amikor kimondhatta: kesz vagyok. Ez a gomb
+    // nem tolt fel ujra semmit; azt rogziti, hogy az ugyfel lezarta, es
+    // visszaigazolast ad neki.
+    // Ferenc, 2026-08-27: "miutan feltelt minden kep 18/18 plusz extra kepek,
+    // maradjon trimite". Ha kuldes UTAN uj fajl kerul fel, a gomb VISSZAJON —
+    // kulonben az uj kepekrol a szerviz sosem kapna jelzest.
+    var most_db  = fajlDb();
+    var kuldve   = !!(JOB.clientGata && JOB.clientGata.at);
+    var kuldott  = (JOB.clientGata && JOB.clientGata.files)||0;
+    var ujFajl   = kuldve && most_db > kuldott;
+    h+='<div class="sendbar">';
+    if(kuldve){
+      h+='<div class="sent">&#10003; Trimis. Vă mulțumim!</div>';
+      if(ujFajl){
+        h+='<div class="muted" style="text-align:center;margin:6px 0">'
+          +'Ați adăugat '+(most_db-kuldott)+' fișier(e) după trimitere.</div>'
+          +'<button type="button" class="send warn" onclick="window.__gata()">'
+          +'&#128228; Trimite fișierele noi ('+(most_db-kuldott)+')</button>';
+      }else{
+        h+='<div class="muted" style="text-align:center;margin-top:4px">'
+          +'Puteți adăuga în continuare fișiere — se salvează automat.</div>';
+      }
+    }else{
+      h+='<button type="button" class="send'+(allOk?'':' warn')+'" onclick="window.__gata()">'
+        +(allOk?'&#128228; Trimite dosarul':'&#128228; Trimite ('+reqDone+'/'+reqTotal+')')
+        +'</button>';
+      if(!allOk)h+='<div class="muted" style="text-align:center;margin-top:6px">'
+        +'Mai lipsesc '+(reqTotal-reqDone)+' documente — puteți trimite și așa.</div>';
     }
     h+='</div>';
 
@@ -187,9 +248,22 @@ window.__rpwServerReady = (async function(){
       catch(err){toast('Eroare la un fișier: '+(err&&err.message||err),1);}
     }
     acte[slot]=arr;JOB.dosarActe=acte;
-    try{await RPWDb.patchV2(sb,JOB.id,{dosarActe:acte},{actor:'client_whatsapp'});toast('✓ Trimis');}
+    // NEM "Trimis": ez csak mentes. A kuldes a Trimite gomb.
+    try{await RPWDb.patchV2(sb,JOB.id,{dosarActe:acte},{actor:'client_whatsapp'});toast('✓ Fișier încărcat');}
     catch(err){toast('Fișier urcat, salvare eșuată. Reîncercați.',1);}
     render();
+  };
+
+  // Az ugyfel kimondja: kesz. Uj fajl NEM megy fel — a jelzes megy.
+  window.__gata=async function(){
+    var most=new Date().toISOString();
+    var elozo=JOB.clientGata;
+    JOB.clientGata={at:most,files:fajlDb()};
+    render();                                  // azonnal lathato visszajelzes
+    try{ await RPWDb.patchV2(sb,JOB.id,{clientGata:JOB.clientGata},{actor:'client_whatsapp'});
+         toast('\u2713 Trimis'); }
+    catch(err){ toast('Trimiterea nu s-a salvat. Încercați din nou.',1);
+                JOB.clientGata=elozo||null; render(); }
   };
 
   window.__up=async function(e){
@@ -200,7 +274,7 @@ window.__rpwServerReady = (async function(){
       catch(err){toast('Eroare la un fișier: '+(err&&err.message||err),1);}
     }
     JOB.clientUploads=uploads;
-    try{await RPWDb.patchV2(sb,JOB.id,{clientUploads:uploads},{actor:'client_whatsapp'});toast('✓ Trimis cu succes');}
+    try{await RPWDb.patchV2(sb,JOB.id,{clientUploads:uploads},{actor:'client_whatsapp'});toast('✓ Fișiere încărcate');}
     catch(err){toast('Fișiere urcate, dar salvare eșuată. Reîncercați.',1);}
     render();
   };
