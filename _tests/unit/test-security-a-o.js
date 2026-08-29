@@ -113,17 +113,35 @@ console.log('\nE. Shop A nem kérhet signed URL-t Shop B fájljához');
 
 console.log('\nF. Hiányzó token minden védett RPC-nél tiltást ad');
 {
-  delete mem['rpw_auth'];
-  for (const [nev, fn, rpc] of [
+  // ── RPW-001 (2026-08-29) — KET REETEG, KET ALLITAS ──────────────
+  // (1) Munkamenet NELKUL a kliens el sem inditja a kerest — igy az
+  //     atiranyitas alatt sem szivarog ki adat. Eddig kikuldte
+  //     `p_token:null`-lal, es csak a szerver allitotta meg.
+  // (2) A szerveroldali elutasitas ettol fuggetlenul kotelezo: ha MEGIS
+  //     kimegy egy keres (helyben ervenyesnek latszo, de visszavont
+  //     tokennel), a szerver nemet mond, es azt a kliens tovabbadja.
+  const esetek = [
     ['listázás', () => DB.listActive(sb),               'rpw_jobs_list'],
     ['megnyitás',() => DB.getRow(sb,'J1'),              'rpw_job_get'],
     ['mentés',   () => DB.patchV2(sb,'J1',{a:1},{}),    'rpw_patch_v3'],
-    ['kosárba',  () => DB.softDelete(sb,'J1'),          'rpw_job_trash']]) {
+    ['kosárba',  () => DB.softDelete(sb,'J1'),          'rpw_job_trash']];
+
+  delete mem['rpw_auth'];
+  for (const [nev, fn, rpc] of esetek) {
     RPC=[]; RESP={ [rpc]: unauth };
     const r = await fn();
-    eq(RPC[0][1].p_token, null, nev + ': null tokent küld');
-    ok(!!r.error, '  ' + nev + ': a szerver elutasítja');
+    eq(RPC.length, 0, nev + ': munkamenet nélkül EL SEM INDUL a kérés');
+    ok(r.error && r.error.code==='auth_required', '  ' + nev + ': a kliens maga tiltja');
   }
+
+  login(TOKEN_A, CAN_ALL);          // helyben ervenyes munkamenet
+  for (const [nev, fn, rpc] of esetek) {
+    RPC=[]; RESP={ [rpc]: unauth };
+    const r = await fn();
+    eq(RPC.length, 1, nev + ': visszavont tokennel a kérés kimegy');
+    ok(!!r.error, '  ' + nev + ': és a SZERVER utasítja el');
+  }
+  delete mem['rpw_auth'];
 }
 
 console.log('\nG. Lejárt token tiltást ad');
@@ -134,8 +152,11 @@ console.log('\nG. Lejárt token tiltást ad');
   eq(A.token(), null, '  nincs token');
   eq(A.guard(), false, '  az őr megállítja');
   RPC=[]; RESP={ rpw_jobs_list: unauth };
-  await DB.listActive(sb);
-  eq(RPC[0][1].p_token, null, '  és nem is küld tokent');
+  const r = await DB.listActive(sb);
+  // RPW-001 (2026-08-29): eddig itt az allt, hogy "nem is kuld tokent" —
+  // vagyis a keres kiment, csak ures tokennel. Mostantol ki sem megy.
+  eq(RPC.length, 0, '  és a kérés EL SEM INDUL (nem csak token nélkül megy)');
+  ok(r.error && r.error.code==='auth_required', '  a kliens maga tiltja');
 }
 
 console.log('\nH. Visszavont token tiltást ad');

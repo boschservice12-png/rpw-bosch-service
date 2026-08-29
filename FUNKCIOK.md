@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 100 | 27 | 64 | 3 | 6 | 7 |
+| 104 | 27 | 68 | 3 | 6 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -73,6 +73,10 @@ szám nélkül, azt is megmondja.
 | **F-136** | 'Trimite' gomb az ugyfel feltolto lapjan: a fajlok eddig is azonnal mentodtek, de az ugyfelnek nem volt egy pillanata, amikor kimondhatta, hogy kesz — es visszaigazolast sem kapott. A gomb clientGata{at,files}-t ir client_whatsapp neveben, hianyos dossziénél is kuldheto, sikertelen mentesnel visszagorgul | `rpw-upload.html` | — | `frontend/test-fe-upload.js` | 🟦 csak frontend |
 | **F-137** | Az 'Adauga alte poze / documente' mezo sor-kozi (<label> display nelkul) doboz volt: a fuggoleges kerete es belso margoja nem tolta arrebb a szomszedait, hanem 14px-t ratakart a kartya cimere es 7px-t a kepekre. Emellett a mellekelt fajlok kockai 3 oszlopban alltak a kotelezo iratok 4 oszlopa helyett — ugyanaz a kep ket meretben | `rpw-upload.html` | — | `frontend/test-fe-upload.js` | 🟦 csak frontend |
 | **F-138** | A kuldes SOSEM automatikus: a lap harom helyen mondta a 'Trimis' szot, pedig csak mentes tortent (18/18 uzenet + minden egyes fajl utan), ezert az ugyfel azt hitte, mar elkuldte. Most a mentes 'incarcat'-ot mond, es csak a gomb 'Trimis'. Ha kuldes UTAN uj fajl kerul fel, a Trimite gomb visszajon, es megmondja, hany uj van | `rpw-upload.html` | — | `frontend/test-fe-upload.js` | 🟦 csak frontend |
+| **F-139** | RPW-001: a bukott munkamenet-or MEGALLITJA a lapot, nem csak atiranyit. Eddig a guard() elinditotta az atiranyitast es false-t adott vissza, amit egyetlen hivo sem nezett meg — a lap kozben tovabb futott es kirajzolta az ugyfeleket. Most a lap mar az elso kepkocka elott elrejtodik, a torzs urul, es `replace`-szel megyunk a loginra, hogy a Vissza gomb ne vigyen a vedett lapra | `rpw-auth.js` | — | `unit/test-rpw001-auth-gate.js` | 🟦 csak frontend |
+| **F-140** | RPW-001: az adatreteg fail-closed. A rpw-db.js az egyetlen belepesi pont az adatbazishoz; munkamenet nelkul most egyetlen olvasas es egyetlen iras sem indul el (auth_required). Eddig a keres az atiranyitas alatt is kiment a halozatra. FIGYELEM: ez KLIENSOLDALI zar, nem helyettesiti az RLS-t | `rpw-db.js` | — | `unit/test-rpw001-auth-gate.js` | 🟦 csak frontend |
+| **F-141** | RPW-001: a lejart vagy VISSZAVONT token azonnali kilepteteshez vezet (enforceSession). A verify() letezett, de sehol nem hivtuk meg, igy egy szerveren mar visszavont token a helyi 12 oras lejaratig ervenyes maradt. Halozati hibanal szandekosan NEM leptetunk ki — az offline munka megmarad | `rpw-auth.js` | — | `unit/test-rpw001-auth-gate.js` | 🟦 csak frontend |
+| **F-142** | RPW-001: a szerver-kepesseg kovetelmeny a TENYLEGES uzemmodhoz igazodik. A lista fixen kovetelte a rpw_transition / rpw_requirements fuggvenyeket, amelyek az elo szerveren nem leteznek — igy az AUTH_REQUIRED=true bekapcsolasa halt()-tal megallitotta volna a teljes muhelyt. A diagnosztikai rpw_server_capabilities hianya csak akkor tolerálhato, ha a szigorusag EGYEDUL az auth-kenyszerbol jon; PRODUCTION, szerveroldali atmenet vagy v3-patch mellett a megallas valtozatlan. A halt() ezentul DOM nelkul is lezar | `rpw-guard.js` | — | `unit/test-p0-1-guard.js` | 🟦 csak frontend |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 

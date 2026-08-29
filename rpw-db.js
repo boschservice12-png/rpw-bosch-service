@@ -16,6 +16,29 @@
 (function(root){
   'use strict';
   function auth(){ return root.RPWAuth || null; }
+
+  // ── RPW-001 (2026-08-29) — AZ ADATREEG FAIL-CLOSED ───────────────
+  // Ez a fajl az EGYETLEN belepesi pont az adatbazishoz. Eddig, ha a
+  // munkamenet-or elbukott, az oldal az atiranyitas alatt MEG lefuttatta
+  // a listazast es a mentest — a halozaton tehat elment a keres, es a
+  // valasz meg is erkezett. Mostantol: nincs munkamenet, nincs egyetlen
+  // olvasas es egyetlen iras sem. Egy helyen, minden oldalra.
+  //
+  // FONTOS: ez KLIENSOLDALI zar. Nem helyettesiti az adatbazis-oldali
+  // vedelmet (RLS) — csak azt garantalja, hogy az ALKALMAZAS nem ad ki
+  // adatot bejelentkezes nelkul.
+  function zarva(){
+    try{ var a=auth(); return !!(a && a.required() && !a.session()); }
+    catch(e){ return false; }
+  }
+  var ZAR_HIBA={ code:'auth_required',
+                 message:'Sesiune expirată. Autentificați-vă din nou.' };
+  function zart(fn){
+    return async function(){
+      if(zarva()) return { data:null, error:ZAR_HIBA };
+      return await fn.apply(null, arguments);
+    };
+  }
   // ── EGYESÍTETT BIZTONSÁGOS ÚT (2026-08-24) ──────────────────────
   // KÉT párhuzamos „secure" ág volt ebben a fájlban:
   //   · useSecure() → rpw_patch_secure / rpw_soft_delete / rpw_restore / rpw_purge
@@ -203,8 +226,19 @@
     return await scoped(sb.from('rpw_jobs').delete().not('deleted_at','is',null));
   }
 
-  var API={ shopId:shopId, actorOf:actorOf, useV3:useV3, tokenOf:tokenOf, useSecure:useSecure, patch:patch, patchV2:patchV2, getRow:getRow, listActive:listActive,
-            listTrashed:listTrashed, softDelete:softDelete, restore:restore, purge:purge, purgeAllTrashed:purgeAllTrashed };
+  // Minden adatmuvelet a zaron keresztul megy ki. A segedfuggvenyek
+  // (shopId, actorOf, ...) nem nyulnak adathoz, azok valtozatlanok.
+  var API={ shopId:shopId, actorOf:actorOf, useV3:useV3, tokenOf:tokenOf, useSecure:useSecure,
+            zarva:zarva,
+            patch:          zart(patch),
+            patchV2:        zart(patchV2),
+            getRow:         zart(getRow),
+            listActive:     zart(listActive),
+            listTrashed:    zart(listTrashed),
+            softDelete:     zart(softDelete),
+            restore:        zart(restore),
+            purge:          zart(purge),
+            purgeAllTrashed:zart(purgeAllTrashed) };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWDb=API;
 })(typeof self!=='undefined'?self:(typeof window!=='undefined'?window:globalThis));
