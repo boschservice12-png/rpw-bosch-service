@@ -1775,6 +1775,23 @@
       "be": [],
       "teszt": "_tests/integration/test-int-rls-live.js",
       "allapot": "nincs-bekotve"
+    },
+    {
+      "id": "F-145",
+      "nev": "Az ugyfel WhatsApp-feltolto lapja KIFEJEZETTEN nyilatkozik magarol (RPW_PUBLIC_PAGE), es csak ezzel mentesul az RPW-001 adatreteg-zara alol. Enelkul az AUTH_REQUIRED=true bekapcsolasa NEMAN megbenitotta volna a teljes ugyfel-feltoltest: az a lap szandekosan PIN nelkuli, a zar viszont minden olvasast es irast tiltott. A mentesseg nem talalgatas — dolgozoi lap nem nyilatkozhat igy",
+      "fe": [
+        [
+          "rpw-upload.html",
+          "window.RPW_PUBLIC_PAGE = true;"
+        ],
+        [
+          "rpw-db.js",
+          "if(root.RPW_PUBLIC_PAGE === true) return false;"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-rpw001-auth-gate.js",
+      "allapot": "csak-frontend"
     }
   ]
 }

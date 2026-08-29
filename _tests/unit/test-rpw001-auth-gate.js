@@ -34,6 +34,7 @@ function kornyezet(cfg, sessionRaw, opts){
     {url:'https://rpw.teszt/index.html?x=1'});
   const w=dom.window;
   w.RPW_CFG=cfg;
+  if(opts.publikus) w.RPW_PUBLIC_PAGE=true;   // ugyfel-lap nyilatkozata
   if(sessionRaw) w.localStorage.setItem('rpw_auth', sessionRaw);
   // Az atiranyitast elkapjuk, nem hajtjuk vegre. A jsdom `location`-je
   // nem irhato felul mezonkent, ezert az EGESZ objektumot lecsereljuk.
@@ -132,6 +133,33 @@ console.log('\n3c. AUTH_REQUIRED=false: a mai elo mukodes valtozatlan');
   const r=await w.RPWDb.listActive(w.__sb);
   ok(!(r&&r.error&&r.error.code==='auth_required'),'nincs uj tiltas a mai uzemben');
   ok(w.__hivas.length>0,'  a regi anon ut valtozatlanul fut  ('+(w.__hivas[0]||'—')+')');
+}
+
+console.log('\n3d. AZ UGYFEL FELTOLTO LAPJA NEM ESIK A ZAR ALA');
+{
+  // RPW-002 elokeszitese kozben derult ki: az AUTH_REQUIRED=true bekapcsolasa
+  // NEMAN megbenitotta volna a WhatsApp-linkrol nyilo ugyfel-feltoltest, mert
+  // az a lap szandekosan PIN nelkuli, a 3. szakasz zara viszont mindent tiltott.
+  // A mentesseg NEM talalgatas: a lapnak KI KELL MONDANIA magarol.
+  const w=kornyezet({AUTH_REQUIRED:true}, null, {publikus:true});
+  const r1=await w.RPWDb.getRow(w.__sb,'J1');
+  const r2=await w.RPWDb.patchV2(w.__sb,'J1',{clientUploads:[]},{actor:'client_whatsapp'});
+  ok(!(r1.error&&r1.error.code==='auth_required'),'az ugyfel OLVASHATJA a sajat dossziejat');
+  ok(!(r2.error&&r2.error.code==='auth_required'),'  es fel is tolthet');
+  ok(w.__hivas.length>0,'  a keres tenylegesen elindul  ('+(w.__hivas[0]||'—')+')');
+  w.close();
+
+  const w2=kornyezet({AUTH_REQUIRED:true}, null);
+  const r3=await w2.RPWDb.getRow(w2.__sb,'J1');
+  ok(r3.error&&r3.error.code==='auth_required','dolgozoi lapon a zar VALTOZATLANUL all');
+  w2.close();
+
+  // Pontosan EGY lap nyilatkozhat igy — ha egy dolgozoi lapra is bekerul, bukik.
+  const fs3=require('fs');
+  const lapok=fs3.readdirSync(ROOT).filter(f=>/\.html$/.test(f))
+    .filter(f=>/RPW_PUBLIC_PAGE\s*=\s*true/.test(fs3.readFileSync(path.join(ROOT,f),'utf8')));
+  ok(lapok.length===1 && lapok[0]==='rpw-upload.html',
+     'pontosan EGY lap mentesul, es az az ugyfel-feltolto  ['+lapok.join(', ')+']');
 }
 
 console.log('\n4. A KEPESSEG-KOVETELMENY A MODHOZ IGAZODIK (nem benitja meg az uzemet)');

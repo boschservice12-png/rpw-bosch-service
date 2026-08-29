@@ -28,8 +28,14 @@
   // vedelmet (RLS) — csak azt garantalja, hogy az ALKALMAZAS nem ad ki
   // adatot bejelentkezes nelkul.
   function zarva(){
-    try{ var a=auth(); return !!(a && a.required() && !a.session()); }
-    catch(e){ return false; }
+    try{
+      // Az UGYFEL-lap (rpw-upload.html) szandekosan PIN nelkuli: az ugyfel a
+      // WhatsApp-linkrol nyitja meg. Az a lap KIFEJEZETTEN nyilatkozik errol
+      // (RPW_PUBLIC_PAGE), es csak ezzel a nyilatkozattal mentesul. A dolgozoi
+      // lapok egyike sem allitja be — ott a zar valtozatlanul all.
+      if(root.RPW_PUBLIC_PAGE === true) return false;
+      var a=auth(); return !!(a && a.required() && !a.session());
+    }catch(e){ return false; }
   }
   var ZAR_HIBA={ code:'auth_required',
                  message:'Sesiune expirată. Autentificați-vă din nou.' };
