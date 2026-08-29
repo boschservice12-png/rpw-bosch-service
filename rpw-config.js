@@ -12,15 +12,31 @@ window.RPW_CFG = {
   // SHOP_ID: a szerviz azonosítója (RedAssistance). Központi konfig — NEM
   // oldalanként hardcode-olva. Felderítve 2026-08-18: minden RPW-dolgozó ide tartozik.
   SHOP_ID: 'bc39e3c1-696c-4590-a9ed-d3810df1c02d',
-  // Hitelesítés-kényszer. ALAPBÓL KI (false) → semmi nem változik.
-  // true-ra állítás CSAK a 0015 alkalmazása + a login-lánc staging-igazolása UTÁN.
-  // 2026-08-29 VISSZAALLITVA: a belepetes utan a panel URES volt.
-  // Ok (szerveroldali): a rpw2_login a munkamenetet `rpw_employee_id`-vel
-  // irja, a rpw_session viszont `employee_id`-t olvas — ket kulon
-  // munkamenet-vonal ugyanazon a tablan. Igy a rpw__ctx nem talalja meg a
-  // munkamenetet, es a rpw_jobs_list egyetlen sort sem ad vissza.
-  // Amig a szerver oldal nincs javitva, a belepetes NEM tehetjo ki.
-  AUTH_REQUIRED: false,
+  // Hitelesítés-kényszer.
+  //
+  // 2026-08-29 delelott KIMENT, es a panel URES lett. Ok (szerveroldali):
+  // a rpw2_login a munkamenetet `rpw_employee_id`-vel irja, a rpw_session
+  // viszont `employee_id`-t olvasott — ket kulon munkamenet-vonal ugyanazon
+  // a tablan. Igy a rpw__ctx nem talalta meg a munkamenetet, es a
+  // rpw_jobs_list egyetlen sort sem adott vissza. Aznap visszaallitva.
+  //
+  // 2026-08-29 delutan JAVITVA es UJRA KIKAPCSOLVA -> most BE:
+  //   - a 010_session_lineage_fix.sql ELESBEN van (a rpw_session mindket
+  //     vonalat ismeri; a ket elo munkamenetet megtalalja — merve),
+  //   - mind a 11 aktiv dolgozonak van PIN-je (merve),
+  //   - a szerep-lekepezes 9 embert beenged, 2 marad kint (Sofor, Egyeb —
+  //     Ferenc dontese),
+  //   - a belepetes altal kovetelt OSSZES RPC letezik es anon-futtathato
+  //     (merve): rpw_jobs_list, rpw_job_get, rpw_job_trash, rpw_job_restore,
+  //     rpw_job_purge, rpw2_session, rpw2_login.
+  //
+  // FIGYELEM: a rpw_server_capabilities NEM letezik elesben. Az or ezt az
+  // EGY hianyt ebben az uzemmodban elviseli (PRODUCTION!=true,
+  // SERVER_TRANSITIONS!=true, PATCH_RPC!='rpw_patch_v3'). Ha ezek
+  // barmelyike valtozik, a lap MEGALL — szandekosan.
+  //
+  // Visszaallas: ez az egy sor false-ra, es kitelepites.
+  AUTH_REQUIRED: true,
   // Privát Storage kapcsoló (P0 #11). ALAPBÓL KI (false) → a fotó-URL réteg
   // szükség esetén publikus URL-re esik vissza (a bucket ma publikus).
   // true-ra állítás CSAK a 0009_storage_private_signed.FILE_ONLY.sql alkalmazása UTÁN:
