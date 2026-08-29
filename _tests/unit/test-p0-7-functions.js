@@ -159,8 +159,14 @@ console.log('\nQ. Mindket elo cim hivhatja a funkciokat');
      'a jelenleg epulo cim engedve');
   ok(enged('https://main--rpw-bosch-service.netlify.app'),
      '  az ag-valtozata is');
-  ok(enged('https://beamish-arithmetic-e52bce.netlify.app'),
-     'a regi cim TOVABBRA IS engedve (nem torunk el semmit)');
+  // 2026-08-29, Ferenc dontese: a regi oldalon MAR NEM DOLGOZUNK.
+  // A regi cim ezzel ugyanolyan idegen, mint barmelyik masik — es ezt
+  // NEGATIV allitas orzi, nem az allitas torlese. Ha barmikor
+  // visszakerulne a listara, itt derul ki.
+  ok(!enged('https://beamish-arithmetic-e52bce.netlify.app'),
+     'a REGI cim BLOKKOLVA — mar nem dolgozunk rajta');
+  ok(!enged('https://main--beamish-arithmetic-e52bce.netlify.app'),
+     '  az ag-valtozata is');
   ok(!enged('https://tamado.example.com'),
      'idegen cim tovabbra is BLOKKOLVA — a lista nem lett szabad ker');
 

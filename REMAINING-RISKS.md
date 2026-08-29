@@ -223,3 +223,45 @@ működnek. A 33 munka addig az anon kulccsal elérhető marad.
 Feloldás: vagy a Szerelő/Sofőr/Egyéb valóban nem használja az RPW-t (akkor
 a `rpw_roles.can_work` hozandó összhangba), vagy fel kell venni őket a
 leképezésbe a saját fázisaikkal.
+
+### A régi Netlify-oldal még él, és ugyanarra az adatbázisra lát
+
+**Ferenc döntése (2026-08-29): a `beamish-arithmetic-e52bce` oldalon
+már nem dolgozunk. Az élő cím a `rpw-bosch-service`.**
+
+Amit ma megtettem: a régi cím **lekerült** a Netlify-funkciók
+CORS-listájáról (`functions/_shared.js`). Ami ott megnyílik, annak az
+OCR-je, az iratbesorolása és a levélküldése CORS-hibára fut. Ez
+szándékos: jobb, ha a régi oldal láthatóan nem működik, mint ha
+csendben, kilenc napos kódból dolgozna tovább.
+
+Amit ez **nem** old meg: az oldal maga **még él és kiszolgál**
+(Netlify-állapot: `ready`). A CORS csak a *funkciókat* vágja el tőle —
+a lap a böngészőből **továbbra is eléri ugyanazt az élő adatbázist** az
+anon kulccsal, mert a kulcs a kiszolgált fájlban van. Aki a régi
+könyvjelzőt nyitja meg, ma is lát és ír munkákat, kilenc napos kódból.
+
+Pontosan ez a mechanizmus tüntette el 2026-08-29-én a telefonról
+feltöltött iratot a műhelyi gépről.
+
+| | |
+|---|---|
+| **Mi a kockázat** | Két különböző kódváltozat írja ugyanazt az adatbázist; az egyik nem kap javítást |
+| **Mi hárítja el véglegesen** | A régi Netlify-oldal leállítása vagy átirányítása |
+| **Ki oldja meg** | **Ferenc** (Netlify → `beamish-arithmetic-e52bce`) — vagy szóljon, és megcsinálom |
+| **Igazolva** | Netlify API: az oldal létezik, utolsó deploy `ready`; a CORS-tiltást negatív teszt őrzi (`test-p0-7-functions.js`) |
+
+### A staging ugyanazt az adatbázist használja, mint az éles
+
+A `rpw-config.staging.js` `SB_URL`-je **ugyanaz a projekt**, mint az
+élesé (`pxypbbvqinbwesfikkdb`). Külön staging-adatbázis tehát **nincs**.
+
+Ez az RPW-018 (staging-igazolás) szempontjából lényeges: egy „staging"
+próba ma **élő adatokon** futna. Amíg nincs külön projekt, a staging
+ellenőrzés nem végezhető el biztonságosan — ezért maradt „NEM IGAZOLT".
+
+| | |
+|---|---|
+| **Mi a kockázat** | A staging-próba éles adatot módosítana |
+| **Mi oldja meg** | Külön Supabase-projekt stagingre (Ferenc döntése — költség és idő) |
+| **Igazolva** | `rpw-config.js` és `rpw-config.staging.js` `SB_URL`-je azonos; a `test-deploy.js` 6. szakasza rögzíti, hogy **egy** projekt van |

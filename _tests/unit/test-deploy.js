@@ -17,6 +17,7 @@ const TOML = fs.readFileSync(path.join(ROOT, 'netlify.toml'), 'utf8');
 
 let pass = 0, fail = 0;
 const ok = (c, m) => { c ? pass++ : (fail++, console.log('  x ' + m)); };
+const eq = (g, e, m) => ok(JSON.stringify(g) === JSON.stringify(e), m + '  got=' + JSON.stringify(g));
 
 // ── A záró szabályok kiolvasása ──────────────────────────────────
 const szabalyok = [];
@@ -133,6 +134,41 @@ console.log('\n5. A biztonsági fejlécek megvannak');
     ok(TOML.indexOf(h) >= 0, h + ' beállítva');
   });
   ok(/functions\s*=\s*"functions"/.test(TOML), 'a funkciók könyvtára megadva');
+}
+
+console.log('\n6. EGY adatbazis van: a BOSCH projekt');
+{
+  // Ferenc dontese (2026-08-29): a Supabase-en is a BOSCH projektre
+  // epitunk. A cegnek tobb Supabase-projektje is van; ha barmelyik
+  // config egy masikra mutatna, a munkak egy resze egy MASIK
+  // adatbazisban keletkezne — es ugy tunne, hogy "eltuntek".
+  // Ez a szakasz azt orzi, hogy egyetlen projekt-azonosito legyen.
+  const BOSCH = 'pxypbbvqinbwesfikkdb';
+  const cfgFajlok = fs.readdirSync(ROOT).filter(n => /^rpw-config.*\.js$/.test(n));
+  ok(cfgFajlok.length > 0, 'van legalabb egy config-fajl  (' + cfgFajlok.join(', ') + ')');
+
+  const refek = new Set();
+  cfgFajlok.forEach(n => {
+    const s = fs.readFileSync(path.join(ROOT, n), 'utf8');
+    (s.match(/https:\/\/([a-z0-9]+)\.supabase\.co/g) || []).forEach(u =>
+      refek.add(u.replace(/https:\/\/([a-z0-9]+)\.supabase\.co/, '$1')));
+    // a kulcs maga is megnevezi a projektet a "ref" mezojeben
+    (s.match(/"ref":"([a-z0-9]+)"/g) || []).forEach(m =>
+      refek.add(m.replace(/"ref":"([a-z0-9]+)"/, '$1')));
+  });
+  eq([...refek].sort(), [BOSCH], 'MINDEN config ugyanarra az egy projektre mutat');
+
+  // A beagyazott anon-kulcs is a BOSCH projekte legyen — kulonben a URL
+  // es a kulcs ket kulon adatbazisrol beszelne, es a lap nemán elhalna.
+  cfgFajlok.forEach(n => {
+    const s = fs.readFileSync(path.join(ROOT, n), 'utf8');
+    const kulcs = (s.match(/SB_KEY:\s*'([^']+)'/) || [])[1];
+    if (!kulcs) return;
+    let torzs = {};
+    try { torzs = JSON.parse(Buffer.from(kulcs.split('.')[1], 'base64').toString('utf8')); } catch(e) {}
+    eq(torzs.ref, BOSCH, n + ': az anon kulcs is a BOSCH projekte');
+    eq(torzs.role, 'anon', '  es anon szerepu (nem service_role — az kiszivarogna)');
+  });
 }
 
 console.log('\n' + (fail ? 'x ' : 'OK ') + pass + ' pass / ' + fail + ' fail');
