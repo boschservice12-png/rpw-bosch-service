@@ -14,10 +14,13 @@ window.RPW_CFG = {
   SHOP_ID: 'bc39e3c1-696c-4590-a9ed-d3810df1c02d',
   // Hitelesítés-kényszer. ALAPBÓL KI (false) → semmi nem változik.
   // true-ra állítás CSAK a 0015 alkalmazása + a login-lánc staging-igazolása UTÁN.
-  // 2026-08-29: KITEVE. A szerep-lekepezes vegigmerve: 11 aktiv dolgozobol
-  // 9 lephet be (4 szerelo csak nezokent), 2 marad kint (Sofor, Egyeb) —
-  // Ferenc dontese. Visszaallas: ez a sor false-ra.
-  AUTH_REQUIRED: true,
+  // 2026-08-29 VISSZAALLITVA: a belepetes utan a panel URES volt.
+  // Ok (szerveroldali): a rpw2_login a munkamenetet `rpw_employee_id`-vel
+  // irja, a rpw_session viszont `employee_id`-t olvas — ket kulon
+  // munkamenet-vonal ugyanazon a tablan. Igy a rpw__ctx nem talalja meg a
+  // munkamenetet, es a rpw_jobs_list egyetlen sort sem ad vissza.
+  // Amig a szerver oldal nincs javitva, a belepetes NEM tehetjo ki.
+  AUTH_REQUIRED: false,
   // Privát Storage kapcsoló (P0 #11). ALAPBÓL KI (false) → a fotó-URL réteg
   // szükség esetén publikus URL-re esik vissza (a bucket ma publikus).
   // true-ra állítás CSAK a 0009_storage_private_signed.FILE_ONLY.sql alkalmazása UTÁN:
