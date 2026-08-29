@@ -124,9 +124,18 @@ A lezárás jogosultságokat és szabályokat változtat, **adatot nem**. A ment
 mégis kötelező, mert a 3. lépés előtti állapotot vissza kell tudni állítani.
 
 - Supabase → Database → Backups: **kézi mentés indítása**, a visszaigazolás
-  időbélyegének feljegyzése.
-- A jogosultsági állapot kiírása a lezárás ELŐTT (a `_tests/integration/test-int-rls-live.js`
-  2. szakaszának lekérdezéseivel), hogy legyen mihez hasonlítani.
+  időbélyegének feljegyzése. → **FERENC FELADATA, nyitott.** A Supabase
+  API-n nincs mentés-művelet, ez a felület egy kattintása.
+- A jogosultsági állapot kiírása a lezárás ELŐTT, hogy legyen mihez
+  hasonlítani. → **KÉSZ (2026-08-29):** `_migrations/008_ELOTTI_ALLAPOT.md`.
+- Adat-pillanatkép az adatbázison belül. → **KÉSZ (2026-08-29):** a
+  `rpw_backup_20260829` séma. 35 munka, 442 audit-sor, 19 dolgozó,
+  tartalom szerint (md5) azonos az eredetivel. A séma zárva: az anon és
+  az authenticated szerep **semmit** nem érhet el belőle — méréssel
+  igazolva, működő kontroll-sorral.
+
+  Ez adatbázison BELÜLI mentés: megvéd a hibás írástól, **nem** véd az
+  egész projekt elvesztése ellen. Azt a platform-szintű mentés adja.
 
 ## 5. Ellenőrzés a lezárás után (go / no-go)
 
@@ -181,7 +190,7 @@ kap · nincs előfeltétel-ellenőrzés · nincs visszavonás · a rollback nem 
 | 2. `CLIENT_RPC=true` | **élesben; Ferenc telefonon kipróbálta, 19 irat megérkezett** |
 | 2b. `010` munkamenet-vonalak | **élesben, ellenőrizve** (2026-08-29) |
 | 3. `AUTH_REQUIRED=true` | ⏸ **egyszer kiment, visszaállítva** — az akadály elhárítva, jóváhagyásra vár |
-| 4. mentés | vár a 3-ra |
+| 4. mentés | **részben kész** — adat-pillanatkép és jogosultsági állapot megvan; a platform-mentés Ferencre vár |
 | 5. `008` lezárás | vár a 3-ra |
 
 Ellenőrizve a 3. lépéshez, és rendben van: a `rpw2_roster` 11 dolgozót ad
