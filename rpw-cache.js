@@ -69,15 +69,17 @@
   // ── Írás ────────────────────────────────────────────────────────
   function set(name, value, ttlMs){
     var st=store(); if(!st) return false;
+    // KÓDREVIEW #8: a lejáratot EGYSZER számoljuk ki, és mindkét próbánál
+    // ezt használjuk. Korábban az újrapróbálás beégetett TTL_MS-t tett be:
+    // aki 5 perces lejárattal tárolt, takarítás után 24 órát kapott — épp
+    // a rövid lejáratú, érzékenyebb bejegyzések éltek tovább a kelleténél.
+    var lejar = now() + (typeof ttlMs==='number' ? ttlMs : TTL_MS);
     try{
-      st.setItem(key(name), JSON.stringify({
-        v: value,
-        e: now() + (typeof ttlMs==='number' ? ttlMs : TTL_MS)
-      }));
+      st.setItem(key(name), JSON.stringify({ v: value, e: lejar }));
       return true;
     }catch(e){
       // tele a tároló → előbb takarítunk, aztán egyszer újrapróbáljuk
-      try{ sweep(); st.setItem(key(name), JSON.stringify({v:value, e:now()+TTL_MS})); return true; }
+      try{ sweep(); st.setItem(key(name), JSON.stringify({v:value, e:lejar})); return true; }
       catch(e2){ return false; }
     }
   }
@@ -193,6 +195,13 @@
         if(p) out.phases[i]={status:p.status||'pending'};
       }
     }
+    // ── 2026-08-29 (kódreview #2) — A MIN-BEJEGYZÉS MONDJA MEG MAGÁRÓL ──
+    // Ez az objektum SZÁNDÉKOSAN hiányos: nincs benne `client`, `phone`,
+    // `vin`, `photos`, `elements`, `closing`. Kirajzolni lehet belőle,
+    // VISSZAMENTENI SOHA — mert a hiányzó mezők a mentéssel elvesznének.
+    // A jelölés nélkül a hívó nem tudja megkülönböztetni egy teljes
+    // munkától; nyolc lap tette pontosan ezt.
+    out.__min = 1;
     return scrub(out);
   }
   // A KIHAGYOTT mezők — ezek SOHA nem kerülnek helyi tárolóba:
@@ -218,15 +227,56 @@
     return o;
   }
 
+  // ── Csak TELJES munkát ad vissza, JSON-ként ────────────────────────
+  // A lapok eddig ezt csinálták:
+  //     var cached = JSON.stringify(RPWCache.getJob(jid)||null);
+  //     if(cached){ JOB = JSON.parse(cached); ... }
+  // Két hiba egyszerre:
+  //   1. a `JSON.stringify(null)` a `"null"` STRING, ami IGAZ — az őr
+  //      sosem védett; csak azért nem robbant, mert a parse null-t adott;
+  //   2. ha mégis volt bejegyzés, a KICSUPASZÍTOTT munka került a JOB-ba,
+  //      a felhasználó szerkesztette, és a mentés részleges objektumot
+  //      küldött vissza. Egy ingadozó hálózat így adatvesztést csinált.
+  // Ez a függvény MIND A KETTŐT megszünteti: valódi `null`-t ad, és a
+  // MIN-bejegyzést soha nem adja ki teljes munkaként.
+  function getFullJobJson(id){
+    var o = getJob(id);
+    if(!o || o.__min) return null;
+    try{ return JSON.stringify(o); }catch(e){ return null; }
+  }
+
   function setJob(job, ttlMs){
     if(!job || !job.id) return false;
     return set('job:'+job.id, minimal(job), ttlMs);
   }
   function getJob(id){ return get('job:'+id); }
 
+  // ── KÓDREVIEW #7 — AZ ANON BEJEGYZÉSEK TÉNYLEG DOBÓDJANAK EL ──────
+  // A fájl teteje azt ígéri, hogy a bejelentkezés előtt keletkezett
+  // ('anon' hatókörű) bejegyzések a következő belépéskor eldobódnak.
+  // ERRE NEM VOLT KÓD: a `migrateLegacy()` csak a régi kulcsokat vitte
+  // el, a `scope()` váltása pedig árván hagyta őket a lejáratig. Közös
+  // műhelygépen a következő ember a saját belépése előtt még olvashatta
+  // az előző munkamenet gyorsítótárazott munkalistáját.
+  //
+  // Ezt a belépés hívja meg (RPWAuth.login), de bármikor biztonságos.
+  function dropScope(nev){
+    var st=store(); if(!st) return 0;
+    var elotag = PREFIX + (nev||'anon') + ':';
+    var torlendo = [], i, k;
+    // előbb GYŰJTÜNK, csak utána törlünk — különben az index elcsúszik
+    for(i=0;i<st.length;i++){
+      k = st.key(i);
+      if(k && k.indexOf(elotag)===0) torlendo.push(k);
+    }
+    for(i=0;i<torlendo.length;i++){ try{ st.removeItem(torlendo[i]); }catch(e){} }
+    return torlendo.length;
+  }
+
   var API={ set:set, get:get, del:del, sweep:sweep, wipe:wipe, scrub:scrub, maskPlate:maskPlate,
             migrateLegacy:migrateLegacy, minimal:minimal,
-            setJob:setJob, getJob:getJob, scope:scope,
+            setJob:setJob, getJob:getJob, getFullJobJson:getFullJobJson, scope:scope,
+            dropScope:dropScope,
             TTL_MS:TTL_MS, PREFIX:PREFIX,
             LEGACY_CACHE:LEGACY_CACHE, LEGACY_SESSION:LEGACY_SESSION,
             MIN_FIELDS:MIN_FIELDS, NEVER_CACHED:NEVER_CACHED };

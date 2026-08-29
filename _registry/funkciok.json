@@ -1891,6 +1891,107 @@
       ],
       "teszt": "_tests/unit/test-rpc-consistency.js",
       "allapot": "csak-backend"
+    },
+    {
+      "id": "F-151",
+      "nev": "A kicsupaszitott gyorsitotar nem mehet vissza a szerverre. A RPWCache.setJob SZANDEKOSAN hianyos objektumot tarol (nincs benne client, phone, vin, photos, elements, closing), KILENC lap viszont ezt toltotte a JOB-ba es mentette vissza. Ket hiba egyszerre: a JSON.stringify(null) a 'null' STRING, ami igaz — az or sosem vedett; es ha volt bejegyzes, egy ingadozó halozat az adatvedelmi funkciobol ADATVESZTEST csinalt. A minimal() mostantol megjeloli magat (__min), es a getFullJobJson a MIN-bejegyzest soha nem adja ki teljes munkakent. A letezes-vizsgalat a lapokon azert kell, mert a sw.js kiszolgalhat REGI rpw-cache.js-t az UJ laphoz. A halott frissesseg-osszehasonlitas (_lts) is kikerult",
+      "fe": [
+        [
+          "rpw-cache.js",
+          "function getFullJobJson(id){"
+        ],
+        [
+          "rpw-cache.js",
+          "out.__min = 1;"
+        ],
+        [
+          "rpw-inchidere-red.html",
+          "RPWCache.getFullJobJson?RPWCache.getFullJobJson(jid):null"
+        ],
+        [
+          "rpw-dosar.html",
+          "RPWCache.getFullJobJson?RPWCache.getFullJobJson(jid):null"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-min-cache.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-152",
+      "nev": "A munkaazonosito nem lephet ki az inline kezelobol. Nyolc lapon a job.id NYERSEN kerult egy onclick attributumon beluli JS-stringbe, mikozben a rendszam mellette escape-elve volt. Az azonosito az adatbazisbol ES az URL-bol jon (a gJI a nyers query parametert adja), tehat egy aposztrof kilepett volna belole. Mostantol escH(encodeURIComponent(...)). A zarojelet az encodeURIComponent nem kodolja, es nem is kell: a string belsejeben artalmatlan, kilepni idezojellel lehetne — az viszont %27/%22 lesz",
+      "fe": [
+        [
+          "rpw-dosar.html",
+          "var _sid=escH(encodeURIComponent(job.id||''));"
+        ],
+        [
+          "rpw-inchidere-red.html",
+          "escH(encodeURIComponent(job.id||''))"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-kodreview-0829.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-153",
+      "nev": "A lezaro fotok jelvenye ne hazudjon. A torles (delClosePhoto) NULL-t hagy a tombben, a jelveny viszont photos.length-t szamolt: 2 valodi foto + 3 torolt hely is 5/5-ot mutatott, ZOLDEN. FONTOS: a LEZARAS maga jol szamolt (RPWWorkflow.realPhotoCount szuri a lyukakat), tehat hianyos munkat NEM lehetett lezarni — a jelveny hazudott, es a dolgozo ertetlenul allt a hibauzenet elott. Mostantol ugyanaz a fuggveny szamol, mint ami enged vagy tilt",
+      "fe": [
+        [
+          "rpw-inchidere-red.html",
+          "RPWWorkflow.realPhotoCount(photos)"
+        ],
+        [
+          "rpw-workflow.js",
+          "function realPhotoCount(list){ return arr(list).filter(isRealPhoto).length; }"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-kodreview-0829.js",
+      "allapot": "el"
+    },
+    {
+      "id": "F-154",
+      "nev": "A fuggo mentes ne vesszen el. A fazislapok 500-600 ms-ra kesleltetik a mentest; aki ezen belul zarja be a fulet vagy valt at masik alkalmazasra, az csendben elvesziti a szerkesztest — mikozben a kepernyo mar az uj erteket mutatta. Kozos kijarat a rpw-save.js-ben (onExit), egyszer bekotve a pagehide-ra ES a visibilitychange-re; a hat fazislap bejelenti a sajat uritojet. A visibilitychange azert kell, mert telefonon az alkalmazas-valtas a gyakori, es ott a pagehide nem mindig fut le",
+      "fe": [
+        [
+          "rpw-save.js",
+          "function onExit(fn){"
+        ],
+        [
+          "rpw-save.js",
+          "addEventListener('pagehide', _uritsMindent)"
+        ],
+        [
+          "rpw-inchidere-red.html",
+          "if(window.RPWSave && RPWSave.onExit) RPWSave.onExit(function(){"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-kodreview-0829.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-155",
+      "nev": "Az anon hatokoru gyorsitotar tenyleg dobodjon el, es a rovid lejarat maradjon rovid. Ket kulon hiba: (1) a rpw-cache.js fejlece azt igerte, hogy a belepes elott keletkezett bejegyzesek a kovetkezo belepeskor eldobodnak — de NEM volt ra kod, igy kozos muhelygepen a kovetkezo ember a sajat belepese elott meg olvashatta az elozo munkamenet gyorsitotarazott munkalistajat; mostantol a dropScope('anon') fut a belepeskor. (2) A set() kvota-ujraprobalasa beegetett 24 oras TTL-t hasznalt a hivo ertekе helyett: aki 5 perces lejarattal tarolt, takaritas utan 24 orat kapott — epp a rovid lejaratu, erzekenyebb bejegyzesek eltek tovabb a kelletenel",
+      "fe": [
+        [
+          "rpw-cache.js",
+          "function dropScope(nev){"
+        ],
+        [
+          "rpw-cache.js",
+          "var lejar = now() + (typeof ttlMs==='number' ? ttlMs : TTL_MS);"
+        ],
+        [
+          "rpw-auth.js",
+          "root.RPWCache.dropScope('anon')"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-kodreview-0829.js",
+      "allapot": "csak-frontend"
     }
   ]
 }

@@ -143,13 +143,13 @@ function gJI(){return new URLSearchParams(location.search).get('job')}
 async function loadJob(){
   try{ if(window.__rpwServerReady) await window.__rpwServerReady; }catch(e){}
   var jid=gJI();if(!jid){render();return}
-  var cached=JSON.stringify(RPWCache.getJob(jid)||null);
+  var cached=(RPWCache.getFullJobJson?RPWCache.getFullJobJson(jid):null);   // KODREVIEW #2: a MIN-gyorsitotar SOHA nem kerul a JOB-ba. A letezes-vizsgalat azert kell, mert a sw.js kiszolgalhat REGI rpw-cache.js-t az UJ laphoz — akkor nincs elotoltes, ami a BIZTONSAGOS viselkedes, nem kivetel.
   if(cached){try{JOB=JSON.parse(cached);if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};render()}catch(e){}}
   try{
     var res=await RPWDb.getRow(sb,jid);
     if(res.error)throw res.error;
-    var _lts=0,_sts=0;try{_lts=Date.parse(null||0)||0;_sts=Date.parse(res.data.updated_at||0)||0}catch(e){}
-    if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};
+    // KODREVIEW #2: itt allt egy halott frissesseg-osszehasonlitas. A helyi idobelyeget egy nulla ertekbol probalta kiolvasni, amibol NaN lett, vagyis mindig 0 — a gyorsitotar sosem nyerhetett a szerverrel szemben. Most mar nincs mit osszehasonlitani: a gyorsitotarbol csak TELJES munka johet, es az is csak akkor, ha van ilyen.
+    {JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};
     try{RPWCache.setJob(JOB)}catch(e){}}
     try{RPWCache.setJob(JOB)}catch(e){}
     /* nincs auto-mentes betolteskor */
@@ -157,6 +157,14 @@ async function loadJob(){
   render();
 }
 var _saveTimer=null;
+// KODREVIEW #6: a fuggo mentes ne vesszen el, ha a dolgozo fel masodpercen
+// belul bezarja a fulet vagy atvalt masik alkalmazasra. A kozos kijaratot a
+// rpw-save.js koti be egyszer (pagehide + visibilitychange).
+try{ if(window.RPWSave && RPWSave.onExit) RPWSave.onExit(function(){
+  if(!_saveTimer) return;
+  clearTimeout(_saveTimer); _saveTimer=null;
+  try{ if(JOB) RPWDb.patch(sb,JOB); }catch(e){}
+}); }catch(e){}
 async function saveJ(){
   if(!JOB)return;
   try{RPWCache.setJob(JOB)}catch(e){}
@@ -255,7 +263,7 @@ function shellHtml(job,ln){
   var v=shellVariant();var plate=job.plate||job.number||job.id||'';var cur=SHELL_PHASES[SHELL_CUR];
   function nm(p){return p[ln]||p.ro}
   var h='<div class="shell no-print"><div class="shell-top">';
-  h+='<div class="sh-left"><div class="sh-back" onclick="location.assign(\'rpw-dosar.html?job='+job.id+'\')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>';
+  h+='<div class="sh-left"><div class="sh-back" onclick="location.assign(\'rpw-dosar.html?job='+escH(encodeURIComponent(job.id||''))+'\')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>';
   h+='<span class="sh-plate">'+escH(plate)+'</span>';
   h+='<div class="sh-phase"><span class="ph-idx">'+cur.n+'</span>'+nm(cur)+'</div></div>';
   h+='<div class="sh-right"><div class="lsw">';

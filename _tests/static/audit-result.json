@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-29T20:14:54.205Z",
+  "generated": "2026-08-29T20:39:12.467Z",
   "files": 33,
   "total": 28,
   "allowed": 28,
@@ -55,7 +55,7 @@
     },
     {
       "fajl": "rpw-cache.js",
-      "sor": 193,
+      "sor": 195,
       "mezo": "phases[]",
       "ok": "megjelenítési kód — csak a státusz betűjét tárolja",
       "ut": "nem ír a JOB-ba, csak olvassa",
@@ -75,7 +75,7 @@
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
-      "szoveg": "if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version="
+      "szoveg": "{JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.pha"
     },
     {
       "fajl": "rpw-dosar.html",
@@ -91,11 +91,11 @@
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
-      "szoveg": "if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version="
+      "szoveg": "{JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.pha"
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 636,
+      "sor": 640,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
@@ -103,7 +103,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 680,
+      "sor": 684,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
@@ -131,7 +131,7 @@
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
-      "szoveg": "if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version="
+      "szoveg": "{JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.pha"
     },
     {
       "fajl": "rpw-recepcio-red.html",
@@ -155,7 +155,7 @@
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
-      "szoveg": "if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version="
+      "szoveg": "{JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.pha"
     },
     {
       "fajl": "rpw-tinichigerie-red.html",
@@ -171,7 +171,7 @@
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
-      "szoveg": "if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version="
+      "szoveg": "{JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.pha"
     },
     {
       "fajl": "rpw-vopsitorie-red.html",
@@ -187,7 +187,7 @@
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
-      "szoveg": "if(!(JOB&&_lts&&_sts<=_lts)){JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version="
+      "szoveg": "{JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.pha"
     },
     {
       "fajl": "rpw-workflow.js",

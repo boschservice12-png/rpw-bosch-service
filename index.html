@@ -557,7 +557,7 @@ async function freshJob(id){
     var r=await Promise.race([p,t]);
     if(r&&r.data&&r.data.data)j=r.data.data;
   }catch(e){}
-  if(!j){try{var c=JSON.stringify(RPWCache.getJob(id)||null);if(c)j=JSON.parse(c)}catch(e){}}
+  if(!j){try{var c=(RPWCache.getFullJobJson?RPWCache.getFullJobJson(id):null);if(c)j=JSON.parse(c)}catch(e){}}   // KODREVIEW #2
   if(!j&&idx>=0)j=JOBS[idx];
   if(j&&idx>=0)JOBS[idx]=j;
   _freshAt[id]=Date.now();

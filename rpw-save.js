@@ -303,7 +303,36 @@
     }
   }
 
+  // ── KÓDREVIEW #6 (2026-08-29) — A FÜGGŐ MENTÉS NE VESSZEN EL ──────
+  // A fázislapok `saveJ()`-e 500-600 ms-ra késlelteti a mentést. A
+  // `bindBeforeUnload` csak FIGYELMEZTET; a lapok pedig nem is azt
+  // használják, hanem saját `setTimeout`-ot. Aki fél másodpercen belül
+  // zárja be a fület a számlaszám megadása után, az csendben elveszti a
+  // szerkesztést — és a UI már mutatta az új értéket. Ez a legrosszabb
+  // fajta veszteség: a felhasználó biztos benne, hogy mentve van.
+  //
+  // Itt egy közös kijárat van: a lapok bejelentik a saját ürítőjüket, és
+  // MI kötjük be egyszer. A `visibilitychange` azért kell a `pagehide`
+  // mellé, mert telefonon a fül bezárása helyett az alkalmazás-váltás a
+  // gyakori, és ott a `pagehide` nem mindig fut le.
+  var _kijarat = [];
+  function onExit(fn){ if(typeof fn === 'function') _kijarat.push(fn); }
+  function _uritsMindent(){
+    for(var i=0;i<_kijarat.length;i++){ try{ _kijarat[i](); }catch(e){} }
+  }
+  if(typeof window !== 'undefined' && window.addEventListener){
+    try{
+      window.addEventListener('pagehide', _uritsMindent);
+      if(typeof document !== 'undefined' && document.addEventListener){
+        document.addEventListener('visibilitychange', function(){
+          if(document.visibilityState === 'hidden') _uritsMindent();
+        });
+      }
+    }catch(e){}
+  }
+
   var api = { createSaver:createSaver, bindBeforeUnload:bindBeforeUnload, classify:classify,
+              onExit:onExit, flushExit:_uritsMindent,
               commitConfirmed:commitConfirmed, stripProtected:stripProtected,
               serverRejection:serverRejection, PROTECTED_TOP:PROTECTED_TOP };
   if(typeof module!=='undefined' && module.exports){ module.exports = api; }

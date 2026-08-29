@@ -126,6 +126,14 @@
                 roleCode:emp.role_code||null, can:(emp.can||null),
                 exp: nowMs(opts)+ttlMs };
       ((opts.store)||defStore()).set(KEY, JSON.stringify(rec));
+      // KODREVIEW #7: a belepes ELOTT keletkezett, 'anon' hatokoru
+      // gyorsitotar-bejegyzesek itt dobodnak el. A rpw-cache.js fejlece
+      // eddig is ezt igerte, de nem volt ra kod: kozos muhelygepen a
+      // kovetkezo ember a sajat belepese elott meg olvashatta az elozo
+      // munkamenet gyorsitotarazott munkalistajat. A hivas azutan fut,
+      // hogy az uj munkamenet mar el van mentve — igy a scope() mar az
+      // uj emberre mutat, es csak a REGI, anon bejegyzesek tunnek el.
+      try{ if(root.RPWCache && root.RPWCache.dropScope) root.RPWCache.dropScope('anon'); }catch(e){}
       return {ok:true, role:canon, rawRole:emp.role, name:nm, hasRpwAccess:(canon!=null)};
     }catch(e){ return {ok:false, error:'network'}; }
   }

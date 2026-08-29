@@ -456,7 +456,7 @@ async function loadJob(){
   try{ if(window.__rpwServerReady) await window.__rpwServerReady; }catch(e){}
   var jid=gJI();
   if(!jid){render();return}
-  var cached=JSON.stringify(RPWCache.getJob(jid)||null);
+  var cached=(RPWCache.getFullJobJson?RPWCache.getFullJobJson(jid):null);   // KODREVIEW #2: a MIN-gyorsitotar SOHA nem kerul a JOB-ba. A letezes-vizsgalat azert kell, mert a sw.js kiszolgalhat REGI rpw-cache.js-t az UJ laphoz — akkor nincs elotoltes, ami a BIZTONSAGOS viselkedes, nem kivetel.
   if(cached){
     try{
       JOB=JSON.parse(cached);
@@ -490,6 +490,14 @@ function fixPhases(){
 }
 
 var _saveTimer=null;
+// KODREVIEW #6: a fuggo mentes ne vesszen el, ha a dolgozo fel masodpercen
+// belul bezarja a fulet vagy atvalt masik alkalmazasra. A kozos kijaratot a
+// rpw-save.js koti be egyszer (pagehide + visibilitychange).
+try{ if(window.RPWSave && RPWSave.onExit) RPWSave.onExit(function(){
+  if(!_saveTimer) return;
+  clearTimeout(_saveTimer); _saveTimer=null;
+  try{ if(JOB) RPWDb.patch(sb,JOB); }catch(e){}
+}); }catch(e){}
 async function saveJ(){
   if(!JOB)return;
   try{RPWCache.setJob(JOB)}catch(e){}
@@ -774,7 +782,7 @@ function shellHtml(job,ln){
   var v=shellVariant();var plate=job.plate||job.number||job.id||'';var cur=SHELL_PHASES[SHELL_CUR];
   function nm(p){return p[ln]||p.ro}
   var h='<div class="shell no-print"><div class="shell-top">';
-  h+='<div class="sh-left"><div class="sh-back" onclick="location.assign(\'rpw-dosar.html?job='+job.id+'\')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>';
+  h+='<div class="sh-left"><div class="sh-back" onclick="location.assign(\'rpw-dosar.html?job='+escH(encodeURIComponent(job.id||''))+'\')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>';
   h+='<span class="sh-plate">'+escH(plate)+'</span>';
   h+='<div class="sh-phase"><span class="ph-idx">'+cur.n+'</span>'+nm(cur)+'</div></div>';
   h+='<div class="sh-right"><div class="lsw">';
