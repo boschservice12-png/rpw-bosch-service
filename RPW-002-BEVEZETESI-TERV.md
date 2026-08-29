@@ -88,11 +88,15 @@ A mai kliens `AUTH_REQUIRED=false` mellett **közvetlen tábla-olvasással** dol
            tölts fel egy fotót, és nézd meg, hogy megérkezik-e.
            Visszaállás: egy sor (percek).
 
-3. lépés   rpw-config.js:  AUTH_REQUIRED = true      ⛔ BLOKKOLVA
-           2026-08-29: a kitétel 11 emberből 6-ot kizárna a panelből
-           (4 Szerelő, 1 Sofőr, 1 Egyéb — nincsenek a szerep-leképezésben).
-           Ferenc döntése: MOST NE menjen ki. Részletek és a feloldás:
-           REMAINING-RISKS.md — "A beléptetés 11 emberből 6-ot kizárna".
+3. lépés   rpw-config.js:  AUTH_REQUIRED = true      ⏸ ÚJRA MEGKÍSÉRELHETŐ
+           2026-08-29 délelőtt: a szerep-leképezés 11 emberből 6-ot
+           kizárt volna (4 Szerelő, 1 Sofőr, 1 Egyéb). MEGOLDVA: a
+           Szerelő 'auditor' lett (lát mindent, nem módosít, F-148);
+           a Sofőr és az Egyéb Ferenc döntése szerint kívül marad.
+           2026-08-29 délután: KI IS MENT, és a panel ÜRES lett. Ok: a
+           munkamenet két vonala (010). VISSZAÁLLÍTVA ugyanaznap.
+           A 010 azóta ÉLESBEN VAN és ellenőrizve — a 3. lépés innentől
+           újra megkísérelhető, de Ferenc jóváhagyása kell hozzá.
            Az 1. és 2. lépés ettől függetlenül ÉLESBEN VAN és működik.
            A PATCH_RPC-t NEM kell átállítani: bejelentkezve az adatréteg
            magától a rpw_patch_v3-ra megy. (Ha 'rpw_patch_v3'-ra állítanád,
@@ -175,7 +179,8 @@ kap · nincs előfeltétel-ellenőrzés · nincs visszavonás · a rollback nem 
 |---|---|
 | 1. `009` szűk ügyfél-út | **élesben, ellenőrizve** |
 | 2. `CLIENT_RPC=true` | **élesben; Ferenc telefonon kipróbálta, 19 irat megérkezett** |
-| 3. `AUTH_REQUIRED=true` | ⛔ **blokkolva** — a szerep-leképezés 6 embert kizárna |
+| 2b. `010` munkamenet-vonalak | **élesben, ellenőrizve** (2026-08-29) |
+| 3. `AUTH_REQUIRED=true` | ⏸ **egyszer kiment, visszaállítva** — az akadály elhárítva, jóváhagyásra vár |
 | 4. mentés | vár a 3-ra |
 | 5. `008` lezárás | vár a 3-ra |
 
@@ -184,7 +189,23 @@ a lap által várt alakban; a `rpw2_login` tokent, `can`-t és szerepet ad; a
 `rpw_jobs_list` / `rpw_job_get` / `rpw_patch_v3` válasz-alakja egyezik a
 klienssel; a config `SHOP_ID`, a dolgozók és a munkák szervize **mind
 ugyanaz** (`bc39e3c1…`), tehát belépés után mind a 33 munka látszana.
-Egyedül a szerep-kérdés maradt.
+A szerep-kérdés megoldva (F-148), a munkamenet-vonalak szétcsúszása
+megoldva (010, élesben).
+
+**A 010 élő ellenőrzése (2026-08-29, csak olvasás):**
+
+| mérés | eredmény |
+|---|---|
+| rövid token | `no_token` — elutasítva |
+| ismeretlen token | `invalid` — elutasítva |
+| élő RPW2-munkamenet | 2 db |
+| ebből amit a JAVÍTÁS megtalál | **2** |
+| ebből amit a RÉGI változat megtalált | **0** ← ettől volt üres a panel |
+| a hozzájuk tartozó munkakör | `Műszakvezető` → a kliens `manager`-t képez belőle |
+
+A lánc zárt: `rpw_jobs_list` / `rpw_job_get` / `rpw_patch_v3` /
+`rpw_job_trash` / `rpw_job_restore` / `rpw_job_purge` mind a `rpw__ctx`-en
+át megy, a `rpw__ctx` pedig a `rpw_session`-t hívja.
 
 ## 9. Megmaradt kockázat
 

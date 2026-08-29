@@ -23,6 +23,7 @@
 --  második ág, ha az első nem talált. Így egyetlen meglévő munkamenet
 --  viselkedése sem változik.
 --
+--  ÁLLAPOT: ÉLESBEN ALKALMAZVA 2026-08-29-én, olvasó ellenőrzéssel igazolva.
 --  ELŐFELTÉTEL: app_session, rpw_employees.     ROLLBACK: 010_rollback.sql
 -- ════════════════════════════════════════════════════════════════
 begin;
