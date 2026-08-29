@@ -1811,7 +1811,7 @@
         ],
         [
           "rpw-config.js",
-          "CLIENT_RPC: false,"
+          "CLIENT_RPC: true,"
         ]
       ],
       "be": [
@@ -1819,7 +1819,7 @@
         "rpw_client_upload"
       ],
       "teszt": "_tests/integration/test-int-rls-live.js",
-      "allapot": "nincs-bekotve"
+      "allapot": "el"
     }
   ]
 }
