@@ -1823,8 +1823,12 @@
     },
     {
       "id": "F-147",
-      "nev": "A Netlify-funkciok CORS-engedelylistaja MINDKET elo cimet ismeri. A csapatban ket oldal all ugyanerre a repora (beamish-arithmetic-e52bce es rpw-bosch-service); a lista eddig csak a regit ismerte, ezert az uj cimen az OCR, a classify es a levelkuldes NEMAN elhalt volna — a bongeszo blokkolja a valaszt, nem a szerver ad hibat",
+      "nev": "Egy igazsag az ELO cimrol: amit a rendszer eleskent hirdet (a file://-or linkje a rpw-config.js-ben), az all a Netlify-funkciok CORS-listajanak elen is. 2026-08-29-en pont ez csuszott szet — a config a REGI cimre kuldott, mikozben a kod az UJRA epult, es a muhelyben a kilenc napos valtozat futott. Az elo cim: rpw-bosch-service.netlify.app",
       "fe": [
+        [
+          "rpw-config.js",
+          "https://rpw-bosch-service.netlify.app/"
+        ],
         [
           "functions/_shared.js",
           "'https://rpw-bosch-service.netlify.app',"

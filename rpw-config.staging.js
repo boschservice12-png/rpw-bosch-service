@@ -69,7 +69,7 @@ window.RPW_CFG = {
       + '<div style="font-size:44px">&#9888;&#65039;</div>'
       + '<div style="font-size:19px;font-weight:800;color:#C81E33;margin:12px 0 6px">Copie descarcata local</div>'
       + '<div style="font-size:14px;color:#3F4956;line-height:1.6">Rulezi o copie VECHE descarcata pe calculator (file://).<br>De aici NU se scrie nimic in baza de date.<br>Deschide sistemul LIVE:</div>'
-      + '<a href="https://beamish-arithmetic-e52bce.netlify.app/" style="display:inline-block;margin-top:16px;background:#E11D2E;color:#fff;text-decoration:none;padding:13px 22px;border-radius:9px;font-weight:800;font-size:14px">Deschide site-ul live &rarr;</a>'
+      + '<a href="https://rpw-bosch-service.netlify.app/" style="display:inline-block;margin-top:16px;background:#E11D2E;color:#fff;text-decoration:none;padding:13px 22px;border-radius:9px;font-weight:800;font-size:14px">Deschide site-ul live &rarr;</a>'
       + '</div></div>';
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show);
