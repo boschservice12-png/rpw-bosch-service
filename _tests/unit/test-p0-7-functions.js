@@ -160,9 +160,10 @@ console.log('\nQ. Mindket elo cim hivhatja a funkciokat');
   ok(enged('https://main--rpw-bosch-service.netlify.app'),
      '  az ag-valtozata is');
   // 2026-08-29, Ferenc dontese: a regi oldalon MAR NEM DOLGOZUNK.
-  // A regi cim ezzel ugyanolyan idegen, mint barmelyik masik — es ezt
-  // NEGATIV allitas orzi, nem az allitas torlese. Ha barmikor
-  // visszakerulne a listara, itt derul ki.
+  // Az oldal azota at is lett nevezve, tehat ez a cim mar SENKIE — es
+  // eppen ezert veszelyes: a felszabadult *.netlify.app alnevet barki
+  // mas regisztralhatja. Ha megteszi, a mi fuggvenyeink akkor sem
+  // szolgalhatjak ki. NEGATIV allitas orzi, nem az allitas torlese.
   ok(!enged('https://beamish-arithmetic-e52bce.netlify.app'),
      'a REGI cim BLOKKOLVA — mar nem dolgozunk rajta');
   ok(!enged('https://main--beamish-arithmetic-e52bce.netlify.app'),

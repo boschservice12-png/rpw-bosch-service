@@ -14,9 +14,14 @@
 // jobb, ha a regi oldal lathatoan nem mukodik, mint ha csendben, kilenc
 // napos kodbol dolgozna tovabb ugyanazon az elo adatbazison.
 //
-// FIGYELEM: a regi oldal maga MEG EL. A CORS csak a fuggvenyeket vagja
-// el tole; a lap a bongeszobol tovabbra is eleri az adatbazist. A teljes
-// lezaras a regi Netlify-oldal leallitasa — az Ferenc kezeben van.
+// 2026-08-29, ugyanaznap: a regi oldal ATNEVEZVE
+// (beamish-arithmetic-e52bce -> rpw-regi-lezarva-2026-08), tehat a regi
+// KONYVJELZO cime mar nem az ové. Az oldal maga megmaradt, a deploy-
+// tortenetevel egyutt — csak nem az a cime, amit a csapat ismer.
+//
+// A regi cim EZERT IS marad a tiltolistan: a felszabadult
+// *.netlify.app alnevet elvileg BARKI MAS regisztralhatja. Ha megteszi,
+// a mi fuggvenyeink akkor sem szolgaljak ki. Negativ teszt orzi.
 // (Az ALLOWED_ORIGINS kornyezeti valtozo ezt a listat felulirja.)
 const DEFAULT_ORIGINS = [
   // ELSO = az ELO cim. Ismeretlen origin eseten ezt tukrozzuk vissza,

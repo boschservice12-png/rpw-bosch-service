@@ -235,21 +235,35 @@ OCR-je, az iratbesorolása és a levélküldése CORS-hibára fut. Ez
 szándékos: jobb, ha a régi oldal láthatóan nem működik, mint ha
 csendben, kilenc napos kódból dolgozna tovább.
 
-Amit ez **nem** old meg: az oldal maga **még él és kiszolgál**
-(Netlify-állapot: `ready`). A CORS csak a *funkciókat* vágja el tőle —
-a lap a böngészőből **továbbra is eléri ugyanazt az élő adatbázist** az
-anon kulccsal, mert a kulcs a kiszolgált fájlban van. Aki a régi
-könyvjelzőt nyitja meg, ma is lát és ír munkákat, kilenc napos kódból.
+**Ugyanaznap, Ferenc utasítására elvégezve: az oldal ÁT LETT NEVEZVE**
+`beamish-arithmetic-e52bce` → `rpw-regi-lezarva-2026-08`.
+
+A régi **könyvjelző címe ezzel megszűnt**: aki azt nyitja meg, nem a
+kilenc napos alkalmazást kapja. Az oldal maga nem lett törölve — a
+deploy-történetével együtt megmaradt, csak más néven. Visszavonható egy
+átnevezéssel.
 
 Pontosan ez a mechanizmus tüntette el 2026-08-29-én a telefonról
 feltöltött iratot a műhelyi gépről.
 
+**Ami ebből MEGMARADT kockázatnak:**
+
+1. A felszabadult `beamish-arithmetic-e52bce.netlify.app` alnevet
+   elvileg **bárki más regisztrálhatja**. A csapat egy régi
+   könyvjelzője ekkor idegen tartalomra mutatna. Ezért marad a cím a
+   funkciók tiltólistáján — negatív teszt őrzi.
+2. Az oldal az **új néven továbbra is kiszolgál**, és a fájljaiban ott
+   az anon kulcs, tehát elvben eléri az élő adatbázist. Az új nevet
+   senki nem ismeri, de a teljes lezárás az oldal **törlése** lenne —
+   ez a Netlify API-n keresztül nem elérhető, a felületen egy kattintás.
+
 | | |
 |---|---|
 | **Mi a kockázat** | Két különböző kódváltozat írja ugyanazt az adatbázist; az egyik nem kap javítást |
-| **Mi hárítja el véglegesen** | A régi Netlify-oldal leállítása vagy átirányítása |
-| **Ki oldja meg** | **Ferenc** (Netlify → `beamish-arithmetic-e52bce`) — vagy szóljon, és megcsinálom |
-| **Igazolva** | Netlify API: az oldal létezik, utolsó deploy `ready`; a CORS-tiltást negatív teszt őrzi (`test-p0-7-functions.js`) |
+| **Mi történt** | Átnevezve — a régi könyvjelző címe megszűnt |
+| **Mi maradt** | Az alnév felszabadult (más regisztrálhatja); az oldal új néven él |
+| **Végleges lezárás** | Az oldal törlése a Netlify felületén — **Ferenc**, egy kattintás |
+| **Igazolva** | Netlify API: `beamish` néven nincs oldal; a projekt `rpw-regi-lezarva-2026-08`. A CORS-tiltást negatív teszt őrzi (`test-p0-7-functions.js`). **A címet magát innen nem tudtam lekérdezni** — a konténer minden `netlify.app` hívást blokkol (a működő oldal is), ezért ez API-bizonyíték, nem böngésző-bizonyíték |
 
 ### A staging ugyanazt az adatbázist használja, mint az éles
 
