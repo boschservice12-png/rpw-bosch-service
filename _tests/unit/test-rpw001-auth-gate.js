@@ -241,6 +241,33 @@ console.log('\n3f. A SZERELOK LATNAK MINDENT, DE NEM MODOSITANAK (Ferenc, 2026-0
   ['Recepció','Karosszéria','Festő','Műszakvezető','Irodavezető'].forEach(function(m){
     ok(RR.isReadOnly(RR.mapEmployeeRole(m))===false, '  a '+m+' tovabbra is dolgozhat');
   });
+
+  // ── A TELJES KEP, AHOGY 2026-08-29-EN ELDOLT ────────────────────
+  // Ez a matrix az uzleti szabaly: ha barmelyik sor elcsuszik, valaki
+  // vagy kizarodik a panelbol, vagy olyat tehet, amit nem szabadna.
+  // A letszamok az elo adatbazisbol (11 aktiv dolgozo).
+  const MATRIX = [
+    ['Műszakvezető', 1, 'manager'],
+    ['Recepció',     1, 'receptie'],
+    ['Irodavezető',  1, 'admin'],
+    ['Karosszéria',  1, 'tinichigiu'],
+    ['Festő',        1, 'vopsitor'],
+    ['Szerelő',      4, 'auditor'],    // belep, de csak nez
+    ['Sofőr',        1, null],         // Ferenc dontese: nem kell neki
+    ['Egyéb',        1, null]
+  ];
+  let belep = 0, kint = 0;
+  MATRIX.forEach(function(x){
+    const kapott = RR.mapEmployeeRole(x[0]);
+    ok(kapott === x[2],
+       '  '+x[0]+' -> '+(x[2]||'nincs hozzaferes')+'  (kapott: '+(kapott||'nincs')+')');
+    if(kapott) belep += x[1]; else kint += x[1];
+  });
+  ok(belep === 9 && kint === 2,
+     'a 11 emberbol 9 lephet be, 2 marad kint  (kapott: '+belep+' / '+kint+')');
+  const dolgozhat = MATRIX.filter(x=>x[2] && !RR.isReadOnly(x[2]))
+                          .reduce((n,x)=>n+x[1], 0);
+  ok(dolgozhat === 5, '  ebbol 5 fo dolgozhat is, a tobbi csak nez  (kapott: '+dolgozhat+')');
 }
 
 console.log('\n4. A KEPESSEG-KOVETELMENY A MODHOZ IGAZODIK (nem benitja meg az uzemet)');

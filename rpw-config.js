@@ -14,7 +14,10 @@ window.RPW_CFG = {
   SHOP_ID: 'bc39e3c1-696c-4590-a9ed-d3810df1c02d',
   // Hitelesítés-kényszer. ALAPBÓL KI (false) → semmi nem változik.
   // true-ra állítás CSAK a 0015 alkalmazása + a login-lánc staging-igazolása UTÁN.
-  AUTH_REQUIRED: false,
+  // 2026-08-29: KITEVE. A szerep-lekepezes vegigmerve: 11 aktiv dolgozobol
+  // 9 lephet be (4 szerelo csak nezokent), 2 marad kint (Sofor, Egyeb) —
+  // Ferenc dontese. Visszaallas: ez a sor false-ra.
+  AUTH_REQUIRED: true,
   // Privát Storage kapcsoló (P0 #11). ALAPBÓL KI (false) → a fotó-URL réteg
   // szükség esetén publikus URL-re esik vissza (a bucket ma publikus).
   // true-ra állítás CSAK a 0009_storage_private_signed.FILE_ONLY.sql alkalmazása UTÁN:

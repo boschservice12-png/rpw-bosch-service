@@ -211,6 +211,14 @@ console.log('\n11. A dosszié-oldal két élő hibája — javítva');
   const dom = new JSDOM('<!doctype html><html><body><div id="app"></div></body></html>',
                         { url:'https://x.test/rpw-dosar.html', runScripts:'outside-only' });
   const win = dom.window;
+  // RPW-001 ota a lap munkamenet nelkul meg sem epul fel (az or elrejti es
+  // a loginra kuld). Ez a probaa a BESOROLAST meri, nem a belepetest —
+  // ezert bejelentkezett emberrel indul.
+  win.localStorage.setItem('rpw_auth', JSON.stringify({
+    token:'t'.repeat(64), name:'Teszt', employeeId:'E1', shopId:'SHOP-A',
+    rawRole:'Műszakvezető', role:'manager',
+    can:{team:true,posts:true,open:true,reception:true,work:true,close:true,override:true,delete:true},
+    exp: Date.now() + 9e6 }));
   win.supabase = { createClient: () => ({ rpc: async()=>({data:null,error:null}),
     from: ()=>({select:()=>({})}), storage:{ from:()=>({}) } }) };
   for (const m of d.matchAll(/<script src="(rpw-[^"]+)"><\/script>/g)) {
