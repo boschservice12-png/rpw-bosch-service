@@ -475,7 +475,19 @@ async function loadJob(){
       try{RPWCache.setJob(JOB)}catch(e){}
     }
     /* nincs auto-mentes betolteskor */
-  }catch(e){if(!JOB)JOB=null}
+  }catch(e){
+    // KODREVIEW #10: halozati hiba, lejart munkamenet es jogosultsag-
+    // megtagadas eddig UGYANAZT a "nincs munka" uzenetet adta, mint egy
+    // tenyleg nem letezo munka. Az operator erre ujra felveszi a
+    // dossziet -> duplikatum. Most megkulonboztetunk.
+    if(!JOB){
+      try{
+        if(window.RPWUtil && RPWUtil.mutasdBetoltesHibat &&
+           RPWUtil.mutasdBetoltesHibat(e, (typeof gL==='function'?gL():null))) return;
+      }catch(_){}
+      JOB=null;
+    }
+  }
   render();
 }
 

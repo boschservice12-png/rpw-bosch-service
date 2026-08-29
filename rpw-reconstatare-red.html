@@ -196,10 +196,22 @@ async function loadJob(){
     if(res.error)throw res.error;
     // KODREVIEW #2: itt allt egy halott frissesseg-osszehasonlitas. A helyi idobelyeget egy nulla ertekbol probalta kiolvasni, amibol NaN lett, vagyis mindig 0 — a gyorsitotar sosem nyerhetett a szerverrel szemben. Most mar nincs mit osszehasonlitani: a gyorsitotarbol csak TELJES munka johet, es az is csak akkor, ha van ilyen.
     {JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};
-    try{RPWCache.setJob(JOB)}catch(e){}}
-    try{RPWCache.setJob(JOB)}catch(e){}
+    }
+    try{RPWCache.setJob(JOB)}catch(e){}   // KODREVIEW #14: eddig ketszer futott
     /* nincs auto-mentes betolteskor */
-  }catch(e){if(!JOB)JOB=null}
+  }catch(e){
+    // KODREVIEW #10: halozati hiba, lejart munkamenet es jogosultsag-
+    // megtagadas eddig UGYANAZT a "nincs munka" uzenetet adta, mint egy
+    // tenyleg nem letezo munka. Az operator erre ujra felveszi a
+    // dossziet -> duplikatum. Most megkulonboztetunk.
+    if(!JOB){
+      try{
+        if(window.RPWUtil && RPWUtil.mutasdBetoltesHibat &&
+           RPWUtil.mutasdBetoltesHibat(e, (typeof gL==='function'?gL():null))) return;
+      }catch(_){}
+      JOB=null;
+    }
+  }
   render();
 }
 var _saveTimer=null;
@@ -222,11 +234,37 @@ async function saveJ(){
 }
 
 function toast(m,e){S.ts=m;S.te=e?1:0;render();setTimeout(function(){S.ts=null;render()},3000)}
-function resize(file,cb){var r=new FileReader();r.onload=function(e){var img=new Image();img.onload=function(){var c=document.createElement('canvas'),mx=1100,sc=img.width>mx?mx/img.width:1;c.width=img.width*sc;c.height=img.height*sc;c.getContext('2d').drawImage(img,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.7))};img.src=e.target.result};r.readAsDataURL(file)}
+// KODREVIEW #15: se a FileReader, se az Image nem volt hibakezelve. Egy
+// serult vagy nem tamogatott kepfajl eseten SEMMI nem tortent: a dolgozo
+// megnyomta a gombot, es a foto egyszeruen nem jelent meg — hibauzenet
+// nelkul, ujraprobalas nelkul. Mostantol szol.
+function resize(file,cb){
+  var hiba=function(mit){
+    try{ toast((typeof T==='function'?T('photoError'):'Fotografia nu s-a putut citi')+(mit?' ('+mit+')':''),1); }
+    catch(e){ try{ console.error('resize',mit); }catch(_){} }
+  };
+  var r=new FileReader();
+  r.onerror=function(){ hiba('citire'); };
+  r.onload=function(e){
+    var img=new Image();
+    img.onerror=function(){ hiba('format'); };
+    img.onload=function(){
+      try{
+        var c=document.createElement('canvas'),mx=1100,sc=img.width>mx?mx/img.width:1;
+        c.width=img.width*sc;c.height=img.height*sc;
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        cb(c.toDataURL('image/jpeg',.7));
+      }catch(err){ hiba('conversie'); }
+    };
+    img.src=e.target.result;
+  };
+  try{ r.readAsDataURL(file); }catch(err){ hiba('citire'); }
+}
 
 var EK_NAMES={fb:{ro:'Bara fata',en:'Front bumper',hu:'Elso lokh.'},rb:{ro:'Bara spate',en:'Rear bumper',hu:'Hatso lokh.'},hood:{ro:'Capota',en:'Hood',hu:'Motorhazt.'},trunk:{ro:'Portbagaj',en:'Trunk',hu:'Csomagtarto'},roof:{ro:'Plafon',en:'Roof',hu:'Teto'},fl_f:{ro:'Aripa stg fata',en:'LF fender',hu:'BE sarvedo'},fr_f:{ro:'Aripa dr fata',en:'RF fender',hu:'JE sarvedo'},rl_f:{ro:'Aripa stg spate',en:'LR fender',hu:'BH sarvedo'},rr_f:{ro:'Aripa dr spate',en:'RR fender',hu:'JH sarvedo'},fl_d:{ro:'Usa stg fata',en:'LF door',hu:'BE ajto'},fr_d:{ro:'Usa dr fata',en:'RF door',hu:'JE ajto'},rl_d:{ro:'Usa stg spate',en:'LR door',hu:'BH ajto'},rr_d:{ro:'Usa dr spate',en:'RR door',hu:'JH ajto'},l_s:{ro:'Prag stg',en:'L sill',hu:'B kuszob'},r_s:{ro:'Prag dr',en:'R sill',hu:'J kuszob'},l_m:{ro:'Ogl. stg',en:'L mirror',hu:'B tukor'},r_m:{ro:'Ogl. dr',en:'R mirror',hu:'J tukor'},a_l:{ro:'Stalp A stg',en:'L A-pil.',hu:'B A oszl.'},a_r:{ro:'Stalp A dr',en:'R A-pil.',hu:'J A oszl.'},b_l:{ro:'Stalp B stg',en:'L B-pil.',hu:'B B oszl.'},b_r:{ro:'Stalp B dr',en:'R B-pil.',hu:'J B oszl.'},c_l:{ro:'Stalp C stg',en:'L C-pil.',hu:'B C oszl.'},c_r:{ro:'Stalp C dr',en:'R C-pil.',hu:'J C oszl.'}};
 
-var i={incomplete:{ro:'Date incomplete — completează câmpurile lipsă.',en:'Incomplete data — fill in the missing fields.',hu:'Hiányos adatok — töltsd ki a hiányzó mezőket.'},
+var i={photoError:{ro:'Fotografia nu s-a putut citi',en:'Photo could not be read',hu:'A foto nem olvashato'},
+incomplete:{ro:'Date incomplete — completează câmpurile lipsă.',en:'Incomplete data — fill in the missing fields.',hu:'Hiányos adatok — töltsd ki a hiányzó mezőket.'},
 reconstatare:{ro:'Nota de Reconstatare',en:'Re-assessment Note',hu:'Ujrafelmeres'},noJob:{ro:'Nu exista lucrare',en:'No job',hu:'Nincs munka'},openD:{ro:'Dashboard',en:'Dashboard',hu:'Dashboard'},saved:{ro:'Salvat',en:'Saved',hu:'Mentve'},
 s1:{ro:'I. DATE DOSAR DE DAUNA SI PARTI IMPLICATE',en:'I. CLAIM FILE & PARTIES',hu:'I. DOSSZIE ES FELEK'},
 asigurator:{ro:'Asigurator RCA/CASCO',en:'Insurer RCA/CASCO',hu:'Biztosito'},nrDosar:{ro:'Nr. dosar dauna',en:'Claim file no.',hu:'Karszam'},polita:{ro:'Polita',en:'Policy',hu:'Kotveny'},valabila:{ro:'Valabila pana la',en:'Valid until',hu:'Ervenyes'},inspector:{ro:'Inspector / referent',en:'Inspector',hu:'Karszemlesz'},telInsp:{ro:'Tel inspector',en:'Phone',hu:'Tel'},emailInsp:{ro:'Email inspector',en:'Email insurer',hu:'Email biztosito'},pagubita:{ro:'Persoana pagubita',en:'Injured party',hu:'Karosult'},service:{ro:'Imputernicit / service',en:'Service',hu:'Szerviz'},

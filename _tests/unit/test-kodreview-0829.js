@@ -168,5 +168,83 @@ console.log('\n7. #6 — a függő mentés ürítése be van kötve');
   });
 }
 
+
+console.log('\n8. #10 — a hiba NE „nincs munka" legyen');
+{
+  const U = require(path.join(ROOT, 'rpw-util.js'));
+  const h = U.betoltesHibaHtml(new Error('Failed to fetch'), 'hu');
+  ok(h.indexOf('NEM tűnt el') > 0, 'kimondja, hogy a munka nem tűnt el');
+  ok(h.indexOf('Ne vegyél fel új dossziét') > 0, '  és hogy ne vegyenek fel újat — ez a duplikátum-veszély');
+  ok(h.indexOf('data-rpw-ujra') > 0, 'van újrapróbálás gomb');
+  ok(h.indexOf('onclick=') < 0, '  és NINCS inline onclick (szigorú CSP mellett is működik)');
+
+  const l = U.betoltesHibaHtml({ code:'auth_required' }, 'hu');
+  ok(l.indexOf('munkamenet lejárt') > 0, 'lejárt munkamenetnél MÁS üzenet — ott belépni kell');
+
+  // ro az alapértelmezett, ha nincs nyelv
+  const r = U.betoltesHibaHtml(new Error('x'));
+  ok(r.indexOf('NU a dispărut') > 0, 'nyelv nélkül románul szól (a műhely nyelve)');
+
+  // és minden fázislap tényleg használja
+  ['rpw-reconstatare-red.html','rpw-dosar.html','rpw-evaluare-red.html','rpw-control-red.html',
+   'rpw-recepcio-red.html','rpw-vopsitorie-red.html','rpw-inchidere-red.html','rpw-tinichigerie-red.html']
+  .forEach(n => {
+    const s2 = R(n);
+    ok(s2.indexOf('RPWUtil.mutasdBetoltesHibat') > 0, n + ': megkülönbözteti a hibát');
+    ok(s2.indexOf('}catch(e){if(!JOB)JOB=null}') < 0, '  és nem tért vissza a néma változat');
+  });
+}
+
+console.log('\n9. #9 — a rendszám-maszk tényleg maszkol');
+{
+  delete require.cache[require.resolve(path.join(ROOT,'rpw-cache.js'))];
+  const C4 = require(path.join(ROOT, 'rpw-cache.js'));
+  const probak = ['MS-01-AAA','MS 01 AAA','MS-1234','MS123','B-123-ABC'];
+  probak.forEach(pl => {
+    const m = C4.maskPlate(pl);
+    ok(m !== pl, pl + ': soha nem adja vissza változatlanul  (' + m + ')');
+    // a rendszam UTOLSO fele semmikepp ne latszodjon
+    const veg = pl.replace(/[\s-]/g,'').slice(-3);
+    ok(m.indexOf(veg) < 0, '  az utolsó három karakter nem szivárog ki  (' + m + ')');
+  });
+  eq(C4.maskPlate(''), '', 'üres bemenet üres marad');
+}
+
+console.log('\n10. #12 — a ZIP megmondja, mi hiányzik belőle');
+{
+  const s3 = R('rpw-inchidere-red.html');
+  ok(s3.indexOf("function _tedd(mappa, nev, blob)") > 0, 'van közös hozzáadó, ami számol');
+  ok(s3.indexOf("HIANYZO_FAJLOK.txt") > 0, 'a ZIP-be bekerül a hiánylista');
+  ok(!/if\(b\)docFolder\.file/.test(s3), 'nincs több néma kihagyás a dokumentumoknál');
+  ok(!/if\(b\)ovFolder\.file/.test(s3), '  az áttekintő fotóknál sem');
+  ok(!/if\(b\)elFolder\.file/.test(s3), '  az elem-fotóknál sem');
+  ok(s3.indexOf("_hianyzo.length") > 0, 'a záró üzenet is jelzi');
+}
+
+console.log('\n11. #14 / #15 — apróságok, amik némán nyeltek');
+{
+  ['rpw-control-red.html','rpw-dosar.html','rpw-inchidere-red.html',
+   'rpw-reconstatare-red.html','rpw-tinichigerie-red.html','rpw-vopsitorie-red.html'].forEach(n => {
+    const s4 = R(n);
+    ok(s4.indexOf("try{RPWCache.setJob(JOB)}catch(e){}}\n    try{RPWCache.setJob(JOB)}catch(e){}") < 0,
+       n + ': #14 — nincs kétszeri gyorsítótárazás');
+  });
+  ['rpw-reconstatare-red.html','rpw-inchidere-red.html'].forEach(n => {
+    const s5 = R(n);
+    ok(/r\.onerror\s*=/.test(s5),   n + ': #15 — a fájlolvasás hibája kezelve');
+    ok(/img\.onerror\s*=/.test(s5), '  a hibás képformátum is');
+  });
+}
+
+console.log('\n12. #17 — a konfiguráció nem krónika');
+{
+  const cfg = R('rpw-config.js');
+  ok(cfg.indexOf('delelott KIMENT') < 0, 'a napi történet kikerült a configból');
+  ok(cfg.indexOf('CHANGELOG.md') > 0, '  és megmondja, hol keresd');
+  ok(cfg.indexOf('012_rollback.sql') > 0, 'a visszaút CSAPDÁJA viszont ott maradt — az működési tudás');
+  const ch = R('CHANGELOG.md');
+  ok(ch.indexOf('A beléptetés bevezetése') > 0, 'a történet a CHANGELOG-ban van');
+}
+
 console.log('\n' + (fail ? 'x ' : 'OK ') + pass + ' pass / ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

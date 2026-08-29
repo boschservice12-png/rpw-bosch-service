@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-29T21:23:07.124Z",
+  "generated": "2026-08-29T21:34:17.537Z",
   "files": 33,
   "total": 28,
   "allowed": 28,
@@ -55,7 +55,7 @@
     },
     {
       "fajl": "rpw-cache.js",
-      "sor": 195,
+      "sor": 205,
       "mezo": "phases[]",
       "ok": "megjelenítési kód — csak a státusz betűjét tárolja",
       "ut": "nem ír a JOB-ba, csak olvassa",
@@ -95,7 +95,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 640,
+      "sor": 652,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
@@ -103,7 +103,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 684,
+      "sor": 696,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
@@ -111,7 +111,7 @@
     },
     {
       "fajl": "rpw-evaluare-red.html",
-      "sor": 510,
+      "sor": 522,
       "mezo": "phases[]",
       "ok": "inicializálás — hiányzó fázisok kitöltése",
       "ut": "üres váz létrehozása; státuszt csak a rpw_transition ír",
@@ -135,7 +135,7 @@
     },
     {
       "fajl": "rpw-recepcio-red.html",
-      "sor": 485,
+      "sor": 497,
       "mezo": "phases[]",
       "ok": "inicializálás — hiányzó fázisok kitöltése",
       "ut": "üres váz létrehozása; státuszt csak a rpw_transition ír",

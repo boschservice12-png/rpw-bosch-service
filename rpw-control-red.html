@@ -141,10 +141,22 @@ async function loadJob(){
     if(res.error)throw res.error;
     // KODREVIEW #2: itt allt egy halott frissesseg-osszehasonlitas. A helyi idobelyeget egy nulla ertekbol probalta kiolvasni, amibol NaN lett, vagyis mindig 0 — a gyorsitotar sosem nyerhetett a szerverrel szemben. Most mar nincs mit osszehasonlitani: a gyorsitotarbol csak TELJES munka johet, es az is csak akkor, ha van ilyen.
     {JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};if(!JOB.controlChecks)JOB.controlChecks={};
-    try{RPWCache.setJob(JOB)}catch(e){}}
-    try{RPWCache.setJob(JOB)}catch(e){}
+    }
+    try{RPWCache.setJob(JOB)}catch(e){}   // KODREVIEW #14: eddig ketszer futott
     /* nincs auto-mentes betolteskor */
-  }catch(e){if(!JOB)JOB=null}
+  }catch(e){
+    // KODREVIEW #10: halozati hiba, lejart munkamenet es jogosultsag-
+    // megtagadas eddig UGYANAZT a "nincs munka" uzenetet adta, mint egy
+    // tenyleg nem letezo munka. Az operator erre ujra felveszi a
+    // dossziet -> duplikatum. Most megkulonboztetunk.
+    if(!JOB){
+      try{
+        if(window.RPWUtil && RPWUtil.mutasdBetoltesHibat &&
+           RPWUtil.mutasdBetoltesHibat(e, (typeof gL==='function'?gL():null))) return;
+      }catch(_){}
+      JOB=null;
+    }
+  }
   render();
 }
 async function saveJ(){

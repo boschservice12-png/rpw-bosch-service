@@ -165,14 +165,24 @@
   var MIN_FIELDS = ['id','number','sosire','flux','inchis','phase',
                     'damageType','dosarStatus'];
 
+  // ── KÓDREVIEW #9 (2026-08-29) — A MASZK TÉNYLEG MASZKOLJON ───────
+  // A korábbi változat három ponton engedett:
+  //   'MS-01-AAA' → 'MS-…-AAA'  — hét karakterből öt kiszivárgott, és a
+  //                                középső két számjegy száz lehetőség:
+  //                                a jármű a műhely udvarán azonosítható;
+  //   'MS-1234'   → 'MS…234'    — ugyanez rövidebb alakban;
+  //   'MS123'     → 'MS123'     — öt karakter alatt VÁLTOZATLANUL ment
+  //                                vissza, vagyis egyáltalán nem maszkolt.
+  // Mostantól a megyekód (az első szegmens, legfeljebb az első két
+  // karakter) marad meg, semmi más — és SOHA nem adjuk vissza a bemenetet
+  // változatlanul. Ennyi elég ahhoz, hogy „a mieink közül való"-t lehessen
+  // látni offline, de azonosítani ne.
   function maskPlate(p){
     var s = String(p||'').trim();
     if(!s) return '';
-    // az első és az utolsó szegmens marad, a szám kitakarva
     var parts = s.split(/[\s-]+/);
-    if(parts.length >= 3) return parts[0] + '-…-' + parts[parts.length-1];
-    if(s.length > 5) return s.slice(0,2) + '…' + s.slice(-3);
-    return s;
+    if(parts.length >= 2 && parts[0]) return parts[0].slice(0,2) + '-…';
+    return s.slice(0,2) + '…';
   }
   function minimal(job){
     if(!job || typeof job!=='object') return null;

@@ -12,40 +12,20 @@ window.RPW_CFG = {
   // SHOP_ID: a szerviz azonosítója (RedAssistance). Központi konfig — NEM
   // oldalanként hardcode-olva. Felderítve 2026-08-18: minden RPW-dolgozó ide tartozik.
   SHOP_ID: 'bc39e3c1-696c-4590-a9ed-d3810df1c02d',
-  // Hitelesítés-kényszer.
+  // Hitelesítés-kényszer. A dolgozói beléptetés 2026-08-29-én ment ki.
   //
-  // 2026-08-29 delelott KIMENT, es a panel URES lett. Ok (szerveroldali):
-  // a rpw2_login a munkamenetet `rpw_employee_id`-vel irja, a rpw_session
-  // viszont `employee_id`-t olvasott — ket kulon munkamenet-vonal ugyanazon
-  // a tablan. Igy a rpw__ctx nem talalta meg a munkamenetet, es a
-  // rpw_jobs_list egyetlen sort sem adott vissza. Aznap visszaallitva.
+  // ⚠ A VISSZAÁLLÁS KÉT LÉPÉS — ne csak ezt a sort írd át:
+  //     1. _migrations/012_rollback.sql futtatása
+  //     2. AUTH_REQUIRED: false, és kitelepítés
+  //   Enélkül a mentés a rpw_patch_v2-re esne vissza, amihez a 012 óta
+  //   nincs jog, és NÉMÁN elhalna. Ugyanez áll a CLIENT_RPC-re is.
   //
-  // 2026-08-29 delutan JAVITVA es UJRA KIKAPCSOLVA -> most BE:
-  //   - a 010_session_lineage_fix.sql ELESBEN van (a rpw_session mindket
-  //     vonalat ismeri; a ket elo munkamenetet megtalalja — merve),
-  //   - mind a 11 aktiv dolgozonak van PIN-je (merve),
-  //   - a szerep-lekepezes 9 embert beenged, 2 marad kint (Sofor, Egyeb —
-  //     Ferenc dontese),
-  //   - a belepetes altal kovetelt OSSZES RPC letezik es anon-futtathato
-  //     (merve): rpw_jobs_list, rpw_job_get, rpw_job_trash, rpw_job_restore,
-  //     rpw_job_purge, rpw2_session, rpw2_login.
+  // ⚠ Az őr elvisel EGY hiányt: a rpw_server_capabilities élesben nem
+  //   létezik. Ez csak addig igaz, amíg PRODUCTION!=true,
+  //   SERVER_TRANSITIONS!=true és PATCH_RPC!='rpw_patch_v3'. Ha ezek
+  //   bármelyike változik, a lap MEGÁLL — szándékosan.
   //
-  // FIGYELEM: a rpw_server_capabilities NEM letezik elesben. Az or ezt az
-  // EGY hianyt ebben az uzemmodban elviseli (PRODUCTION!=true,
-  // SERVER_TRANSITIONS!=true, PATCH_RPC!='rpw_patch_v3'). Ha ezek
-  // barmelyike valtozik, a lap MEGALL — szandekosan.
-  //
-  // ⚠ VISSZAALLAS: MOSTANTOL KET LEPES ⚠
-  // A 012 migracio elvette az anon-tol a rpw_patch es a rpw_patch_v2
-  // futtatasi jogat (bero-ellenorzes nelkuli irasi utak voltak). Belepve
-  // a mentes a rpw_patch_v3-ra megy, tehat ez ma nem zavar semmit — DE
-  // ha ezt a sort false-ra allitod, a mentes visszaesne a v2-re, amihez
-  // mar nincs jog, es NEMAN elhalna. Ezert:
-  //
-  //     1. _migrations/012_rollback.sql futtatasa
-  //     2. AUTH_REQUIRED: false, es kitelepites
-  //
-  // Ugyanez all a CLIENT_RPC visszaallitasara is.
+  // A bevezetés története és a mérések: CHANGELOG.md, 2026-08-29.
   AUTH_REQUIRED: true,
   // Privát Storage kapcsoló (P0 #11). ALAPBÓL KI (false) → a fotó-URL réteg
   // szükség esetén publikus URL-re esik vissza (a bucket ma publikus).

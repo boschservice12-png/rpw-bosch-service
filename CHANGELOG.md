@@ -474,3 +474,44 @@ Elutasításkor: `protected_workflow_field` + a **konkrét mezőutak** (`phases.
 | `_tests/frontend/test-fe-transition.js` | **176 állítás VALÓDI oldalkóddal** jsdom-ban: mind a 7 fázisoldal + dosar; elutasítás, konfliktus, offline, kettős mentés |
 | `_tests/static/test-static-workflow.js` | Statikus workflow-audit dokumentált engedélylistával |
 | `_tests/run-all.js` | **Öt kategória**: unit / database integration / frontend integration / static audit / staging |
+
+## 2026-08-29 — A beléptetés bevezetése és a kódreview
+
+**A `rpw-config.js` korábban ezt a történetet a kapcsoló fölött hordozta.
+Onnan ide került: a konfiguráció diffelhető tényekből álljon, ne krónikából.**
+(Kódreview #17.)
+
+### A beléptetés kimenetele
+
+**Délelőtt kiment, és a panel ÜRES lett.** Ok (szerveroldali): a
+`rpw2_login` a munkamenetet `rpw_employee_id`-vel írja, a `rpw_session`
+viszont `employee_id`-t olvasott — két külön munkamenet-vonal ugyanazon a
+táblán. Így a `rpw__ctx` nem találta meg a munkamenetet, és a
+`rpw_jobs_list` egyetlen sort sem adott vissza. Aznap visszaállítva.
+
+**Délután javítva (010), este újra kiment.** Ami a második nekifutás előtt
+meg lett mérve:
+
+- a `010_session_lineage_fix.sql` élesben van: a `rpw_session` mindkét
+  vonalat ismeri, és a két élő munkamenetet megtalálja (a régi változat
+  nullát talált);
+- mind a 11 aktív dolgozónak van PIN-je;
+- a szerep-leképezés 9 embert beenged, 2 marad kint (Sofőr, Egyéb —
+  Ferenc döntése);
+- a beléptetés által követelt összes RPC létezik és futtatható:
+  `rpw_jobs_list`, `rpw_job_get`, `rpw_job_trash`, `rpw_job_restore`,
+  `rpw_job_purge`, `rpw2_session`, `rpw2_login`.
+
+**Igazolás a szerver naplójából** (nem benyomás): az élesítés utáni órában
+nulla közvetlen tábla-olvasás történt, miközben napközben, a régi
+változattal 47. Kijelentkezés 22:46:39, PIN-es visszalépés 22:46:53.
+
+### Adatbázis-változások
+
+| | |
+|---|---|
+| `010` | a munkamenet két vonala összekötve |
+| `011` | négy régi munkamásolat (87 sor) a zárt `rpw_archiv` sémába |
+| `012` | a bérlő-ellenőrzés nélküli írási utak (`rpw_patch`, `rpw_patch_v2`) lezárva — a PUBLIC-tól is |
+
+`008` (az RLS-lezárás) továbbra sem ment ki.

@@ -40,7 +40,70 @@
   // Fájlnév: veszélyes karakterek eltávolítása (megjelenítéshez + tároláshoz)
   function safeName(s){ return String(s==null?'':s).replace(/\.\.+/g,'_').replace(/[\/\<>:"'`|?* -]+/g,'_').slice(0,180); }
 
-  var API={ uuid:uuid, jobId:jobId, esc:esc, escAttr:escAttr, escUrl:escUrl, safeName:safeName };
+  // ── KÓDREVIEW #10 (2026-08-29) — A HIBA NE „NINCS MUNKA" LEGYEN ──
+  // A fázislapok betöltése eddig így végződött:
+  //     }catch(e){ if(!JOB) JOB=null }  → render() → „Nu există lucrare"
+  // Hálózati hiba, lejárt munkamenet és jogosultság-megtagadás tehát
+  // UGYANAZT az üzenetet adta, mint egy tényleg nem létező munka. Az
+  // operátor természetes reakciója erre: felveszi újra a dossziét —
+  // amitől duplikátum keletkezik, épp az ellenkezője annak, amit a
+  // rendszer poka-yoke szabályai máshol védenek.
+  //
+  // Ez a képernyő MEGKÜLÖNBÖZTET: megmondja, hogy a munka nem tűnt el,
+  // csak nem sikerült betölteni, és felkínálja az újrapróbálást.
+  var HIBA_SZOVEG = {
+    cim:      { ro:'Nu s-a putut încărca',        hu:'Nem sikerült betölteni',      en:'Could not load' },
+    magyarazat:{ro:'Lucrarea NU a dispărut. Verifică conexiunea și încearcă din nou. Nu crea dosar nou.',
+                hu:'A munka NEM tűnt el. Ellenőrizd a kapcsolatot, és próbáld újra. Ne vegyél fel új dossziét.',
+                en:'The job has NOT disappeared. Check your connection and try again. Do not create a new file.' },
+    ujra:     { ro:'Încearcă din nou',            hu:'Újra',                        en:'Retry' },
+    vissza:   { ro:'Dashboard',                   hu:'Dashboard',                   en:'Dashboard' },
+    lejart:   { ro:'Sesiunea a expirat. Autentifică-te din nou.',
+                hu:'A munkamenet lejárt. Lépj be újra.',
+                en:'Session expired. Please sign in again.' }
+  };
+  function _sz(k, ln){ var m=HIBA_SZOVEG[k]||{}; return m[ln]||m.ro; }
+
+  // Lejárt munkamenet? Akkor a belépés a teendő, nem az újrapróbálás.
+  function _lejart(err){
+    var kod=String((err&&(err.code||err.name))||'');
+    var uz =String((err&&err.message)||'').toLowerCase();
+    return kod==='auth_required' || uz.indexOf('sesiune')>=0 ||
+           uz.indexOf('jwt')>=0 || uz.indexOf('expired')>=0;
+  }
+
+  function betoltesHibaHtml(err, ln){
+    ln = ln || 'ro';
+    var lejart=_lejart(err);
+    return '<div class="loading" style="text-align:center;padding:24px">' +
+      '<div style="font-size:34px;line-height:1">⚠</div>' +
+      '<div style="font-weight:700;margin-top:8px">' + esc(_sz('cim',ln)) + '</div>' +
+      '<div style="margin-top:8px;max-width:34em;margin-left:auto;margin-right:auto">' +
+        esc(lejart ? _sz('lejart',ln) : _sz('magyarazat',ln)) + '</div>' +
+      '<div style="margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">' +
+        '<button type="button" data-rpw-ujra="1" style="padding:10px 24px;border:none;border-radius:10px;background:#E11D2E;color:#fff;font-weight:700;font-family:inherit;cursor:pointer">' +
+          esc(_sz('ujra',ln)) + '</button>' +
+        '<button type="button" data-rpw-vissza="1" style="padding:10px 24px;border:1px solid #ccc;border-radius:10px;background:#fff;color:#333;font-weight:700;font-family:inherit;cursor:pointer">' +
+          esc(_sz('vissza',ln)) + '</button>' +
+      '</div></div>';
+  }
+
+  // Kirajzolja a hibaképernyőt az #app-ba, és beköti a két gombot.
+  // A gombok NEM inline handlerrel mennek: így szigorú CSP mellett is
+  // működnek (lásd a review #18-as pontját).
+  function mutasdBetoltesHibat(err, ln){
+    if(typeof document==='undefined') return false;
+    var app=document.getElementById('app'); if(!app) return false;
+    app.innerHTML = betoltesHibaHtml(err, ln);
+    var u=app.querySelector('[data-rpw-ujra]');
+    if(u) u.addEventListener('click', function(){ try{ location.reload(); }catch(e){} });
+    var v=app.querySelector('[data-rpw-vissza]');
+    if(v) v.addEventListener('click', function(){ try{ location.assign('index.html'); }catch(e){} });
+    return true;
+  }
+
+  var API={ uuid:uuid, jobId:jobId, esc:esc, escAttr:escAttr, escUrl:escUrl, safeName:safeName,
+            betoltesHibaHtml:betoltesHibaHtml, mutasdBetoltesHibat:mutasdBetoltesHibat };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWUtil=API;
 })(typeof self!=='undefined'?self:(typeof window!=='undefined'?window:globalThis));

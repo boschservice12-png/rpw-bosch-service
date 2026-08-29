@@ -257,10 +257,22 @@ async function loadJob(){
     if(res.error)throw res.error;
     // KODREVIEW #2: itt allt egy halott frissesseg-osszehasonlitas. A helyi idobelyeget egy nulla ertekbol probalta kiolvasni, amibol NaN lett, vagyis mindig 0 — a gyorsitotar sosem nyerhetett a szerverrel szemben. Most mar nincs mit osszehasonlitani: a gyorsitotarbol csak TELJES munka johet, es az is csak akkor, ha van ilyen.
     {JOB=res.data.data;if(JOB&&res.data.version!=null)JOB.version=res.data.version;if(!JOB.phases)JOB.phases={};for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:"pending"}};
-    try{RPWCache.setJob(JOB)}catch(e){}}
-    try{RPWCache.setJob(JOB)}catch(e){}
+    }
+    try{RPWCache.setJob(JOB)}catch(e){}   // KODREVIEW #14: eddig ketszer futott
     /* nincs auto-mentes betolteskor */
-  }catch(e){if(!JOB)JOB=null}
+  }catch(e){
+    // KODREVIEW #10: halozati hiba, lejart munkamenet es jogosultsag-
+    // megtagadas eddig UGYANAZT a "nincs munka" uzenetet adta, mint egy
+    // tenyleg nem letezo munka. Az operator erre ujra felveszi a
+    // dossziet -> duplikatum. Most megkulonboztetunk.
+    if(!JOB){
+      try{
+        if(window.RPWUtil && RPWUtil.mutasdBetoltesHibat &&
+           RPWUtil.mutasdBetoltesHibat(e, (typeof gL==='function'?gL():null))) return;
+      }catch(_){}
+      JOB=null;
+    }
+  }
   render();
 }
 var _saveTimer=null;
@@ -282,12 +294,38 @@ async function saveJ(){
   },500);
 }
 function toast(m,e){S.ts=m;S.te=e?1:0;render();setTimeout(function(){S.ts=null;render()},3000)}
-function resize(file,cb){var r=new FileReader();r.onload=function(e){var img=new Image();img.onload=function(){var c=document.createElement('canvas'),mx=1280,sc=img.width>mx?mx/img.width:1;c.width=img.width*sc;c.height=img.height*sc;c.getContext('2d').drawImage(img,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.82))};img.src=e.target.result};r.readAsDataURL(file)}
+// KODREVIEW #15: se a FileReader, se az Image nem volt hibakezelve. Egy
+// serult vagy nem tamogatott kepfajl eseten SEMMI nem tortent: a dolgozo
+// megnyomta a gombot, es a foto egyszeruen nem jelent meg — hibauzenet
+// nelkul, ujraprobalas nelkul. Mostantol szol.
+function resize(file,cb){
+  var hiba=function(mit){
+    try{ toast((typeof T==='function'?T('photoError'):'Fotografia nu s-a putut citi')+(mit?' ('+mit+')':''),1); }
+    catch(e){ try{ console.error('resize',mit); }catch(_){} }
+  };
+  var r=new FileReader();
+  r.onerror=function(){ hiba('citire'); };
+  r.onload=function(e){
+    var img=new Image();
+    img.onerror=function(){ hiba('format'); };
+    img.onload=function(){
+      try{
+        var c=document.createElement('canvas'),mx=1280,sc=img.width>mx?mx/img.width:1;
+        c.width=img.width*sc;c.height=img.height*sc;
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        cb(c.toDataURL('image/jpeg',.82));
+      }catch(err){ hiba('conversie'); }
+    };
+    img.src=e.target.result;
+  };
+  try{ r.readAsDataURL(file); }catch(err){ hiba('citire'); }
+}
 
 var VK=['fata','spate','stanga','dreapta','detaliu'];
 var IC={cam:'<svg class="pslot-icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>',chk:'<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',x:'<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',dl:'<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>'};
 
-var i={inchidere:{ro:'Inchidere Lucrare',en:'Close Job',hu:'Munka Lezaras'},
+var i={photoError:{ro:'Fotografia nu s-a putut citi',en:'Photo could not be read',hu:'A foto nem olvashato'},
+inchidere:{ro:'Inchidere Lucrare',en:'Close Job',hu:'Munka Lezaras'},
 factura:{ro:'Nr. factura',en:'Invoice no.',hu:'Szamlaszam'},devizRef:{ro:'Referinta deviz',en:'Deviz reference',hu:'Deviz hivatkozas'},devizType:{ro:'Tip deviz',en:'Deviz type',hu:'Deviz tipus'},asigurator:{ro:'Asigurator',en:'Insurer',hu:'Biztosito'},note:{ro:'Observatii finale',en:'Final notes',hu:'Vegso megjegyzesek'},
 photosFinal:{ro:'FOTOGRAFII AUTO REPARAT',en:'REPAIRED CAR PHOTOS',hu:'JAVITOTT AUTO FOTOK'},
 fata:{ro:'Fata',en:'Front',hu:'Elol'},spate:{ro:'Spate',en:'Rear',hu:'Hatul'},stanga:{ro:'Stanga',en:'Left',hu:'Bal'},dreapta:{ro:'Dreapta',en:'Right',hu:'Jobb'},detaliu:{ro:'Detaliu',en:'Detail',hu:'Reszlet'},
@@ -672,6 +710,17 @@ window.doExportZip=async function(){
   S.expLoading=1;S.expProgress=5;render();
 
   var zip=new JSZip();
+  // ── KODREVIEW #12 (2026-08-29) — NE LEGYEN CSENDBEN HIANYOS ──────
+  // A fetchBlob barmilyen hibanal null-t ad, es a hivas helye eddig
+  // egyszeruen tovabblepett: a fajl kimaradt az archivumbol, szo nelkul.
+  // Egy biztositoi dossziebol csendben hianyzo `constatare.jpg` nem
+  // kenyelmi kerdes, hanem megfelelosegi. Mostantol szamoljuk, es a
+  // ZIP MAGA is dokumentalja, mi nem fert bele.
+  var _hianyzo=[];
+  function _tedd(mappa, nev, blob){
+    if(blob){ mappa.file(nev, blob); return true; }
+    _hianyzo.push(nev); return false;
+  }
   var cl=JOB.closing||{};
   var plate=(JOB.plate||'').replace(/[\s]/g,'');
   var model=(JOB.brand||JOB.auto||'').replace(/\s+/g,'_');
@@ -685,17 +734,17 @@ window.doExportZip=async function(){
 
     if(S.expSel.talon){
       var b=await getPhotoBlob('photo_talon');
-      if(b)docFolder.file('talon.jpg',b);
+      _tedd(docFolder,'talon.jpg',b);
       S.expProgress=15;render();
     }
     if(S.expSel.buletin){
       var b=await getPhotoBlob('doc_buletin');
-      if(b)docFolder.file('buletin.jpg',b);
+      _tedd(docFolder,'buletin.jpg',b);
       S.expProgress=22;render();
     }
     if(S.expSel.constatare){
       var b=await getPhotoBlob('doc_constatare');
-      if(b)docFolder.file('constatare.jpg',b);
+      _tedd(docFolder,'constatare.jpg',b);
       S.expProgress=30;render();
     }
 
@@ -720,7 +769,7 @@ window.doExportZip=async function(){
       var ovKeys=[['ov_front','ansamblu_fata.jpg'],['ov_back','ansamblu_spate.jpg'],['ov_left','ansamblu_stanga.jpg'],['ov_right','ansamblu_dreapta.jpg'],['ov_serieCaros','serie_caroserie.jpg'],['ov_km','kilometraj.jpg']];
       for(var oi=0;oi<ovKeys.length;oi++){
         var b=await getPhotoBlob(ovKeys[oi][0]);
-        if(b)ovFolder.file(ovKeys[oi][1],b);
+        _tedd(ovFolder,ovKeys[oi][1],b);
       }
       S.expProgress=55;render();
     }
@@ -739,7 +788,7 @@ window.doExportZip=async function(){
             b=await fetchBlob(e.photo);
           }
         }
-        if(b)elFolder.file('element_'+ek+'.jpg',b);
+        _tedd(elFolder,'element_'+ek+'.jpg',b);
       }
       S.expProgress=70;render();
     }
@@ -750,9 +799,9 @@ window.doExportZip=async function(){
       var clPhotos=JOB.closingPhotos||[];
       var VK_LOCAL=['fata','spate','stanga','dreapta','detaliu'];
       for(var pi=0;pi<clPhotos.length;pi++){
-        var p=clPhotos[pi];if(!p||!p.data)continue;
+        var p=clPhotos[pi];if(!p||!p.data)continue;   // torolt hely: nem hianyzas
         var b=dataUrlToBlob(p.data);
-        if(b)clFolder.file('reparat_'+(VK_LOCAL[pi]||('foto'+(pi+1)))+'.jpg',b);
+        _tedd(clFolder,'reparat_'+(VK_LOCAL[pi]||('foto'+(pi+1)))+'.jpg',b);
       }
       S.expProgress=80;render();
     }
@@ -947,6 +996,17 @@ window.doExportZip=async function(){
 
     S.expProgress=90;render();
 
+    // KODREVIEW #12: ha valami nem fert bele, az ARCHIVUM MAGA mondja meg.
+    // Igy a dosszie kesobbi olvasoja is latja, nem csak az, aki exportalt.
+    if(_hianyzo.length){
+      zip.file('HIANYZO_FAJLOK.txt',
+        'FIGYELEM — az alabbi fajlokat nem sikerult letolteni, ezert NEM\r\n' +
+        'kerultek bele ebbe az archivumba:\r\n\r\n  - ' +
+        _hianyzo.join('\r\n  - ') + '\r\n\r\n' +
+        'Keszult: ' + new Date().toISOString() + '\r\n' +
+        'Munka:   ' + (JOB.number||JOB.id||'') + '\r\n');
+    }
+
     // Generalj ZIP-et
     var blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'},function(meta){S.expProgress=90+Math.round(meta.percent/10);render()});
     S.expProgress=100;render();
@@ -958,7 +1018,9 @@ window.doExportZip=async function(){
     if(saveResult && saveResult.ok){
       // Sikeres mentes a kivalasztott mappaba
       S.expLoading=0;S.showExp=0;
-      toast(T('savedToDisk')+': '+saveResult.path);
+      toast(_hianyzo.length
+        ? (T('savedToDisk')+': '+saveResult.path+' — FIGYELEM: '+_hianyzo.length+' fajl hianyzik')
+        : (T('savedToDisk')+': '+saveResult.path), _hianyzo.length?1:0);
       render();
     }else{
       // Fallback: bongeszo Downloads mappaja

@@ -1883,7 +1883,7 @@
       "fe": [
         [
           "rpw-config.js",
-          "_migrations/012_rollback.sql futtatasa"
+          "_migrations/012_rollback.sql futtatása"
         ]
       ],
       "be": [
@@ -2012,6 +2012,78 @@
       ],
       "be": [],
       "teszt": "_tests/unit/test-kr4-prepare-rollback.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-157",
+      "nev": "A betoltesi hiba ne 'nincs munka' legyen. Halozati hiba, lejart munkamenet es jogosultsag-megtagadas eddig UGYANAZT a 'Nu exista lucrare' uzenetet adta, mint egy tenyleg nem letezo munka. Az operator termeszetes reakcioja erre: felveszi ujra a dossziet — duplikatum, epp az ellenkezoje annak, amit a rendszer poka-yoke szabalyai mashol vednek. Kozos hibakepernyo a rpw-util.js-ben: kimondja, hogy a munka NEM tunt el, hogy ne vegyenek fel ujat, es felkinal ujraprobalast. Lejart munkamenetnel MAS uzenet (ott belepni kell). A gombok addEventListener-rel mennek, nem inline handlerrel — igy szigoru CSP mellett is mukodnek. Bekotve mind a nyolc fazislapra",
+      "fe": [
+        [
+          "rpw-util.js",
+          "function mutasdBetoltesHibat(err, ln){"
+        ],
+        [
+          "rpw-util.js",
+          "function betoltesHibaHtml(err, ln){"
+        ],
+        [
+          "rpw-inchidere-red.html",
+          "RPWUtil.mutasdBetoltesHibat"
+        ],
+        [
+          "rpw-dosar.html",
+          "RPWUtil.mutasdBetoltesHibat"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-kodreview-0829.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-158",
+      "nev": "A rendszam-maszk tenyleg maszkoljon. Harom ponton engedett: 'MS-01-AAA' -> 'MS-…-AAA' (het karakterbol ot kiszivargott, a kozepso ket szamjegy szaz lehetoseg — a jarmu a muhely udvaran azonosithato); 'MS-1234' -> 'MS…234'; es ot karakter alatt VALTOZATLANUL ment vissza, vagyis egyaltalan nem maszkolt. Mostantol csak a megyekod marad, es SOHA nem adja vissza a bemenetet valtozatlanul. A biztonsagi teszt is szigorodott: nem a szoveget rogziti, hanem azt, hogy az utolso szegmens es a szamjegyek NEM szivarognak ki",
+      "fe": [
+        [
+          "rpw-cache.js",
+          "if(parts.length >= 2 && parts[0]) return parts[0].slice(0,2) + '-…';"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-security-a-o.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-159",
+      "nev": "A ZIP-export ne legyen csendben hianyos. A fetchBlob barmilyen hibanal null-t adott, es a hivas helye egyszeruen tovabblepett: a fajl kimaradt az archivumbol, szo nelkul. Egy biztositoi dossziebol csendben hianyzo constatare.jpg nem kenyelmi kerdes, hanem megfelelosegi. Mostantol kozos hozzaado szamolja a kimaradasokat, a zaro uzenet jelzi, es maga a ZIP is tartalmaz egy HIANYZO_FAJLOK.txt-t — igy a dosszie kesobbi olvasoja is latja, nem csak az, aki exportalt",
+      "fe": [
+        [
+          "rpw-inchidere-red.html",
+          "function _tedd(mappa, nev, blob){"
+        ],
+        [
+          "rpw-inchidere-red.html",
+          "HIANYZO_FAJLOK.txt"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-kodreview-0829.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-160",
+      "nev": "Ket apro, ami neman nyelt. (#14) A loadJob ketszer gyorsitotarazott ugyanabban a lefutasban — az egyik kikerult hat lapon. (#15) A resize() se a FileReader, se az Image hibajat nem kezelte: egy serult vagy nem tamogatott kepfajl eseten SEMMI nem tortent — a dolgozo megnyomta a gombot, es a foto nem jelent meg, hibauzenet nelkul. Mostantol szol, es megmondja, melyik lepesnel (olvasas / formatum / konverzio)",
+      "fe": [
+        [
+          "rpw-inchidere-red.html",
+          "r.onerror=function(){ hiba('citire'); };"
+        ],
+        [
+          "rpw-reconstatare-red.html",
+          "img.onerror=function(){ hiba('format'); };"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-kodreview-0829.js",
       "allapot": "csak-frontend"
     }
   ]
