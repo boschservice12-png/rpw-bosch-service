@@ -151,9 +151,19 @@
       st.textContent='html{display:none!important}';
       (doc.head||doc.documentElement).appendChild(st);
     }catch(e){}
-    // Azonnal urit, HA mar van torzs; es a betoltes vegen ujra, mert a
-    // parszolas kozben meg erkezhet tartalom a hallgato lefutasa elott.
-    var urit=function(){ try{ if(doc.body) doc.body.textContent=''; }catch(e){} };
+    // Kiuritjuk a torzset — de a lapok kozos tartojat (#app) MEGHAGYJUK.
+    // Enelkul a lap sajat render()-e a hianyzo tartora hasalna el, mielott
+    // az atiranyitas megtortenik: a felhasznalo ebbol semmit nem lat, de a
+    // hiba elfedi a valodi okot, es a teszteket is megoli.
+    var urit=function(){
+      try{
+        if(!doc.body) return;
+        doc.body.textContent='';
+        if(!doc.getElementById('app')){
+          var app=doc.createElement('div'); app.id='app'; doc.body.appendChild(app);
+        }
+      }catch(e){}
+    };
     urit();
     if(doc.readyState==='loading') doc.addEventListener('DOMContentLoaded',urit);
   }

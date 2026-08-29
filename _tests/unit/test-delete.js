@@ -71,10 +71,17 @@ function bootPanel(opts){
       rawRole:'Műszakvezető', roleCode:'MANAGER', can:(opts.can||CAN_MGR),
       exp: Date.now() + 9e6 }));
   }
-  const rpc = async n => ({ data:(n === 'rpw2_session'
-      ? { ok:true, employee:{ id:'E1', name:'Teszt Vezető', role:'Műszakvezető',
-                              shop_id:'SHOP-A', can:(opts.can||CAN_MGR) } }
-      : null), error:null });
+  // Az AUTH_REQUIRED bekapcsolasa ota a bejelentkezett ut RPC-n megy
+  // (rpw_job_trash), nem tabla-frissitessel. A harness MINDKETTOT feljegyzi,
+  // kulonben a "elment-e a szerverre" allitas vakon zold lenne.
+  const rpc = async (n, a) => {
+    if(n === 'rpw2_session') return { data:{ ok:true, employee:{ id:'E1', name:'Teszt Vezető',
+      role:'Műszakvezető', shop_id:'SHOP-A', can:(opts.can||CAN_MGR) } }, error:null };
+    if(n === 'rpw_job_trash'){ SZERVER.push({ rpc:n, id:(a&&a.p_id), deleted_at:true });
+      return { data:{ ok:true }, error:null }; }
+    if(n === 'rpw_jobs_list') return { data:{ ok:true, rows:[] }, error:null };
+    return { data:null, error:null };
+  };
   const update = v => { const t = { eq: () => t,
     then: f => { SZERVER.push(v); return Promise.resolve(f({ error:null })) } }; return t; };
   w.supabase = { createClient: () => ({ rpc,
@@ -109,15 +116,33 @@ console.log('\n2. Bejelentkezett vezető: a törlés VÉGIGMEGY a szerverig');
   ok(!!w.__cim, 'a megerősítő ablak MEGNYÍLT (' + (w.__cim||'—') + ')');
   eq(SZERVER.length, 1, 'pontosan egy szerverhívás történt');
   ok(SZERVER[0] && !!SZERVER[0].deleted_at, '  és az a kosárba tette (deleted_at)');
+  ok(SZERVER[0] && SZERVER[0].rpc === 'rpw_job_trash',
+     '  a TOKENES úton, nem közvetlen tábla-írással  ('+((SZERVER[0]||{}).rpc||'tábla-írás')+')');
   ok(uz.join(' ').length > 0, 'a felhasználó visszajelzést kapott');
   try{ dom.window.close() }catch(e){}
 }
 
-console.log('\n3. Bejelentkezés nélkül NEM töröl — és ezt meg is mondja');
+console.log('\n3a. Bejelentkezés nélkül a panel EL SEM INDUL (RPW-001 óta)');
 {
+  // 2026-08-29 elott a lap munkamenet nelkul is felepult, es a torlest a
+  // sajat ellenorzese allitotta meg. Az AUTH_REQUIRED bekapcsolasa ota az
+  // or MAR AZ ELSO KEPKOCKA ELOTT megallitja a lapot es a loginra kuld —
+  // igy a torles kerdese fel sem merul.
   const { w, SZERVER, dom } = bootPanel({ session:false });
   await varj(300);
-  ok(w.eval('isAdmin()') === false, 'isAdmin() hamis');
+  ok(w.RPWAuth.blocked() === true, 'az őr megállította a lapot');
+  ok(!!w.document.querySelector('style[data-rpw-block]'), '  a lap el van rejtve');
+  eq(SZERVER.length, 0, '  és semmi nem ment a szerverre');
+  try{ dom.window.close() }catch(e){}
+}
+
+console.log('\n3b. Bejelentkezve, DE törlési jog nélkül sem töröl — és megmondja');
+{
+  // Ez a valodi mai eset: a dolgozo BENT van, csak nincs joga torolni.
+  const { w, SZERVER, dom } = bootPanel({ can:{ team:false, posts:false, open:true,
+    reception:true, work:true, close:false, override:false, delete:false } });
+  await varj(300);
+  ok(w.eval('isAdmin()') === false, 'isAdmin() hamis (nincs törlési jog)');
   const uz = []; w.__uz = uz;
   w.eval('window.toast=function(m){window.__uz.push(m)}');
   w.eval('window.RPWWorkflow.ask=function(o){ o.onConfirm(); }');

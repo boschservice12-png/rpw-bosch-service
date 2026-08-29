@@ -1841,6 +1841,31 @@
       "be": [],
       "teszt": "_tests/unit/test-p0-7-functions.js",
       "allapot": "el"
+    },
+    {
+      "id": "F-148",
+      "nev": "A szerelok belephetnek a panelbe, de nem modosithatnak. A szerep-lekepezes nem ismerte a 'Szerelo' munkakort, ezert a belepetes 11 emberbol 6-ot kizart volna. Ferenc dontese: lassanak mindent, de fazist ne leptessenek — ez az 'auditor' szerep. A tiltas az ADATRETEGBEN all (a panel a fazis-muveleteket nem koti szerephez, es az elo rpw_patch_v3 egyaltalan nem nez szerepet): olvasas atmegy, minden iras read_only-val elutasitva. FIGYELEM: kliensoldali korlat, a szerver ma nem ellenoriz szerepet",
+      "fe": [
+        [
+          "rpw-roles.js",
+          "'Szerelő':'auditor'"
+        ],
+        [
+          "rpw-db.js",
+          "function csakOlvaso(){"
+        ],
+        [
+          "rpw-db.js",
+          "if(csakOlvaso()) return { data:null, error:OLVASO_HIBA };"
+        ],
+        [
+          "rpw-db.js",
+          "patchV2:        irasZart(patchV2),"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-rpw001-auth-gate.js",
+      "allapot": "csak-frontend"
     }
   ]
 }

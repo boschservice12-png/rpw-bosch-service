@@ -189,3 +189,37 @@ funkció értéke elvész, és ezt csak a felületen látni. Riasztás nincs rá
 Az alkalmi dosszié 2026-08-25-i útvonala (kék gomb → ablak → mentés → a
 dosszié lapja) **unit- és jsdom-szinten** igazolt. Valódi böngészőben,
 valódi szerverrel nem — `MANUAL-STAGING-CHECKLIST.md` 13. pont.
+
+### A beléptetés 11 emberből 6-ot kizárna — és két hely mást mond
+**Mérve 2026-08-29-én, élő adatbázison, csak olvasással.**
+
+Az `AUTH_REQUIRED=true` kitétele ma a következőt tenné:
+
+| élő szerep | fő | RPW-hozzáférés |
+|---|---|---|
+| Recepció, Karosszéria, Festő, Műszakvezető, Irodavezető | 1–1 | **van** |
+| Szerelő | **4** | nincs |
+| Sofőr | 1 | nincs |
+| Egyéb | 1 | nincs |
+
+**5 fő tudna belépni, 6 fő kizárva.**
+
+A `rpw-roles.js` `EMPLOYEE_ROLE_MAP`-ja csak öt magyar munkakört ismer; a
+többi `null`-t ad, amitől a `RPWAuth.login()` `hasRpwAccess:false`-szal
+elutasít („Cont valid, dar fără acces la fluxul de vopsitorie").
+A kód szerint ez **Ferenc 2026-08-17-i döntése**, nem hiba.
+
+**Az ellentmondás:** az adatbázis `rpw_roles` táblájában a Szerelő
+(`TECH`) szerepnek `can_work = true` joga van. A szerep-tábla tehát
+megengedi neki a munkát, a kliens-oldali leképezés viszont teljesen
+kizárja az RPW-ből. Amíg `AUTH_REQUIRED=false`, ez nem látszik: mindenki
+mindent lát. A beléptetés pillanatában a két forrás szétválik, és a
+szigorúbb nyer.
+
+**Amíg ez nem dől el, a beléptetés nem tehető ki** — és nélküle a
+`008` lezárás sem, mert a dolgozói lapok utána csak bejelentkezve
+működnek. A 33 munka addig az anon kulccsal elérhető marad.
+
+Feloldás: vagy a Szerelő/Sofőr/Egyéb valóban nem használja az RPW-t (akkor
+a `rpw_roles.can_work` hozandó összhangba), vagy fel kell venni őket a
+leképezésbe a saját fázisaikkal.
