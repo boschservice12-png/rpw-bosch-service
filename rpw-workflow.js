@@ -647,6 +647,28 @@
     CRIT_KEYS.forEach(function(k){ if(snap[k]===undefined){ delete job[k]; } else { job[k]=snap[k]; } });
   }
 
+  // ── KÓDREVIEW #4 (2026-08-29) — A `prepare` NORMÁL mezőket ír ─────
+  // A snapshotCrit csak a WORKFLOW-mezőket őrzi (phase, phases, inchis,
+  // rework). A szerver-ágon futó `opts.prepare()` viszont normál mezőket
+  // állít — a lezárásnál például a `closing.closedAt`-ot. Elutasításkor
+  // ezekre eddig NEM volt visszagörgetés, pedig a helyszíni megjegyzés
+  // azt ígéri, hogy „a helyi állapot VÁLTOZATLAN marad". Ezért kell egy
+  // TELJES pillanatkép is: az objektum AZONOSSÁGA megmarad (a hívó ezt a
+  // referenciát tartja), csak a tartalma áll vissza.
+  function snapshotJob(job){
+    try{ return JSON.parse(JSON.stringify(job)); }catch(e){ return null; }
+  }
+  function restoreJob(job, snap){
+    if(!job || !snap) return;
+    var k;
+    for(k in job){
+      if(Object.prototype.hasOwnProperty.call(job,k) && !Object.prototype.hasOwnProperty.call(snap,k)) delete job[k];
+    }
+    for(k in snap){
+      if(Object.prototype.hasOwnProperty.call(snap,k)) job[k]=snap[k];
+    }
+  }
+
   // ---- localStorage rollback-paritás (P0 #8) -------------------------
   // A mentőréteg (rpw-save.js localWrite / commitConfirmed) a MUTÁLT jobot
   // azonnal kiírja a localStorage-be (rpw_job_<id>). Ha a szervermentés
@@ -740,13 +762,20 @@
     // Néhány oldal a lezárás ELŐTT normál mezőket is beállít
     // (pl. evalData.status, closing.closedAt). Ezek NEM workflow-mezők,
     // tehát a rendes mentési úton mennek — a fázisváltás előtt.
+    // KÓDREVIEW #4: a `prepare` ELŐTTI állapot, hogy elutasításkor
+    // vissza tudjuk görgetni azt is, amit ő írt.
+    var _elo = null, _eloLs = null;
     if(typeof opts.prepare === 'function'){
+      _elo   = snapshotJob(job);
+      _eloLs = snapshotLS(job.id, opts.ls);
       var prep;
       try{ prep = opts.prepare(); }
-      catch(e){ return { ok:false, saved:false, serverRejected:true,
+      catch(e){ restoreJob(job,_elo); restoreLS(_eloLs);
+                return { ok:false, saved:false, serverRejected:true,
                          result:{ok:false, errors:['prepare_threw']},
                          error:{code:'prepare_threw', message:String(e && e.message || e)} }; }
       if(prep && prep.ok === false){
+        restoreJob(job,_elo); restoreLS(_eloLs);
         return { ok:false, saved:false, serverRejected:true, result:prep,
                  error:{ code:'requirements_missing',
                          message:'Faza nu poate fi închisă.',
@@ -756,6 +785,7 @@
         var pres;
         try{ pres = await opts.save(); }catch(e){ pres = {failed:true}; }
         if(!saveConfirmed(pres)){
+          restoreJob(job,_elo); restoreLS(_eloLs);
           return { ok:false, saved:false, notSynced:true,
                    result:{ok:false, errors:['not_synced']},
                    error:{ code:'not_synced',
@@ -774,7 +804,17 @@
 
     if(!res || res.ok !== true){
       // ── ELUTASÍTÁS: a helyi állapot VÁLTOZATLAN marad ────────────
-      // Nem írjuk át a phase / phases / inchis / rework mezőket.
+      // A workflow-mezőket (phase, phases, inchis, rework) eleve nem
+      // írjuk át. KÓDREVIEW #4: amit viszont a `prepare` beírt (pl.
+      // closing.closedAt), azt VISSZA is kell görgetni — különben a lap
+      // lezárási dátumot mutat egy le nem zárt munkán.
+      //
+      // ⚠ AMI ÍGY IS MARAD: a `prepare` utáni `opts.save()` a felkészített
+      // mezőket MÁR KIÍRTA a szerverre. A memóriát és a localStorage-t
+      // visszaállítjuk, a szerveren lévő másolat viszont a felkészített
+      // értéket tartja a következő mentésig. Ez tudatos: egy újabb
+      // hálózati hívás az elutasítás pillanatában maga is elbukhat.
+      restoreJob(job,_elo); restoreLS(_eloLs);
       return { ok:false, saved:false, serverRejected:true,
                conflict: !!(res && res.conflict),
                serverVersion: res ? res.serverVersion : null,

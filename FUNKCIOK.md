@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 117 | 30 | 74 | 5 | 8 | 7 |
+| 118 | 30 | 75 | 5 | 8 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -90,6 +90,7 @@ szám nélkül, azt is megmondja.
 | **F-153** | A lezaro fotok jelvenye ne hazudjon. A torles (delClosePhoto) NULL-t hagy a tombben, a jelveny viszont photos.length-t szamolt: 2 valodi foto + 3 torolt hely is 5/5-ot mutatott, ZOLDEN. FONTOS: a LEZARAS maga jol szamolt (RPWWorkflow.realPhotoCount szuri a lyukakat), tehat hianyos munkat NEM lehetett lezarni — a jelveny hazudott, es a dolgozo ertetlenul allt a hibauzenet elott. Mostantol ugyanaz a fuggveny szamol, mint ami enged vagy tilt | `rpw-inchidere-red.html` `rpw-workflow.js` | — | `unit/test-kodreview-0829.js` | ✅ él |
 | **F-154** | A fuggo mentes ne vesszen el. A fazislapok 500-600 ms-ra kesleltetik a mentest; aki ezen belul zarja be a fulet vagy valt at masik alkalmazasra, az csendben elvesziti a szerkesztest — mikozben a kepernyo mar az uj erteket mutatta. Kozos kijarat a rpw-save.js-ben (onExit), egyszer bekotve a pagehide-ra ES a visibilitychange-re; a hat fazislap bejelenti a sajat uritojet. A visibilitychange azert kell, mert telefonon az alkalmazas-valtas a gyakori, es ott a pagehide nem mindig fut le | `rpw-save.js` `rpw-inchidere-red.html` | — | `unit/test-kodreview-0829.js` | 🟦 csak frontend |
 | **F-155** | Az anon hatokoru gyorsitotar tenyleg dobodjon el, es a rovid lejarat maradjon rovid. Ket kulon hiba: (1) a rpw-cache.js fejlece azt igerte, hogy a belepes elott keletkezett bejegyzesek a kovetkezo belepeskor eldobodnak — de NEM volt ra kod, igy kozos muhelygepen a kovetkezo ember a sajat belepese elott meg olvashatta az elozo munkamenet gyorsitotarazott munkalistajat; mostantol a dropScope('anon') fut a belepeskor. (2) A set() kvota-ujraprobalasa beegetett 24 oras TTL-t hasznalt a hivo ertekе helyett: aki 5 perces lejarattal tarolt, takaritas utan 24 orat kapott — epp a rovid lejaratu, erzekenyebb bejegyzesek eltek tovabb a kelletenel | `rpw-cache.js` `rpw-auth.js` | — | `unit/test-kodreview-0829.js` | 🟦 csak frontend |
+| **F-156** | Amit a `prepare` irt, az is gorgodjon vissza. A kodreview azt allitotta, hogy a prepare es a mutate-callback duplan alkalmazza a lezarasi idot — UTANANEZTEM, ez nem igy van: a ketto ket KULON ut (SERVER_TRANSITIONS=false -> mutate; true -> prepare, es ott a mutate le sem fut). VALODI hiba viszont, hogy a szerver-ag elutasitaskor NEM gorgette vissza, amit a prepare beirt (pl. closing.closedAt), pedig a helyszini megjegyzes azt igeri, hogy a helyi allapot valtozatlan marad — a lap igy lezarasi datumot mutatott volna egy le NEM zart munkan. Uj snapshotJob/restoreJob: az objektum AZONOSSAGA megmarad, csak a tartalma all vissza. MARAD: a prepare utani save mar kiirta a felkeszitett mezoket a szerverre; a memoria es a localStorage visszaall, a szerveren levo masolat a kovetkezo mentesig a felkeszitett erteket tartja — tudatos, mert egy ujabb halozati hivas az elutasitas pillanataban maga is elbukhat. Ma alszik (SERVER_TRANSITIONS=false), de az RPW-003 ezt az utat kapcsolja be | `rpw-workflow.js` | — | `unit/test-kr4-prepare-rollback.js` | 🟦 csak frontend |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 

@@ -1992,6 +1992,27 @@
       "be": [],
       "teszt": "_tests/unit/test-kodreview-0829.js",
       "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-156",
+      "nev": "Amit a `prepare` irt, az is gorgodjon vissza. A kodreview azt allitotta, hogy a prepare es a mutate-callback duplan alkalmazza a lezarasi idot — UTANANEZTEM, ez nem igy van: a ketto ket KULON ut (SERVER_TRANSITIONS=false -> mutate; true -> prepare, es ott a mutate le sem fut). VALODI hiba viszont, hogy a szerver-ag elutasitaskor NEM gorgette vissza, amit a prepare beirt (pl. closing.closedAt), pedig a helyszini megjegyzes azt igeri, hogy a helyi allapot valtozatlan marad — a lap igy lezarasi datumot mutatott volna egy le NEM zart munkan. Uj snapshotJob/restoreJob: az objektum AZONOSSAGA megmarad, csak a tartalma all vissza. MARAD: a prepare utani save mar kiirta a felkeszitett mezoket a szerverre; a memoria es a localStorage visszaall, a szerveren levo masolat a kovetkezo mentesig a felkeszitett erteket tartja — tudatos, mert egy ujabb halozati hivas az elutasitas pillanataban maga is elbukhat. Ma alszik (SERVER_TRANSITIONS=false), de az RPW-003 ezt az utat kapcsolja be",
+      "fe": [
+        [
+          "rpw-workflow.js",
+          "function snapshotJob(job){"
+        ],
+        [
+          "rpw-workflow.js",
+          "function restoreJob(job, snap){"
+        ],
+        [
+          "rpw-workflow.js",
+          "restoreJob(job,_elo); restoreLS(_eloLs);"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-kr4-prepare-rollback.js",
+      "allapot": "csak-frontend"
     }
   ]
 }
