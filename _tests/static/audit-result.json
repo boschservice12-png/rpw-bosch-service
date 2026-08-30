@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-29T21:36:20.774Z",
+  "generated": "2026-08-30T19:43:28.979Z",
   "files": 33,
   "total": 28,
   "allowed": 28,
@@ -191,7 +191,7 @@
     },
     {
       "fajl": "rpw-workflow.js",
-      "sor": 121,
+      "sor": 122,
       "mezo": "phases[]",
       "ok": "a helyi UX-előnézet és a fejlesztői (szerver nélküli) út",
       "ut": "a rpw-workflow.js a kliensoldali modell. Élesben (SERVER_TRANSITIONS=true) a commitCriticalTransition NEM futtatja a helyi mutációt — a rpw_transition dönt. Ezt a frontend-integrációs teszt bizonyítja: a mutate() kivételt dob, és nem következik be.",
@@ -199,7 +199,7 @@
     },
     {
       "fajl": "rpw-workflow.js",
-      "sor": 147,
+      "sor": 148,
       "mezo": "phases[]",
       "ok": "a helyi UX-előnézet és a fejlesztői (szerver nélküli) út",
       "ut": "a rpw-workflow.js a kliensoldali modell. Élesben (SERVER_TRANSITIONS=true) a commitCriticalTransition NEM futtatja a helyi mutációt — a rpw_transition dönt. Ezt a frontend-integrációs teszt bizonyítja: a mutate() kivételt dob, és nem következik be.",
@@ -207,7 +207,7 @@
     },
     {
       "fajl": "rpw-workflow.js",
-      "sor": 176,
+      "sor": 177,
       "mezo": "phase",
       "ok": "a helyi UX-előnézet és a fejlesztői (szerver nélküli) út",
       "ut": "a rpw-workflow.js a kliensoldali modell. Élesben (SERVER_TRANSITIONS=true) a commitCriticalTransition NEM futtatja a helyi mutációt — a rpw_transition dönt. Ezt a frontend-integrációs teszt bizonyítja: a mutate() kivételt dob, és nem következik be.",
@@ -215,7 +215,7 @@
     },
     {
       "fajl": "rpw-workflow.js",
-      "sor": 476,
+      "sor": 546,
       "mezo": "phase",
       "ok": "a helyi UX-előnézet és a fejlesztői (szerver nélküli) út",
       "ut": "a rpw-workflow.js a kliensoldali modell. Élesben (SERVER_TRANSITIONS=true) a commitCriticalTransition NEM futtatja a helyi mutációt — a rpw_transition dönt. Ezt a frontend-integrációs teszt bizonyítja: a mutate() kivételt dob, és nem következik be.",
@@ -223,7 +223,7 @@
     },
     {
       "fajl": "rpw-workflow.js",
-      "sor": 602,
+      "sor": 672,
       "mezo": "phase",
       "ok": "a helyi UX-előnézet és a fejlesztői (szerver nélküli) út",
       "ut": "a rpw-workflow.js a kliensoldali modell. Élesben (SERVER_TRANSITIONS=true) a commitCriticalTransition NEM futtatja a helyi mutációt — a rpw_transition dönt. Ezt a frontend-integrációs teszt bizonyítja: a mutate() kivételt dob, és nem következik be.",

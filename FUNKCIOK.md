@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 122 | 30 | 79 | 5 | 8 | 7 |
+| 124 | 30 | 81 | 5 | 8 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -95,6 +95,8 @@ szám nélkül, azt is megmondja.
 | **F-158** | A rendszam-maszk tenyleg maszkoljon. Harom ponton engedett: 'MS-01-AAA' -> 'MS-…-AAA' (het karakterbol ot kiszivargott, a kozepso ket szamjegy szaz lehetoseg — a jarmu a muhely udvaran azonosithato); 'MS-1234' -> 'MS…234'; es ot karakter alatt VALTOZATLANUL ment vissza, vagyis egyaltalan nem maszkolt. Mostantol csak a megyekod marad, es SOHA nem adja vissza a bemenetet valtozatlanul. A biztonsagi teszt is szigorodott: nem a szoveget rogziti, hanem azt, hogy az utolso szegmens es a szamjegyek NEM szivarognak ki | `rpw-cache.js` | — | `unit/test-security-a-o.js` | 🟦 csak frontend |
 | **F-159** | A ZIP-export ne legyen csendben hianyos. A fetchBlob barmilyen hibanal null-t adott, es a hivas helye egyszeruen tovabblepett: a fajl kimaradt az archivumbol, szo nelkul. Egy biztositoi dossziebol csendben hianyzo constatare.jpg nem kenyelmi kerdes, hanem megfelelosegi. Mostantol kozos hozzaado szamolja a kimaradasokat, a zaro uzenet jelzi, es maga a ZIP is tartalmaz egy HIANYZO_FAJLOK.txt-t — igy a dosszie kesobbi olvasoja is latja, nem csak az, aki exportalt | `rpw-inchidere-red.html` | — | `unit/test-kodreview-0829.js` | 🟦 csak frontend |
 | **F-160** | Ket apro, ami neman nyelt. (#14) A loadJob ketszer gyorsitotarazott ugyanabban a lefutasban — az egyik kikerult hat lapon. (#15) A resize() se a FileReader, se az Image hibajat nem kezelte: egy serult vagy nem tamogatott kepfajl eseten SEMMI nem tortent — a dolgozo megnyomta a gombot, es a foto nem jelent meg, hibauzenet nelkul. Mostantol szol, es megmondja, melyik lepesnel (olvasas / formatum / konverzio) | `rpw-inchidere-red.html` `rpw-reconstatare-red.html` | — | `unit/test-kodreview-0829.js` | 🟦 csak frontend |
+| **F-161** | HID: egy fotozas, ket helyre. Az avizare dauna iratlistajaba feltoltott hat auto-foto (4 oldal + alvazszam + kilometeróra) UGYANAZ a hat kep, amit a recepcio attekinto fotokent var — de a ket oldal nem tudott egymasrol: a szabaly csak a photoKeys-t nezte, a foto viszont a dosarActe-ban ult. Ezert kerte a rendszer KETSZER ugyanazt a kepet. A hid OLVASASKOR huzodik meg: nem masolunk adatot, nem irunk photoKeys-t — igy nincs elavulo masolat (ha az iratot torlik, a szamlalo magatol visszaesik), es visszafordithato. A talon-foto is atjon a pag_talon_fata rekeszbol. Uj kotelezo rekesz: foto_km (a hatodik auto-foto), ettol a kotelezo lista 17-rol 18-ra nott | `rpw-workflow.js` `rpw-config.js` | — | `unit/test-harom-allapot.js` | 🟦 csak frontend |
+| **F-162** | AVIZARE DAUNA sajat lezarasi szabalya. A fazis-szabalyok nem ismertek a 'csak dosszie' esetet: a doar_dosar szo NULLASZOR fordult elo a rpw-workflow.js-ben. Ezert egy iratgyujto dossziétol is muhelyi bevetelezest kert (talon-foto, 6 attekinto kep, elem-statuszok, damage report) — pedig ott a szerviz nem javit, csak gyujt es atad, es az auto sokszor ott sincs. 2026-08-30-an 33 munkabol 18 allt ezen. Mostantol az avizare akkor es csak akkor kesz, amikor a FAJL elkeszitheto: a kotelezo iratlista hianytalan. A javitasi ut (deschide dosar = recepcio) valtozatlanul keri a teljes bevetelezest | `rpw-workflow.js` | — | `unit/test-harom-allapot.js` | 🟦 csak frontend |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 

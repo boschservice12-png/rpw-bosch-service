@@ -58,6 +58,7 @@
     wf_docs_not_delivered:  {ro:'documentele nu sunt predate biroului', hu:'a dokumentumok nincsenek az irodának átadva', en:'documents not delivered to office'},
     wf_no_handover:         {ro:'lipsește responsabilul de predare', hu:'nincs átadási felelős rögzítve', en:'no handover responsible recorded'},
     wf_talon_missing:       {ro:'talonul nu e încărcat', hu:'a talon nincs feltöltve', en:'registration card not uploaded'},
+    wf_acte_incomplete:{ro:'Dosarul nu e complet — mai lipsesc acte/foto',hu:'A dosszié nem teljes — hiányzik irat vagy fotó',en:'File incomplete — documents or photos missing'},
     wf_overview_missing:    {ro:'lipsesc cele 6 fotografii de ansamblu', hu:'hiányzik a 6 áttekintő fotó', en:'the 6 overview photos are missing'},
     wf_elements_incomplete: {ro:'nu toate elementele de caroserie au status', hu:'nem minden karosszériaelem státusza kitöltött', en:'not all body elements have status'},
     wf_proof_photo_missing: {ro:'element avariat/recomandat fără foto dovadă', hu:'sérült/ajánlott elemhez hiányzik a bizonyító fotó', en:'damaged/suggested element without proof photo'},
@@ -239,14 +240,75 @@
   // ====================================================================
   //  LEZÁRÁSI ELLENŐRZÉS — canCompletePhase (fázisonként)
   // ====================================================================
+  // ── HÍD: EGY FOTÓZÁS, KÉT HELYRE (2026-08-30, Ferenc döntése) ────
+  // Az avizare daună iratlistájába feltöltött hat autó-fotó UGYANAZ a hat
+  // kép, amit a recepció áttekintő fotóként vár. Eddig a két oldal nem
+  // tudott egymásról: a szabály csak a `photoKeys`-t nézte, a fotó viszont
+  // a `dosarActe`-ban ült. Ezért kérte volna a rendszer KÉTSZER ugyanazt a
+  // képet — és ezért állt meg 33 munkából 18 az 1. fázisban.
+  //
+  // A híd OLVASÁSKOR húzódik meg: NEM másolunk adatot, nem írunk
+  // `photoKeys`-t. Így nincs elavuló másolat (ha az iratot törlik, a
+  // számláló magától visszaesik), és az egész visszafordítható.
+  var OV_POZ  = ['front','back','left','right','serieCaros','km'];
+  var OV_ACTE = { front:'foto_fata', back:'foto_spate', left:'foto_stanga',
+                  right:'foto_dreapta', serieCaros:'foto_serie_caroserie', km:'foto_km' };
+
+  // Van-e valódi fájl az iratlista adott rekeszében?
+  function acteFotoVan(job, slot){
+    var a = (job && job.dosarActe) ? job.dosarActe[slot] : null;
+    if(!a) return false;
+    var lista = Array.isArray(a) ? a : [a];
+    for(var i=0;i<lista.length;i++){
+      var f=lista[i];
+      if(f && (nonEmpty(f.url)||nonEmpty(f.path)||nonEmpty(f.key)||nonEmpty(f.data)||nonEmpty(f.ref))) return true;
+    }
+    return false;
+  }
+
+  // ── AVIZARE DAUNĂ = „csak dosszié" (Ferenc, 2026-08-30) ─────────
+  // A szerviz nem javít, csak GYŰJT és ÁTAD: iratok + 6 autó-fotó +
+  // kárfotók, egyetlen fájlban, amit a biztosító portáljára másolnak.
+  // Az autó sokszor ott sincs — ezért a műhelyi bevételezés (elem-
+  // státuszok, damage report) itt ÉRTELMETLEN követelmény volt.
+  // A lappal AZONOS definíciót használjuk, hogy a kettő ne csússzon szét.
+  function csakDosszie(job){
+    if(!job) return false;
+    return job.flux==='doar_dosar' || (job.flux==null && job.doarDosar===true);
+  }
+
+  // A kötelező iratlista hiányai — UGYANAZZAL a szabállyal, amivel a
+  // dosszié-lap a ZIP-et engedi. Így az avizare akkor és csak akkor
+  // „kész", amikor a fájl tényleg elkészíthető.
+  function acteHianyzo(job){
+    var DA = (root.RPW_DAUNA_DOCS||[]);
+    var hiany = [];
+    for(var i=0;i<DA.length;i++){
+      var g=DA[i];
+      if(g.optional) continue;
+      if(g.either){
+        var vanBarmelyik=false;
+        for(var j=0;j<g.items.length;j++){ if(acteFotoVan(job,g.items[j].key)){ vanBarmelyik=true; break; } }
+        if(!vanBarmelyik) hiany.push(g.label);
+      } else {
+        for(var k=0;k<g.items.length;k++){
+          if(!acteFotoVan(job,g.items[k].key)) hiany.push(g.label+' / '+g.items[k].label);
+        }
+      }
+    }
+    return hiany;
+  }
+
   function overviewPhotoCount(job){
-    var pk=job.photoKeys||{}, c=0;
-    // 1) indexelt kulcsok ov_0..ov_5
-    for(var i=0;i<6;i++){ if(pk['ov_'+i]) c++; }
-    // 2) nevesített kulcsok
-    if(c===0){ ['ov_front','ov_back','ov_left','ov_right','ov_serieCaros','ov_km'].forEach(function(k){ if(pk[k]) c++; }); }
-    // 3) legacy photos tömb (type:'overview')
-    if(c===0){ c=realPhotoCount(arr(job.photos).filter(function(p){return p&&p.type==='overview';})); }
+    var pk=job.photoKeys||{}, c=0, i, p;
+    // Pozíciónként EGYSZER számolunk, három forrásból: indexelt kulcs,
+    // nevesített kulcs, vagy az iratlista megfelelő rekesze (a híd).
+    for(i=0;i<OV_POZ.length;i++){
+      p=OV_POZ[i];
+      if(pk['ov_'+i] || pk['ov_'+p] || acteFotoVan(job, OV_ACTE[p])) c++;
+    }
+    // legacy photos tömb (type:'overview') — csak ha a fentiekből semmi
+    if(c===0){ c=realPhotoCount(arr(job.photos).filter(function(q){return q&&q.type==='overview';})); }
     return c;
   }
   function elemStatus(e){ return e ? (e.statusV2 || e.status) : null; }
@@ -273,9 +335,17 @@
 
   function checkPhase1(job){
     var m=[];
+    // AVIZARE DAUNĂ: a dosszié akkor kész, amikor a fájl elkészíthető.
+    // Semmi műhelyi bevételezés — az a javítási úton (2. eset) van.
+    if(csakDosszie(job)){
+      if(acteHianyzo(job).length) m.push('wf_acte_incomplete');
+      return m;
+    }
     if(!nonEmpty(job.damageType) && !nonEmpty(job.workType)) m.push('wf_worktype_missing');
     var pk=job.photoKeys||{};
-    var hasTalon = !!pk.talon || !!pk.photo_talon || realPhotoCount(arr(job.photos).filter(function(p){return p&&p.type==='talon';}))>0;
+    // HÍD: a talon-fotó az iratlistából is elfogadható (pag_talon_fata).
+    var hasTalon = !!pk.talon || !!pk.photo_talon || acteFotoVan(job,'pag_talon_fata') ||
+                   realPhotoCount(arr(job.photos).filter(function(p){return p&&p.type==='talon';}))>0;
     if(!hasTalon) m.push('wf_talon_missing');
     if(job.damageType==='asig'){
       var karDoc = !!(pk.doc_constatare) || arr(job.docs).some(function(d){return d&&/constatare|proces/i.test(d.type||'');}) || (job.dosarActe&&Object.keys(job.dosarActe).length);
@@ -1278,6 +1348,10 @@
     phaseName: phaseName,
     migrateJob: migrateJob,
     isRealPhoto: isRealPhoto,
+    acteFotoVan: acteFotoVan,
+    csakDosszie: csakDosszie,
+    acteHianyzo: acteHianyzo,
+    overviewPhotoCount: overviewPhotoCount,
     realPhotoCount: realPhotoCount,
     reconstApprovedItems: reconstApprovedItems,
     canAcceptEval: function(job){ return {ok:canAcceptEval(job).length===0, missing:canAcceptEval(job)}; },

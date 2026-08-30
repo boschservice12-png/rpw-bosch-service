@@ -29,13 +29,15 @@ function inline(html){return html.replace(/<script src="([^"]+)"><\/script>/g,(m
   if(/^rpw-/.test(src)&&fs.existsSync(f))return '<script>'+fs.readFileSync(f,'utf8').replace(/<\/script>/g,'<\\/script>')+'</'+'script>';
   return '';});}
 
-// Ferenc valodi MS-26-074 sora: NINCS rendszam, NINCS marka, 17 irat.
-// (a 18. — "foto_avarii" — hianyzik, ezert a szamlalo 17/18)
+// Ferenc valodi MS-26-074 sora: NINCS rendszam, NINCS marka, 18 irat.
+// (a 19. — "foto_avarii" — hianyzik, ezert a szamlalo 18/19)
+// 2026-08-30: a `foto_km` (kilometeróra) UJ kotelezo rekesz — Ferenc
+// dontese szerint a hat auto-foto: 4 oldal + alvazszam + km.
 const AKTA={};
 ['constatare_amiabila','pag_buletin','pag_talon_fata','pag_talon_verso',
  'pag_permis_fata','pag_permis_verso','declaratie_dauna','polita_rca',
  'vin_buletin','vin_talon','vin_permis','foto_fata','foto_spate',
- 'foto_stanga','foto_dreapta','foto_serie_caroserie',
+ 'foto_stanga','foto_dreapta','foto_serie_caroserie','foto_km',
  'imputernicire_doc'].forEach(function(k,i){
    AKTA[k]={url:'https://s/'+k+'.jpg',path:'p/'+k+'.jpg',type:'image/jpeg',src:'whatsapp'};
  });
@@ -138,7 +140,7 @@ console.log('\n3. HIANYOS dossziet is el LEHET kuldeni — de a lap megmondja, m
   ok(!!g && !g.disabled,'a gomb hianyos dossziénél sem tiltott — az ugyfel nem ragad be');
   ok(!!g && /warn/.test(g.className),
      '  de figyelmezteto (kortvonalas) formaban all');
-  ok(!!g && /17\/18/.test(g.textContent.replace(/\s/g,'')),
+  ok(!!g && /18\/19/.test(g.textContent.replace(/\s/g,'')),
      '  a feliraton ott a merleg: '+(g?g.textContent.trim():'—'));
   ok(/Mai lipsesc 1 documente/.test(L.szoveg()),
      '  es szammal kimondja, hany irat hianyzik meg');
@@ -174,7 +176,7 @@ console.log('\n4. KATTINTAS: a jelzes ELMEGY, es az ugyfel LATJA, hogy elment');
   const cg=p.length?p[0].p.clientGata:null;
   ok(!!cg&&typeof cg.at==='string'&&!isNaN(Date.parse(cg.at)),
      '  a jelzes idopontot visz (ebbol tudja a szerviz, MIKOR zarta le)');
-  ok(!!cg&&cg.files===18,'  es a fajlok szamat: 17 irat + 1 egyeb = 18  (kapott: '+(cg?cg.files:'—')+')');
+  ok(!!cg&&cg.files===19,'  es a fajlok szamat: 18 irat + 1 egyeb = 19  (kapott: '+(cg?cg.files:'—')+')');
   ok(p.length&&p[0].o&&p[0].o.actor==='client_whatsapp',
      '  a mentes az UGYFEL neveben megy, nem dolgozokent');
   ok(p.length&&!('phase' in p[0].p)&&!('inchis' in p[0].p),
@@ -196,7 +198,7 @@ console.log('\n5. HA A MENTES ELBUKIK, nem hazudunk "elkuldve"-t');
 
 console.log('\n6. AKI MAR ELKULDTE, ujranyitaskor is a visszaigazolast latja');
 {
-  const L=await lap(ujJob({clientGata:{at:'2026-08-27T09:00:00.000Z',files:18}}));
+  const L=await lap(ujJob({clientGata:{at:'2026-08-27T09:00:00.000Z',files:19}}));
   ok(!L.gomb(),'nincs ujra "Trimite" gomb');
   ok(!!L.D().querySelector('.sent'),'a visszaigazolas all a helyen — a szerverrol jott allapot');
   ok(L.PATCH.length===0,'  es a puszta megnyitas nem ir a szerverre');
@@ -235,18 +237,18 @@ console.log('\n8b. KULDES UTAN felvett fajlnal a Trimite VISSZAJON');
 {
   // "plusz extra kepek, maradjon trimite" — kulonben az utolag felrakott
   // kepekrol a szerviz sosem kapna jelzest.
-  const L=await lap(ujJob({clientGata:{at:'2026-08-27T09:00:00.000Z',files:14}}));  // most 18 van
+  const L=await lap(ujJob({clientGata:{at:'2026-08-27T09:00:00.000Z',files:14}}));  // most 19 van (a km-fotoval)
   ok(!!L.D().querySelector('.sent'),'a korabbi visszaigazolas megmarad');
   const g=L.gomb();
   ok(!!g,'  DE a Trimite gomb visszajott az uj fajlok miatt');
-  ok(!!g && /4/.test(g.textContent),'  es megmondja, hany uj van  ("'+(g?g.textContent.trim():'—')+'")');
-  ok(/Ați adăugat 4 fișier/.test(L.szoveg()),'  szoveggel is');
+  ok(!!g && /5/.test(g.textContent),'  es megmondja, hany uj van  ("'+(g?g.textContent.trim():'—')+'")');
+  ok(/Ați adăugat 5 fișier/.test(L.szoveg()),'  szoveggel is');
   L.w.close();
 }
 
 console.log('\n8c. Ha nincs uj fajl a kuldes ota, NINCS ujra gomb');
 {
-  const L=await lap(ujJob({clientGata:{at:'2026-08-27T09:00:00.000Z',files:18}}));
+  const L=await lap(ujJob({clientGata:{at:'2026-08-27T09:00:00.000Z',files:19}}));
   ok(!L.gomb(),'ugyanannyi fajlnal nem tolakszik ujra a gomb');
   ok(!!L.D().querySelector('.sent'),'  csak a visszaigazolas all');
   L.w.close();

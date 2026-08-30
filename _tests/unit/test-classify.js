@@ -33,7 +33,8 @@ console.log('\n1. A konfiguráció és a szótár ugyanarról beszél');
 {
   const slots = [];
   DOCS.forEach(gr => (gr.items||[]).forEach(it => slots.push(it.key)));
-  ok(slots.length === 19, 'a dosszié 19 rése (' + slots.length + ')');
+  // 2026-08-30: +1 res (foto_km)
+  ok(slots.length === 20, 'a dosszié 20 rése (' + slots.length + ')');
 
   // Minden közvetlen megfeleltetés LÉTEZŐ résre mutat
   const rossz = Object.keys(C.DIRECT).filter(t => slots.indexOf(C.DIRECT[t]) < 0);
@@ -162,7 +163,7 @@ console.log('\n8. A terv EGYBEN készül — két azonos irat nem üti egymást'
 console.log('\n9. A legördülő minden rést felkínál, csoportosítva');
 {
   const opts = C.slotOptions(DOCS);
-  eq(opts.length, 19, 'mind a 19 rés');
+  eq(opts.length, 20, 'mind a 20 rés');
   ok(opts.every(o => o.key && o.label && o.group), 'mindegyiknek van címkéje és csoportja');
   const kulcsok = opts.map(o => o.key);
   ok(new Set(kulcsok).size === kulcsok.length, 'nincs duplikált kulcs');

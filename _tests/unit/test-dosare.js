@@ -15,9 +15,10 @@ const ok=(c,m)=>{c?pass++:(fail++,console.log('  x '+m))};
 const eq=(g,e,m)=>ok(g===e,m+'  got='+JSON.stringify(g)+' exp='+JSON.stringify(e));
 
 console.log('\n1. Iratszamlalo — AZONOS a dosszie-oldal szabalyaval');
-eq(acteCount({dosarStatus:'deschid'}).total,17,'deschid -> 17 tetel');
-eq(acteCount({dosarStatus:'deschis'}).total,8,'deschis -> 7 + karszam = 8');
-eq(acteCount({}).total,17,'dosarStatus nelkul -> a szigorubb (17)');
+// 2026-08-30: +1 kotelezo rekesz (foto_km) — a hat auto-foto hatodika
+eq(acteCount({dosarStatus:'deschid'}).total,18,'deschid -> 18 tetel');
+eq(acteCount({dosarStatus:'deschis'}).total,9,'deschis -> 8 + karszam = 9');
+eq(acteCount({}).total,18,'dosarStatus nelkul -> a szigorubb (18)');
 
 console.log('\n2. Szamlalas');
 eq(acteCount({dosarStatus:'deschis'}).done,0,'ures -> 0');

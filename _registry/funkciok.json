@@ -2085,6 +2085,52 @@
       "be": [],
       "teszt": "_tests/unit/test-kodreview-0829.js",
       "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-161",
+      "nev": "HID: egy fotozas, ket helyre. Az avizare dauna iratlistajaba feltoltott hat auto-foto (4 oldal + alvazszam + kilometeróra) UGYANAZ a hat kep, amit a recepcio attekinto fotokent var — de a ket oldal nem tudott egymasrol: a szabaly csak a photoKeys-t nezte, a foto viszont a dosarActe-ban ult. Ezert kerte a rendszer KETSZER ugyanazt a kepet. A hid OLVASASKOR huzodik meg: nem masolunk adatot, nem irunk photoKeys-t — igy nincs elavulo masolat (ha az iratot torlik, a szamlalo magatol visszaesik), es visszafordithato. A talon-foto is atjon a pag_talon_fata rekeszbol. Uj kotelezo rekesz: foto_km (a hatodik auto-foto), ettol a kotelezo lista 17-rol 18-ra nott",
+      "fe": [
+        [
+          "rpw-workflow.js",
+          "function acteFotoVan(job, slot){"
+        ],
+        [
+          "rpw-workflow.js",
+          "if(pk['ov_'+i] || pk['ov_'+p] || acteFotoVan(job, OV_ACTE[p])) c++;"
+        ],
+        [
+          "rpw-workflow.js",
+          "acteFotoVan(job,'pag_talon_fata')"
+        ],
+        [
+          "rpw-config.js",
+          "{ key:'foto_km', label:'Kilometraj (bord)' }"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-harom-allapot.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-162",
+      "nev": "AVIZARE DAUNA sajat lezarasi szabalya. A fazis-szabalyok nem ismertek a 'csak dosszie' esetet: a doar_dosar szo NULLASZOR fordult elo a rpw-workflow.js-ben. Ezert egy iratgyujto dossziétol is muhelyi bevetelezest kert (talon-foto, 6 attekinto kep, elem-statuszok, damage report) — pedig ott a szerviz nem javit, csak gyujt es atad, es az auto sokszor ott sincs. 2026-08-30-an 33 munkabol 18 allt ezen. Mostantol az avizare akkor es csak akkor kesz, amikor a FAJL elkeszitheto: a kotelezo iratlista hianytalan. A javitasi ut (deschide dosar = recepcio) valtozatlanul keri a teljes bevetelezest",
+      "fe": [
+        [
+          "rpw-workflow.js",
+          "function csakDosszie(job){"
+        ],
+        [
+          "rpw-workflow.js",
+          "function acteHianyzo(job){"
+        ],
+        [
+          "rpw-workflow.js",
+          "if(acteHianyzo(job).length) m.push('wf_acte_incomplete');"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-harom-allapot.js",
+      "allapot": "csak-frontend"
     }
   ]
 }
