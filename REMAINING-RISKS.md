@@ -291,7 +291,23 @@ PostgREST kiszolgálja: egyetlen elgépelt `grant` elég lett volna.
 egy `alter table ... set schema public` visszahozza őket. A törlés külön
 döntés, külön napon.
 
-### A régi `foto` tároló 11 árva fájlja — nyitott, kis súly
+### ~~A régi `foto` tároló 11 árva fájlja~~ — ✅ AZONOSÍTVA, törlésre vár
+
+**2026-08-30-i mérés, ami megváltoztatta a képet:** a 11 fájl mind a
+`tools/<shop_id>/` útvonalon ül, mind 2026-02-25-én készült hét perc
+alatt, és **mind pontosan azonos méretű** (1817 kB). Ezek tehát
+**szerszám-fotók** egy próba-sorozatból — **nem kárfelvételek**, ahogy
+korábban óvatosságból feltételeztem. A `tools` funkció táblái ugyanezen
+a napon kerültek archívba.
+
+A képek **listája megőrizve** a `rpw_archiv.torolt_2026_08_30` táblában
+(név, méret, dátum). Maguk a képek **még megvannak**: a Supabase tiltja
+a közvetlen törlést a tároló-tábláiból („Direct deletion from storage
+tables is not allowed") — ez helyes védelem, mert árva fájlok
+maradnának. A törlés a felületen: **Storage → foto → mind kijelöl →
+Delete**, majd a tároló maga is eldobható. **Ferenc kattintása.**
+
+### Az eredeti bejegyzés (2026-08-29)
 
 A Bosch projektben két tároló van: `rpw-photos` (296 fájl, ez az élő) és
 `foto` (11 fájl, **utoljára 2026-02-25-én írva**, 20 MB). Mindkettő privát.
@@ -301,3 +317,18 @@ A 11 fájl tehát árva.
 
 **Nem töröltem.** Fényképek törlése visszafordíthatatlan, és nem tudom,
 mi van rajtuk — februári kárfelvételek is lehetnek. Ferenc döntése.
+
+
+### Amit a 013 törölt (2026-08-30)
+
+| mi | mennyi | visszahozható |
+|---|---|---|
+| `rpw_archiv` négy régi munkamásolata | 87 sor | **nem** — csak a nyoma maradt |
+| `settings`, `tools`, `tool_categories` | 4 sor | igen (`013_rollback.sql`) — csak archívba **mozgatva** |
+| a `foto` tároló 11 képe | 20 MB | a listájuk megvan; a képek törlése a felületen, Ferencre vár |
+
+**Ami szándékosan MARADT:** a `rpw_backup_20260829` séma — a mai
+adat-pillanatkép (35 munka, 442 audit-sor). Azt nem bántottuk.
+
+Kontroll a törlés után: 35 élő munka, 35 a pillanatképben, 318 élő fotó,
+15 tétel a törlési nyomban. Az archívot az anon továbbra sem látja.
