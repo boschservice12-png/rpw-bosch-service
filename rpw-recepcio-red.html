@@ -575,10 +575,31 @@ function resizeFile(file){
    `.jpg` marad — ahogy eddig is. */
 var MIME_EXT={'image/jpeg':'jpg','image/jpg':'jpg','image/png':'png','image/webp':'webp',
               'image/gif':'gif','application/pdf':'pdf'};
+/* A dataURL-ben bejelentett tipus — VALTOZTATAS NELKUL.
+   ── 2026-09-03 (2.) ────────────────────────────────────────────────
+   Ez a fuggveny korabban MINDEN ismeretlen tipusra `image/jpeg`-et
+   adott vissza. Az iPhone HEIC-je, amit a bongeszo nem tud dekodolni,
+   igy a "engedd tovabb az eredetit" agon `.jpg` neven, `image/jpeg`
+   cimkevel kerult volna a tarolba — HAZUG cimkevel. Ugyanaz a
+   hibaosztaly, amit a PDF-nel javitottunk.
+   Mostantol a bejelentett tipust tartjuk meg. */
 function mimeOfDataUrl(d){
   var m=/^data:([^;,]+)[;,]/.exec(String(d||''));
-  var t=m?m[1].toLowerCase():'';
-  return MIME_EXT[t]?t:'image/jpeg';
+  return m ? m[1].toLowerCase() : 'image/jpeg';
+}
+/* Kiterjesztes a tipushoz. Ismert tipus -> rogzitett kiterjesztes.
+   Ismeretlen, de KEP-szeru tipus (image/heic, image/heif) -> az altipusbol
+   kepzett, megtisztitott kiterjesztes: a bizonyitek a VALODI formatumaban
+   all a tarolban, es az OCR mondja meg erthetoen, hogy nem tudja olvasni.
+   Se nem ismert, se nem kep -> NULL: ezt nem toltjuk fel. */
+function extOfMime(mime){
+  mime=String(mime||'').toLowerCase();
+  if(MIME_EXT[mime]) return MIME_EXT[mime];
+  // Az SVG sosem fotó és sosem szkennelt irat — kifejezetten kizárjuk.
+  if(mime==='image/svg+xml'||mime==='image/svg') return null;
+  var m=/^image\/([a-z0-9.+-]{1,12})$/.exec(mime);
+  if(m){ var e=m[1].replace(/[^a-z0-9]/g,'').slice(0,8); return e||null; }
+  return null;
 }
 /* A tarolt ut: az UJ munkanal megjegyzett, a reginel a `.jpg`. */
 function photoPath(photoKey){
@@ -595,10 +616,13 @@ async function uploadPhoto(photoKey,dataUrl){
   S.uploading[photoKey]=true;render();
   try{
     var mime=mimeOfDataUrl(dataUrl);
+    var ext=extOfMime(mime);
+    // Amit nem tudunk BECSULETESEN eltarolni, azt nem toltjuk fel.
+    if(!ext) throw new Error('Format de fisier neacceptat: '+mime);
     // dataUrl -> blob
     var res=await fetch(dataUrl);
     var blob=await res.blob();
-    var path=JOB.id+'/'+photoKey+'.'+(MIME_EXT[mime]||'jpg');
+    var path=JOB.id+'/'+photoKey+'.'+ext;
     // Ha korabban MAS kiterjesztessel allt itt irat, azt eltakaritjuk —
     // kulonben ket fajl maradna ugyanarra a resre (a regi arvan).
     var elozo=(JOB.photoPaths&&JOB.photoPaths[photoKey])||(JOB.id+'/'+photoKey+'.jpg');

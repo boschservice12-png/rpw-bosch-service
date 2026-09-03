@@ -91,6 +91,36 @@ miatt bukott. A **recepció irat-rései** viszont tényleg nem: `image/*`,
   (egy `<img src="....pdf">` üres négyzet lenne — a bizonyíték eltűnne
   szem elől)
 
+### 🔴 Utójavítás: a nem dekódolható fájl HAZUG címkét kapott volna
+
+Ferenc, ugyanaznap: „**nem tudok fotózni a telefonról** — a kamera
+megnyílik, lefotózom, utána nem történik semmi." Ez a fenti 2. pont
+(néma elakadás), ami élesben még nincs kint. A saját javításom
+átnézésekor viszont **hibát találtam benne**:
+
+A „nem dekódolható → menjen tovább az eredeti" ág és a `mimeOfDataUrl`
+együtt azt csinálta, hogy **minden ismeretlen típus `image/jpeg`-gé
+vált**:
+
+```js
+return MIME_EXT[t] ? t : 'image/jpeg';   // <- az iPhone HEIC-je is
+```
+
+Egy telefonról jövő, nem dekódolható HEIC így `.jpg` néven,
+`image/jpeg` címkével került volna a tárolóba — **ugyanaz a hibaosztály,
+amit a PDF-nél épp most javítottunk**, csak a másik ágon.
+
+- a bejelentett típus **megmarad** (nincs néma `.jpg`-re esés)
+- kép-szerű ismeretlen típus (`image/heic`, `image/heif`) a **valódi**
+  kiterjesztését kapja, megtisztítva (csak betű/szám, max 8 karakter)
+- SVG kizárva — sosem fotó és sosem szkennelt irat
+- amit nem tudunk becsületesen eltárolni, azt **nem töltjük fel**:
+  beszélő hiba, nem csendes hazugság
+
+Így a bizonyíték a valódi formátumában áll a tárolóban, és az OCR
+mondja meg érthetően, ha nem tudja olvasni — üres négyzet és néma
+elakadás helyett.
+
 
 ## 2026-08-25 (5) — „Nem tudok törölni" — két hiba egy úton
 

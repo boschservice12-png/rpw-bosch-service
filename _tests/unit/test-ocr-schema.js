@@ -177,6 +177,10 @@ console.log('\n7. Az irat lehet PDF is — a tárolás és a megjelenítés is t
   ok(/contentType:mime/.test(s), 'a feltöltés a VALÓDI tartalomtípust adja meg');
   ok(/JOB\.photoPaths\[photoKey\]=path/.test(s), 'a JOB megjegyzi a tényleges utat');
   ok(/JOB\.photoMime\[photoKey\]=mime/.test(s),  'a JOB megjegyzi a tényleges típust');
+  ok(/if\(!ext\) throw new Error/.test(s),
+     'amit nem tudunk becsületesen tárolni, azt NEM töltjük fel (beszélő hiba)');
+  ok(!/MIME_EXT\[mime\]\|\|'jpg'/.test(s),
+     'nincs néma .jpg-re esés ismeretlen típusnál');
   ok(/function deletePhoto[\s\S]{0,200}var path=photoPath\(photoKey\)/.test(s),
      'a törlés a MEGJEGYZETT utat törli (nem vakon .jpg-t)');
 
@@ -185,16 +189,33 @@ console.log('\n7. Az irat lehet PDF is — a tárolás és a megjelenítés is t
      'a RÉGI munkák változatlanul a .jpg úton vannak');
 
   // A dataURL-ből olvasott típus — a valódi függvényt futtatjuk
-  const src = /var MIME_EXT=[\s\S]*?\n}\n/.exec(s);
+  const src = /var MIME_EXT=[\s\S]*?function extOfMime[\s\S]*?\n}\n/.exec(s);
   ok(!!src, 'a MIME_EXT + mimeOfDataUrl kinyerhető a lapból');
   if (src){
-    const f = new Function(src[0] + '\nreturn {m:mimeOfDataUrl,E:MIME_EXT};')();
+    const f = new Function(src[0] + '\nreturn {m:mimeOfDataUrl,E:MIME_EXT,x:extOfMime};')();
     ok(f.m('data:application/pdf;base64,JVBERi0=') === 'application/pdf', 'PDF felismerve');
     ok(f.m('data:image/png;base64,iVBOR')          === 'image/png',       'PNG felismerve');
     ok(f.m('data:image/jpeg;base64,/9j/')          === 'image/jpeg',      'JPEG felismerve');
-    ok(f.m('data:application/x-msdownload;base64,TVo') === 'image/jpeg',
-       'ismeretlen típus NEM kerül be nyersen (jpeg-re esik vissza)');
     ok(f.E['application/pdf'] === 'pdf' && f.E['image/webp'] === 'webp', 'a kiterjesztés-tábla helyes');
+
+    // A telefon HEIC-je: a bejelentett típus MEGMARAD — nem hazudunk .jpg-t rá
+    ok(f.m('data:image/heic;base64,AAAA') === 'image/heic',
+       'iPhone HEIC: a valódi típus megmarad (nem lesz belőle hamis jpeg)');
+    ok(f.x('image/heic') === 'heic' && f.x('image/heif') === 'heif',
+       'a kép-szerű ismeretlen típus valódi kiterjesztést kap');
+    ok(f.x('image/jpeg') === 'jpg' && f.x('application/pdf') === 'pdf',
+       'az ismert típusok kiterjesztése változatlan');
+    ok(f.x('application/x-msdownload') === null && f.x('text/html') === null,
+       'a nem kép / nem PDF típus NEM tölthető fel (null)');
+    // A tisztítást olyan altípuson mérjük, ami ÁTMEGY a szűrőn, de
+    // tartalmaz eltávolítandó karaktert — különben a teszt nem mér semmit.
+    ok(f.x('image/x.heic+seq') === 'xheicseq',
+       'a kiterjesztés megtisztítva (pont, plusz eltávolítva)');
+    ok(!/[^a-z0-9]/.test(f.x('image/x.heic+seq') || ''),
+       'a kiterjesztésben CSAK betű és szám marad');
+    ok(f.x('image/../../etc') === null, 'útvonal-karakteres típus elutasítva');
+    ok(f.x('image/svg+xml') === null, 'SVG kizárva (sosem fotó vagy irat)');
+    ok((f.x('image/aaaaaaaaaaaa') || '').length <= 8, 'a kiterjesztés hossza korlátozott');
   }
 
   // A megjelenítés: az irat-résekben NINCS csupasz <img>, docTag van
