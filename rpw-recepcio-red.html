@@ -514,18 +514,49 @@ function toast(m,type){
 function uid(){return 'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)}
 
 /* Kepmeret csokkentes feltoltes elott */
+/* ── 2026-09-03 — A NEMA ELAKADAS MEGSZUNT ────────────────────────
+   ITT VOLT A MASIK HIBA. Sem az olvasas (`r.onerror`), sem a dekodolas
+   (`img.onerror`) hibaja nem volt lekezelve, es a Promise-nak NEM volt
+   elutasito aga. Ha a bongeszo nem tudta megnyitni a fajlt — iPhone HEIC
+   asztali gepen, PDF-be szkennelt irat, serult kep —, a Promise SOHA nem
+   dolt el: nem tortent SEMMI, hibauzenet sem jott. Ez volt a "nem veszi
+   be a fotot".
+   MOSTANTOL:
+     · olvasasi hiba        -> beszelo hibauzenet (elutasitas)
+     · dekodolasi hiba      -> az EREDETI fajl megy tovabb valtozatlanul;
+                               a szerver formatum-ellenorzese dont rola
+                               (elfogadja, vagy erthetoen elutasitja)
+     · ures vaszon (iOS)    -> az eredeti megy tovabb
+     · 20 masodperc utan    -> hiba, nem orok varakozas
+   Ezenkivul a kicsinyites mostantol a HOSSZABB oldalt nezi: az allo
+   telefonfotok korabban teljes meretben mentek fel. */
 function resizeFile(file){
-  return new Promise(function(res){
+  return new Promise(function(res,rej){
+    var done=false, tm=null;
+    function finish(v){ if(done)return; done=true; clearTimeout(tm); res(v) }
+    function fail(m){ if(done)return; done=true; clearTimeout(tm); rej(new Error(m)) }
+    tm=setTimeout(function(){fail('Fisierul nu a putut fi citit (timeout)')},20000);
     var r=new FileReader();
+    r.onerror=function(){fail('Fisierul nu a putut fi citit')};
     r.onload=function(e){
+      var src=e.target.result;
+      if(typeof src!=='string'||src.indexOf('data:')!==0){fail('Format de fisier necunoscut');return}
       var img=new Image();
+      img.onerror=function(){finish(src)};          // nem dekodolhato kep -> eredeti
       img.onload=function(){
-        var c=document.createElement('canvas'),mx=1600,sc=img.width>mx?mx/img.width:1;
-        c.width=img.width*sc;c.height=img.height*sc;
-        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-        res(c.toDataURL('image/jpeg',.85));
+        try{
+          var w=img.width||0,h=img.height||0;
+          if(!w||!h){finish(src);return}
+          var mx=1600,sc=Math.min(1,mx/Math.max(w,h));
+          var c=document.createElement('canvas');
+          c.width=Math.max(1,Math.round(w*sc));
+          c.height=Math.max(1,Math.round(h*sc));
+          c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+          var out=c.toDataURL('image/jpeg',.85);
+          finish(out&&out.length>1000?out:src);      // ures vaszon -> eredeti
+        }catch(err){ finish(src) }
       };
-      img.src=e.target.result;
+      img.src=src;
     };
     r.readAsDataURL(file);
   });
@@ -1241,12 +1272,13 @@ window.setType=async function(t){
 // Talon upload + OCR
 window.upTalon=function(e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     JOB._plateEdited=false;JOB._vinEdited=false;JOB._brandEdited=false;JOB._yearEdited=false;JOB._capEdited=false;JOB._propEdited=false;
     try{await uploadPhoto('talon',dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     render();
     await ocrTalon(dataUrl);
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 window.reOcrTalon=async function(){
   var url=photoUrl('talon');if(!url)return;
@@ -1265,23 +1297,25 @@ window.reOcrTalon=async function(){
 // Buletin upload + OCR
 window.upBuletin=function(e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     JOB._clientEdited=false;JOB._adresaEdited=false;JOB._cnpEdited=false;
     try{await uploadPhoto('buletin_client',dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     render();
     await ocrBuletin(dataUrl);
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 
 // Constatare upload + OCR
 window.upConstatare=function(e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     JOB._nrDosarEdited=false;JOB._propDosarEdited=false;JOB._asigEdited=false;
     try{await uploadPhoto('doc_constatare',dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     render();
     await ocrConstatare(dataUrl);
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 window.reOcrConstatare=async function(){
   var url=photoUrl('doc_constatare');if(!url)return;
@@ -1299,6 +1333,7 @@ window.reOcrConstatare=async function(){
 // Document upload (ha constatare, OCR-t is futtat)
 window.upDoc=function(t,e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     try{await uploadPhoto('doc_'+t,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     toast(T(t)+' '+T('saved'),'info');
@@ -1307,7 +1342,7 @@ window.upDoc=function(t,e){
       JOB._nrDosarEdited=false;JOB._propDosarEdited=false;JOB._asigEdited=false;
       await ocrConstatare(dataUrl);
     }
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 
 // Custom document (user added with name)
@@ -1323,11 +1358,12 @@ window.addCustomDoc=async function(){
 };
 window.upCustomDoc=function(cdId,e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     try{await uploadPhoto('custdoc_'+cdId,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     toast(T('saved'),'info');
     render();
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 window.delCustomDoc=async function(cdId){
   if(!JOB.customDocs)return;
@@ -1342,11 +1378,12 @@ window.delCustomDoc=async function(cdId){
 // Overview foto upload
 window.upOv=function(x,e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     try{await uploadPhoto('ov_'+x,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     toast(T(VK[x])+' '+T('saved'),'info');
     render();
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 
 // 23 caroserie elem state handlers (mindket seman ir!)
@@ -1369,11 +1406,12 @@ window.mE=async function(k,stV2){
 
 window.aEP=function(k,e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     try{await uploadPhoto('elem_'+k,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     toast(T(k)+' '+T('saved'),'info');
     render();
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 window.dElPh=async function(k){
   if(!confirm('\u26A0\uFE0F Fotografia este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;
@@ -1470,10 +1508,11 @@ window.delAlt=async function(id){
 
 window.aAltP=function(id,e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     try{await uploadPhoto('alt_'+id,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     render();
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 window.dAltPh=async function(id){
   if(!confirm('\u26A0\uFE0F Fotografia este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;

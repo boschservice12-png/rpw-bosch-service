@@ -139,12 +139,62 @@ function flagUncertain(fields){
 // Az AI szövegmodell — a válasza NEM megbízható szerkezet. Ha nem
 // értelmezhető objektum, az NEM sikeres válasz (a hívó 502-t ad).
 var OCR_SCHEMA = {
-  talon:      ['vin','plate','nr','marca','model','an','proprietar','serie','categorie','masaMax','culoare'],
-  buletin:    ['cnp','nume','prenume','serie','numar','adresa','emis','valabil'],
-  constatare: ['nrDosar','asigurator','dataConstatare','vinovat','plateVinovat','elemente','observatii','plate','vin'],
-  audatex:    ['nrDosar','total','totalFaraTva','manopera','piese','vopsea',
+  // ── 2026-09-03 — A SZŰRŐ ÉS A PROMPT UGYANARRÓL BESZÉL ──────────
+  // ITT VOLT A HIBA. A `functions/ocr.js` promptja MÁS mezőneveket kért
+  // az AI-tól, mint amit ez a lista átengedett. Ami nem volt a listán,
+  // azt a `validateOcr` NÉMÁN eldobta — a válasz 200-zal ment vissza,
+  // csak éppen üresen. Amit ez a hét mező elvitt:
+  //   talon      → brand, year, capacitate, owner  (a márka, az évjárat,
+  //                a hengerűrtartalom és a tulajdonos SOHA nem íródott be)
+  //   buletin    → name, address                   (csak a CNP jött át)
+  //   constatare → proprietar, daune               (a KÁRLISTA, vagyis a
+  //                funkció lényege, minden alkalommal elveszett)
+  //   audatex    → MIND A NYOLC mező               (egyetlen ismert mező
+  //                sem maradt → `no_known_fields` → 502 minden hívásnál)
+  //
+  // A LISTA FORRÁSA A PROMPT. Ha a promptba új mező kerül, ide is fel
+  // kell venni — ezt a `_tests/unit/test-ocr-schema.js` őrzi: kiolvassa
+  // a promptok JSON-kulcsait, és megköveteli, hogy itt is szerepeljenek.
+  // A régi (rövidebb) neveket MEGTARTJUK: egy régebbi kliens válasza sem
+  // vész el tőle, és a `flagUncertain` is ezeken dolgozik.
+  talon:      ['plate','vin','brand','model','year','capacitate','owner',
+               'nr','marca','an','proprietar','serie','categorie','masaMax','culoare'],
+  buletin:    ['name','address','cnp',
+               'nume','prenume','serie','numar','adresa','emis','valabil'],
+  constatare: ['nrDosar','proprietar','asigurator','daune',
+               'dataConstatare','vinovat','plateVinovat','elemente','observatii','plate','vin'],
+  audatex:    ['nr_dosar','ore_tinichigerie','ore_vopsitorie','pret_ora',
+               'total_manopera_ron','total_vopsitorie_ron','total_piese_ron','total_cu_tva',
+               'nrDosar','total','totalFaraTva','manopera','piese','vopsea',
                'oreManopera','oreVopsire','oreTinichigerie','pozitii','moneda']
 };
+// A tömbök (daune, elemente, pozitii) elemeit sem vesszük át vakon: minden
+// elem CSAK egyszerű értékeket tartalmazhat, korlátozott darabszámban és
+// hosszban. Az AI beágyazott szerkezete így nem jut be a JOB JSON-be.
+var OCR_MAX_ITEMS = 200, OCR_MAX_KEYS = 20, OCR_MAX_STR = 300;
+function sanitizeScalar(v){
+  if(v===null || typeof v==='number' || typeof v==='boolean') return v;
+  if(typeof v==='string') return v.slice(0, OCR_MAX_STR);
+  return undefined;
+}
+function sanitizeArray(arr){
+  var out=[];
+  for(var i=0;i<arr.length && out.length<OCR_MAX_ITEMS;i++){
+    var it=arr[i], sc=sanitizeScalar(it);
+    if(sc!==undefined){ out.push(sc); continue; }
+    if(it && typeof it==='object' && !Array.isArray(it)){
+      var o={}, n=0;
+      for(var k in it){
+        if(!Object.prototype.hasOwnProperty.call(it,k)) continue;
+        if(n>=OCR_MAX_KEYS) break;
+        var sv=sanitizeScalar(it[k]);
+        if(sv!==undefined){ o[String(k).slice(0,60)]=sv; n++; }
+      }
+      if(n) out.push(o);
+    }
+  }
+  return out;
+}
 function validateOcr(obj, type){
   if(obj===null || typeof obj!=='object' || Array.isArray(obj)){
     return { ok:false, error:'not_an_object' };
@@ -157,8 +207,9 @@ function validateOcr(obj, type){
     if(allowed.indexOf(k)>=0){
       var v=obj[k];
       // csak egyszerű értékek és tömbök — beágyazott objektum nem várt
-      if(v===null || typeof v==='string' || typeof v==='number' ||
-         typeof v==='boolean' || Array.isArray(v)) clean[k]=v;
+      if(Array.isArray(v)) clean[k]=sanitizeArray(v);
+      else if(v===null || typeof v==='string' || typeof v==='number' ||
+              typeof v==='boolean') clean[k]=v;
       else extra.push(k);
     } else extra.push(k);
   }

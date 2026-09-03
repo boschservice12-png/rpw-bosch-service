@@ -1,5 +1,78 @@
 # CHANGELOG.md
 
+## 2026-09-03 — „A fotókat nem veszi be, nem olvas az OCR" — két hiba egy úton
+
+Ferenc jelzése. Két, egymástól **független** hiba ült ugyanazon az úton:
+az egyik a fotót nem engedte be, a másik az AI válaszát dobta el.
+Egyiket sem fogta meg teszt.
+
+### 🔴 1. A szűrő MÁS mezőneveket ismert, mint amit a prompt kért
+
+A `functions/ocr.js` promptja `brand` / `year` / `owner` / `daune` néven
+kérte az adatot az AI-tól, a `functions/_shared.js` `OCR_SCHEMA` viszont
+`marca` / `an` / `proprietar` / `elemente` néven engedett át. A
+`validateOcr` az ismeretlen kulcsot **némán eldobta**, és a válasz
+**200-zal, üresen** ment vissza. Amit ez elvitt:
+
+| Típus | Elveszett mező | Amit a felhasználó látott |
+|---|---|---|
+| talon | `brand`, `year`, `capacitate`, `owner` | rendszám és VIN beíródott, a márka/évjárat/tulajdonos nem |
+| buletin | `name`, `address` | csak a CNP jött át |
+| constatare | `proprietar`, `daune` | **a KÁRLISTA minden alkalommal elveszett** — 0 elem |
+| audatex | **mind a 8** | `no_known_fields` → **502 minden importnál** |
+
+A séma mostantól a prompt mezőneveit ismeri (a régieket megtartva), és a
+tömbök (`daune`) elemeit is átengedi — elemenként megszűrve: csak
+egyszerű értékek, legfeljebb 200 elem, kulcsonként 300 karakter. A
+szigor megmarad: ismeretlen mező továbbra is kiesik, értelmezhetetlen
+válasz továbbra is 502.
+
+### 🔴 2. A fotó-beolvasás NÉMÁN elakadt
+
+A `resizeFile()` Promise-ának **nem volt elutasító ága**, és sem az
+olvasás (`r.onerror`), sem a dekódolás (`img.onerror`) hibája nem volt
+lekezelve:
+
+```js
+return new Promise(function(res){        // <- nincs rej
+  var r=new FileReader();
+  r.onload=function(e){
+    var img=new Image();
+    img.onload=function(){ … res(…) };   // <- ha sosem fut le, a Promise
+    img.src=e.target.result;             //    SOHA nem dől el
+  };
+  r.readAsDataURL(file);
+});
+```
+
+Ha a böngésző nem tudta megnyitni a fájlt — **iPhone HEIC asztali gépen,
+PDF-be szkennelt irat, sérült kép** —, akkor nem történt semmi:
+se feltöltés, se hibaüzenet, se pörgő. Pontosan ez a „nem veszi be".
+
+**Javítás:**
+- olvasási hiba → beszélő hibaüzenet
+- dekódolási hiba → az **eredeti fájl** megy tovább változatlanul; a
+  szerver formátum-ellenőrzése dönt (elfogadja, vagy érthetően elutasítja)
+- üres vászon (iOS memóriakorlát) → az eredeti megy tovább
+- 20 másodperc után időtúllépés — nem örök várakozás
+- **mind a 10 fotó-hívás** hibaága kivezetve a felületre (`toast`)
+- a fájlválasztó `value`-ja nullázódik: **ugyanaz a fájl újra választható**
+  (eddig a második próbálkozás nem váltott eseményt — „megint nem csinál semmit")
+- a kicsinyítés a **hosszabb oldalt** nézi: az álló telefonfotók eddig
+  teljes méretben mentek fel
+
+### A teszt, ami mostantól őrzi
+
+`_tests/unit/test-ocr-schema.js` — a promptot a **valódi fájlból** olvassa
+ki, és megköveteli, hogy minden kért mező átjusson a szűrőn, a kliens
+minden olvasott mezője benne legyen a sémában, és a fotó-út minden
+hívásának legyen hibaága. 53 állítás.
+
+**Ami NEM változott:** az `AUTH_REQUIRED`, a Storage-beállítás, a
+modellválasztás (`claude-sonnet-4-5` — továbbra is aktív) és a
+biztonsági szűrés szigora.
+
+
 ## 2026-08-25 (5) — „Nem tudok törölni" — két hiba egy úton
 
 Két, egymástól független hiba ült a törlés útján. Egyiket sem fogta meg

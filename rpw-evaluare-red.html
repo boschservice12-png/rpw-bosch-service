@@ -438,18 +438,49 @@ function loadConfig(){
 function saveConfig(){try{localStorage.setItem('rpw_config',JSON.stringify(CONFIG))}catch(e){}}
 
 // ====== SUPABASE STORAGE FOTO-API (recepcióval azonos: elem_<key> kulcs) ======
+/* ── 2026-09-03 — A NEMA ELAKADAS MEGSZUNT ────────────────────────
+   ITT VOLT A MASIK HIBA. Sem az olvasas (`r.onerror`), sem a dekodolas
+   (`img.onerror`) hibaja nem volt lekezelve, es a Promise-nak NEM volt
+   elutasito aga. Ha a bongeszo nem tudta megnyitni a fajlt — iPhone HEIC
+   asztali gepen, PDF-be szkennelt irat, serult kep —, a Promise SOHA nem
+   dolt el: nem tortent SEMMI, hibauzenet sem jott. Ez volt a "nem veszi
+   be a fotot".
+   MOSTANTOL:
+     · olvasasi hiba        -> beszelo hibauzenet (elutasitas)
+     · dekodolasi hiba      -> az EREDETI fajl megy tovabb valtozatlanul;
+                               a szerver formatum-ellenorzese dont rola
+                               (elfogadja, vagy erthetoen elutasitja)
+     · ures vaszon (iOS)    -> az eredeti megy tovabb
+     · 20 masodperc utan    -> hiba, nem orok varakozas
+   Ezenkivul a kicsinyites mostantol a HOSSZABB oldalt nezi: az allo
+   telefonfotok korabban teljes meretben mentek fel. */
 function resizeFile(file){
-  return new Promise(function(res){
+  return new Promise(function(res,rej){
+    var done=false, tm=null;
+    function finish(v){ if(done)return; done=true; clearTimeout(tm); res(v) }
+    function fail(m){ if(done)return; done=true; clearTimeout(tm); rej(new Error(m)) }
+    tm=setTimeout(function(){fail('Fisierul nu a putut fi citit (timeout)')},20000);
     var r=new FileReader();
+    r.onerror=function(){fail('Fisierul nu a putut fi citit')};
     r.onload=function(e){
+      var src=e.target.result;
+      if(typeof src!=='string'||src.indexOf('data:')!==0){fail('Format de fisier necunoscut');return}
       var img=new Image();
+      img.onerror=function(){finish(src)};          // nem dekodolhato kep -> eredeti
       img.onload=function(){
-        var c=document.createElement('canvas'),mx=1600,sc=img.width>mx?mx/img.width:1;
-        c.width=img.width*sc;c.height=img.height*sc;
-        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-        res(c.toDataURL('image/jpeg',.85));
+        try{
+          var w=img.width||0,h=img.height||0;
+          if(!w||!h){finish(src);return}
+          var mx=1600,sc=Math.min(1,mx/Math.max(w,h));
+          var c=document.createElement('canvas');
+          c.width=Math.max(1,Math.round(w*sc));
+          c.height=Math.max(1,Math.round(h*sc));
+          c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+          var out=c.toDataURL('image/jpeg',.85);
+          finish(out&&out.length>1000?out:src);      // ures vaszon -> eredeti
+        }catch(err){ finish(src) }
       };
-      img.src=e.target.result;
+      img.src=src;
     };
     r.readAsDataURL(file);
   });
@@ -544,8 +575,10 @@ async function callOCR(b64,type){
 }
 window.importAudatex=function(e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   S.audatexRun=true;render();
   var r=new FileReader();
+  r.onerror=function(){S.audatexRun=false;toast('Fisierul nu a putut fi citit',1);render()};
   r.onload=async function(ev){
     try{
       var p=await callOCR(dataUrlToBase64(ev.target.result),'audatex');
@@ -963,10 +996,11 @@ async function _finishEval(nav){
 window.sendToProd=function(){ return _finishEval(false); };
 window.aEP=function(k,e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     try{await uploadPhoto('elem_'+k,dataUrl)}catch(err){toast('Upload: '+err.message,1);return}
     toast(T(k)+' '+T('saved'));render();
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),1)});
 };
 window.dElPh=async function(k){if(!confirm('\u26A0\uFE0F Fotografia este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;await deletePhoto('elem_'+k);render()};
 
