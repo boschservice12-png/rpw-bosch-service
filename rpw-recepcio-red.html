@@ -619,9 +619,9 @@ async function uploadPhoto(photoKey,dataUrl){
     var ext=extOfMime(mime);
     // Amit nem tudunk BECSULETESEN eltarolni, azt nem toltjuk fel.
     if(!ext) throw new Error('Format de fisier neacceptat: '+mime);
-    // dataUrl -> blob
-    var res=await fetch(dataUrl);
-    var blob=await res.blob();
+    // dataUrl -> blob HALOZAT NELKUL (a CSP connect-src-je nem enged
+    // `data:`-t, es a mobil sem birja a tobb megabajtos data:-fetch-et)
+    var blob=RPWPhotos.dataUrlToBlob(dataUrl);
     var path=JOB.id+'/'+photoKey+'.'+ext;
     // Ha korabban MAS kiterjesztessel allt itt irat, azt eltakaritjuk —
     // kulonben ket fajl maradna ugyanarra a resre (a regi arvan).

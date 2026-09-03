@@ -489,7 +489,8 @@ async function uploadPhoto(photoKey,dataUrl){
   if(!JOB||!JOB.id)throw new Error('no job');
   S.uploading[photoKey]=true;render();
   try{
-    var res=await fetch(dataUrl);var blob=await res.blob();
+    // dataUrl -> blob HALOZAT NELKUL (lasd rpw-photos.js dataUrlToBlob)
+    var blob=RPWPhotos.dataUrlToBlob(dataUrl);
     var path=JOB.id+'/'+photoKey+'.jpg';
     var up=await sb.storage.from(STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg',upsert:true});
     if(up.error)throw up.error;

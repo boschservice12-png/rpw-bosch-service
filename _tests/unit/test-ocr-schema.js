@@ -26,6 +26,10 @@ const R = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
 let pass = 0, fail = 0;
 const ok = (c, m) => { c ? pass++ : (fail++, console.log('  x ' + m)); };
+// A Blob tartalma csak aszinkron olvasható — a bájtszintű próbákat itt
+// gyűjtjük, és a futás VÉGÉN, az összegzés előtt ellenőrizzük. A puszta
+// méret nem elég: egy csonkított dekódolás ugyanolyan hosszú tömböt ad.
+const BAJT_PROBA = [];
 
 const H = require(path.join(ROOT, 'functions', '_shared.js'));
 const ocrSrc = R('functions/ocr.js');
@@ -234,6 +238,67 @@ console.log('\n7. Az irat lehet PDF is — a tárolás és a megjelenítés is t
      'a kamera-bevitel NEM kér PDF-et (' + kamera.length + ' db)');
 }
 
-console.log('\n──────────────────────────────────────────');
-console.log('  OCR-séma:  ' + pass + ' pass / ' + fail + ' fail');
-process.exit(fail ? 1 : 0);
+console.log('\n8. A feltöltés nem fetch-el data: URL-t (Ferenc: „upload failed to fetch")');
+{
+  // A CSP `connect-src`-je (helyesen) NEM enged `data:`-t. A feltöltés
+  // viszont `await fetch(dataUrl)`-lel csinált Blob-ot — a böngésző ezt
+  // blokkolta, és a hiba szó szerint „Failed to fetch" volt a telefonon.
+  ['rpw-recepcio-red.html', 'rpw-evaluare-red.html', 'rpw-dosar.html'].forEach(function(f){
+    const s = R(f);
+    ok(!/fetch\(dataUrl\)/.test(s), f + ': NINCS fetch(dataUrl)');
+    ok(!/var res=await fetch\(dataUrl\)/.test(s), f + ': a régi feltöltő sor eltűnt');
+  });
+  ok(/RPWPhotos\.dataUrlToBlob\(dataUrl\)/.test(R('rpw-recepcio-red.html')),
+     'a recepció a hálózat nélküli dekódolót használja');
+  ok(/RPWPhotos\.dataUrlToBlob\(dataUrl\)/.test(R('rpw-evaluare-red.html')),
+     'az evaluare a hálózat nélküli dekódolót használja');
+  ok(/RPWPhotos\.dataUrlToBlob\(src\)/.test(R('rpw-dosar.html')),
+     'a ZIP-export a régi data: URL-t sem fetch-eli');
+
+  // A VÉDELMET NEM GYENGÍTETTÜK: a CSP-ben továbbra sincs `data:` a
+  // connect-src-ben. A kódot javítottuk, nem a szabályt tágítottuk.
+  const toml = R('netlify.toml');
+  const csp = /connect-src ([^;"]*)/.exec(toml);
+  ok(!!csp, 'a CSP connect-src megvan a netlify.toml-ban');
+  ok(csp && !/\bdata:/.test(csp[1]),
+     'a connect-src-ben NINCS data: — a CSP nem lett tágítva');
+  ok(/img-src[^;]*\bdata:/.test(toml), 'az img-src viszont továbbra is enged data:-t (megjelenítéshez kell)');
+
+  // A dekódoló valódi működése — a valódi fájlból betöltve
+  const prev = global.window; global.window = undefined;
+  delete require.cache[require.resolve(path.join(ROOT, 'rpw-photos.js'))];
+  const P = require(path.join(ROOT, 'rpw-photos.js'));
+  global.window = prev;
+  ok(typeof P.dataUrlToBlob === 'function', 'a dataUrlToBlob exportálva van');
+
+  const jpg = P.dataUrlToBlob('data:image/jpeg;base64,/9j/4AAQSkZJRg==');
+  ok(jpg.type === 'image/jpeg', 'a JPEG típusa megmarad');
+  ok(jpg.size === 10, 'a JPEG mérete pontos (' + jpg.size + ' bájt)');
+  BAJT_PROBA.push({ blob: jpg,
+    vart: [0xFF,0xD8,0xFF,0xE0,0x00,0x10,0x4A,0x46,0x49,0x46], nev: 'JPEG' });
+  BAJT_PROBA.push({ blob: P.dataUrlToBlob('data:application/pdf;base64,JVBERi0xLjQ='),
+    vart: [0x25,0x50,0x44,0x46,0x2D,0x31,0x2E,0x34], nev: 'PDF' });
+  const pdf = P.dataUrlToBlob('data:application/pdf;base64,JVBERi0xLjQ=');
+  ok(pdf.type === 'application/pdf', 'a PDF típusa megmarad');
+  const heic = P.dataUrlToBlob('data:image/heic;base64,AAAAGGZ0eXA=');
+  ok(heic.type === 'image/heic', 'az ismeretlen (HEIC) típus is megmarad');
+
+  let dobott = false;
+  try { P.dataUrlToBlob('https://pelda.hu/a.jpg'); } catch(e){ dobott = true; }
+  ok(dobott, 'a nem-dataURL beszélő hibát dob');
+  try { P.dataUrlToBlob(''); dobott = dobott && true; } catch(e){ /* ok */ }
+}
+
+(async function(){
+  console.log('\n9. A dekódolt bájtok pontosak (nem csak a hosszuk)');
+  for (const pr of BAJT_PROBA){
+    const b = new Uint8Array(await pr.blob.arrayBuffer());
+    const jo = b.length === pr.vart.length && pr.vart.every((v,i) => b[i] === v);
+    ok(jo, pr.nev + ': minden bájt pontos' + (jo ? '' :
+       ' — kapott: ' + Array.from(b).map(x => x.toString(16)).join(' ')));
+  }
+
+  console.log('\n──────────────────────────────────────────');
+  console.log('  OCR-séma:  ' + pass + ' pass / ' + fail + ' fail');
+  process.exit(fail ? 1 : 0);
+})();

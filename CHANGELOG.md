@@ -121,6 +121,45 @@ amit a PDF-nél épp most javítottunk**, csak a másik ágon.
 mondja meg érthetően, ha nem tudja olvasni — üres négyzet és néma
 elakadás helyett.
 
+### 🔴 A VALÓDI ok: a feltöltés `data:` URL-t fetch-elt — a CSP blokkolta
+
+Ferenc a telefonon: „**upload failed to fetch**". Ez már a beszélő
+hibaüzenet volt — és egyenesen a hibához vezetett.
+
+A feltöltés így csinált Blob-ot a fotóból:
+
+```js
+var res = await fetch(dataUrl);   // data:image/jpeg;base64,...
+var blob = await res.blob();
+```
+
+Egy `data:` URL **fetch-elése KAPCSOLATNAK számít**, tehát a CSP
+`connect-src`-je szabályozza. A `netlify.toml`-ban pedig:
+
+```
+connect-src 'self' https://*.supabase.co https://api.anthropic.com
+```
+
+**nincs benne `data:`** — a 11 (v3) CSP-szigorítás kifejezetten kivette,
+ezzel az indoklással: *„connect-src data: és blob: — ezek NEM kellenek
+kapcsolathoz, csak img-src-hez."* **Ez az indoklás téves volt:** a kód
+igenis fetch-elt `data:` URL-t. A böngésző blokkolta, és a dobott hiba
+szó szerint `TypeError: Failed to fetch`.
+
+Ugyanez a sor CSP nélkül is elhasalt volna a telefonon: több megabájtos
+`data:` URL fetch-elése mobilon memóriaigényes.
+
+**A megoldás NEM a CSP tágítása** — az gyengítené a védelmet egy olyan
+sémára, amit támadó is kihasználhat. Ehelyett a kód nem megy hálózaton:
+az új `RPWPhotos.dataUrlToBlob()` helyben, base64-ből állítja elő a
+bájtokat. Nincs CSP-függés, nincs mobil memória-korlát.
+
+- `rpw-recepcio-red.html` és `rpw-evaluare-red.html` feltöltése átállítva
+- a `rpw-dosar.html` ZIP-exportja is: egy RÉGI rekordban maradt `data:`
+  URL eddig csendben „LIPSA (eroare)" sorrá vált az exportban
+- **a CSP érintetlen** — teszt rögzíti, hogy a `connect-src`-ben továbbra
+  sincs `data:`, az `img-src`-ben viszont marad (a megjelenítéshez kell)
+
 
 ## 2026-08-25 (5) — „Nem tudok törölni" — két hiba egy úton
 

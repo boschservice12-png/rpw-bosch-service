@@ -40,6 +40,38 @@
     }catch(e){ return ''; }
   }
 
+  // ── dataURL → Blob, HÁLÓZAT NÉLKÜL ────────────────────────────────
+  // 2026-09-03 (Ferenc: „upload failed to fetch" — a telefonon):
+  // a feltöltés eddig `await fetch(dataUrl)`-lel csinált Blob-ot. Egy
+  // `data:` URL fetch-elése KAPCSOLATNAK számít, tehát a CSP
+  // `connect-src`-je szabályozza — abban pedig (helyesen) NINCS `data:`.
+  // A böngésző blokkolta, és a dobott hiba szó szerint:
+  //   TypeError: Failed to fetch
+  // Ugyanez a sor CSP nélkül is elhasalt volna a telefonon: több
+  // megabájtos data: URL fetch-elése mobilon memóriaigényes.
+  //
+  // A megoldás NEM a CSP tágítása (az gyengítené a védelmet), hanem
+  // hogy egyáltalán ne hálózaton keresztül dekódoljunk: a base64-ből
+  // helyben állítjuk elő a bájtokat. Így nincs CSP-függés, és nincs
+  // mobil memória-korlát sem.
+  function dataUrlToBlob(dataUrl){
+    var s=String(dataUrl||'');
+    var m=/^data:([^;,]*)(;base64)?,/i.exec(s);
+    if(!m) throw new Error('Nu este dataURL');
+    var mime=m[1]||'application/octet-stream';
+    var body=s.slice(m[0].length), bytes, i;
+    if(m[2]){
+      var bin=atob(body);
+      bytes=new Uint8Array(bin.length);
+      for(i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+    }else{
+      var txt=decodeURIComponent(body);
+      bytes=new Uint8Array(txt.length);
+      for(i=0;i<txt.length;i++) bytes[i]=txt.charCodeAt(i)&0xFF;
+    }
+    return new Blob([bytes],{type:mime});
+  }
+
   // ── ÍRÁS-oldal (P0 #11): base64/dataURL → privát Storage, visszaad REF-et ──
   // A JOB JSON ezt a ref-et tárolja (nem base64). now/actor injektálható (teszt).
   function mimeOf(dataUrl){ var m=/^data:([^;]+);base64,/.exec(String(dataUrl||'')); return m?m[1]:'image/jpeg'; }
@@ -102,7 +134,7 @@
   }
 
   var API={ isFullUrl:isFullUrl, signedUrl:signedUrl, publicUrl:publicUrl, resolveRef:resolveRef, hydrate:hydrate,
-            storePhoto:storePhoto, isPrivate:isPrivate };
+            storePhoto:storePhoto, isPrivate:isPrivate, dataUrlToBlob:dataUrlToBlob };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWPhotos=API;
 })(typeof self!=='undefined'?self:(typeof window!=='undefined'?window:globalThis));

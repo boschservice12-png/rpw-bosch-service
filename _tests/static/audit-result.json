@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-03T15:46:20.971Z",
+  "generated": "2026-09-03T16:09:18.214Z",
   "files": 33,
   "total": 28,
   "allowed": 28,
@@ -111,7 +111,7 @@
     },
     {
       "fajl": "rpw-evaluare-red.html",
-      "sor": 541,
+      "sor": 542,
       "mezo": "phases[]",
       "ok": "inicializálás — hiányzó fázisok kitöltése",
       "ut": "üres váz létrehozása; státuszt csak a rpw_transition ír",

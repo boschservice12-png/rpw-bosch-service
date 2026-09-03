@@ -1146,8 +1146,11 @@ window.exportDosarZip=async function(missing){
       // ujra alairjuk a path-bol, kulonben az export ures mappat ad.
       var src=u.url;
       try{ if(u.path && window.RPWPhotos) src=(await RPWPhotos.signedUrl(sb,u.path))||u.url; }catch(e){}
-      var r=await fetch(src);if(!r.ok)throw new Error('HTTP '+r.status);
-      var b=await r.blob();
+      // Egy REGI rekordban maradhatott data: URL. Azt sem fetch-eljuk:
+      // a CSP connect-src-je nem enged `data:`-t (lasd rpw-photos.js).
+      var b;
+      if(/^data:/i.test(String(src))){ b=RPWPhotos.dataUrlToBlob(src); }
+      else { var r=await fetch(src); if(!r.ok)throw new Error('HTTP '+r.status); b=await r.blob(); }
       var name=folder+'/'+base+'.'+extOf(u);
       zip.file(name,b);index.push('OK  '+name);n++;
     }catch(e){errs++;index.push('!!  LIPSA (eroare): '+folder+'/'+base);}
