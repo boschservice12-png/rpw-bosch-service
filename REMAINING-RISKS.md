@@ -278,6 +278,50 @@ feltöltött iratot a műhelyi gépről.
 | **Végleges lezárás** | Az oldal törlése a Netlify felületén. **Ferenc döntése (2026-09-03): NEM töröljük** — az oldal marad, átnevezve és CORS-tiltással. A kockázat tudatosan vállalt, nem elfelejtett |
 | **Igazolva** | Netlify API: `beamish` néven nincs oldal; a projekt `rpw-regi-lezarva-2026-08`. A CORS-tiltást negatív teszt őrzi (`test-p0-7-functions.js`). **A címet magát innen nem tudtam lekérdezni** — a konténer minden `netlify.app` hívást blokkol (a működő oldal is), ezért ez API-bizonyíték, nem böngésző-bizonyíték |
 
+### A fénykép-tároló védtelen: az anon kulcs mindent tud
+
+**2026-09-03, mérésből.** A fotózás ellenőrzésekor derült ki. Nem
+elméletből: felvettem az `anon` szerepet, és megszámoltattam vele a
+fájlokat.
+
+```
+set local role anon;
+select count(*) from storage.objects where bucket_id='rpw-photos';  -->  318
+select count(*) from storage.objects where bucket_id='foto';        -->   11
+```
+
+Az `anon` kulcs a kiszolgált JS-fájlokban van, tehát **bárki megkapja,
+aki megnyitja az oldalt.** A `storage.objects` szabályai:
+
+| szabály | művelet | kinek | feltétel |
+|---|---|---|---|
+| `Allow anon read from rpw-photos` | SELECT | anon | `bucket_id='rpw-photos'` |
+| `Allow anon upload to rpw-photos` | INSERT | anon | `bucket_id='rpw-photos'` |
+| `Allow anon update in rpw-photos` | UPDATE | anon | `bucket_id='rpw-photos'` |
+| `Allow anon delete in rpw-photos` | DELETE | anon | `bucket_id='rpw-photos'` |
+| `rpw_photos signed url mint` | SELECT | anon, authenticated | `bucket_id='rpw-photos'` |
+| `allow_all` | **MIND** | **PUBLIC** | `bucket_id='foto'` |
+
+Egyik feltétel sem néz **szervizt**, **munkát** és **munkamenetet**. Ez
+tehát ugyanaz a hiányosság, amit a `rpw_jobs` táblán a P0.3 lezárt
+(minden művelet token-alapú RPC-n megy, a `shop_id` a munkamenetből jön)
+— csak a **tárolón nem lett lezárva**. A tábla védve van, a képek nem.
+
+A `foto` tároló `allow_all` szabálya a rosszabb: nem `anon`-ra, hanem
+**PUBLIC**-ra szól, tehát minden szerepre.
+
+| | |
+|---|---|
+| **Mi a kockázat** | Aki ismeri az anon kulcsot (bárki, aki megnyitja az oldalt), az **minden kárfelvételt letölthet, felülírhat és véglegesen törölhet** |
+| **Mi enyhíti ma** | A tárolók `public: false`-ok, tehát találomra nem böngészhetők; a fájlnevek kitalálása nehéz. Ez homály, nem védelem |
+| **Mi zárná le** | A tárolószabályok átírása munkamenet-alapúra, ahogy a P0.3 tette a táblákkal; vagy aláírt feltöltési URL, amit a szerver ad ki |
+| **Igazolva** | `set local role anon` + számlálás, 2026-09-03. Kontrollal: ugyanez a lekérdezés a `pg_policy`-ból visszaadja mind a hat szabályt |
+
+Emellett három **elgépelt tároló** is létezik, mindhárom üres:
+`body workflow`, `FOTO` és egy `STORAGE_BUCKET = 'rpw-photos'` nevű —
+ez utóbbi nyilván egy konfigurációs sor, amit tárolónévnek adtak meg.
+Ártalmatlanok, de takaríthatók.
+
 ### A staging ugyanazt az adatbázist használja, mint az éles
 
 A `rpw-config.staging.js` `SB_URL`-je **ugyanaz a projekt**, mint az
