@@ -821,11 +821,11 @@
       "fe": [
         [
           "functions/ocr.js",
-          "anthropic"
+          "claude-sonnet-5"
         ]
       ],
       "be": [],
-      "teszt": "_tests/unit/test-p0-7-functions.js",
+      "teszt": "_tests/unit/test-ocr-model.js",
       "allapot": "nincs-bekotve"
     },
     {

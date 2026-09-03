@@ -113,7 +113,7 @@ szám nélkül, azt is megmondja.
 | **F-208** | Tomeges feltoltes - sok kep egyszerre | `rpw-dosar.html` | — | `unit/test-classify.js` | 🟦 csak frontend |
 | **F-209** | AI iratbesorolas - javaslat a rekeszre | `rpw-classify.js` | — | `unit/test-classify.js` | 🟦 csak frontend |
 | **F-210** | AI iratbesorolas - szerver oldal (Claude) | `rpw-classify.js` `functions/classify.js` | — | `unit/test-p0-7-functions.js` | ⚠️ nincs bekötve |
-| **F-211** | OCR - szoveg kiolvasasa kepbol | `functions/ocr.js` | — | `unit/test-p0-7-functions.js` | ⚠️ nincs bekötve |
+| **F-211** | OCR - szoveg kiolvasasa kepbol | `functions/ocr.js` | — | `unit/test-ocr-model.js` | ⚠️ nincs bekötve |
 | **F-212** | Feltoltesi link kuldese az ugyfelnek | `rpw-dosar.html` | — | **—** | 🟦 csak frontend |
 | **F-213** | Fotok kezelese (tomorites, tarolas) | `rpw-photos.js` | — | `unit/test-p0-6-storage.js` | 🟦 csak frontend |
 | **F-214** | Regi base64 kepek atkoltoztetese | `rpw-base64-migrate.js` | — | `unit/test-p0-6-storage.js` | 🟦 csak frontend |
