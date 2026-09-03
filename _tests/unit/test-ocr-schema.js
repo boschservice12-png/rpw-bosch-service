@@ -167,6 +167,52 @@ console.log('\n6. A fotó-beolvasás nem akadhat el némán');
      f + ': ugyanaz a fájl újra választható mind a ' + input + ' helyen (' + reset + ')');
 });
 
+console.log('\n7. Az irat lehet PDF is — a tárolás és a megjelenítés is tudja');
+{
+  const s = R('rpw-recepcio-red.html');
+
+  // A tárolás nem drótozza be a .jpg-t
+  ok(!/var path=JOB\.id\+'\/'\+photoKey\+'\.jpg';/.test(s),
+     'a feltöltés NEM `.jpg`-t drótoz be');
+  ok(/contentType:mime/.test(s), 'a feltöltés a VALÓDI tartalomtípust adja meg');
+  ok(/JOB\.photoPaths\[photoKey\]=path/.test(s), 'a JOB megjegyzi a tényleges utat');
+  ok(/JOB\.photoMime\[photoKey\]=mime/.test(s),  'a JOB megjegyzi a tényleges típust');
+  ok(/function deletePhoto[\s\S]{0,200}var path=photoPath\(photoKey\)/.test(s),
+     'a törlés a MEGJEGYZETT utat törli (nem vakon .jpg-t)');
+
+  // A régi munka (nincs megjegyzett út) továbbra is .jpg
+  ok(/if\(JOB&&JOB\.photoPaths&&JOB\.photoPaths\[photoKey\]\)return JOB\.photoPaths\[photoKey\];\s*\n\s*return JOB\.id\+'\/'\+photoKey\+'\.jpg';/.test(s),
+     'a RÉGI munkák változatlanul a .jpg úton vannak');
+
+  // A dataURL-ből olvasott típus — a valódi függvényt futtatjuk
+  const src = /var MIME_EXT=[\s\S]*?\n}\n/.exec(s);
+  ok(!!src, 'a MIME_EXT + mimeOfDataUrl kinyerhető a lapból');
+  if (src){
+    const f = new Function(src[0] + '\nreturn {m:mimeOfDataUrl,E:MIME_EXT};')();
+    ok(f.m('data:application/pdf;base64,JVBERi0=') === 'application/pdf', 'PDF felismerve');
+    ok(f.m('data:image/png;base64,iVBOR')          === 'image/png',       'PNG felismerve');
+    ok(f.m('data:image/jpeg;base64,/9j/')          === 'image/jpeg',      'JPEG felismerve');
+    ok(f.m('data:application/x-msdownload;base64,TVo') === 'image/jpeg',
+       'ismeretlen típus NEM kerül be nyersen (jpeg-re esik vissza)');
+    ok(f.E['application/pdf'] === 'pdf' && f.E['image/webp'] === 'webp', 'a kiterjesztés-tábla helyes');
+  }
+
+  // A megjelenítés: az irat-résekben NINCS csupasz <img>, docTag van
+  ['bulUrl','talonUrl','constUrl','dUrl','cdUrl'].forEach(function(v){
+    ok(!new RegExp("<img[^']*src=\"'\\+(escU\\()?" + v).test(s),
+       v + ': nincs csupasz <img> (PDF-nél üres négyzet lenne)');
+  });
+  ok((s.match(/h\+=docTag\(/g) || []).length === 5, 'mind az 5 irat-rés a docTag-et használja');
+  ok(/photoMime\(photoKey\)!=='application\/pdf'/.test(s), 'a docTag a típus szerint dönt');
+
+  // Az accept: a FÁJLBÓL IMPORT fogad PDF-et, a KAMERA nem
+  const pdfAccept = (s.match(/accept="image\/\*,application\/pdf"/g) || []).length;
+  ok(pdfAccept === 5, 'öt beviteli mező fogad PDF-et (' + pdfAccept + ')');
+  const kamera = s.match(/accept="[^"]*"\s+capture="environment"/g) || [];
+  ok(kamera.length > 0 && kamera.every(x => !/pdf/.test(x)),
+     'a kamera-bevitel NEM kér PDF-et (' + kamera.length + ' db)');
+}
+
 console.log('\n──────────────────────────────────────────');
 console.log('  OCR-séma:  ' + pass + ' pass / ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

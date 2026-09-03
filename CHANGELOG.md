@@ -72,6 +72,25 @@ hívásának legyen hibaága. 53 állítás.
 modellválasztás (`claude-sonnet-4-5` — továbbra is aktív) és a
 biztonsági szűrés szigora.
 
+### ➕ PDF-be szkennelt irat a recepción
+
+A szerver eddig is fogadott PDF-et, és az **Audatex-import** meg a
+**dosszié fájlból** út `accept`-je is engedte — csak a fenti séma-hiba
+miatt bukott. A **recepció irat-rései** viszont tényleg nem: `image/*`,
+és a tárolás mindent `.jpg` néven, `image/jpeg` típussal tolt fel.
+
+- a 📁 **Import** és a dokumentum-rések mostantól PDF-et is fogadnak
+  (a 📷 **Foto** kamera-bevitel marad kép — onnan nem jön PDF)
+- a Storage a **valódi** kiterjesztéssel és tartalomtípussal tárol; a
+  JOB megjegyzi (`photoPaths` / `photoMime`), a törlés ezt az utat törli
+- formátumváltásnál (kép → PDF ugyanabba a résbe) a régi fájl eltakarítva,
+  nem marad árván
+- **a régi munkák változatlanul működnek:** ahol nincs megjegyzett út,
+  ott marad a `.jpg` — ahogy eddig is
+- PDF-nél a felület megnyitható **📄 PDF csempét** ad `<img>` helyett
+  (egy `<img src="....pdf">` üres négyzet lenne — a bizonyíték eltűnne
+  szem elől)
+
 
 ## 2026-08-25 (5) — „Nem tudok törölni" — két hiba egy úton
 
