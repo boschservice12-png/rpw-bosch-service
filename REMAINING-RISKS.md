@@ -257,12 +257,25 @@ feltöltött iratot a műhelyi gépről.
    senki nem ismeri, de a teljes lezárás az oldal **törlése** lenne —
    ez a Netlify API-n keresztül nem elérhető, a felületen egy kattintás.
 
+   **2026-09-03: Ferenc úgy döntött, hogy az oldal marad.** A kockázat
+   ezzel nyitva van hagyva. Ami továbbra is védi: az átnevezés (a régi
+   könyvjelző cím megszűnt) és a CORS-tiltás (OCR, iratbesorolás,
+   levélküldés hibára fut onnan). Amit NEM véd: aki tudja az új nevet,
+   azzal az anon kulccsal olvashat és írhat az élő adatbázisba. Ez a
+   `008` RLS-lezárással szűnne meg végleg, nem az oldal törlésével.
+
+   A Netlify-fiók többi oldala átnézve ugyanaznap: `stellar-flan-8530b1`
+   = a `redassistance-core` projekt, tulajdonosi döntésre szüneteltetve
+   (marad); `ornate-dasik-704529` és `reliable-custard-d576de` = egy-egy
+   márciusi, kézzel feltöltött `index.html`, se repó, se függvény, se
+   adat (ártalmatlanok, maradnak).
+
 | | |
 |---|---|
 | **Mi a kockázat** | Két különböző kódváltozat írja ugyanazt az adatbázist; az egyik nem kap javítást |
 | **Mi történt** | Átnevezve — a régi könyvjelző címe megszűnt |
 | **Mi maradt** | Az alnév felszabadult (más regisztrálhatja); az oldal új néven él |
-| **Végleges lezárás** | Az oldal törlése a Netlify felületén — **Ferenc**, egy kattintás |
+| **Végleges lezárás** | Az oldal törlése a Netlify felületén. **Ferenc döntése (2026-09-03): NEM töröljük** — az oldal marad, átnevezve és CORS-tiltással. A kockázat tudatosan vállalt, nem elfelejtett |
 | **Igazolva** | Netlify API: `beamish` néven nincs oldal; a projekt `rpw-regi-lezarva-2026-08`. A CORS-tiltást negatív teszt őrzi (`test-p0-7-functions.js`). **A címet magát innen nem tudtam lekérdezni** — a konténer minden `netlify.app` hívást blokkol (a működő oldal is), ezért ez API-bizonyíték, nem böngésző-bizonyíték |
 
 ### A staging ugyanazt az adatbázist használja, mint az éles
