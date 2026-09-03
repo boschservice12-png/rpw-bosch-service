@@ -278,6 +278,32 @@ feltöltött iratot a műhelyi gépről.
 | **Végleges lezárás** | Az oldal törlése a Netlify felületén. **Ferenc döntése (2026-09-03): NEM töröljük** — az oldal marad, átnevezve és CORS-tiltással. A kockázat tudatosan vállalt, nem elfelejtett |
 | **Igazolva** | Netlify API: `beamish` néven nincs oldal; a projekt `rpw-regi-lezarva-2026-08`. A CORS-tiltást negatív teszt őrzi (`test-p0-7-functions.js`). **A címet magát innen nem tudtam lekérdezni** — a konténer minden `netlify.app` hívást blokkol (a működő oldal is), ezért ez API-bizonyíték, nem böngésző-bizonyíték |
 
+**HELYESBÍTÉS — 2026-09-03.** Ferenc megkérdezte, mit keresünk egyáltalán
+a szerszám-fotóknál, és a kérdés jogos volt: a fenti állítás **téves**.
+
+Amikor „árvának" neveztem a 11 fájlt, csak a **munkákat** néztem meg (`rpw_jobs`)
+— a szerszám-táblát nem. Most megnéztem:
+
+A `rpw_archiv.tools`-ban két sor van, mindkettő ugyanaz a szerszám (Kit montaj
+pompa injectie, OPEL VIVARO 1.5 D, RAKTÁR FELSŐ 4 FIÓK, OE `cv 100`). Az
+**aktív** sor `photo_url` mezője a `1772050074496.jpg`-re mutat — ez a 11 fájl
+közül az utolsó (20:07:56). **Tehát egy kép valódi nyilvántartási tételhez
+tartozik, nem árva.**
+
+A másik 10 viszont tényleg szemét: 20:01 és 20:03 között készültek, és
+**mindegyik pontosan 1 860 363 bájt** — ugyanannak a képnek az ismételt
+feltöltési kísérletei. A tizenegyedik ment át, azt jegyezte be a rendszer.
+
+**Döntés: a `foto` tároló marad.** 20 MB, és pont az egyik kép egy valódi
+szerszám-tétel fényképe; ha a szerszám-nyilvántartás valaha újraindul, a
+helyén lesz. A 10 duplikátum kitörlése 18 MB-ért nem éri meg a kockázatot,
+hogy a rossz fájl vész el.
+
+**Tanulság a módszerre:** „egyetlen munka sem hivatkozza" nem ugyanaz, mint
+„semmi sem hivatkozza". A törlés előtti felmérésnek MINDEN olyan táblát végig
+kell néznie, ami URL-t vagy fájlnevet tárolhat — nem csak azt az egyet, ami
+éppen eszembe jut.
+
 ### A fénykép-tároló védtelen: az anon kulcs mindent tud
 
 **2026-09-03, mérésből.** A fotózás ellenőrzésekor derült ki. Nem
@@ -348,7 +374,7 @@ PostgREST kiszolgálja: egyetlen elgépelt `grant` elég lett volna.
 egy `alter table ... set schema public` visszahozza őket. A törlés külön
 döntés, külön napon.
 
-### ~~A régi `foto` tároló 11 árva fájlja~~ — ✅ AZONOSÍTVA, törlésre vár
+### ~~A régi `foto` tároló 11 árva fájlja~~ — ⚠️ HELYESBÍTVE: nem mind árva
 
 **2026-08-30-i mérés, ami megváltoztatta a képet:** a 11 fájl mind a
 `tools/<shop_id>/` útvonalon ül, mind 2026-02-25-én készült hét perc
