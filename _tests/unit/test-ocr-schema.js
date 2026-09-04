@@ -289,6 +289,78 @@ console.log('\n8. A feltöltés nem fetch-el data: URL-t (Ferenc: „upload fail
   try { P.dataUrlToBlob(''); dobott = dobott && true; } catch(e){ /* ok */ }
 }
 
+console.log('\n10. RENDSZERSZINTU: a foto-ut minden lapon ep (Ferenc: „epitesi hiany")');
+{
+  // Ferenc figyelte meg: az avizare dauna felen mennek a fotok, a
+  // recepcion es a reconstatare-n nem. Az ok: MINDEN lap ujrairta a
+  // sajat foto-kodjat, es elsodrodtak. Ez a szakasz REPO-SZINTEN tiltja
+  // a ket hibamintat, hogy ne sodrodhasson el ujra.
+  // A vizsgalat KODOT mer, nem prozat: a kommenteket eltavolitjuk, kulonben
+  // egy magyarazo szoveg ("...new Image()...") hamis talalatot ad. Ezt a
+  // sajat kommentem buktatta le az elso futasnal.
+  // SORSZINTU szures: csak azokat a sorokat dobjuk el, amelyek MAGUK
+  // kommentek. A blokk-kommentes valtozat atugrott kodot is (egy korabbi
+  // `/*` osszeparosodott egy kesobbi `*/`-gal, es koztuk elnyelte a
+  // `RPWPhotos.dataUrlToBlob(...)` sort) — ez igy nem fordulhat elo.
+  const kodOnly = src => src.split('\n')
+    .filter(l => !/^\s*(\/\/|\/\*|\*|<!--)/.test(l))
+    .join('\n');
+  const K = f => kodOnly(R(f));
+  const lapok = fs.readdirSync(ROOT).filter(f => /\.html$/.test(f));
+  ok(lapok.length >= 10, 'megvannak a lapok (' + lapok.length + ')');
+
+  // (a) SENKI nem fetch-elhet data: URL-t — a CSP connect-src-je tiltja
+  const fetchelok = lapok.filter(f => {
+    const src = K(f);
+    return /fetch\(\s*(dataUrl|[A-Za-z_$][\w.$\[\]]*\.data)\s*\)/.test(src);
+  });
+  ok(fetchelok.length === 0,
+     'egyetlen lap sem fetch-el data: URL-t' +
+     (fetchelok.length ? ' — VETKES: ' + fetchelok.join(', ') : ''));
+
+  // (b) Aki new Image()-dzsel dekodol FAJLT, annak legyen HIBAAGA.
+  //     Enelkul a Promise/callback sosem dol el -> nema elakadas.
+  const dekodolok = lapok.filter(f => /new Image\(\)/.test(K(f)));
+  ok(dekodolok.length > 0, 'van kepet dekodolo lap (' + dekodolok.length + ')');
+  const hibaag_nelkul = dekodolok.filter(f => !/img\.onerror\s*=/.test(K(f)));
+  ok(hibaag_nelkul.length === 0,
+     'minden kepet dekodolo lapon van img.onerror' +
+     (hibaag_nelkul.length ? ' — HIANYZIK: ' + hibaag_nelkul.join(', ') : ''));
+
+  // (c) Aki fotot kezel, toltse be a KOZOS reteget — ne irjon sajatot.
+  const fotos = lapok.filter(f => /new Image\(\)|RPWPhotos\./.test(K(f)));
+  const reteg_nelkul = fotos.filter(f => !/<script src="rpw-photos\.js"/.test(K(f)));
+  ok(reteg_nelkul.length === 0,
+     'minden fotot kezelo lap betolti a rpw-photos.js-t' +
+     (reteg_nelkul.length ? ' — HIANYZIK: ' + reteg_nelkul.join(', ') : ''));
+
+  // (d) A reconstatare konkretan: a kozos implementaciot hasznalja
+  const rc = K('rpw-reconstatare-red.html');
+  ok(/RPWPhotos\.fileToDataUrl\(file/.test(rc),
+     'reconstatare: valoban MEGHIVJA a kozos dekodolot (nem csak emliti)');
+  ok(/RPWPhotos\.dataUrlToBlob/.test(rc), 'reconstatare: a foto-kuldes sem fetch-el data:-t');
+  ok(!/var r=new FileReader\(\);r\.onload=function\(e\)\{var img=new Image\(\);img\.onload/.test(rc),
+     'reconstatare: a regi, hibaag nelkuli resize() eltunt');
+  const inch = K('rpw-inchidere-red.html');
+  ok(/RPWPhotos\.fileToDataUrl\(file/.test(inch),
+     'inchidere: valoban MEGHIVJA a kozos dekodolot (nem csak emliti)');
+  ok(!/var r=new FileReader\(\);r\.onload=function\(e\)\{var img=new Image\(\);img\.onload/.test(inch),
+     'inchidere: a regi, hibaag nelkuli resize() eltunt');
+
+  // (e) A kozos implementacio letezik es exportalva van
+  const prev = global.window; global.window = undefined;
+  delete require.cache[require.resolve(path.join(ROOT, 'rpw-photos.js'))];
+  const P = require(path.join(ROOT, 'rpw-photos.js'));
+  global.window = prev;
+  ok(typeof P.fileToDataUrl === 'function', 'a fileToDataUrl exportalva van');
+  const fsrc = P.fileToDataUrl.toString();
+  ok(/img\.onerror/.test(fsrc),          'a kozos dekodolonak van kep-hibaaga');
+  ok(/r\.onerror/.test(fsrc),            'a kozos dekodolonak van olvasasi hibaaga');
+  ok(/setTimeout/.test(fsrc),             'a kozos dekodoloban van idokorlat');
+  ok(/createObjectURL/.test(fsrc),        'objectURL-rol dekodol (nem tobb megabajtos data: URL-rol)');
+  ok(/revokeObjectURL/.test(fsrc),        'az objectURL fel is szabadul (nincs memoriaszivargas)');
+}
+
 (async function(){
   console.log('\n9. A dekódolt bájtok pontosak (nem csak a hosszuk)');
   for (const pr of BAJT_PROBA){

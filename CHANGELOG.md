@@ -1,5 +1,57 @@
 # CHANGELOG.md
 
+## 2026-09-04 — „Építési hiány" — a megoldás egyetlen oldalon létezett
+
+Ferenc megfigyelése, ami eldöntötte az ügyet: **„az avizare daună felén a
+fotók működnek, a recepción nem, a reconstatare-n sem — szerintem
+hiányzik a megoldás a rendszerből."** Igaza volt, és a kód meg is
+mutatta, miért.
+
+### A természetes kísérlet
+
+| Oldal | Hogyan olvassa be a fotót | Eredmény |
+|---|---|---|
+| **avizare daună** (`rpw-upload.html`) | `createObjectURL` + **`img.onerror`-ág** + a Blob **közvetlen** feltöltése | ✅ működik |
+| recepció / evaluare | `fetch(dataUrl)` | ❌ a CSP blokkolja |
+| **reconstatare** | saját `resize()` — **semmilyen hibaág** | ❌ néma elakadás |
+| **lezárás** (`rpw-inchidere`) | ugyanaz a hibaág nélküli `resize()` | ❌ *(még nem ért oda senki)* |
+
+**Minden oldal újraírta a saját fotó-kódját, és elsodródtak.** A helyes
+minta pontosan EGY helyen létezett. Ez az „építési hiány".
+
+A `rpw-reconstatare-red.html` ráadásul **be sem töltötte a
+`rpw-photos.js`-t** — a közös réteg szó szerint hiányzott a lapról.
+
+### Amit ez a kör csinált
+
+- **`RPWPhotos.fileToDataUrl()`** — EGY implementáció, a működő avizare
+  daună minta alapján: objectURL-ről dekódol (nincs több megabájtos
+  `data:` URL), van kép- és olvasási hibaága, van időkorlátja, és
+  felszabadítja az objectURL-t.
+- **reconstatare**: betölti a közös réteget, a saját `resize()`-a ezt
+  hívja, és a fotó-küldés sem `fetch`-eli a `data:` URL-t (az is CSP-be
+  ütközött volna).
+- **lezárás**: ugyanez — **ezt a tesztünk találta meg, nem panasz.**
+- mindkét lapon a fájlválasztó nullázódik: ugyanaz a fotó újra választható.
+
+### A teszt, ami mostantól őrzi — REPO-SZINTEN
+
+A `test-ocr-schema.js` 10. szakasza minden `.html` lapot végignéz, és
+megköveteli, hogy **egyik se** fetch-eljen `data:` URL-t, **minden**
+képet dekódoló lapon legyen `img.onerror`, és **minden** fotót kezelő lap
+töltse be a `rpw-photos.js`-t. Így nem sodródhat el újra.
+
+**Két saját hiba ebben a körben, kimondva:**
+1. A szűrőm a *kommentemre* illeszkedett kód helyett — sorszintű szűrésre
+   írtam át, mert a blokk-kommentes változat kódot is elnyelt.
+2. Egy állításom csak azt mérte, hogy *szerepel-e* a `fileToDataUrl` a
+   lapon; a védő `if(...)` miatt akkor is igaz volt, ha a tényleges hívást
+   kivettem. A hívást méri mostantól.
+
+Teljes futás zöld: unit 45/2980 · integration 5/350 · frontend 5/480 ·
+static 1/2 — 0 hibás. Mutáció: 9, mind elkapva.
+
+
 ## 2026-09-03 — „A fotókat nem veszi be, nem olvas az OCR" — két hiba egy úton
 
 Ferenc jelzése. Két, egymástól **független** hiba ült ugyanazon az úton:

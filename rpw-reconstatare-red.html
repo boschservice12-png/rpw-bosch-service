@@ -25,6 +25,7 @@
 <script src="rpw-save.js"></script>
 <script src="rpw-queue.js"></script><!-- 2026-08-25: tartos offline sor -->
 <script src="rpw-data.js"></script><!-- v4: szerveroldali átmenetek -->
+<script src="rpw-photos.js"></script><!-- 2026-09-04: a kozos foto-reteg — eddig HIANYZOTT innen -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#FAF8F5;--w:#fff;--r:#E11D2E;--r50:#FDF3F4;--r100:#FCE6E8;--r700:#B5121F;--bad:#C81E33;--g:#1E9D55;--gl:#E1F4E8;--y:#A6701F;--yl:#FAEFD8;--bl:#2A6FDB;--bll:#E2ECFA;--pl:#F2F4F7;--tl:#14753F;--tll:#E1F4E8;--t:#0F141A;--t2:#3F4956;--t3:#6B7280;--b:#E8EBEF;--b2:#D7DBE2;--rd:10px}
@@ -214,7 +215,20 @@ async function saveJ(){
 }
 
 function toast(m,e){S.ts=m;S.te=e?1:0;render();setTimeout(function(){S.ts=null;render()},3000)}
-function resize(file,cb){var r=new FileReader();r.onload=function(e){var img=new Image();img.onload=function(){var c=document.createElement('canvas'),mx=1100,sc=img.width>mx?mx/img.width:1;c.width=img.width*sc;c.height=img.height*sc;c.getContext('2d').drawImage(img,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.7))};img.src=e.target.result};r.readAsDataURL(file)}
+/* ── 2026-09-04 — ITT VOLT A RECONSTATARE HIBAJA ──────────────────
+    * A regi `resize()` igy nezett ki: FileReader -> new Image() -> onload.
+    * Sem `r.onerror`, sem `img.onerror`, sem hibaag NEM volt benne. Ha a
+    * bongeszo nem tudta megnyitni a fajlt, a `cb` SOHA nem hivodott meg:
+    * nem tortent semmi, hibauzenet sem jott. Ugyanaz a nema elakadas, mint
+    * a recepcion — csak ez a lap a sajat masolatat hasznalta.
+    * MOSTANTOL a kozos, EGY implementaciot hivja (rpw-photos.js), amely a
+    * mukodo avizare-dauna minta alapjan keszult. */
+function resize(file,cb){
+  if(!window.RPWPhotos||!RPWPhotos.fileToDataUrl){toast('Modul foto lipsa',1);return}
+  RPWPhotos.fileToDataUrl(file,{maxSide:1100,quality:.7})
+    .then(cb)
+    .catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),1)});
+}
 
 var EK_NAMES={fb:{ro:'Bara fata',en:'Front bumper',hu:'Elso lokh.'},rb:{ro:'Bara spate',en:'Rear bumper',hu:'Hatso lokh.'},hood:{ro:'Capota',en:'Hood',hu:'Motorhazt.'},trunk:{ro:'Portbagaj',en:'Trunk',hu:'Csomagtarto'},roof:{ro:'Plafon',en:'Roof',hu:'Teto'},fl_f:{ro:'Aripa stg fata',en:'LF fender',hu:'BE sarvedo'},fr_f:{ro:'Aripa dr fata',en:'RF fender',hu:'JE sarvedo'},rl_f:{ro:'Aripa stg spate',en:'LR fender',hu:'BH sarvedo'},rr_f:{ro:'Aripa dr spate',en:'RR fender',hu:'JH sarvedo'},fl_d:{ro:'Usa stg fata',en:'LF door',hu:'BE ajto'},fr_d:{ro:'Usa dr fata',en:'RF door',hu:'JE ajto'},rl_d:{ro:'Usa stg spate',en:'LR door',hu:'BH ajto'},rr_d:{ro:'Usa dr spate',en:'RR door',hu:'JH ajto'},l_s:{ro:'Prag stg',en:'L sill',hu:'B kuszob'},r_s:{ro:'Prag dr',en:'R sill',hu:'J kuszob'},l_m:{ro:'Ogl. stg',en:'L mirror',hu:'B tukor'},r_m:{ro:'Ogl. dr',en:'R mirror',hu:'J tukor'},a_l:{ro:'Stalp A stg',en:'L A-pil.',hu:'B A oszl.'},a_r:{ro:'Stalp A dr',en:'R A-pil.',hu:'J A oszl.'},b_l:{ro:'Stalp B stg',en:'L B-pil.',hu:'B B oszl.'},b_r:{ro:'Stalp B dr',en:'R B-pil.',hu:'J B oszl.'},c_l:{ro:'Stalp C stg',en:'L C-pil.',hu:'B C oszl.'},c_r:{ro:'Stalp C dr',en:'R C-pil.',hu:'J C oszl.'}};
 
@@ -372,7 +386,7 @@ window.aRow=async function(){if(!JOB)return;if(!JOB.reconst)JOB.reconst={};if(!J
 window.saveRow=async function(x){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[x])return;var r=JOB.reconst.rows[x];if(!r.name){alert('Completeaza numele elementului');return}r.editing=false;await saveJ();render()};
 window.editRow=async function(x){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[x])return;JOB.reconst.rows[x].editing=true;await saveJ();render()};
 window.setRowOp=async function(idx,op){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[idx])return;var r=JOB.reconst.rows[idx];r.op=(r.op===op?'':op);await saveJ();render()};
-window.addRowPhoto=function(idx,e){var f=e.target.files&&e.target.files[0];if(!f)return;resize(f,async function(d){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[idx])return;if(!JOB.reconst.rows[idx].photos)JOB.reconst.rows[idx].photos=[];JOB.reconst.rows[idx].photos.push(d);await saveJ();toast(T('saved'));render()})};
+window.addRowPhoto=function(idx,e){var f=e.target.files&&e.target.files[0];if(!f)return;try{e.target.value=''}catch(_){}resize(f,async function(d){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[idx])return;if(!JOB.reconst.rows[idx].photos)JOB.reconst.rows[idx].photos=[];JOB.reconst.rows[idx].photos.push(d);await saveJ();toast(T('saved'));render()})};
 window.delRowPhoto=async function(idx,pidx){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[idx]||!JOB.reconst.rows[idx].photos)return;if(!confirm('\u26A0\uFE0F Fotografia este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;JOB.reconst.rows[idx].photos.splice(pidx,1);await saveJ();render()};
 window.uDoc=async function(f,v){if(!JOB||!JOB.reconst)return;JOB.reconst.docs[f]=v;await saveJ()};
 // Reconstatare Acceptat → a plusz sorok a termelésbe (evalData.suplimentare), az evaluare pótmunkáit megőrizve
@@ -400,7 +414,7 @@ window.rcResponse=async function(st){
   await saveJ();render();
   toast(st==='accepted'?'Acceptat ✓':'Refuzat ✗');
 };
-window.addPh=function(x,e){var f=e.target.files&&e.target.files[0];if(!f)return;resize(f,async function(d){if(!JOB.reconstPhotos)JOB.reconstPhotos=[];if(JOB.reconstPhotos.length>x)JOB.reconstPhotos[x]={data:d,ts:new Date().toISOString()};else JOB.reconstPhotos.push({data:d,ts:new Date().toISOString()});await saveJ();toast(T('saved'));render()})};
+window.addPh=function(x,e){var f=e.target.files&&e.target.files[0];if(!f)return;try{e.target.value=''}catch(_){}resize(f,async function(d){if(!JOB.reconstPhotos)JOB.reconstPhotos=[];if(JOB.reconstPhotos.length>x)JOB.reconstPhotos[x]={data:d,ts:new Date().toISOString()};else JOB.reconstPhotos.push({data:d,ts:new Date().toISOString()});await saveJ();toast(T('saved'));render()})};
 window.delPh=async function(x){if(!JOB||!JOB.reconstPhotos||!JOB.reconstPhotos[x])return;if(!confirm('\u26A0\uFE0F Fotografia '+(x+1)+' este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;JOB.reconstPhotos.splice(x,1);await saveJ();render()};
 window.advPh=async function(){
   if(!JOB)return;
@@ -582,9 +596,11 @@ window.shareReconst=async function(){
   for(var x=0;x<photos.length;x++){
     if(photos[x]&&photos[x].data){
       try{
-        var resp=await fetch(photos[x].data);
-        var blob=await resp.blob();
-        files.push(new File([blob],'reconst_'+(x+1)+'.jpg',{type:'image/jpeg'}));
+        // 2026-09-04: NEM fetch-eljuk a data: URL-t — a CSP connect-src-je
+        // (helyesen) nem enged `data:`-t, es a hivas "Failed to fetch"-csel
+        // elszallt volna. Helyben dekodolunk.
+        var blob=RPWPhotos.dataUrlToBlob(photos[x].data);
+        files.push(new File([blob],'reconst_'+(x+1)+'.jpg',{type:blob.type||'image/jpeg'}));
       }catch(e){}
     }
   }
