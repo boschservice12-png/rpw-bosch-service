@@ -274,7 +274,18 @@ async function saveJ(){
   },500);
 }
 function toast(m,e){S.ts=m;S.te=e?1:0;render();setTimeout(function(){S.ts=null;render()},3000)}
-function resize(file,cb){var r=new FileReader();r.onload=function(e){var img=new Image();img.onload=function(){var c=document.createElement('canvas'),mx=1280,sc=img.width>mx?mx/img.width:1;c.width=img.width*sc;c.height=img.height*sc;c.getContext('2d').drawImage(img,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.82))};img.src=e.target.result};r.readAsDataURL(file)}
+/* ── 2026-09-04 — UGYANAZ A NEMA ELAKADAS, A LEZARO FOTOKON ────────
+    * Ezt a tesztunk talalta meg, nem panasz: a regi `resize()` itt is
+    * hibaag nelkul allt (se `r.onerror`, se `img.onerror`), tehat a
+    * javitott auto zaro fotoi (fata/spate/stanga/dreapta/detaliu) is
+    * csendben elakadtak volna egy nem dekodolhato fajlon.
+    * Most a kozos, EGY implementaciot hivja — mint a reconstatare. */
+function resize(file,cb){
+  if(!window.RPWPhotos||!RPWPhotos.fileToDataUrl){toast('Modul foto lipsa',1);return}
+  RPWPhotos.fileToDataUrl(file,{maxSide:1280,quality:.82})
+    .then(cb)
+    .catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),1)});
+}
 
 var VK=['fata','spate','stanga','dreapta','detaliu'];
 var IC={cam:'<svg class="pslot-icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>',chk:'<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',x:'<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',dl:'<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>'};
@@ -536,7 +547,7 @@ async function uploadDevizFile(file){
   await saveJ();toast('Deviz încărcat ✓');render();
 }
 window.addDevizFile=function(e){var f=e.target.files&&e.target.files[0];if(!f)return;toast('Se încarcă...');uploadDevizFile(f).catch(function(err){toast('Eroare: '+(err&&err.message||err),1)})};
-window.addPh=function(x,e){var f=e.target.files&&e.target.files[0];if(!f)return;resize(f,async function(d){if(!JOB.closingPhotos)JOB.closingPhotos=[];while(JOB.closingPhotos.length<=x)JOB.closingPhotos.push(null);JOB.closingPhotos[x]={data:d,label:VK[x],ts:new Date().toISOString()};await saveJ();toast(T(VK[x])+' OK');render()})};
+window.addPh=function(x,e){var f=e.target.files&&e.target.files[0];if(!f)return;try{e.target.value=''}catch(_){}resize(f,async function(d){if(!JOB.closingPhotos)JOB.closingPhotos=[];while(JOB.closingPhotos.length<=x)JOB.closingPhotos.push(null);JOB.closingPhotos[x]={data:d,label:VK[x],ts:new Date().toISOString()};await saveJ();toast(T(VK[x])+' OK');render()})};
 window.delClosePhoto=async function(x){if(!JOB||!JOB.closingPhotos||!JOB.closingPhotos[x])return;if(!confirm('⚠️ Fotografia este o DOVADĂ. Sigur o ștergi DEFINITIV?'))return;JOB.closingPhotos[x]=null;await saveJ();render()};
 
 // KRITIKUS lezárás: megerősített (awaitolt) mentés — offline/hiba esetén NINCS siker + NINCS navigáció

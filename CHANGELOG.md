@@ -1,5 +1,218 @@
 # CHANGELOG.md
 
+## 2026-09-04 — „Építési hiány" — a megoldás egyetlen oldalon létezett
+
+Ferenc megfigyelése, ami eldöntötte az ügyet: **„az avizare daună felén a
+fotók működnek, a recepción nem, a reconstatare-n sem — szerintem
+hiányzik a megoldás a rendszerből."** Igaza volt, és a kód meg is
+mutatta, miért.
+
+### A természetes kísérlet
+
+| Oldal | Hogyan olvassa be a fotót | Eredmény |
+|---|---|---|
+| **avizare daună** (`rpw-upload.html`) | `createObjectURL` + **`img.onerror`-ág** + a Blob **közvetlen** feltöltése | ✅ működik |
+| recepció / evaluare | `fetch(dataUrl)` | ❌ a CSP blokkolja |
+| **reconstatare** | saját `resize()` — **semmilyen hibaág** | ❌ néma elakadás |
+| **lezárás** (`rpw-inchidere`) | ugyanaz a hibaág nélküli `resize()` | ❌ *(még nem ért oda senki)* |
+
+**Minden oldal újraírta a saját fotó-kódját, és elsodródtak.** A helyes
+minta pontosan EGY helyen létezett. Ez az „építési hiány".
+
+A `rpw-reconstatare-red.html` ráadásul **be sem töltötte a
+`rpw-photos.js`-t** — a közös réteg szó szerint hiányzott a lapról.
+
+### Amit ez a kör csinált
+
+- **`RPWPhotos.fileToDataUrl()`** — EGY implementáció, a működő avizare
+  daună minta alapján: objectURL-ről dekódol (nincs több megabájtos
+  `data:` URL), van kép- és olvasási hibaága, van időkorlátja, és
+  felszabadítja az objectURL-t.
+- **reconstatare**: betölti a közös réteget, a saját `resize()`-a ezt
+  hívja, és a fotó-küldés sem `fetch`-eli a `data:` URL-t (az is CSP-be
+  ütközött volna).
+- **lezárás**: ugyanez — **ezt a tesztünk találta meg, nem panasz.**
+- mindkét lapon a fájlválasztó nullázódik: ugyanaz a fotó újra választható.
+
+### A teszt, ami mostantól őrzi — REPO-SZINTEN
+
+A `test-ocr-schema.js` 10. szakasza minden `.html` lapot végignéz, és
+megköveteli, hogy **egyik se** fetch-eljen `data:` URL-t, **minden**
+képet dekódoló lapon legyen `img.onerror`, és **minden** fotót kezelő lap
+töltse be a `rpw-photos.js`-t. Így nem sodródhat el újra.
+
+**Két saját hiba ebben a körben, kimondva:**
+1. A szűrőm a *kommentemre* illeszkedett kód helyett — sorszintű szűrésre
+   írtam át, mert a blokk-kommentes változat kódot is elnyelt.
+2. Egy állításom csak azt mérte, hogy *szerepel-e* a `fileToDataUrl` a
+   lapon; a védő `if(...)` miatt akkor is igaz volt, ha a tényleges hívást
+   kivettem. A hívást méri mostantól.
+
+Teljes futás zöld: unit 45/2980 · integration 5/350 · frontend 5/480 ·
+static 1/2 — 0 hibás. Mutáció: 9, mind elkapva.
+
+
+## 2026-09-03 — „A fotókat nem veszi be, nem olvas az OCR" — két hiba egy úton
+
+Ferenc jelzése. Két, egymástól **független** hiba ült ugyanazon az úton:
+az egyik a fotót nem engedte be, a másik az AI válaszát dobta el.
+Egyiket sem fogta meg teszt.
+
+### 🔴 1. A szűrő MÁS mezőneveket ismert, mint amit a prompt kért
+
+A `functions/ocr.js` promptja `brand` / `year` / `owner` / `daune` néven
+kérte az adatot az AI-tól, a `functions/_shared.js` `OCR_SCHEMA` viszont
+`marca` / `an` / `proprietar` / `elemente` néven engedett át. A
+`validateOcr` az ismeretlen kulcsot **némán eldobta**, és a válasz
+**200-zal, üresen** ment vissza. Amit ez elvitt:
+
+| Típus | Elveszett mező | Amit a felhasználó látott |
+|---|---|---|
+| talon | `brand`, `year`, `capacitate`, `owner` | rendszám és VIN beíródott, a márka/évjárat/tulajdonos nem |
+| buletin | `name`, `address` | csak a CNP jött át |
+| constatare | `proprietar`, `daune` | **a KÁRLISTA minden alkalommal elveszett** — 0 elem |
+| audatex | **mind a 8** | `no_known_fields` → **502 minden importnál** |
+
+A séma mostantól a prompt mezőneveit ismeri (a régieket megtartva), és a
+tömbök (`daune`) elemeit is átengedi — elemenként megszűrve: csak
+egyszerű értékek, legfeljebb 200 elem, kulcsonként 300 karakter. A
+szigor megmarad: ismeretlen mező továbbra is kiesik, értelmezhetetlen
+válasz továbbra is 502.
+
+### 🔴 2. A fotó-beolvasás NÉMÁN elakadt
+
+A `resizeFile()` Promise-ának **nem volt elutasító ága**, és sem az
+olvasás (`r.onerror`), sem a dekódolás (`img.onerror`) hibája nem volt
+lekezelve:
+
+```js
+return new Promise(function(res){        // <- nincs rej
+  var r=new FileReader();
+  r.onload=function(e){
+    var img=new Image();
+    img.onload=function(){ … res(…) };   // <- ha sosem fut le, a Promise
+    img.src=e.target.result;             //    SOHA nem dől el
+  };
+  r.readAsDataURL(file);
+});
+```
+
+Ha a böngésző nem tudta megnyitni a fájlt — **iPhone HEIC asztali gépen,
+PDF-be szkennelt irat, sérült kép** —, akkor nem történt semmi:
+se feltöltés, se hibaüzenet, se pörgő. Pontosan ez a „nem veszi be".
+
+**Javítás:**
+- olvasási hiba → beszélő hibaüzenet
+- dekódolási hiba → az **eredeti fájl** megy tovább változatlanul; a
+  szerver formátum-ellenőrzése dönt (elfogadja, vagy érthetően elutasítja)
+- üres vászon (iOS memóriakorlát) → az eredeti megy tovább
+- 20 másodperc után időtúllépés — nem örök várakozás
+- **mind a 10 fotó-hívás** hibaága kivezetve a felületre (`toast`)
+- a fájlválasztó `value`-ja nullázódik: **ugyanaz a fájl újra választható**
+  (eddig a második próbálkozás nem váltott eseményt — „megint nem csinál semmit")
+- a kicsinyítés a **hosszabb oldalt** nézi: az álló telefonfotók eddig
+  teljes méretben mentek fel
+
+### A teszt, ami mostantól őrzi
+
+`_tests/unit/test-ocr-schema.js` — a promptot a **valódi fájlból** olvassa
+ki, és megköveteli, hogy minden kért mező átjusson a szűrőn, a kliens
+minden olvasott mezője benne legyen a sémában, és a fotó-út minden
+hívásának legyen hibaága. 53 állítás.
+
+**Ami NEM változott:** az `AUTH_REQUIRED`, a Storage-beállítás, a
+modellválasztás (`claude-sonnet-4-5` — továbbra is aktív) és a
+biztonsági szűrés szigora.
+
+### ➕ PDF-be szkennelt irat a recepción
+
+A szerver eddig is fogadott PDF-et, és az **Audatex-import** meg a
+**dosszié fájlból** út `accept`-je is engedte — csak a fenti séma-hiba
+miatt bukott. A **recepció irat-rései** viszont tényleg nem: `image/*`,
+és a tárolás mindent `.jpg` néven, `image/jpeg` típussal tolt fel.
+
+- a 📁 **Import** és a dokumentum-rések mostantól PDF-et is fogadnak
+  (a 📷 **Foto** kamera-bevitel marad kép — onnan nem jön PDF)
+- a Storage a **valódi** kiterjesztéssel és tartalomtípussal tárol; a
+  JOB megjegyzi (`photoPaths` / `photoMime`), a törlés ezt az utat törli
+- formátumváltásnál (kép → PDF ugyanabba a résbe) a régi fájl eltakarítva,
+  nem marad árván
+- **a régi munkák változatlanul működnek:** ahol nincs megjegyzett út,
+  ott marad a `.jpg` — ahogy eddig is
+- PDF-nél a felület megnyitható **📄 PDF csempét** ad `<img>` helyett
+  (egy `<img src="....pdf">` üres négyzet lenne — a bizonyíték eltűnne
+  szem elől)
+
+### 🔴 Utójavítás: a nem dekódolható fájl HAZUG címkét kapott volna
+
+Ferenc, ugyanaznap: „**nem tudok fotózni a telefonról** — a kamera
+megnyílik, lefotózom, utána nem történik semmi." Ez a fenti 2. pont
+(néma elakadás), ami élesben még nincs kint. A saját javításom
+átnézésekor viszont **hibát találtam benne**:
+
+A „nem dekódolható → menjen tovább az eredeti" ág és a `mimeOfDataUrl`
+együtt azt csinálta, hogy **minden ismeretlen típus `image/jpeg`-gé
+vált**:
+
+```js
+return MIME_EXT[t] ? t : 'image/jpeg';   // <- az iPhone HEIC-je is
+```
+
+Egy telefonról jövő, nem dekódolható HEIC így `.jpg` néven,
+`image/jpeg` címkével került volna a tárolóba — **ugyanaz a hibaosztály,
+amit a PDF-nél épp most javítottunk**, csak a másik ágon.
+
+- a bejelentett típus **megmarad** (nincs néma `.jpg`-re esés)
+- kép-szerű ismeretlen típus (`image/heic`, `image/heif`) a **valódi**
+  kiterjesztését kapja, megtisztítva (csak betű/szám, max 8 karakter)
+- SVG kizárva — sosem fotó és sosem szkennelt irat
+- amit nem tudunk becsületesen eltárolni, azt **nem töltjük fel**:
+  beszélő hiba, nem csendes hazugság
+
+Így a bizonyíték a valódi formátumában áll a tárolóban, és az OCR
+mondja meg érthetően, ha nem tudja olvasni — üres négyzet és néma
+elakadás helyett.
+
+### 🔴 A VALÓDI ok: a feltöltés `data:` URL-t fetch-elt — a CSP blokkolta
+
+Ferenc a telefonon: „**upload failed to fetch**". Ez már a beszélő
+hibaüzenet volt — és egyenesen a hibához vezetett.
+
+A feltöltés így csinált Blob-ot a fotóból:
+
+```js
+var res = await fetch(dataUrl);   // data:image/jpeg;base64,...
+var blob = await res.blob();
+```
+
+Egy `data:` URL **fetch-elése KAPCSOLATNAK számít**, tehát a CSP
+`connect-src`-je szabályozza. A `netlify.toml`-ban pedig:
+
+```
+connect-src 'self' https://*.supabase.co https://api.anthropic.com
+```
+
+**nincs benne `data:`** — a 11 (v3) CSP-szigorítás kifejezetten kivette,
+ezzel az indoklással: *„connect-src data: és blob: — ezek NEM kellenek
+kapcsolathoz, csak img-src-hez."* **Ez az indoklás téves volt:** a kód
+igenis fetch-elt `data:` URL-t. A böngésző blokkolta, és a dobott hiba
+szó szerint `TypeError: Failed to fetch`.
+
+Ugyanez a sor CSP nélkül is elhasalt volna a telefonon: több megabájtos
+`data:` URL fetch-elése mobilon memóriaigényes.
+
+**A megoldás NEM a CSP tágítása** — az gyengítené a védelmet egy olyan
+sémára, amit támadó is kihasználhat. Ehelyett a kód nem megy hálózaton:
+az új `RPWPhotos.dataUrlToBlob()` helyben, base64-ből állítja elő a
+bájtokat. Nincs CSP-függés, nincs mobil memória-korlát.
+
+- `rpw-recepcio-red.html` és `rpw-evaluare-red.html` feltöltése átállítva
+- a `rpw-dosar.html` ZIP-exportja is: egy RÉGI rekordban maradt `data:`
+  URL eddig csendben „LIPSA (eroare)" sorrá vált az exportban
+- **a CSP érintetlen** — teszt rögzíti, hogy a `connect-src`-ben továbbra
+  sincs `data:`, az `img-src`-ben viszont marad (a megjelenítéshez kell)
+
+
 ## 2026-08-25 (5) — „Nem tudok törölni" — két hiba egy úton
 
 Két, egymástól független hiba ült a törlés útján. Egyiket sem fogta meg

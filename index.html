@@ -2298,7 +2298,12 @@ window.lucrareAcum=async function(){
 
 window.dosarFisier=function(e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  // 2026-09-03: ugyanaz a fajl ujra valaszthato, es az olvasasi hiba
+  // LATSZIK. Korabban a masodik probalkozas nem valtott esemenyt, a
+  // sikertelen olvasas pedig nema volt.
+  try{e.target.value=''}catch(_){}
   var r=new FileReader();
+  r.onerror=function(){toast('Fisierul nu a putut fi citit')};
   r.onload=async function(ev){
     var dataUrl=ev.target.result;
     var b64=(dataUrl.split(',')[1])||'';

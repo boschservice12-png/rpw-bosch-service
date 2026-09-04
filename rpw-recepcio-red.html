@@ -485,6 +485,8 @@ function fixPhases(){
   for(var p=1;p<=7;p++){if(!JOB.phases[p])JOB.phases[p]={status:'pending'}}
   if(!JOB.photoKeys)JOB.photoKeys={};
   if(!JOB.photoUrls)JOB.photoUrls={};
+  if(!JOB.photoPaths)JOB.photoPaths={};
+  if(!JOB.photoMime)JOB.photoMime={};
   if(!JOB.elements)JOB.elements={};
   if(!JOB.alteParti)JOB.alteParti=[];
 }
@@ -514,43 +516,131 @@ function toast(m,type){
 function uid(){return 'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)}
 
 /* Kepmeret csokkentes feltoltes elott */
+/* ── 2026-09-03 — A NEMA ELAKADAS MEGSZUNT ────────────────────────
+   ITT VOLT A MASIK HIBA. Sem az olvasas (`r.onerror`), sem a dekodolas
+   (`img.onerror`) hibaja nem volt lekezelve, es a Promise-nak NEM volt
+   elutasito aga. Ha a bongeszo nem tudta megnyitni a fajlt — iPhone HEIC
+   asztali gepen, PDF-be szkennelt irat, serult kep —, a Promise SOHA nem
+   dolt el: nem tortent SEMMI, hibauzenet sem jott. Ez volt a "nem veszi
+   be a fotot".
+   MOSTANTOL:
+     · olvasasi hiba        -> beszelo hibauzenet (elutasitas)
+     · dekodolasi hiba      -> az EREDETI fajl megy tovabb valtozatlanul;
+                               a szerver formatum-ellenorzese dont rola
+                               (elfogadja, vagy erthetoen elutasitja)
+     · ures vaszon (iOS)    -> az eredeti megy tovabb
+     · 20 masodperc utan    -> hiba, nem orok varakozas
+   Ezenkivul a kicsinyites mostantol a HOSSZABB oldalt nezi: az allo
+   telefonfotok korabban teljes meretben mentek fel. */
 function resizeFile(file){
-  return new Promise(function(res){
+  return new Promise(function(res,rej){
+    var done=false, tm=null;
+    function finish(v){ if(done)return; done=true; clearTimeout(tm); res(v) }
+    function fail(m){ if(done)return; done=true; clearTimeout(tm); rej(new Error(m)) }
+    tm=setTimeout(function(){fail('Fisierul nu a putut fi citit (timeout)')},20000);
     var r=new FileReader();
+    r.onerror=function(){fail('Fisierul nu a putut fi citit')};
     r.onload=function(e){
+      var src=e.target.result;
+      if(typeof src!=='string'||src.indexOf('data:')!==0){fail('Format de fisier necunoscut');return}
       var img=new Image();
+      img.onerror=function(){finish(src)};          // nem dekodolhato kep -> eredeti
       img.onload=function(){
-        var c=document.createElement('canvas'),mx=1600,sc=img.width>mx?mx/img.width:1;
-        c.width=img.width*sc;c.height=img.height*sc;
-        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-        res(c.toDataURL('image/jpeg',.85));
+        try{
+          var w=img.width||0,h=img.height||0;
+          if(!w||!h){finish(src);return}
+          var mx=1600,sc=Math.min(1,mx/Math.max(w,h));
+          var c=document.createElement('canvas');
+          c.width=Math.max(1,Math.round(w*sc));
+          c.height=Math.max(1,Math.round(h*sc));
+          c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+          var out=c.toDataURL('image/jpeg',.85);
+          finish(out&&out.length>1000?out:src);      // ures vaszon -> eredeti
+        }catch(err){ finish(src) }
       };
-      img.src=e.target.result;
+      img.src=src;
     };
     r.readAsDataURL(file);
   });
 }
 
 // ────── SUPABASE STORAGE HELPERS ─────────────────────────────
-/* Fotofeltoltes Supabase Storage-ba. Visszaadja a public URL-t. */
+/* ── 2026-09-03 — AZ IRAT LEHET PDF IS ────────────────────────────
+   KORABBAN minden feltoltes `.jpg` neven, `image/jpeg` tipussal ment a
+   Storage-ba. Egy PDF-be szkennelt irat igy HAZUDOTT tipussal allt volna
+   ott, es a megjelenitesnel ures negyzet lett volna belole.
+   MOSTANTOL a dataURL mondja meg a formatumot; a JOB megjegyzi a
+   tenyleges utat es tipust (`photoPaths` / `photoMime`).
+   A REGI munkak valtozatlanul mukodnek: ha nincs megjegyzett ut, a
+   `.jpg` marad — ahogy eddig is. */
+var MIME_EXT={'image/jpeg':'jpg','image/jpg':'jpg','image/png':'png','image/webp':'webp',
+              'image/gif':'gif','application/pdf':'pdf'};
+/* A dataURL-ben bejelentett tipus — VALTOZTATAS NELKUL.
+   ── 2026-09-03 (2.) ────────────────────────────────────────────────
+   Ez a fuggveny korabban MINDEN ismeretlen tipusra `image/jpeg`-et
+   adott vissza. Az iPhone HEIC-je, amit a bongeszo nem tud dekodolni,
+   igy a "engedd tovabb az eredetit" agon `.jpg` neven, `image/jpeg`
+   cimkevel kerult volna a tarolba — HAZUG cimkevel. Ugyanaz a
+   hibaosztaly, amit a PDF-nel javitottunk.
+   Mostantol a bejelentett tipust tartjuk meg. */
+function mimeOfDataUrl(d){
+  var m=/^data:([^;,]+)[;,]/.exec(String(d||''));
+  return m ? m[1].toLowerCase() : 'image/jpeg';
+}
+/* Kiterjesztes a tipushoz. Ismert tipus -> rogzitett kiterjesztes.
+   Ismeretlen, de KEP-szeru tipus (image/heic, image/heif) -> az altipusbol
+   kepzett, megtisztitott kiterjesztes: a bizonyitek a VALODI formatumaban
+   all a tarolban, es az OCR mondja meg erthetoen, hogy nem tudja olvasni.
+   Se nem ismert, se nem kep -> NULL: ezt nem toltjuk fel. */
+function extOfMime(mime){
+  mime=String(mime||'').toLowerCase();
+  if(MIME_EXT[mime]) return MIME_EXT[mime];
+  // Az SVG sosem fotó és sosem szkennelt irat — kifejezetten kizárjuk.
+  if(mime==='image/svg+xml'||mime==='image/svg') return null;
+  var m=/^image\/([a-z0-9.+-]{1,12})$/.exec(mime);
+  if(m){ var e=m[1].replace(/[^a-z0-9]/g,'').slice(0,8); return e||null; }
+  return null;
+}
+/* A tarolt ut: az UJ munkanal megjegyzett, a reginel a `.jpg`. */
+function photoPath(photoKey){
+  if(JOB&&JOB.photoPaths&&JOB.photoPaths[photoKey])return JOB.photoPaths[photoKey];
+  return JOB.id+'/'+photoKey+'.jpg';
+}
+function photoMime(photoKey){
+  return (JOB&&JOB.photoMime&&JOB.photoMime[photoKey])||'image/jpeg';
+}
+
+/* Fotofeltoltes Supabase Storage-ba. Visszaadja az alairt URL-t. */
 async function uploadPhoto(photoKey,dataUrl){
   if(!JOB||!JOB.id)throw new Error('no job');
   S.uploading[photoKey]=true;render();
   try{
-    // dataUrl -> blob
-    var res=await fetch(dataUrl);
-    var blob=await res.blob();
-    var path=JOB.id+'/'+photoKey+'.jpg';
+    var mime=mimeOfDataUrl(dataUrl);
+    var ext=extOfMime(mime);
+    // Amit nem tudunk BECSULETESEN eltarolni, azt nem toltjuk fel.
+    if(!ext) throw new Error('Format de fisier neacceptat: '+mime);
+    // dataUrl -> blob HALOZAT NELKUL (a CSP connect-src-je nem enged
+    // `data:`-t, es a mobil sem birja a tobb megabajtos data:-fetch-et)
+    var blob=RPWPhotos.dataUrlToBlob(dataUrl);
+    var path=JOB.id+'/'+photoKey+'.'+ext;
+    // Ha korabban MAS kiterjesztessel allt itt irat, azt eltakaritjuk —
+    // kulonben ket fajl maradna ugyanarra a resre (a regi arvan).
+    var elozo=(JOB.photoPaths&&JOB.photoPaths[photoKey])||(JOB.id+'/'+photoKey+'.jpg');
+    if(elozo!==path){try{await sb.storage.from(STORAGE_BUCKET).remove([elozo])}catch(e){}}
     // Upsert (lecsereli ha mar letezik)
-    var up=await sb.storage.from(STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg',upsert:true});
+    var up=await sb.storage.from(STORAGE_BUCKET).upload(path,blob,{contentType:mime,upsert:true});
     if(up.error)throw up.error;
     // P0.6: a bucket PRIVÁT — a publikus URL halott. Aláírt URL kell.
     var url=await RPWPhotos.signedUrl(sb,path,{bucket:STORAGE_BUCKET});
     // Update JOB
     if(!JOB.photoKeys)JOB.photoKeys={};
     if(!JOB.photoUrls)JOB.photoUrls={};
+    if(!JOB.photoPaths)JOB.photoPaths={};
+    if(!JOB.photoMime)JOB.photoMime={};
     JOB.photoKeys[photoKey]=true;
     JOB.photoUrls[photoKey]=url;
+    JOB.photoPaths[photoKey]=path;
+    JOB.photoMime[photoKey]=mime;
     S.photoCache[photoKey]=url;
     await saveJ();
     return url;
@@ -563,12 +653,30 @@ async function uploadPhoto(photoKey,dataUrl){
 /* Foto torles a Storage-bol */
 async function deletePhoto(photoKey){
   if(!JOB||!JOB.id)return;
-  var path=JOB.id+'/'+photoKey+'.jpg';
+  var path=photoPath(photoKey);
   try{await sb.storage.from(STORAGE_BUCKET).remove([path])}catch(e){console.warn('Delete:',e)}
   if(JOB.photoKeys)delete JOB.photoKeys[photoKey];
   if(JOB.photoUrls)delete JOB.photoUrls[photoKey];
+  if(JOB.photoPaths)delete JOB.photoPaths[photoKey];
+  if(JOB.photoMime)delete JOB.photoMime[photoKey];
   delete S.photoCache[photoKey];
   await saveJ();
+}
+
+/* Iratcsempe: kepnel <img>, PDF-nel MEGNYITHATO csempe.
+   Egy `<img src="....pdf">` ures negyzet lenne — a bizonyitek elveszne
+   szem elol. A PDF uj lapon nyilik, az alairt URL-lel. */
+function docTag(photoKey,url,cls,style){
+  if(!url)return '';
+  var c=cls?' class="'+cls+'"':'';
+  if(photoMime(photoKey)!=='application/pdf')
+    return '<img'+c+' src="'+escU(url)+'"'+(style?' style="'+style+'"':'')+'/>';
+  return '<a'+c+' href="'+escU(url)+'" target="_blank" rel="noopener"'
+       +' onclick="event.stopPropagation()" title="PDF" style="'+(style||'')
+       +';display:flex;align-items:center;justify-content:center;gap:5px;min-height:46px;'
+       +'padding:0 10px;border:1px solid var(--b);border-radius:8px;'
+       +'background:var(--bll,#eff6ff);color:var(--bl,#2563eb);'
+       +'font-weight:800;font-size:11px;text-decoration:none">\uD83D\uDCC4 PDF</a>';
 }
 
 /* URL kinyerese egy fotokulcshoz */
@@ -865,10 +973,10 @@ function render(){
     h+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--b)">';
     h+='<div class="talon-box '+(hasBuletin?'done':'')+'" style="padding:14px">';
     var bulUrl=photoUrl('buletin_client');
-    if(bulUrl)h+='<img src="'+escU(bulUrl)+'" style="max-height:100px;object-fit:contain;margin:0 auto 4px;display:block"/>';
+    if(bulUrl)h+=docTag('buletin_client',bulUrl,'','max-height:100px;object-fit:contain;margin:0 auto 4px;display:block');
     else h+='<svg class="tb-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
     h+='<div class="tb-t">'+T('scanBuletin')+'</div><div class="tb-s">'+T('scanBuletinS')+'</div>';
-    h+='<div class="pslot-acts"><label class="pslot-act" title="Fotografiază">📷 Foto<input type="file" accept="image/*" capture="environment" onchange="upBuletin(event)"/></label><label class="pslot-act" title="Importă din fișier">📁 Import<input type="file" accept="image/*" onchange="upBuletin(event)"/></label></div></div>';
+    h+='<div class="pslot-acts"><label class="pslot-act" title="Fotografiază">📷 Foto<input type="file" accept="image/*" capture="environment" onchange="upBuletin(event)"/></label><label class="pslot-act" title="Importă din fișier">📁 Import<input type="file" accept="image/*,application/pdf" onchange="upBuletin(event)"/></label></div></div>';
     if(S.ocrRun.buletin)h+='<div class="ocr-text">'+T('scanning')+'</div><div class="ocr-bar"><div class="ocr-fill" style="width:60%"></div></div>';
     if(hasBuletin){
       h+='<div class="info-grid" style="margin-top:8px"><div class="info-f"><div class="info-l">'+T('adresa')+'</div><input class="info-v" value="'+escA(job.adresa||'')+'" onchange="updF(\'adresa\',this.value);mark(\'_adresaEdited\')"/></div><div class="info-f"><div class="info-l">'+T('cnp')+'</div><input class="info-v mono" value="'+escA(job.cnp||'')+'" onchange="updF(\'cnp\',this.value);mark(\'_cnpEdited\')"/></div></div>';
@@ -880,10 +988,10 @@ function render(){
     h+='<div class="sec"><div class="sec-h" onclick="tS(\'talon\')"><div class="sec-t"><span class="step-n">1</span> '+T('step1')+'</div><span class="sec-badge '+badge(hasTalon,0)+'">'+(hasTalon?'OK':'-')+'</span></div><div class="sec-bd '+(S.sec.talon?'open':'')+'">';
     var talonUrl=photoUrl('talon');
     h+='<div class="talon-box '+(hasTalon?'done':'')+' '+(S.uploading['talon']?'uploading':'')+'">';
-    if(talonUrl)h+='<img src="'+escU(talonUrl)+'"/>';
+    if(talonUrl)h+=docTag('talon',talonUrl,'','');
     else h+='<svg class="tb-icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>';
     h+='<div class="tb-t">'+(hasTalon?T('reScan'):T('scanT'))+'</div><div class="tb-s">'+T('scanTS')+'</div>';
-    h+='<div class="pslot-acts"><label class="pslot-act" title="Fotografiază">📷 Foto<input type="file" accept="image/*" capture="environment" onchange="upTalon(event)"/></label><label class="pslot-act" title="Importă din fișier">📁 Import<input type="file" accept="image/*" onchange="upTalon(event)"/></label></div></div>';
+    h+='<div class="pslot-acts"><label class="pslot-act" title="Fotografiază">📷 Foto<input type="file" accept="image/*" capture="environment" onchange="upTalon(event)"/></label><label class="pslot-act" title="Importă din fișier">📁 Import<input type="file" accept="image/*,application/pdf" onchange="upTalon(event)"/></label></div></div>';
     if(hasTalon&&!S.ocrRun.talon)h+='<button class="reocr-btn" onclick="reOcrTalon()">'+T('reOcr')+'</button>';
     if(S.ocrRun.talon)h+='<div class="ocr-text">'+T('scanning')+'</div><div class="ocr-bar"><div class="ocr-fill" style="width:60%"></div></div>';
     if(S.uploading['talon'])h+='<div class="ocr-text">'+T('uploading')+'</div>';
@@ -900,10 +1008,10 @@ function render(){
       h+='<div class="sec"><div class="sec-h" onclick="tS(\'constatare\')"><div class="sec-t"><span class="step-n">2</span> '+T('step2')+'</div><span class="sec-badge '+badge(hasConstatare,0)+'">'+(hasConstatare?'OK':'-')+'</span></div><div class="sec-bd '+(S.sec.constatare?'open':'')+'">';
       var constUrl=photoUrl('doc_constatare');
       h+='<div class="talon-box '+(hasConstatare?'done':'')+' '+(S.uploading['doc_constatare']?'uploading':'')+'">';
-      if(constUrl)h+='<img src="'+constUrl+'"/>';
+      if(constUrl)h+=docTag('doc_constatare',constUrl,'','');
       else h+='<svg class="tb-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
       h+='<div class="tb-t">'+(hasConstatare?T('reScan'):T('scanC'))+'</div><div class="tb-s">'+T('scanCS')+'</div>';
-      h+='<div class="pslot-acts"><label class="pslot-act" title="Fotografiază">📷 Foto<input type="file" accept="image/*" capture="environment" onchange="upConstatare(event)"/></label><label class="pslot-act" title="Importă din fișier">📁 Import<input type="file" accept="image/*" onchange="upConstatare(event)"/></label></div></div>';
+      h+='<div class="pslot-acts"><label class="pslot-act" title="Fotografiază">📷 Foto<input type="file" accept="image/*" capture="environment" onchange="upConstatare(event)"/></label><label class="pslot-act" title="Importă din fișier">📁 Import<input type="file" accept="image/*,application/pdf" onchange="upConstatare(event)"/></label></div></div>';
       if(hasConstatare&&!S.ocrRun.constatare)h+='<button class="reocr-btn" onclick="reOcrConstatare()">'+T('reOcr')+'</button>';
       if(S.ocrRun.constatare)h+='<div class="ocr-text">'+T('scanning')+'</div><div class="ocr-bar"><div class="ocr-fill" style="width:60%"></div></div>';
       if(S.uploading['doc_constatare'])h+='<div class="ocr-text">'+T('uploading')+'</div>';
@@ -929,10 +1037,10 @@ function render(){
       var dUrl=photoUrl('doc_'+d.id);
       var isUp=S.uploading['doc_'+d.id];
       h+='<div class="doc-item '+(hasD?'done':'')+' '+(isUp?'uploading':'')+'"><div class="di-icon">'+IC.doc+'</div><div class="di-text"><div class="di-name">'+T(d.id)+'</div><div class="di-req '+(d.req?'req':'opt')+'">'+(d.req?T('mandatory'):T('optional'))+'</div></div>';
-      if(dUrl)h+='<img class="di-thumb" src="'+dUrl+'"/>';
+      if(dUrl)h+=docTag('doc_'+d.id,dUrl,'di-thumb','');
       else if(isUp)h+='<div class="thumb-loading"></div>';
       if(hasD)h+='<div class="di-chk">'+chkS+'</div>';
-      h+='<input class="doc-upload" type="file" accept="image/*" onchange="upDoc(\''+d.id+'\',event)"/></div>';
+      h+='<input class="doc-upload" type="file" accept="image/*,application/pdf" onchange="upDoc(\''+d.id+'\',event)"/></div>';
     }
     // Custom documents (felhasznalo altal hozzaadott)
     var customDocs=job.customDocs||[];
@@ -943,11 +1051,11 @@ function render(){
       var cdUp=S.uploading[cdKey];
       var hasCd=!!pk[cdKey];
       h+='<div class="doc-item '+(hasCd?'done':'')+' '+(cdUp?'uploading':'')+'"><div class="di-icon">'+IC.doc+'</div><div class="di-text"><div class="di-name">'+escapeHtml(cd.name||'Document')+'</div><div class="di-req opt">'+T('optional')+'</div></div>';
-      if(cdUrl)h+='<img class="di-thumb" src="'+cdUrl+'"/>';
+      if(cdUrl)h+=docTag(cdKey,cdUrl,'di-thumb','');
       else if(cdUp)h+='<div class="thumb-loading"></div>';
       if(hasCd)h+='<div class="di-chk">'+chkS+'</div>';
       h+='<button class="del-cd-btn" onclick="event.stopPropagation();delCustomDoc(\''+cd.id+'\')" title="'+T('delete')+'">×</button>';
-      h+='<input class="doc-upload" type="file" accept="image/*" onchange="upCustomDoc(\''+cd.id+'\',event)"/></div>';
+      h+='<input class="doc-upload" type="file" accept="image/*,application/pdf" onchange="upCustomDoc(\''+cd.id+'\',event)"/></div>';
     }
     // + Adauga document gomb
     h+='<div class="add-doc-btn" onclick="addCustomDoc()">+ '+T('addDoc')+'</div>';
@@ -1241,12 +1349,13 @@ window.setType=async function(t){
 // Talon upload + OCR
 window.upTalon=function(e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     JOB._plateEdited=false;JOB._vinEdited=false;JOB._brandEdited=false;JOB._yearEdited=false;JOB._capEdited=false;JOB._propEdited=false;
     try{await uploadPhoto('talon',dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     render();
     await ocrTalon(dataUrl);
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 window.reOcrTalon=async function(){
   var url=photoUrl('talon');if(!url)return;
@@ -1265,23 +1374,25 @@ window.reOcrTalon=async function(){
 // Buletin upload + OCR
 window.upBuletin=function(e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     JOB._clientEdited=false;JOB._adresaEdited=false;JOB._cnpEdited=false;
     try{await uploadPhoto('buletin_client',dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     render();
     await ocrBuletin(dataUrl);
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 
 // Constatare upload + OCR
 window.upConstatare=function(e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     JOB._nrDosarEdited=false;JOB._propDosarEdited=false;JOB._asigEdited=false;
     try{await uploadPhoto('doc_constatare',dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     render();
     await ocrConstatare(dataUrl);
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 window.reOcrConstatare=async function(){
   var url=photoUrl('doc_constatare');if(!url)return;
@@ -1299,6 +1410,7 @@ window.reOcrConstatare=async function(){
 // Document upload (ha constatare, OCR-t is futtat)
 window.upDoc=function(t,e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     try{await uploadPhoto('doc_'+t,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     toast(T(t)+' '+T('saved'),'info');
@@ -1307,7 +1419,7 @@ window.upDoc=function(t,e){
       JOB._nrDosarEdited=false;JOB._propDosarEdited=false;JOB._asigEdited=false;
       await ocrConstatare(dataUrl);
     }
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 
 // Custom document (user added with name)
@@ -1323,11 +1435,12 @@ window.addCustomDoc=async function(){
 };
 window.upCustomDoc=function(cdId,e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     try{await uploadPhoto('custdoc_'+cdId,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     toast(T('saved'),'info');
     render();
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 window.delCustomDoc=async function(cdId){
   if(!JOB.customDocs)return;
@@ -1342,11 +1455,12 @@ window.delCustomDoc=async function(cdId){
 // Overview foto upload
 window.upOv=function(x,e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     try{await uploadPhoto('ov_'+x,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     toast(T(VK[x])+' '+T('saved'),'info');
     render();
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 
 // 23 caroserie elem state handlers (mindket seman ir!)
@@ -1369,11 +1483,12 @@ window.mE=async function(k,stV2){
 
 window.aEP=function(k,e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     try{await uploadPhoto('elem_'+k,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     toast(T(k)+' '+T('saved'),'info');
     render();
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 window.dElPh=async function(k){
   if(!confirm('\u26A0\uFE0F Fotografia este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;
@@ -1470,10 +1585,11 @@ window.delAlt=async function(id){
 
 window.aAltP=function(id,e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
+  try{e.target.value=''}catch(_){}   // ugyanaz a fajl ujra valaszthato
   resizeFile(f).then(async function(dataUrl){
     try{await uploadPhoto('alt_'+id,dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     render();
-  });
+  }).catch(function(err){toast('Foto: '+((err&&err.message)||'eroare'),'err')});
 };
 window.dAltPh=async function(id){
   if(!confirm('\u26A0\uFE0F Fotografia este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;

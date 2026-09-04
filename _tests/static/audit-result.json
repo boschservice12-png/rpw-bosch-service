@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-29T19:03:47.453Z",
+  "generated": "2026-09-04T05:49:17.951Z",
   "files": 33,
   "total": 28,
   "allowed": 28,
@@ -31,7 +31,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 2460,
+      "sor": 2465,
       "mezo": "phases[]",
       "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
       "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
@@ -39,7 +39,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 2461,
+      "sor": 2466,
       "mezo": "phases[].status",
       "ok": "ÚJ munka létrehozása — a szerveren még nem létezik",
       "ut": "rpw_patch_v3 `open` joggal — az INSERT ágon a védelem nem alkalmazandó, mert nincs mit megkerülni; a szerver ekkor a teljes objektumot beszúrja",
@@ -47,7 +47,7 @@
     },
     {
       "fajl": "index.html",
-      "sor": 2487,
+      "sor": 2492,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
@@ -111,7 +111,7 @@
     },
     {
       "fajl": "rpw-evaluare-red.html",
-      "sor": 510,
+      "sor": 542,
       "mezo": "phases[]",
       "ok": "inicializálás — hiányzó fázisok kitöltése",
       "ut": "üres váz létrehozása; státuszt csak a rpw_transition ír",
@@ -143,7 +143,7 @@
     },
     {
       "fajl": "rpw-reconstatare-red.html",
-      "sor": 193,
+      "sor": 194,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -151,7 +151,7 @@
     },
     {
       "fajl": "rpw-reconstatare-red.html",
-      "sor": 198,
+      "sor": 199,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
