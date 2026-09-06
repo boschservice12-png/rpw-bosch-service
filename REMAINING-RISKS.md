@@ -304,6 +304,35 @@ hogy a rossz fájl vész el.
 kell néznie, ami URL-t vagy fájlnevet tárolhat — nem csak azt az egyet, ami
 éppen eszembe jut.
 
+### ~~A recepciós fotózás 2026-08-25 és 09-06 között halott volt~~ — ✅ LEZÁRVA
+
+**Tünet (Ferenc, 2026-09-06):** „megint baj van a foto atvetelevel, nem menti
+a fotokat". Mérés: a tárolóban 0 fájl, egyetlen feltöltés sem; a dosszié-
+mentés közben működött.
+
+**Ok:** három lap (`rpw-recepcio-red.html`, `rpw-evaluare-red.html`,
+`rpw-reconstatare-red.html`) `fetch(dataUrl)`-lel csinált blobot a
+lefényképezett képből. A `fetch` egy `data:` URL-re a CSP **`connect-src`**
+alá esik, abból pedig a `data:` **2026-08-25-én (`87cfb18`) szándékosan
+kikerült** — azzal a téves indokkal, hogy „kapcsolathoz nem kell". Azóta a
+`fetch` dobott, az `uploadPhoto` elszállt, a kép sehová nem került, a mentés
+sem futott. **Némán.**
+
+Az ügyfél-link (`rpw-upload.html`) és a dossziélap azért működött végig, mert
+ott `canvas.toBlob` van — ezért tűnt úgy, hogy „eddig működött": az másik út
+volt.
+
+**Javítás (`06ce9ef`, élesben 20:37):** nem a CSP visszatágítása, hanem
+`RPWUtil.dataUrlToBlob` — a base64 kézi bontása Blob-bá, hálózat nélkül. A
+`test-csp-data-url.js` a tilalmat a CSP-hez köti: amíg a `connect-src`-ben
+nincs `data:`, egyetlen lap sem `fetch`-elhet `data:` URL-t.
+
+| | |
+|---|---|
+| **Igazolva** | 20:39:18 — 3 fájl a `rpw-photos`-ban, a dosszié mappájában, a `photoKeys` pontosan egyezik a fájlnevekkel |
+| **Tanulság** | Egy CSP-szigorítás **kódolvasás nélkül** történt: a megjegyzés állította, hogy a `data:` „nem kell", miközben három lap használta. Mostantól a tilalmat teszt köti a kódhoz, nem egy megjegyzés |
+| **Ami megmaradt** | 08-25 és 09-06 között a recepción készült fotók **sosem kerültek fel** — ha valamelyik dossziéhoz ilyen kellene, az nincs meg |
+
 ### A fénykép-tároló védtelen: az anon kulcs mindent tud
 
 **2026-09-03, mérésből.** A fotózás ellenőrzésekor derült ki. Nem
