@@ -628,8 +628,8 @@ window.shareReconst=async function(){
   for(var x=0;x<photos.length;x++){
     if(photos[x]&&photos[x].data){
       try{
-        var resp=await fetch(photos[x].data);
-        var blob=await resp.blob();
+        // 2026-09-06: NEM fetch(dataUrl) — azt a CSP connect-src tiltja (lasd rpw-util.js dataUrlToBlob)
+        var blob=(window.RPWUtil&&RPWUtil.dataUrlToBlob)?RPWUtil.dataUrlToBlob(photos[x].data):await (await fetch(photos[x].data)).blob();
         files.push(new File([blob],'reconst_'+(x+1)+'.jpg',{type:'image/jpeg'}));
       }catch(e){}
     }

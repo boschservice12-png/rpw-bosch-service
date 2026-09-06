@@ -102,8 +102,31 @@
     return true;
   }
 
+  // ── 2026-09-06 — A FOTO NEM fetch(dataUrl)-LEL LESZ BLOB ───────────
+  // A recepcio, az evaluare es a reconstatare `fetch(dataUrl)`-lel csinalt
+  // blobot a lefenykepezett kepbol. A `fetch` egy data: URL-re a CSP
+  // `connect-src` ala esik — abbol pedig 2026-08-25-en (87cfb18) SZANDEKOSAN
+  // kikerult a `data:`, azzal a (teves) indokkal, hogy "kapcsolathoz nem
+  // kell". Azota a recepcios fotozas nema hibaval elhalt: a fetch dobott,
+  // az uploadPhoto elszallt, a kep sehova nem kerult. Az ugyfel-link es a
+  // dossziélap azert mukodott, mert ott canvas.toBlob van.
+  //
+  // A javitas NEM a CSP visszatagitasa (az szigoritas jo volt), hanem ez:
+  // a base64-et kezzel bontjuk Blob-ba. Ehhez nem kell halozati kapcsolat,
+  // tehat a connect-src nem szol bele.
+  function dataUrlToBlob(dataUrl){
+    var m = /^data:([^;,]*)((?:;[^;,]*)*?)(;base64)?,([\s\S]*)$/.exec(String(dataUrl||''));
+    if(!m) throw new Error('bad_data_url');
+    var mime = m[1] || 'application/octet-stream';
+    var raw  = m[3] ? atob(m[4]) : decodeURIComponent(m[4]);
+    var u8   = new Uint8Array(raw.length);
+    for(var i=0;i<raw.length;i++) u8[i]=raw.charCodeAt(i)&255;
+    return new Blob([u8], {type:mime});
+  }
+
   var API={ uuid:uuid, jobId:jobId, esc:esc, escAttr:escAttr, escUrl:escUrl, safeName:safeName,
-            betoltesHibaHtml:betoltesHibaHtml, mutasdBetoltesHibat:mutasdBetoltesHibat };
+            betoltesHibaHtml:betoltesHibaHtml, mutasdBetoltesHibat:mutasdBetoltesHibat,
+            dataUrlToBlob:dataUrlToBlob };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWUtil=API;
 })(typeof self!=='undefined'?self:(typeof window!=='undefined'?window:globalThis));

@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 124 | 30 | 81 | 5 | 8 | 7 |
+| 125 | 30 | 82 | 5 | 8 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -97,6 +97,7 @@ szám nélkül, azt is megmondja.
 | **F-160** | Ket apro, ami neman nyelt. (#14) A loadJob ketszer gyorsitotarazott ugyanabban a lefutasban — az egyik kikerult hat lapon. (#15) A resize() se a FileReader, se az Image hibajat nem kezelte: egy serult vagy nem tamogatott kepfajl eseten SEMMI nem tortent — a dolgozo megnyomta a gombot, es a foto nem jelent meg, hibauzenet nelkul. Mostantol szol, es megmondja, melyik lepesnel (olvasas / formatum / konverzio) | `rpw-inchidere-red.html` `rpw-reconstatare-red.html` | — | `unit/test-kodreview-0829.js` | 🟦 csak frontend |
 | **F-161** | HID: egy fotozas, ket helyre. Az avizare dauna iratlistajaba feltoltott hat auto-foto (4 oldal + alvazszam + kilometeróra) UGYANAZ a hat kep, amit a recepcio attekinto fotokent var — de a ket oldal nem tudott egymasrol: a szabaly csak a photoKeys-t nezte, a foto viszont a dosarActe-ban ult. Ezert kerte a rendszer KETSZER ugyanazt a kepet. A hid OLVASASKOR huzodik meg: nem masolunk adatot, nem irunk photoKeys-t — igy nincs elavulo masolat (ha az iratot torlik, a szamlalo magatol visszaesik), es visszafordithato. A talon-foto is atjon a pag_talon_fata rekeszbol. Uj kotelezo rekesz: foto_km (a hatodik auto-foto), ettol a kotelezo lista 17-rol 18-ra nott | `rpw-workflow.js` `rpw-config.js` | — | `unit/test-harom-allapot.js` | 🟦 csak frontend |
 | **F-162** | AVIZARE DAUNA sajat lezarasi szabalya. A fazis-szabalyok nem ismertek a 'csak dosszie' esetet: a doar_dosar szo NULLASZOR fordult elo a rpw-workflow.js-ben. Ezert egy iratgyujto dossziétol is muhelyi bevetelezest kert (talon-foto, 6 attekinto kep, elem-statuszok, damage report) — pedig ott a szerviz nem javit, csak gyujt es atad, es az auto sokszor ott sincs. 2026-08-30-an 33 munkabol 18 allt ezen. Mostantol az avizare akkor es csak akkor kesz, amikor a FAJL elkeszitheto: a kotelezo iratlista hianytalan. A javitasi ut (deschide dosar = recepcio) valtozatlanul keri a teljes bevetelezest | `rpw-workflow.js` | — | `unit/test-harom-allapot.js` | 🟦 csak frontend |
+| **F-163** | A FOTO NEM fetch(dataUrl)-LEL LESZ BLOB. A recepcio, az evaluare es a reconstatare fetch(dataUrl)-lel csinalt blobot a lefenykepezett kepbol; a fetch egy data: URL-re a CSP connect-src ala esik, abbol pedig 2026-08-25-en (87cfb18) kikerult a data:. Azota a recepcios fotozas nema hibaval elhalt (a kep sehova nem kerult), mikozben az ugyfel-link es a dossziélap mukodott, mert ott canvas.toBlob van. 2026-09-06-an Ferenc jelentette. A javitas nem a CSP visszatagitasa, hanem RPWUtil.dataUrlToBlob: a base64 kezi bontasa Blob-ba, halozat nelkul. A teszt a CSP-hez koti a tilalmat: amig a connect-src-ben nincs data:, egyetlen lap sem fetch-elhet data: URL-t. | `rpw-util.js` `rpw-recepcio-red.html` `rpw-evaluare-red.html` `rpw-reconstatare-red.html` | — | `unit/test-csp-data-url.js` | 🟦 csak frontend |
 
 ## F-2xx · Avizare daună, dosszié, iratok
 

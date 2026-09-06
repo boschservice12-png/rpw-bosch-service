@@ -458,7 +458,8 @@ async function uploadPhoto(photoKey,dataUrl){
   if(!JOB||!JOB.id)throw new Error('no job');
   S.uploading[photoKey]=true;render();
   try{
-    var res=await fetch(dataUrl);var blob=await res.blob();
+    // 2026-09-06: NEM fetch(dataUrl) — azt a CSP connect-src tiltja (lasd rpw-util.js dataUrlToBlob)
+    var blob=(window.RPWUtil&&RPWUtil.dataUrlToBlob)?RPWUtil.dataUrlToBlob(dataUrl):await (await fetch(dataUrl)).blob();
     var path=JOB.id+'/'+photoKey+'.jpg';
     var up=await sb.storage.from(STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg',upsert:true});
     if(up.error)throw up.error;

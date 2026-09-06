@@ -2131,6 +2131,31 @@
       "be": [],
       "teszt": "_tests/unit/test-harom-allapot.js",
       "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-163",
+      "nev": "A FOTO NEM fetch(dataUrl)-LEL LESZ BLOB. A recepcio, az evaluare es a reconstatare fetch(dataUrl)-lel csinalt blobot a lefenykepezett kepbol; a fetch egy data: URL-re a CSP connect-src ala esik, abbol pedig 2026-08-25-en (87cfb18) kikerult a data:. Azota a recepcios fotozas nema hibaval elhalt (a kep sehova nem kerult), mikozben az ugyfel-link es a dossziélap mukodott, mert ott canvas.toBlob van. 2026-09-06-an Ferenc jelentette. A javitas nem a CSP visszatagitasa, hanem RPWUtil.dataUrlToBlob: a base64 kezi bontasa Blob-ba, halozat nelkul. A teszt a CSP-hez koti a tilalmat: amig a connect-src-ben nincs data:, egyetlen lap sem fetch-elhet data: URL-t.",
+      "fe": [
+        [
+          "rpw-util.js",
+          "dataUrlToBlob"
+        ],
+        [
+          "rpw-recepcio-red.html",
+          "uploadPhoto"
+        ],
+        [
+          "rpw-evaluare-red.html",
+          "uploadPhoto"
+        ],
+        [
+          "rpw-reconstatare-red.html",
+          "fetch(photos[x].data)"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-csp-data-url.js",
+      "allapot": "csak-frontend"
     }
   ]
 }
