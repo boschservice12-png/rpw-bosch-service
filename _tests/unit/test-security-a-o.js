@@ -285,7 +285,15 @@ console.log('\nP. (extra) A helyi gyorsítótár nem tárol személyes adatot');
     ok(min[k] === undefined, '  ' + k + ' NEM kerül a helyi tárolóba'));
   // 10 (v3): a rendszám MASZKOLVA — személyhez kapcsolható adat
   eq(min.plate, undefined, 'a nyers rendszám NEM kerül a tárolóba');
-  eq(min.plateMasked, 'MS-…-ABC', '  csak maszkolt változat');
+  // KODREVIEW #9 (2026-08-29): a maszk SZIGORODOTT. Korabban 'MS-…-ABC'
+  // volt, vagyis het karakterbol ot kiszivargott, es a kozepso ket
+  // szamjegy csak szaz lehetoseg — a jarmu a muhely udvaran azonosithato
+  // volt. Mostantol csak a megyekod marad.
+  eq(min.plateMasked, 'MS-…', '  csak maszkolt változat');
+  // A LENYEG nem a szoveg, hanem hogy mi NEM szivarog ki:
+  ok(min.plateMasked.indexOf('ABC') < 0, '  az utolso szegmens NEM szivarog ki');
+  ok(min.plateMasked.indexOf('01')  < 0, '  a szamjegyek sem');
+  ok(min.plateMasked !== job.plate,      '  es soha nem a nyers rendszam');
   eq(min.number, 'RPW-001', 'a munkaszám marad');
   ok(min.phases && min.phases[1] && min.phases[1].status === 'done', 'a fázisállapot marad');
   ok(min.phases[1].by === undefined, '  de a „ki csinálta" nem');

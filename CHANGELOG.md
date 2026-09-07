@@ -1,5 +1,45 @@
 # CHANGELOG.md
 
+## 2026-09-07 — Két javítás ugyanarra a hibára: összefésülés, egy átalakítóval
+
+A `main` időközben **önállóan is megjavította** a `fetch(dataUrl)`-hibát
+(`06ce9ef`, `RPWUtil.dataUrlToBlob`). Ez az ág is javította
+(`RPWPhotos.dataUrlToBlob`). Két javítás, két átalakító — **pontosan az a
+szerkezeti hiba, amit ezen az úton javítunk.** Ezért az összefésülés nem
+„mindkettőt megtartom", hanem döntés:
+
+| Kérdés | Döntés | Miért |
+|---|---|---|
+| Melyik átalakító marad? | **`RPWUtil.dataUrlToBlob`** | Már élesben van, tesztelt, és a regexe a `data:image/jpeg;charset=…;base64,` alakot is bontja — a másik nem |
+| Mi lesz a másikkal? | **`RPWPhotos.dataUrlToBlob` továbbadja a hívást** | Egy dekódoló a rendszerben; a lapok hívása nem változik |
+| Marad tartalék `fetch`? | **Nem** | A `main` sora `(RPWUtil?…:await fetch(dataUrl))` volt; a tartalék pont abba az ágba esne vissza, ami a hibát okozta |
+| Melyik `resize()` marad? | **A közös modul** (`RPWPhotos.fileToDataUrl`) | A `main` beágyazott változata a **rövidebb** oldal szerint kicsinyít (az álló telefonfotók így teljes méretben mennek fel), nincs benne időtúllépés, üres-vászon ág, és nem enged tovább eredeti fájlt |
+| A `main` hibaüzenete? | **Megtartva** | A kódreview #15 háromnyelvű `T('photoError')` szövege jobb, mint a miénk volt |
+
+A `main` OCR-modellváltása (`claude-sonnet-5`, kikapcsolt gondolkodás) és a
+`thinking`-blokkot kezelő szövegkinyerés **érintetlenül** átjött.
+
+**Amit a `main` NEM javított, és ez az ág hoz:** az `OCR_SCHEMA` és a prompt
+mezőnevei továbbra is eltértek — a szűrő némán eldobta a talon márkáját,
+a buletin nevét/címét, a constatare **kárlistáját**, és 502-re bukott
+**minden** Audatex-import. Ez élesben **most is így van**.
+
+### Az őrszemek, amiket az összefésülés miatt át kellett írni
+
+- `test-kodreview-0829.js` #15: szó szerint `r.onerror` / `img.onerror`-t
+  keresett a lapokon. A javítás a közös modulba került, ezért az őrszem
+  most **oda** néz, és a lapon azt követeli meg, hogy (a) a közös modult
+  hívja, (b) **kiírja** a hibát, (c) **ne legyen** saját `FileReader`-másolata.
+  *Mutáció: 3, mind elkapva.*
+- `_registry/funkciok.json` F-160 / F-163: az ujjlenyomatok az eltűnt
+  sorokra mutattak — az F-163-é ráadásul a **hibás** sorra
+  (`fetch(photos[x].data)`), nem a javításra. Átírva a javításra.
+- Új: **F-907** (az OCR-szűrő és a prompt egy nyelvet beszél),
+  **F-908** (közös fotó-réteg, PDF a recepción).
+
+**Teljes futás zöld:** unit 51/3396 · integration 5/350 · frontend 6/532 ·
+static 1/2 — **0 hibás**. A staging továbbra sem igazolt.
+
 ## 2026-09-04 — „Építési hiány" — a megoldás egyetlen oldalon létezett
 
 Ferenc megfigyelése, ami eldöntötte az ügyet: **„az avizare daună felén a
@@ -687,3 +727,44 @@ Elutasításkor: `protected_workflow_field` + a **konkrét mezőutak** (`phases.
 | `_tests/frontend/test-fe-transition.js` | **176 állítás VALÓDI oldalkóddal** jsdom-ban: mind a 7 fázisoldal + dosar; elutasítás, konfliktus, offline, kettős mentés |
 | `_tests/static/test-static-workflow.js` | Statikus workflow-audit dokumentált engedélylistával |
 | `_tests/run-all.js` | **Öt kategória**: unit / database integration / frontend integration / static audit / staging |
+
+## 2026-08-29 — A beléptetés bevezetése és a kódreview
+
+**A `rpw-config.js` korábban ezt a történetet a kapcsoló fölött hordozta.
+Onnan ide került: a konfiguráció diffelhető tényekből álljon, ne krónikából.**
+(Kódreview #17.)
+
+### A beléptetés kimenetele
+
+**Délelőtt kiment, és a panel ÜRES lett.** Ok (szerveroldali): a
+`rpw2_login` a munkamenetet `rpw_employee_id`-vel írja, a `rpw_session`
+viszont `employee_id`-t olvasott — két külön munkamenet-vonal ugyanazon a
+táblán. Így a `rpw__ctx` nem találta meg a munkamenetet, és a
+`rpw_jobs_list` egyetlen sort sem adott vissza. Aznap visszaállítva.
+
+**Délután javítva (010), este újra kiment.** Ami a második nekifutás előtt
+meg lett mérve:
+
+- a `010_session_lineage_fix.sql` élesben van: a `rpw_session` mindkét
+  vonalat ismeri, és a két élő munkamenetet megtalálja (a régi változat
+  nullát talált);
+- mind a 11 aktív dolgozónak van PIN-je;
+- a szerep-leképezés 9 embert beenged, 2 marad kint (Sofőr, Egyéb —
+  Ferenc döntése);
+- a beléptetés által követelt összes RPC létezik és futtatható:
+  `rpw_jobs_list`, `rpw_job_get`, `rpw_job_trash`, `rpw_job_restore`,
+  `rpw_job_purge`, `rpw2_session`, `rpw2_login`.
+
+**Igazolás a szerver naplójából** (nem benyomás): az élesítés utáni órában
+nulla közvetlen tábla-olvasás történt, miközben napközben, a régi
+változattal 47. Kijelentkezés 22:46:39, PIN-es visszalépés 22:46:53.
+
+### Adatbázis-változások
+
+| | |
+|---|---|
+| `010` | a munkamenet két vonala összekötve |
+| `011` | négy régi munkamásolat (87 sor) a zárt `rpw_archiv` sémába |
+| `012` | a bérlő-ellenőrzés nélküli írási utak (`rpw_patch`, `rpw_patch_v2`) lezárva — a PUBLIC-tól is |
+
+`008` (az RLS-lezárás) továbbra sem ment ki.

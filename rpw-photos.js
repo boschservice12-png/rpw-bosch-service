@@ -54,22 +54,26 @@
   // hogy egyáltalán ne hálózaton keresztül dekódoljunk: a base64-ből
   // helyben állítjuk elő a bájtokat. Így nincs CSP-függés, és nincs
   // mobil memória-korlát sem.
-  function dataUrlToBlob(dataUrl){
-    var s=String(dataUrl||'');
-    var m=/^data:([^;,]*)(;base64)?,/i.exec(s);
-    if(!m) throw new Error('Nu este dataURL');
-    var mime=m[1]||'application/octet-stream';
-    var body=s.slice(m[0].length), bytes, i;
-    if(m[2]){
-      var bin=atob(body);
-      bytes=new Uint8Array(bin.length);
-      for(i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-    }else{
-      var txt=decodeURIComponent(body);
-      bytes=new Uint8Array(txt.length);
-      for(i=0;i<txt.length;i++) bytes[i]=txt.charCodeAt(i)&0xFF;
+  //
+  // 2026-09-06 — EGY ÁTALAKÍTÓ VAN, NEM KETTŐ. Ugyanerre a hibára két
+  // javítás született párhuzamosan: `RPWUtil.dataUrlToBlob` (rpw-util.js)
+  // és egy másolat itt. A másolat pontosan az a szerkezeti hiba, amit
+  // ezen a fotó-úton javítunk, ezért ELTŰNT: ez a függvény már csak
+  // továbbadja a hívást. Az `rpw-util.js` MINDEN fotós lapon a
+  // `rpw-photos.js` ELŐTT töltődik be, tehát mire ez lefut, ott van;
+  // a `require` ág csak a Node-os teszteknek kell.
+  function _util(){
+    if(root.RPWUtil && typeof root.RPWUtil.dataUrlToBlob==='function') return root.RPWUtil;
+    if(typeof module!=='undefined' && module.exports && typeof require==='function'){
+      try{ return require('./rpw-util.js'); }catch(e){}
     }
-    return new Blob([bytes],{type:mime});
+    return null;
+  }
+  function dataUrlToBlob(dataUrl){
+    var u=_util();
+    // Némán visszaesni tilos: a hívó a bájtokra épít.
+    if(!u) throw new Error('rpw-util.js lipseste (dataUrlToBlob)');
+    return u.dataUrlToBlob(dataUrl);
   }
 
   // ── FÁJL → dataURL, EGYETLEN HELYEN ──────────────────────────────

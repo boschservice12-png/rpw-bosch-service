@@ -116,6 +116,9 @@ window.RPW_DAUNA_DOCS = [
   { key:'foto_serie', req:['deschid','deschis'], label:'Foto serie caroserie', photo:true, items:[
     { key:'foto_serie_caroserie', label:'Serie caroserie (VIN)' }
   ]},
+  { key:'foto_km', req:['deschid','deschis'], label:'Foto kilometraj', photo:true, items:[
+    { key:'foto_km', label:'Kilometraj (bord)' }
+  ]},
   { key:'foto_avarii', label:'Foto poziții avariate', photo:true, req:['deschid','deschis'], multi:true, items:[
     { key:'foto_avarii', label:'Poziții avariate', multi:true }
   ]}

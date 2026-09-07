@@ -257,13 +257,96 @@ feltöltött iratot a műhelyi gépről.
    senki nem ismeri, de a teljes lezárás az oldal **törlése** lenne —
    ez a Netlify API-n keresztül nem elérhető, a felületen egy kattintás.
 
+   **2026-09-03: Ferenc úgy döntött, hogy az oldal marad.** A kockázat
+   ezzel nyitva van hagyva. Ami továbbra is védi: az átnevezés (a régi
+   könyvjelző cím megszűnt) és a CORS-tiltás (OCR, iratbesorolás,
+   levélküldés hibára fut onnan). Amit NEM véd: aki tudja az új nevet,
+   azzal az anon kulccsal olvashat és írhat az élő adatbázisba. Ez a
+   `008` RLS-lezárással szűnne meg végleg, nem az oldal törlésével.
+
+   A Netlify-fiók többi oldala átnézve ugyanaznap: `stellar-flan-8530b1`
+   = a `redassistance-core` projekt, tulajdonosi döntésre szüneteltetve
+   (marad); `ornate-dasik-704529` és `reliable-custard-d576de` = egy-egy
+   márciusi, kézzel feltöltött `index.html`, se repó, se függvény, se
+   adat (ártalmatlanok, maradnak).
+
 | | |
 |---|---|
 | **Mi a kockázat** | Két különböző kódváltozat írja ugyanazt az adatbázist; az egyik nem kap javítást |
 | **Mi történt** | Átnevezve — a régi könyvjelző címe megszűnt |
 | **Mi maradt** | Az alnév felszabadult (más regisztrálhatja); az oldal új néven él |
-| **Végleges lezárás** | Az oldal törlése a Netlify felületén — **Ferenc**, egy kattintás |
+| **Végleges lezárás** | Az oldal törlése a Netlify felületén. **Ferenc döntése (2026-09-03): NEM töröljük** — az oldal marad, átnevezve és CORS-tiltással. A kockázat tudatosan vállalt, nem elfelejtett |
 | **Igazolva** | Netlify API: `beamish` néven nincs oldal; a projekt `rpw-regi-lezarva-2026-08`. A CORS-tiltást negatív teszt őrzi (`test-p0-7-functions.js`). **A címet magát innen nem tudtam lekérdezni** — a konténer minden `netlify.app` hívást blokkol (a működő oldal is), ezért ez API-bizonyíték, nem böngésző-bizonyíték |
+
+**HELYESBÍTÉS — 2026-09-03.** Ferenc megkérdezte, mit keresünk egyáltalán
+a szerszám-fotóknál, és a kérdés jogos volt: a fenti állítás **téves**.
+
+Amikor „árvának" neveztem a 11 fájlt, csak a **munkákat** néztem meg (`rpw_jobs`)
+— a szerszám-táblát nem. Most megnéztem:
+
+A `rpw_archiv.tools`-ban két sor van, mindkettő ugyanaz a szerszám (Kit montaj
+pompa injectie, OPEL VIVARO 1.5 D, RAKTÁR FELSŐ 4 FIÓK, OE `cv 100`). Az
+**aktív** sor `photo_url` mezője a `1772050074496.jpg`-re mutat — ez a 11 fájl
+közül az utolsó (20:07:56). **Tehát egy kép valódi nyilvántartási tételhez
+tartozik, nem árva.**
+
+A másik 10 viszont tényleg szemét: 20:01 és 20:03 között készültek, és
+**mindegyik pontosan 1 860 363 bájt** — ugyanannak a képnek az ismételt
+feltöltési kísérletei. A tizenegyedik ment át, azt jegyezte be a rendszer.
+
+**Döntés: a `foto` tároló marad.** 20 MB, és pont az egyik kép egy valódi
+szerszám-tétel fényképe; ha a szerszám-nyilvántartás valaha újraindul, a
+helyén lesz. A 10 duplikátum kitörlése 18 MB-ért nem éri meg a kockázatot,
+hogy a rossz fájl vész el.
+
+**Tanulság a módszerre:** „egyetlen munka sem hivatkozza" nem ugyanaz, mint
+„semmi sem hivatkozza". A törlés előtti felmérésnek MINDEN olyan táblát végig
+kell néznie, ami URL-t vagy fájlnevet tárolhat — nem csak azt az egyet, ami
+éppen eszembe jut.
+
+### A fénykép-tároló védtelen: az anon kulcs mindent tud
+
+**2026-09-03, mérésből.** A fotózás ellenőrzésekor derült ki. Nem
+elméletből: felvettem az `anon` szerepet, és megszámoltattam vele a
+fájlokat.
+
+```
+set local role anon;
+select count(*) from storage.objects where bucket_id='rpw-photos';  -->  318
+select count(*) from storage.objects where bucket_id='foto';        -->   11
+```
+
+Az `anon` kulcs a kiszolgált JS-fájlokban van, tehát **bárki megkapja,
+aki megnyitja az oldalt.** A `storage.objects` szabályai:
+
+| szabály | művelet | kinek | feltétel |
+|---|---|---|---|
+| `Allow anon read from rpw-photos` | SELECT | anon | `bucket_id='rpw-photos'` |
+| `Allow anon upload to rpw-photos` | INSERT | anon | `bucket_id='rpw-photos'` |
+| `Allow anon update in rpw-photos` | UPDATE | anon | `bucket_id='rpw-photos'` |
+| `Allow anon delete in rpw-photos` | DELETE | anon | `bucket_id='rpw-photos'` |
+| `rpw_photos signed url mint` | SELECT | anon, authenticated | `bucket_id='rpw-photos'` |
+| `allow_all` | **MIND** | **PUBLIC** | `bucket_id='foto'` |
+
+Egyik feltétel sem néz **szervizt**, **munkát** és **munkamenetet**. Ez
+tehát ugyanaz a hiányosság, amit a `rpw_jobs` táblán a P0.3 lezárt
+(minden művelet token-alapú RPC-n megy, a `shop_id` a munkamenetből jön)
+— csak a **tárolón nem lett lezárva**. A tábla védve van, a képek nem.
+
+A `foto` tároló `allow_all` szabálya a rosszabb: nem `anon`-ra, hanem
+**PUBLIC**-ra szól, tehát minden szerepre.
+
+| | |
+|---|---|
+| **Mi a kockázat** | Aki ismeri az anon kulcsot (bárki, aki megnyitja az oldalt), az **minden kárfelvételt letölthet, felülírhat és véglegesen törölhet** |
+| **Mi enyhíti ma** | A tárolók `public: false`-ok, tehát találomra nem böngészhetők; a fájlnevek kitalálása nehéz. Ez homály, nem védelem |
+| **Mi zárná le** | A tárolószabályok átírása munkamenet-alapúra, ahogy a P0.3 tette a táblákkal; vagy aláírt feltöltési URL, amit a szerver ad ki |
+| **Igazolva** | `set local role anon` + számlálás, 2026-09-03. Kontrollal: ugyanez a lekérdezés a `pg_policy`-ból visszaadja mind a hat szabályt |
+
+Emellett három **elgépelt tároló** is létezik, mindhárom üres:
+`body workflow`, `FOTO` és egy `STORAGE_BUCKET = 'rpw-photos'` nevű —
+ez utóbbi nyilván egy konfigurációs sor, amit tárolónévnek adtak meg.
+Ártalmatlanok, de takaríthatók.
 
 ### A staging ugyanazt az adatbázist használja, mint az éles
 
@@ -279,3 +362,56 @@ ellenőrzés nem végezhető el biztonságosan — ezért maradt „NEM IGAZOLT"
 | **Mi a kockázat** | A staging-próba éles adatot módosítana |
 | **Mi oldja meg** | Külön Supabase-projekt stagingre (Ferenc döntése — költség és idő) |
 | **Igazolva** | `rpw-config.js` és `rpw-config.staging.js` `SB_URL`-je azonos; a `test-deploy.js` 6. szakasza rögzíti, hogy **egy** projekt van |
+
+### ~~Régi munkamásolatok a kiszolgált sémában~~ — ✅ ELINTÉZVE (011)
+
+Négy `rpw_jobs_backup_*` tábla ült a `public` sémában, kikapcsolt
+RLS-sel, összesen 87 munkasorral — ügyféladatostul. Elérhetők nem
+voltak (nem volt rájuk grant, ezt megmértem), de a `public` sémát a
+PostgREST kiszolgálja: egyetlen elgépelt `grant` elég lett volna.
+
+2026-08-29: átkerültek a zárt `rpw_archiv` sémába (`011`). Nem törölve —
+egy `alter table ... set schema public` visszahozza őket. A törlés külön
+döntés, külön napon.
+
+### ~~A régi `foto` tároló 11 árva fájlja~~ — ⚠️ HELYESBÍTVE: nem mind árva
+
+**2026-08-30-i mérés, ami megváltoztatta a képet:** a 11 fájl mind a
+`tools/<shop_id>/` útvonalon ül, mind 2026-02-25-én készült hét perc
+alatt, és **mind pontosan azonos méretű** (1817 kB). Ezek tehát
+**szerszám-fotók** egy próba-sorozatból — **nem kárfelvételek**, ahogy
+korábban óvatosságból feltételeztem. A `tools` funkció táblái ugyanezen
+a napon kerültek archívba.
+
+A képek **listája megőrizve** a `rpw_archiv.torolt_2026_08_30` táblában
+(név, méret, dátum). Maguk a képek **még megvannak**: a Supabase tiltja
+a közvetlen törlést a tároló-tábláiból („Direct deletion from storage
+tables is not allowed") — ez helyes védelem, mert árva fájlok
+maradnának. A törlés a felületen: **Storage → foto → mind kijelöl →
+Delete**, majd a tároló maga is eldobható. **Ferenc kattintása.**
+
+### Az eredeti bejegyzés (2026-08-29)
+
+A Bosch projektben két tároló van: `rpw-photos` (296 fájl, ez az élő) és
+`foto` (11 fájl, **utoljára 2026-02-25-én írva**, 20 MB). Mindkettő privát.
+
+Megmértem: a 35 munka közül **egyetlen sem** hivatkozik a `foto` tárolóra.
+A 11 fájl tehát árva.
+
+**Nem töröltem.** Fényképek törlése visszafordíthatatlan, és nem tudom,
+mi van rajtuk — februári kárfelvételek is lehetnek. Ferenc döntése.
+
+
+### Amit a 013 törölt (2026-08-30)
+
+| mi | mennyi | visszahozható |
+|---|---|---|
+| `rpw_archiv` négy régi munkamásolata | 87 sor | **nem** — csak a nyoma maradt |
+| `settings`, `tools`, `tool_categories` | 4 sor | igen (`013_rollback.sql`) — csak archívba **mozgatva** |
+| a `foto` tároló 11 képe | 20 MB | a listájuk megvan; a képek törlése a felületen, Ferencre vár |
+
+**Ami szándékosan MARADT:** a `rpw_backup_20260829` séma — a mai
+adat-pillanatkép (35 munka, 442 audit-sor). Azt nem bántottuk.
+
+Kontroll a törlés után: 35 élő munka, 35 a pillanatképben, 318 élő fotó,
+15 tétel a törlési nyomban. Az archívot az anon továbbra sem látja.

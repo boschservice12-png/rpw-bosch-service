@@ -4,7 +4,10 @@
 // szigorú kimenet-validáció, biztonságos hiba (nincs upstream-szivárgás).
 const H = require('./_shared.js');
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL = 'claude-sonnet-4-5';
+// A Sonnet 5-on a gondolkodas alapbol bekapcsol, ha nincs `thinking` mezo.
+// Itt a max_tokens 200 — a gondolkodas ezt egymaga felenne, es ures valasz
+// jonne. Egy iratfajta felismerese nem igenyel gondolkodast: disabled.
+const MODEL = 'claude-sonnet-5';
 const MAX_TOKENS = 200;
 const MAX_BODY = 8 * 1024 * 1024;
 
@@ -64,6 +67,7 @@ exports.handler = async function (event) {
       headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: MODEL, max_tokens: MAX_TOKENS,
+        thinking: { type: 'disabled' },
         messages: [{ role: 'user', content: [
           { type: 'image', source: { type: 'base64', media_type: media.media, data: cleanImage } },
           { type: 'text', text: CLASSIFY_PROMPT }
@@ -72,7 +76,9 @@ exports.handler = async function (event) {
     });
     if (!res.ok) { const t = await res.text().catch(() => ''); console.error('Anthropic classify error', res.status, t); return H.resp(event, 502, { error: 'AI indisponibil' }); }
     const data = await res.json();
-    const textContent = (data.content && data.content[0] && data.content[0].text) || '';
+    const _blocks = Array.isArray(data.content) ? data.content : [];
+    const _first  = _blocks.find(function (b) { return b && b.type === 'text'; });
+    const textContent = (_first && _first.text) || '';
     let parsed;
     try { const m = textContent.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : {}; } catch (e) { parsed = {}; }
     return H.resp(event, 200, H.validateClassify(parsed));   // szigorú séma-validáció

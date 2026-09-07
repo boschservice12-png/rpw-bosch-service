@@ -186,7 +186,7 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);m
    Regi vaz + uj retegek + Claude OCR + Supabase Storage
 
    UJITASOK:
-   - Claude Sonnet 4.5 OCR via /.netlify/functions/ocr
+   - Claude Sonnet 5 OCR via /.netlify/functions/ocr
    - Fotok: Supabase Storage (URL-ek a JOB-ban, nem base64)
    - Uj szekcio: Constatare OCR (csak ASIG)
    - Uj mezok: capacitate, nrDosar, proprietarDosar, asigurator, listaDauneRaw
@@ -456,7 +456,7 @@ async function loadJob(){
   try{ if(window.__rpwServerReady) await window.__rpwServerReady; }catch(e){}
   var jid=gJI();
   if(!jid){render();return}
-  var cached=JSON.stringify(RPWCache.getJob(jid)||null);
+  var cached=(RPWCache.getFullJobJson?RPWCache.getFullJobJson(jid):null);   // KODREVIEW #2: a MIN-gyorsitotar SOHA nem kerul a JOB-ba. A letezes-vizsgalat azert kell, mert a sw.js kiszolgalhat REGI rpw-cache.js-t az UJ laphoz — akkor nincs elotoltes, ami a BIZTONSAGOS viselkedes, nem kivetel.
   if(cached){
     try{
       JOB=JSON.parse(cached);
@@ -475,7 +475,19 @@ async function loadJob(){
       try{RPWCache.setJob(JOB)}catch(e){}
     }
     /* nincs auto-mentes betolteskor */
-  }catch(e){if(!JOB)JOB=null}
+  }catch(e){
+    // KODREVIEW #10: halozati hiba, lejart munkamenet es jogosultsag-
+    // megtagadas eddig UGYANAZT a "nincs munka" uzenetet adta, mint egy
+    // tenyleg nem letezo munka. Az operator erre ujra felveszi a
+    // dossziet -> duplikatum. Most megkulonboztetunk.
+    if(!JOB){
+      try{
+        if(window.RPWUtil && RPWUtil.mutasdBetoltesHibat &&
+           RPWUtil.mutasdBetoltesHibat(e, (typeof gL==='function'?gL():null))) return;
+      }catch(_){}
+      JOB=null;
+    }
+  }
   render();
 }
 
@@ -492,6 +504,14 @@ function fixPhases(){
 }
 
 var _saveTimer=null;
+// KODREVIEW #6: a fuggo mentes ne vesszen el, ha a dolgozo fel masodpercen
+// belul bezarja a fulet vagy atvalt masik alkalmazasra. A kozos kijaratot a
+// rpw-save.js koti be egyszer (pagehide + visibilitychange).
+try{ if(window.RPWSave && RPWSave.onExit) RPWSave.onExit(function(){
+  if(!_saveTimer) return;
+  clearTimeout(_saveTimer); _saveTimer=null;
+  try{ if(JOB) RPWDb.patch(sb,JOB); }catch(e){}
+}); }catch(e){}
 async function saveJ(){
   if(!JOB)return;
   try{RPWCache.setJob(JOB)}catch(e){}
@@ -620,7 +640,8 @@ async function uploadPhoto(photoKey,dataUrl){
     // Amit nem tudunk BECSULETESEN eltarolni, azt nem toltjuk fel.
     if(!ext) throw new Error('Format de fisier neacceptat: '+mime);
     // dataUrl -> blob HALOZAT NELKUL (a CSP connect-src-je nem enged
-    // `data:`-t, es a mobil sem birja a tobb megabajtos data:-fetch-et)
+    // `data:`-t, es a mobil sem birja a tobb megabajtos data:-fetch-et).
+    // Tartalek fetch NINCS — az ugyanabba a hibaba esne vissza.
     var blob=RPWPhotos.dataUrlToBlob(dataUrl);
     var path=JOB.id+'/'+photoKey+'.'+ext;
     // Ha korabban MAS kiterjesztessel allt itt irat, azt eltakaritjuk —
@@ -882,7 +903,7 @@ function shellHtml(job,ln){
   var v=shellVariant();var plate=job.plate||job.number||job.id||'';var cur=SHELL_PHASES[SHELL_CUR];
   function nm(p){return p[ln]||p.ro}
   var h='<div class="shell no-print"><div class="shell-top">';
-  h+='<div class="sh-left"><div class="sh-back" onclick="location.assign(\'rpw-dosar.html?job='+job.id+'\')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>';
+  h+='<div class="sh-left"><div class="sh-back" onclick="location.assign(\'rpw-dosar.html?job='+escH(encodeURIComponent(job.id||''))+'\')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>';
   h+='<span class="sh-plate">'+escH(plate)+'</span>';
   h+='<div class="sh-phase"><span class="ph-idx">'+cur.n+'</span>'+nm(cur)+'</div></div>';
   h+='<div class="sh-right"><div class="lsw">';

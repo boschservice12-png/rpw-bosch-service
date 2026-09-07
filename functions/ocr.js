@@ -8,13 +8,26 @@
 //   - Kliens soha nem fer hozza
 //   - CORS: barmilyen origin elfogadva (public endpoint)
 //
-// Model: claude-sonnet-4-5 (legujabb stabil Sonnet, $3/$15 per M token)
-// Atlag koltseg: ~$0.003-0.005 / kep
+// Model: claude-sonnet-5 ($2/$15 -> $2/$10 per M token, olcsobb ES pontosabb,
+//        mint a korabbi claude-sonnet-4-5)
+// Atlag koltseg: ~$0.002-0.004 / kep
+//
+// ⚠ MIERT VAN KIKAPCSOLVA A GONDOLKODAS ⚠
+//   A Sonnet 5-on a gondolkodas ALAPBOL BEKAPCSOL, ha a keresben nincs
+//   `thinking` mezo (a sonnet-4-5-on forditva volt: alapbol ki). Ket okbol
+//   nem hagyhatjuk igy:
+//     1. A Netlify szinkron fuggvenyre 10 masodperc jut (a netlify.toml nem
+//        allit sajatot). A gondolkodas ezt atlepheti, es akkor nem hibas
+//        valasz jon, hanem SEMMILYEN.
+//     2. A gondolkodas tokenjei a max_tokens-bol mennek. 1500-nal a JSON
+//        elmaradna, es a lenti ellenorzes 502-t adna vissza.
+//   Egy talon leolvasasa nem igenyel gondolkodast, ezert: disabled.
+//   Ha valaha bekapcsolod, a max_tokens-t is emeld, es szamolj a 10 mp-cel.
 
 const H = require('./_shared.js');
 let _evt = null;
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL = 'claude-sonnet-4-5';
+const MODEL = 'claude-sonnet-5';
 const MAX_TOKENS = 1500;
 
 // ───────────────────────────────────────────────────────────────
@@ -176,6 +189,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
+        thinking: { type: 'disabled' },      // lasd a fejlec magyarazatat
         messages: [
           {
             role: 'user',
@@ -198,8 +212,12 @@ exports.handler = async (event) => {
       return response(502, { error: 'AI indisponibil' });
     }
 
-    // Szoveg kinyer
-    const text = (data.content && data.content[0] && data.content[0].text) || '';
+    // Szoveg kinyer. NEM data.content[0]-bol: ha valaha bekapcsol a
+    // gondolkodas, az elso blokk egy `thinking` blokk, aminek nincs `.text`
+    // mezoje — a regi kod ilyenkor csendben ures szoveget kapott volna.
+    const blocks = Array.isArray(data.content) ? data.content : [];
+    const first  = blocks.find(function(b){ return b && b.type === 'text'; });
+    const text   = (first && first.text) || '';
 
     // JSON tisztitas (ha Claude markdown kodbloccal adna)
     let cleaned = text.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
