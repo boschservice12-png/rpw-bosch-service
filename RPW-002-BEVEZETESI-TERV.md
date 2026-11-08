@@ -281,3 +281,32 @@ Csak olvas. A 008 előtt közvetlenül futtatandó; **GO csak akkor, ha minden s
 - **`rpw_backup_20260829` séma:** a 014 (2026-09-03) a munkákat végleg törölte, de ez a
   zárt mentés-séma a 08-29-i 35 munkát (ügyféladatokkal) és a PIN-hasheket még őrzi.
   A törlési döntéssel és a GDPR adattakarékossági elvével ütközhet — **Ferenc döntése**.
+
+## 11. ÉLESÍTVE — 2026-11-08 vasárnap este (a műhely zárva)
+
+| lépés | eredmény |
+|---|---|
+| kliens (`f0313be`) Netlifyon | éles, deploy `6af0e23c…`, 20:59 |
+| mentés | Pro csomag: napi automatikus mentés (7 nap); a 008 adatot nem érint |
+| `008_ELOTTI_ELLENORZES` közvetlenül előtte | **27/27 OK** |
+| `008` alkalmazva (`rpw_008_rls_lockdown_live`) | sikeres |
+
+**Eltérés a fájltól:** élesben a feltételes lista hiánya `raise exception`-nel állt volna
+meg (`WARNING` helyett) — szigorúbb, fail-closed. Hatásában azonos: mind a 12 függvény létezett.
+A repó fájlja `WARNING`-on marad, mert a fixture-teszt nem hozza létre a teljes feltételes készletet.
+
+**Mérés a lezárás után (csak olvasás):**
+| # | mérés | elvárt | kapott |
+|---|---|---|---|
+| 1 | policy az `rpw_jobs`-on | 0 | **0** |
+| 2 | anon/authenticated tábla-jog `rpw_*` táblán | 0 | **0** |
+| 3 | `rpw_*` tábla RLS nélkül vagy force nélkül | 0 | **0** |
+| 4 | anon által hívható `rpw`-függvény | a 008 listája | **23**, pontosan a lista |
+| 5 | tiltott régi utak közül hívható | egy sem | **egy sem** |
+| 6 | munkák száma | 7 | **7** |
+| 7 | anon `select … from rpw_jobs` | elutasítva | **`42501 permission denied`** |
+| 8 | `rpw_jobs_list` / `rpw_job_number` / `rpw2_pin_status` érvénytelen tokennel | `unauthorized`, nem jogosultsági hiba | **`unauthorized`** |
+| 9 | `rpw2_roster` (belépő képernyő) | a csapat | **11 fő** |
+
+**Hátravan:** a felhasználói go/no-go (5. pont 1–5, 7–8 sor) — Ferenc, PIN-nel, élő felületen.
+Bukás esetén: `008_rollback.sql`.
