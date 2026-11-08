@@ -5,7 +5,7 @@
 --  Tartalma volt: a 014-gyel már törölt 35 munka, 442 audit-sor,
 --  19 dolgozó PIN-hashekkel. Ok: GDPR adattakarékosság — a törölt adat
 --  ne éljen tovább másolatban. Külső függőség nem volt (mérve).
---  (A 016 — három elgépelt, üres tároló — SQL-ből tiltott; a felületen
+--  (A 016 a három elgépelt, üres tárolót törölte.)
 --   törlendő: 'FOTO', 'body workflow', 'STORAGE_BUCKET = ''rpw-photos''')
 -- ════════════════════════════════════════════════════════════════
 begin;
