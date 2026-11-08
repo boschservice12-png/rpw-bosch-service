@@ -34,6 +34,10 @@ window.RPW_CFG = {
   // P0.6 (2026-08-23): a bucket PRIVÁT. Minden fájlelérés időkorlátos
   // aláírt URL-lel megy; publikus fallback NINCS.
   STORAGE_PRIVATE: true,
+  // RPW-003 (2026-11-08): minden tároló-művelet a `rpw-storage` Edge Functionön
+  // megy (munkamenet + munka-gazda ellenőrzés, aláírt URL). false → a régi,
+  // közvetlen út — a 018 (anon tárolószabályok törlése) után az már nem működik.
+  STORAGE_GATEWAY: true,
   // ── SZŰK ÜGYFÉL-ÚT (009) ─────────────────────────────────────────
   // ALAPBÓL KI (false) → az ügyfél-feltöltő a mai úton dolgozik
   // (közvetlen tábla-olvasás + rpw_patch_v2). true-ra állítás CSAK a

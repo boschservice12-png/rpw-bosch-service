@@ -320,7 +320,7 @@
       upOpts = upOpts || {};
       var bucket = upOpts.bucket || _cfg().BUCKET || 'rpw-photos';
       try{
-        var res = await sb.storage.from(bucket).upload(pathOrRef, fileBlob, {
+        var res = await ((root.RPWPhotos&&root.RPWPhotos.bucket)?root.RPWPhotos.bucket(sb,bucket):sb.storage.from(bucket)).upload(pathOrRef, fileBlob, {
           upsert: (upOpts.upsert!==false),
           contentType: upOpts.contentType || undefined
         });

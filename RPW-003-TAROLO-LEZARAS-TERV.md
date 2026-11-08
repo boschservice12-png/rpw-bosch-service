@@ -1,6 +1,6 @@
 # RPW-003 — A fotótároló lezárása: terv
 
-> Állapot: **TERV**, 2026-11-08. Kód még nem változott.
+> Állapot (2026-11-08 este): **kapu élesben, kliens kész, 018 vár az élő igazolásra.** Lásd a 7. pontot.
 > Előzmény: RPW-002 (a `rpw_jobs` tábla lezárva, 2026-11-08).
 
 ## 1. A mai állapot — mért tények (2026-11-08, csak olvasás)
@@ -88,3 +88,29 @@ tud törölni, és más munkát nem lát. A teljes megoldás a dossziénkénti f
 | a service-kulcs mindenhez hozzáfér | csak szerveren; a függvény kizárólag aláírt URL-t ad ki, a kulcsot soha |
 | a régi, átnevezett Netlify-oldal (`rpw-regi-lezarva-2026-08`) a 018 után nem tud fotózni | szándékos — azon az oldalon nem dolgozunk (Ferenc döntése, 2026-08-29) |
 | a Netlify function kiesése → nincs fotózás | a hiba látható, a feltöltés újrapróbálható; a 018 visszavonható |
+
+## 7. Megvalósítás — 2026-11-08
+
+**Eltérés a tervtől:** a kapu **Supabase Edge Function** (`rpw-storage`), nem Netlify-függvény.
+Ok: az Edge Function a service-kulcsot a Supabase futtatókörnyezetétől kapja
+(`SUPABASE_SERVICE_ROLE_KEY`) — senkinek nem kell kulcsot másolnia, és a kulcs soha nem
+hagyja el a Supabase-t. Az 1. lépés (Netlify környezeti változó) ezzel megszűnt.
+
+| elem | hely | állapot |
+|---|---|---|
+| kapu logikája | `supabase/functions/rpw-storage/core.js` | kész, 48 teszt + 2 mutáció |
+| kapu belépési pont | `supabase/functions/rpw-storage/index.ts` | **élesben** (v1, verify_jwt) |
+| kliens-adapter | `rpw-photos.js` → `RPWPhotos.bucket()` | kész, 23 teszt |
+| hívási pontok | 7 fájl, 10 hely + `rpw-photos.js` belső | átállítva; statikus őr tiltja a közvetlen hívást |
+| kapcsoló | `rpw-config.js` `STORAGE_GATEWAY: true` | kész |
+| lezárás | `_migrations/018_…` + rollback | **megírva, NEM futott** |
+
+**Élő mérés a kapun (2026-11-08, a munkamenet hálózatáról):**
+token nélkül → 401 · hamis tokennel → 401 · nem létező dosszié (ügyfél) → 403 ·
+ügyfél a dolgozói fotóra → 403 · listázás → 400 · idegen Origin → 403 · kulcs nélkül → 401 ·
+létező dosszié, ügyfél-név → **200, feltöltési token** (feltöltés nem történt).
+A régi közvetlen út ugyanekkor: anon kulccsal a tároló **listázható** — ezt zárja a 018.
+
+**Törlési jog:** a mai viselkedés marad (bejelentkezett dolgozó, saját szerviz munkája),
+de mostantól **minden törlés auditsort ír** (`photo_remove`). Szigorítás `can.delete`-re:
+külön döntés.

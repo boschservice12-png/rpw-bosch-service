@@ -561,7 +561,7 @@ async function uploadPhoto(photoKey,dataUrl){
     var blob=(window.RPWUtil&&RPWUtil.dataUrlToBlob)?RPWUtil.dataUrlToBlob(dataUrl):await (await fetch(dataUrl)).blob();
     var path=JOB.id+'/'+photoKey+'.jpg';
     // Upsert (lecsereli ha mar letezik)
-    var up=await sb.storage.from(STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg',upsert:true});
+    var up=await RPWPhotos.bucket(sb,STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg',upsert:true});
     if(up.error)throw up.error;
     // P0.6: a bucket PRIVÁT — a publikus URL halott. Aláírt URL kell.
     var url=await RPWPhotos.signedUrl(sb,path,{bucket:STORAGE_BUCKET});
@@ -583,7 +583,7 @@ async function uploadPhoto(photoKey,dataUrl){
 async function deletePhoto(photoKey){
   if(!JOB||!JOB.id)return;
   var path=JOB.id+'/'+photoKey+'.jpg';
-  try{await sb.storage.from(STORAGE_BUCKET).remove([path])}catch(e){console.warn('Delete:',e)}
+  try{await RPWPhotos.bucket(sb,STORAGE_BUCKET).remove([path])}catch(e){console.warn('Delete:',e)}
   if(JOB.photoKeys)delete JOB.photoKeys[photoKey];
   if(JOB.photoUrls)delete JOB.photoUrls[photoKey];
   delete S.photoCache[photoKey];

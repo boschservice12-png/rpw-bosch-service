@@ -16,6 +16,66 @@
   'use strict';
 
   function isFullUrl(s){ return typeof s==='string' && /^(https?:|data:|blob:)/i.test(s); }
+
+  // ── RPW-003 (2026-11-08): A TÁROLÓ EGYETLEN KAPUJA ─────────────────
+  // A kliens NEM nyúl közvetlenül a tárolóhoz. Minden fotó-művelet a
+  // `rpw-storage` Edge Functionön megy: az ellenőrzi a munkamenetet és a
+  // munka gazdáját, és csak egyetlen fájlra szóló, időkorlátos aláírt URL-t
+  // ad. A `bucket(sb, név)` UGYANAZT a felületet adja, mint a
+  // `sb.storage.from(név)` (upload / remove / createSignedUrl), ezért a
+  // hívási pontok logikája változatlan — csak a forrás cserélődik.
+  // Ki: STORAGE_GATEWAY=false (vagy a kapu nem érhető el) → a régi út.
+  // Bekapcsolva NINCS csendes visszaesés a közvetlen útra (fail closed).
+  function gatewayOn(){ return !!(root.RPW_CFG && root.RPW_CFG.STORAGE_GATEWAY); }
+  function workerToken(){ try{ return (root.RPWAuth && typeof root.RPWAuth.token==='function') ? root.RPWAuth.token() : null; }catch(e){ return null; } }
+  async function gw(op, payload, opts){
+    opts=opts||{};
+    var cfg=root.RPW_CFG||{};
+    var f=opts.fetch||root.fetch;
+    var h={'Content-Type':'application/json','apikey':cfg.SB_KEY,'Authorization':'Bearer '+cfg.SB_KEY};
+    if(!opts.client){ var t=(opts.token!==undefined)?opts.token:workerToken(); if(t) h['x-rpw-token']=t; }
+    var r, body=null;
+    try{
+      r=await f(String(cfg.SB_URL||'')+'/functions/v1/rpw-storage',
+                {method:'POST', headers:h, body:JSON.stringify(Object.assign({op:op}, payload))});
+    }catch(e){ return { error:{ message:'network', status:0 } }; }
+    try{ body=await r.json(); }catch(e){ body=null; }
+    if(!r.ok || !body || body.ok!==true){
+      var err={ message:(body&&body.error)||('HTTP '+r.status), status:r.status };
+      try{ console.warn('[RPW] tároló-kapu: '+op+' elutasítva', err); }catch(e){}
+      return { error:err };
+    }
+    return { data:body };
+  }
+  function bucket(sb, name, opts){
+    opts=opts||{};
+    if(!gatewayOn()) return sb.storage.from(name);
+    var client=!!opts.client;
+    return {
+      upload: async function(path, body, o){
+        var s=await gw(client?'client-sign-upload':'sign-upload', {path:path}, opts);
+        if(s.error) return { data:null, error:s.error };
+        var up=await sb.storage.from(name).uploadToSignedUrl(s.data.path, s.data.token, body,
+                                                             {contentType:(o&&o.contentType)||undefined});
+        if(up && up.error) return { data:null, error:up.error };
+        return { data:{ path:s.data.path }, error:null };
+      },
+      remove: async function(paths){
+        if(client) return { data:null, error:{ message:'not_allowed', status:403 } };
+        var r=await gw('remove', {paths:paths}, opts);
+        return r.error ? { data:null, error:r.error } : { data:r.data, error:null };
+      },
+      createSignedUrl: async function(path){
+        var r=await gw(client?'client-sign-read':'sign-read', {paths:[path]}, opts);
+        if(r.error) return { data:null, error:r.error };
+        var u=r.data.urls && r.data.urls[0];
+        return (u && u.signedUrl) ? { data:{ signedUrl:u.signedUrl }, error:null }
+                                  : { data:null, error:{ message:'not_found', status:404 } };
+      },
+      // privát tároló: publikus URL NINCS
+      getPublicUrl: function(){ return { data:{ publicUrl:'' } }; }
+    };
+  }
   function bucketOf(opts){ return (opts&&opts.bucket) || (root.RPW_CFG&&root.RPW_CFG.BUCKET) || 'rpw-photos'; }
   // Privát-Storage kapcsoló (P0 #11): true → NINCS publikus-URL fallback (a 0009 élesítése után).
   function isPrivate(opts){ if(opts&&opts.private!=null) return !!opts.private; return !!(root.RPW_CFG&&root.RPW_CFG.STORAGE_PRIVATE); }
@@ -26,16 +86,16 @@
     opts=opts||{};
     if(!path) return '';
     if(isFullUrl(path)) return path;                 // már teljes URL → hagyjuk
-    var bucket=bucketOf(opts);
+    var b=bucketOf(opts);
     var expires=opts.expiresSec||3600;
     try{
-      var res=await sb.storage.from(bucket).createSignedUrl(path, expires);
+      var res=await bucket(sb, b, opts).createSignedUrl(path, expires);
       if(res && !res.error && res.data && res.data.signedUrl) return res.data.signedUrl;
     }catch(e){ /* fallback lent */ }
     if(isPrivate(opts)) return '';                   // privát mód: NINCS publikus fallback
     // fallback: publikus URL (amíg a bucket publikus — 0009 előtt)
     try{
-      var pub=sb.storage.from(bucket).getPublicUrl(path);
+      var pub=sb.storage.from(b).getPublicUrl(path);
       return (pub && pub.data && pub.data.publicUrl) || '';
     }catch(e){ return ''; }
   }
@@ -46,14 +106,14 @@
   function extFromMime(mime){ var M={'image/jpeg':'jpg','image/jpg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif','application/pdf':'pdf'}; return M[mime]||'bin'; }
   async function storePhoto(sb, jobId, dataUrlOrBlob, opts){
     opts=opts||{};
-    var bucket=bucketOf(opts);
+    var bk=bucketOf(opts);
     var isData = (typeof dataUrlOrBlob==='string' && dataUrlOrBlob.indexOf('data:')===0);
     var mime = opts.mimeType || (isData?mimeOf(dataUrlOrBlob):'image/jpeg');
     var key = opts.key || ('p_'+(opts.seq!=null?opts.seq:Math.max(0,String(jobId).length)));
     var path = opts.path || (jobId+'/'+key+'.'+extFromMime(mime));
     var body = (isData && typeof opts.decode==='function') ? opts.decode(dataUrlOrBlob) : dataUrlOrBlob;
     try{
-      var up = await sb.storage.from(bucket).upload(path, body, {contentType:mime, upsert:(opts.upsert!==false)});
+      var up = await bucket(sb, bk, opts).upload(path, body, {contentType:mime, upsert:(opts.upsert!==false)});
       if(up && up.error) return { ok:false, error:up.error };
       var okPath = up && up.data && (up.data.path || up.data.Key || path);
       var b64 = isData ? String(dataUrlOrBlob).replace(/^data:[^;]+;base64,/,'') : '';
@@ -102,7 +162,7 @@
   }
 
   var API={ isFullUrl:isFullUrl, signedUrl:signedUrl, publicUrl:publicUrl, resolveRef:resolveRef, hydrate:hydrate,
-            storePhoto:storePhoto, isPrivate:isPrivate };
+            storePhoto:storePhoto, isPrivate:isPrivate, bucket:bucket, gatewayOn:gatewayOn };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWPhotos=API;
 })(typeof self!=='undefined'?self:(typeof window!=='undefined'?window:globalThis));
