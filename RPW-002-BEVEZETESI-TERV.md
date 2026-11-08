@@ -255,7 +255,7 @@ kliens aktívan hívta.
 `test-load.js` — a tokenes számkiosztás, a szövegként érkező jsonb és a nem néma tartalék.
 Teljes készlet: 4098 állítás, 0 hibás.
 
-### 10.3 Új eszköz: `_migrations/008_ELOTTI_ELLENORZES.sql`
+### 10.3 Új eszköz: `_migrations/ELLENORZES_008_elotti.sql`
 Csak olvas. A 008 előtt közvetlenül futtatandó; **GO csak akkor, ha minden sor `OK`.**
 2026-11-08-án élesen futtatva: **27/27 OK.**
 
@@ -266,7 +266,7 @@ Csak olvas. A 008 előtt közvetlenül futtatandó; **GO csak akkor, ha minden s
    NINCS „[RPW] munkaszam” figyelmeztetés.
 2. MENTÉS — Supabase → Database → Backups → kézi mentés      ← FERENC
    (az időbélyeget ide kell felírni)
-3. 008_ELOTTI_ELLENORZES.sql — minden sor OK?   ha nem: STOP
+3. ELLENORZES_008_elotti.sql — minden sor OK?   ha nem: STOP
 4. 008_rls_lockdown_live.sql — egy tranzakció; hiba esetén semmi nem változik
 5. Az 5. pont go / no-go táblája (belépés, lista, mentés, recepció,
    ügyfél-feltöltés telefonról, anon rpw_jobs → elutasítva)
@@ -288,7 +288,7 @@ Csak olvas. A 008 előtt közvetlenül futtatandó; **GO csak akkor, ha minden s
 |---|---|
 | kliens (`f0313be`) Netlifyon | éles, deploy `6af0e23c…`, 20:59 |
 | mentés | Pro csomag: napi automatikus mentés (7 nap); a 008 adatot nem érint |
-| `008_ELOTTI_ELLENORZES` közvetlenül előtte | **27/27 OK** |
+| `ELLENORZES_008_elotti.sql` közvetlenül előtte | **27/27 OK** |
 | `008` alkalmazva (`rpw_008_rls_lockdown_live`) | sikeres |
 
 **Eltérés a fájltól:** élesben a feltételes lista hiánya `raise exception`-nel állt volna
