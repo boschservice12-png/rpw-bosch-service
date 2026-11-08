@@ -119,12 +119,17 @@ grant execute on function public.rpw_job_purge(text,text)                       
 grant execute on function public.rpw_job_number(text,text)                      to anon, authenticated;
 
 -- Csak ha léteznek (az élő készlet ezekben eltérhet)
+-- 2026-11-08: a rpw2_pin_status aláírása (uuid) volt, élesben viszont
+-- (p_token text) — a 007 óta. A to_regprocedure ezért NULL-t adott, és a
+-- függvény CSENDBEN kimaradt volna: a lezárás után a PIN-zárolás állapota
+-- (F-011) jogosultsági hibával halt volna el. Javítva (text), és a
+-- kihagyás mostantól nem néma: WARNING jelzi, melyik maradt ki.
 do $$
-declare f text;
+declare f text; kimaradt text[] := '{}';
 begin
   foreach f in array array[
     'public.rpw2_can(text,text)', 'public.rpw2_team(text,boolean)',
-    'public.rpw2_pin_status(uuid)', 'public.rpw_posts_get(text)',
+    'public.rpw2_pin_status(text)', 'public.rpw_posts_get(text)',
     'public.rpw_post_assign(text,text,uuid)',
     'public.rpw_post_upsert(text,text,text,text,int,boolean)',
     'public.rpw2_employee_save(text,uuid,text,text,text,boolean)',
@@ -138,8 +143,13 @@ begin
   ] loop
     if to_regprocedure(f) is not null then
       execute format('grant execute on function %s to anon, authenticated', f);
+    else
+      kimaradt := kimaradt || f;
     end if;
   end loop;
+  if array_length(kimaradt, 1) > 0 then
+    raise warning '008: NEM LÉTEZŐ, ezért jog nélkül maradt függvény(ek): % — ellenőrizd, hívja-e a kliens', kimaradt;
+  end if;
 end $$;
 
 -- ── 5) AMI SZÁNDÉKOSAN NEM KAP JOGOT ─────────────────────────────

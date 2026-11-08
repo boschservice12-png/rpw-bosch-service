@@ -67,11 +67,41 @@ const yr=new Date().getFullYear().toString().slice(-2);
   JOBS=[{number:'XX-99-777'},{number:null},{number:'MS-'+yr+'-003'}];
   ok(await njNextNumber()==='MS-'+yr+'-004','mas prefixet es null-t figyelmen kivul hagy');
 
-  // szerver elerheto -> a szerver szava dont
+  // szerver elerheto, NINCS munkamenet -> a regi ut szava dont
+  global.RPWAuth=undefined;
   global.sb={rpc:async()=>({data:'MS-'+yr+'-777',error:null})};
   eval(numFn[0]);
   JOBS=[{number:'MS-'+yr+'-001'}];
-  ok(await njNextNumber()==='MS-'+yr+'-777','online: a szerver atomi szamlaloja nyer');
+  ok(await njNextNumber()==='MS-'+yr+'-777','online, token nelkul: a szerver atomi szamlaloja nyer');
+
+  // RPW-002 (2026-11-08): bejelentkezve a TOKENES rpw_job_number megy,
+  // mert a 008 utan a rpw_next_job_number nem hivhato.
+  const hivasok=[];
+  global.RPWAuth={token:()=>'TOK-123'};
+  global.sb={rpc:async(n,p)=>{ hivasok.push([n,p]);
+    return n==='rpw_job_number' ? {data:{ok:true,number:'MS-'+yr+'-321'},error:null}
+                                : {data:null,error:{message:'permission denied'}}; }};
+  eval(numFn[0]);
+  JOBS=[{number:'MS-'+yr+'-001'}];
+  ok(await njNextNumber()==='MS-'+yr+'-321','bejelentkezve: a tokenes rpw_job_number adja a szamot');
+  ok(hivasok.length===1 && hivasok[0][0]==='rpw_job_number','bejelentkezve NEM hivja a regi rpw_next_job_number-t');
+  ok(hivasok[0][1].p_token==='TOK-123' && hivasok[0][1].p_prefix==='MS-'+yr+'-','a token es a prefix a szervernek megy');
+
+  // jsonb szovegkent erkezik (PostgREST egyes beallitasainal)
+  global.sb={rpc:async()=>({data:JSON.stringify({ok:true,number:'MS-'+yr+'-322'}),error:null})};
+  eval(numFn[0]);
+  ok(await njNextNumber()==='MS-'+yr+'-322','a szovegkent erkezo jsonb valaszt is kezeli');
+
+  // a szerver elutasitja (lejart munkamenet) -> helyi tartalek, de NEM nemán
+  const warn=console.warn; let figyelmeztetes=0; console.warn=()=>{figyelmeztetes++;};
+  global.sb={rpc:async()=>({data:{ok:false,error:'unauthorized'},error:null})};
+  eval(numFn[0]);
+  JOBS=[{number:'MS-'+yr+'-040'}];
+  const tartalek=await njNextNumber();
+  console.warn=warn;
+  ok(tartalek==='MS-'+yr+'-041','elutasitasnal a helyi tartalek: 040 -> 041');
+  ok(figyelmeztetes===1,'az elutasitas naplozva van (nem nema hiba)');
+  global.RPWAuth=undefined;
 
   console.log('\n'+(fail?'x ':'OK ')+pass+' pass / '+fail+' fail');
   process.exit(fail?1:0);

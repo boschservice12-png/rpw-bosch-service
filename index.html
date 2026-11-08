@@ -1906,14 +1906,31 @@ window.saveRepro=async function(){
 // === MUNKASZAM — utkozesbiztos kiosztas ====================================
 // A regi kod JOBS.length+1-bol szamolt, ezert torles utan ujraosztotta a mar
 // hasznalt szamokat. Most a szerver atomi szamlaloja ad szamot
-// (rpw_next_job_number). Offline eseten a helyi maximum+1 a tartalek.
+// Offline eseten a helyi maximum+1 a tartalek.
+// 2026-11-08 (RPW-002): bejelentkezve a TOKENES rpw_job_number ad szamot.
+// A regi rpw_next_job_number nem ellenoriz munkamenetet, ezert a 008 utan
+// nem hivhato — ha ezen maradnank, a lezaras utan MINDEN uj munka a helyi
+// tartalekbol kapna szamot, es ket egyideju felvetel ugyanazt kaphatna.
+// A ket fuggveny ugyanazt a szamlalot (rpw_job_counters) es formatumot
+// hasznalja, igy a szamozas folytonos marad.
 window.njNextNumber=async function(){
   var yr=new Date().getFullYear().toString().slice(-2);
   var prefix='MS-'+yr+'-';
+  var tok=null;
+  try{ tok=window.RPWAuth?RPWAuth.token():null; }catch(e){ tok=null; }
   try{
-    var r=await sb.rpc('rpw_next_job_number',{p_prefix:prefix});
-    if(r && !r.error && r.data) return String(r.data);
-  }catch(e){}
+    if(tok){
+      var r=await sb.rpc('rpw_job_number',{p_token:tok,p_prefix:prefix});
+      var d=(r && !r.error)?r.data:null;
+      if(typeof d==='string'){ try{ d=JSON.parse(d); }catch(e){ d=null; } }
+      if(d && d.ok && d.number) return String(d.number);
+      console.warn('[RPW] munkaszam: a szerver nem adott szamot, helyi tartalek', (r&&r.error)||d);
+    }else{
+      var r2=await sb.rpc('rpw_next_job_number',{p_prefix:prefix});   // regi ut, csak munkamenet nelkul
+      if(r2 && !r2.error && r2.data) return String(r2.data);
+      console.warn('[RPW] munkaszam: regi ut elutasitva, helyi tartalek', r2&&r2.error);
+    }
+  }catch(e){ console.warn('[RPW] munkaszam: szerverhiba, helyi tartalek', e); }
   var mx=0;
   JOBS.forEach(function(j){
     var s=String(j.number||'');
