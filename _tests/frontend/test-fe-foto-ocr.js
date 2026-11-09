@@ -88,6 +88,22 @@ async function lap(fajl, job, opts){
       // ── Halozat: MINDEN fetch-hivast rogzitunk ────────────────────
       w.fetch = async function(url, o){
         const u = String(url); NET.push({ url: u, opts: o });
+        // RPW-003: a foto a TAROLO-KAPUN megy (STORAGE_GATEWAY=true elesben).
+        // A kapu egyetlen fajlra szolo, idokorlatos alairt utat ad vissza;
+        // a feltoltes utana `uploadToSignedUrl`-lel tortenik. A teszt ezt az
+        // ELES utat jarja vegig, nem a kikapcsolt tartalekot.
+        if (/\/functions\/v1\/rpw-storage/.test(u)){
+          const op = JSON.parse(o.body).op;
+          if (op === 'sign-upload' || op === 'client-sign-upload')
+            return { ok:true, status:200, json: async () => ({
+              ok:true, path: JSON.parse(o.body).path, token:'SIGNED-TOKEN' }) };
+          if (op === 'sign-read' || op === 'client-sign-read')
+            return { ok:true, status:200, json: async () => ({ ok:true, urls:
+              (JSON.parse(o.body).paths||[]).map(x => ({ path:x, signedUrl:'https://sig/'+x })) }) };
+          if (op === 'remove')
+            return { ok:true, status:200, json: async () => ({ ok:true }) };
+          return { ok:false, status:400, json: async () => ({ error:'bad_op' }) };
+        }
         if (/\/functions\/ocr/.test(u)){
           // A VALODI szerveroldali szuro fut le (functions/_shared.js), nem
           // egy masolat: igy a sema-hiba is vegig merheto. Ha a szuro
@@ -113,6 +129,12 @@ async function lap(fajl, job, opts){
                                   order:()=>Promise.resolve({data:[],error:null}) }; return { select:()=>q }; },
         storage: { from: (bucket) => ({
           upload: async (p, blob, o) => { UPLOAD.push({ bucket, path:p, blob, opts:o }); return { data:{path:p}, error:null }; },
+          // A kapu ezt hivja a kapott alairt uttal — ugyanoda rogzitunk,
+          // igy az ut / tartalomtipus / meret allitasai valtozatlanul mernek.
+          uploadToSignedUrl: async (p, tok, blob, o) => {
+            UPLOAD.push({ bucket, path:p, blob, opts:o, token:tok });
+            return { data:{path:p}, error:null };
+          },
           remove: async () => ({ data:null, error:null }),
           createSignedUrl: async (p) => ({ data:{ signedUrl:'https://sig/' + p }, error:null }),
           getPublicUrl: (p) => ({ data:{ publicUrl:'https://pub/' + p } })

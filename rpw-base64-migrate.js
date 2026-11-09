@@ -86,7 +86,7 @@
       if(opts.dryRun){ log.push({key:it.key, status:'dry-run', path:path, checksum:cs, mime:mime}); continue; }
       try{
         var blob = opts.decode ? opts.decode(it.b64) : it.b64;   // böngészőben dataURL→Blob; node-ban a stub kezeli
-        var up = await sb.storage.from(bucket).upload(path, blob, {contentType:mime, upsert:true});
+        var up = await ((root.RPWPhotos&&root.RPWPhotos.bucket)?root.RPWPhotos.bucket(sb,bucket):sb.storage.from(bucket)).upload(path, blob, {contentType:mime, upsert:true});
         if(up && up.error) throw up.error;
         // VERIFY: a feltöltött path visszaigazolása (a stub/valós upload data.path-ot ad)
         var okPath = up && up.data && (up.data.path || up.data.Key || path);

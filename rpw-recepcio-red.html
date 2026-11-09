@@ -647,9 +647,11 @@ async function uploadPhoto(photoKey,dataUrl){
     // Ha korabban MAS kiterjesztessel allt itt irat, azt eltakaritjuk —
     // kulonben ket fajl maradna ugyanarra a resre (a regi arvan).
     var elozo=(JOB.photoPaths&&JOB.photoPaths[photoKey])||(JOB.id+'/'+photoKey+'.jpg');
-    if(elozo!==path){try{await sb.storage.from(STORAGE_BUCKET).remove([elozo])}catch(e){}}
+    if(elozo!==path){try{await RPWPhotos.bucket(sb,STORAGE_BUCKET).remove([elozo])}catch(e){}}
     // Upsert (lecsereli ha mar letezik)
-    var up=await sb.storage.from(STORAGE_BUCKET).upload(path,blob,{contentType:mime,upsert:true});
+    // A tarolo-kapun (RPW-003) keresztul, de a VALODI mime-mal: a
+    // beegetett 'image/jpeg' PDF-et es PNG-t is jpg-nek hazudott.
+    var up=await RPWPhotos.bucket(sb,STORAGE_BUCKET).upload(path,blob,{contentType:mime,upsert:true});
     if(up.error)throw up.error;
     // P0.6: a bucket PRIVÁT — a publikus URL halott. Aláírt URL kell.
     var url=await RPWPhotos.signedUrl(sb,path,{bucket:STORAGE_BUCKET});
@@ -674,8 +676,10 @@ async function uploadPhoto(photoKey,dataUrl){
 /* Foto torles a Storage-bol */
 async function deletePhoto(photoKey){
   if(!JOB||!JOB.id)return;
+  // A TAROLT kiterjesztes szerint (nem beegetett .jpg) — kulonben a PDF
+  // es a PNG a torles utan is ott marad arvan.
   var path=photoPath(photoKey);
-  try{await sb.storage.from(STORAGE_BUCKET).remove([path])}catch(e){console.warn('Delete:',e)}
+  try{await RPWPhotos.bucket(sb,STORAGE_BUCKET).remove([path])}catch(e){console.warn('Delete:',e)}
   if(JOB.photoKeys)delete JOB.photoKeys[photoKey];
   if(JOB.photoUrls)delete JOB.photoUrls[photoKey];
   if(JOB.photoPaths)delete JOB.photoPaths[photoKey];

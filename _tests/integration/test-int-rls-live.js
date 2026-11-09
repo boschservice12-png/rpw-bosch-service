@@ -124,7 +124,16 @@ console.log('\n0. Az ÉLŐ alak felépítése (fixture)');
         p_actor text, p_phase text) returns jsonb
       language sql security definer as $$ select jsonb_build_object('ok',true) $$;
     create function public.rpw_login(p_shop_id uuid, p_pin text) returns jsonb
-      language sql security definer as $$ select jsonb_build_object('ok',true) $$;`);
+      language sql security definer as $$ select jsonb_build_object('ok',true) $$;
+    -- 2026-11-08: az ELO aláírások, olvasással mérve. A kliens hívja őket.
+    -- rpw2_pin_status élesben (p_token text) — a 008 korábban (uuid)-t
+    -- keresett, és ezért csendben kihagyta volna.
+    create function public.rpw2_pin_status(p_token text) returns jsonb
+      language sql security definer as $$ select jsonb_build_object('ok',true) $$;
+    -- (a rpw_client_job_get / rpw_client_upload a 0b lépésben a VALÓDI 009-ből jön)
+    -- régi, token nélküli számkiosztó: a 008 után NEM hívható
+    create function public.rpw_next_job_number(p_prefix text) returns text
+      language sql security definer as $$ select p_prefix || '001' $$;`);
 
   // A MAI kitettség: RLS be, de egyetlen mindent megengedő policy + teljes grant
   await c.query(`
@@ -179,7 +188,12 @@ console.log('\n3. A tenant-biztos utak TOVÁBBRA IS hívhatók (a műhely dolgoz
     ['rpw_job_get',   "select public.rpw_job_get('t','J1')"],
     ['rpw_patch_v3',  "select public.rpw_patch_v3('t','J1','{}'::jsonb,1,null)"],
     ['rpw_job_trash', "select public.rpw_job_trash('t','J1')"],
-    ['rpw_logout',    "select public.rpw_logout('t')"]]) {
+    ['rpw_logout',    "select public.rpw_logout('t')"],
+    // 2026-11-08: amit a kliens a lezárás után is hív
+    ['rpw_job_number',     "select public.rpw_job_number('t','MS-26-')"],
+    ['rpw2_pin_status',    "select public.rpw2_pin_status('t')"],
+    ['rpw_client_job_get', "select public.rpw_client_job_get('J1')"],
+    ['rpw_client_upload',  "select public.rpw_client_upload('J1','{}'::jsonb)"]]) {
     eq(await anonKent(c, hivas, /\$1/.test(hivas)?[SHOP_A]:[]), 'ENGEDVE', nev + ' hívható');
   }
 }
@@ -192,6 +206,8 @@ console.log('\n4. A NEM tenant-biztos régi utak NEM kapnak jogot');
      'TILTVA', 'rpw_login (token nélküli régi belépés) tiltva');
   eq(await anonKent(c,"select public.rpw__ctx('t')"),
      'TILTVA', 'a belső rpw__ctx kívülről nem hívható');
+  eq(await anonKent(c,"select public.rpw_next_job_number('MS-26-')"),
+     'TILTVA', 'rpw_next_job_number (token nélküli számkiosztó) tiltva — a kliens a rpw_job_number-re állt át');
 }
 
 console.log('\n5. A tokenből jön a shop — hamisítani nem lehet');

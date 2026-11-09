@@ -576,7 +576,7 @@ window.uJobFlag=async function(f,v){if(!JOB)return;JOB[f]=v;await saveJ();render
 async function uploadDevizFile(file){
   var ext=((file.name||'deviz').split('.').pop()||'pdf').toLowerCase();
   var path=JOB.id+'/deviz_file.'+ext;
-  var up=await sb.storage.from(RPW_CFG.BUCKET).upload(path,file,{contentType:file.type||'application/octet-stream',upsert:true});
+  var up=await RPWPhotos.bucket(sb,RPW_CFG.BUCKET).upload(path,file,{contentType:file.type||'application/octet-stream',upsert:true});
   if(up.error)throw up.error;
   // P0.6: a bucket PRIVÁT — a publikus URL halott. Aláírt URL kell.
   var url=await RPWPhotos.signedUrl(sb,path,{bucket:RPW_CFG.BUCKET});

@@ -918,7 +918,7 @@ async function _uploadFileToSlot(f,key){
   var ext=isImg?'jpg':(((f.name||'file').split('.').pop())||'bin').toLowerCase();
   var kk='acta_'+key+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   var path=JOB.id+'/acte/'+kk+'.'+ext;
-  var up=await sb.storage.from(BUCKET).upload(path,blob,{contentType:blob.type||f.type||'application/octet-stream',upsert:true});
+  var up=await RPWPhotos.bucket(sb,BUCKET).upload(path,blob,{contentType:blob.type||f.type||'application/octet-stream',upsert:true});
   if(up.error)throw up.error;
   // P0.6: a bucket PRIVÁT — a publikus URL halott. Aláírt URL kell.
   var url=await RPWPhotos.signedUrl(sb,path,{bucket:BUCKET});

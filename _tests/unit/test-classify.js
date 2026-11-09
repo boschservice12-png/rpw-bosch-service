@@ -236,8 +236,10 @@ console.log('\n12. EGYETLEN feltöltési út');
 {
   const d = R('rpw-dosar.html');
   ok(/async function _uploadFileToSlot\(f,key\)/.test(d), 'közös feltöltő függvény');
-  const feltoltes = (d.match(/sb\.storage\.from\(BUCKET\)\.upload\(/g)||[]).length;
+  // RPW-003: a feltöltés a tároló-kapun megy (RPWPhotos.bucket), közvetlenül SEHOL
+  const feltoltes = (d.match(/RPWPhotos\.bucket\(sb,BUCKET\)\.upload\(/g)||[]).length;
   eq(feltoltes, 1, 'a tárolóba EGY helyről írunk (nem két külön úton)');
+  eq((d.match(/sb\.storage\.from\(/g)||[]).length, 0, 'a dosszié-lap közvetlenül NEM nyúl a tárolóhoz (RPW-003)');
   ok(/arr\.push\(await _uploadFileToSlot\(files\[i\],key\)\)/.test(d), 'a résenkénti gomb ezt hívja');
   ok(/arr\.push\(await _uploadFileToSlot\(it\.file,it\.slot\)\)/.test(d), 'a kötegelt feltöltés is');
   ok(/RPWPhotos\.signedUrl/.test(d), 'és aláírt URL-t kér (a bucket privát)');
@@ -330,7 +332,10 @@ async function e2e(){
   for (const m of d.matchAll(/<script src="(rpw-[^"]+)"><\/script>/g)) { try { win.eval(R(m[1])) } catch(e){} }
   for (const m of d.matchAll(/<script>([\s\S]*?)<\/script>/g))       { try { win.eval(m[1])    } catch(e){} }
 
-  win.RPWPhotos = { signedUrl: async (sb, path) => 'https://signed/' + path };
+  // A kapu-adaptert itt átengedjük a stubra: ez a teszt a BESOROLÁST méri;
+  // a kapu viselkedését a test-storage-gateway / test-photos-gateway fedi.
+  win.RPWPhotos = { signedUrl: async (sb, path) => 'https://signed/' + path,
+                   bucket: (sb, b) => sb.storage.from(b) };
   win.RPWDb = Object.assign(win.RPWDb || {}, {
     patchV2: async (sb, id, patch) => { MENTVE.push(JSON.parse(JSON.stringify(patch))); }
   });

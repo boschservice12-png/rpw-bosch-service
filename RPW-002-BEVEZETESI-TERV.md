@@ -223,3 +223,90 @@ A lánc zárt: `rpw_jobs_list` / `rpw_job_get` / `rpw_patch_v3` /
 - Az élő függvények törzsét nem másoltuk a tesztbe: a fixture a **jogosultsági
   viselkedést** bizonyítja, az üzleti logikát a `test-int-tenant.js` fedi.
 - A staging továbbra sem igazolt (RPW-018).
+
+---
+
+## 10. Felülvizsgálat — 2026-11-08 (élesítés előtti ellenőrzés)
+
+Az élő adatbázison **kizárólag olvasó lekérdezésekkel** mérve.
+
+### 10.1 Mért állapot
+| mérés | eredmény |
+|---|---|
+| `rpw_jobs anon rw` szabály | **még él** — a rés nyitva |
+| anon tábla-jog az `rpw_jobs`-on | SELECT, INSERT, UPDATE, DELETE — **mind igaz** |
+| élő munkák | 7 (a 014 óta új adat) |
+| aktív dolgozó PIN nélkül | 0 |
+| `rpw_patch`, `rpw_patch_v2` anon-hívhatóság | nincs (012 óta) |
+| 1–3. lépés (009, `CLIENT_RPC`, `AUTH_REQUIRED`) | élesben (2026-08-29 óta) |
+
+### 10.2 Talált hibák — a 008 kitétele ELŐTT javítva
+| # | hiba | következmény a lezárás után | javítás |
+|---|---|---|---|
+| 1 | A 008 a `rpw2_pin_status(uuid)` aláírást kereste; élesben `(p_token text)` | a `to_regprocedure` NULL → a függvény **csendben** jog nélkül marad → a PIN-zárolás állapota (F-011) jogosultsági hibával hal el | aláírás `(text)`; a kihagyás mostantól `WARNING`, nem néma |
+| 2 | A kliens (`njNextNumber`) a token nélküli `rpw_next_job_number`-t hívta, amelyet a 008 szándékosan lezár | minden új munka a helyi „maximum + 1” tartalékból kap számot → két egyidejű felvétel **ugyanazt a számot** kaphatja | bejelentkezve a tokenes `rpw_job_number`; azonos számláló és formátum, a számozás folytonos; a hiba naplózva |
+
+**Miért nem fogta meg a meglévő teszt:** a `test-rpc-consistency` csak neveket vet össze
+(aláírást nem), és a `rpw_next_job_number` a „kivezetett” listán szerepelt, miközben a
+kliens aktívan hívta.
+
+**Bizonyíték:** `test-int-rls-live.js` — 68 állítás; a régi `(uuid)` aláírással
+**elbukik** (`rpw2_pin_status hívható got="TILTVA"`), a javítottal zöld.
+`test-load.js` — a tokenes számkiosztás, a szövegként érkező jsonb és a nem néma tartalék.
+Teljes készlet: 4098 állítás, 0 hibás.
+
+### 10.3 Új eszköz: `_migrations/ELLENORZES_008_elotti.sql`
+Csak olvas. A 008 előtt közvetlenül futtatandó; **GO csak akkor, ha minden sor `OK`.**
+2026-11-08-án élesen futtatva: **27/27 OK.**
+
+### 10.4 Frissített élesítési sorrend
+```
+1. KLIENS KITELEPÍTÉSE (Netlify) — a javított index.html (rpw_job_number)
+   ELLENŐRZÉS: új munka felvétele → kap számot, és a böngésző konzolján
+   NINCS „[RPW] munkaszam” figyelmeztetés.
+2. MENTÉS — Supabase → Database → Backups → kézi mentés      ← FERENC
+   (az időbélyeget ide kell felírni)
+3. ELLENORZES_008_elotti.sql — minden sor OK?   ha nem: STOP
+4. 008_rls_lockdown_live.sql — egy tranzakció; hiba esetén semmi nem változik
+5. Az 5. pont go / no-go táblája (belépés, lista, mentés, recepció,
+   ügyfél-feltöltés telefonról, anon rpw_jobs → elutasítva)
+   + ÚJ: 7. sor — PIN-állapot a Echipă lapon betölt
+   + ÚJ: 8. sor — új munka szerverről kap számot
+   bármelyik 1–5, 7–8 bukik → azonnal 008_rollback.sql
+```
+
+### 10.5 Nyitott
+- **Staging nincs.** A Supabase-fiókban nincs külön RPW staging-projekt. A 008 viselkedését
+  valódi PostgreSQL bizonyítja (fixture), az élő eltérést a 10.3 ellenőrzés méri.
+- **`rpw_backup_20260829` séma:** a 014 (2026-09-03) a munkákat végleg törölte, de ez a
+  zárt mentés-séma a 08-29-i 35 munkát (ügyféladatokkal) és a PIN-hasheket még őrzi.
+  A törlési döntéssel és a GDPR adattakarékossági elvével ütközhet — **Ferenc döntése**.
+
+## 11. ÉLESÍTVE — 2026-11-08 vasárnap este (a műhely zárva)
+
+| lépés | eredmény |
+|---|---|
+| kliens (`f0313be`) Netlifyon | éles, deploy `6af0e23c…`, 20:59 |
+| mentés | Pro csomag: napi automatikus mentés (7 nap); a 008 adatot nem érint |
+| `ELLENORZES_008_elotti.sql` közvetlenül előtte | **27/27 OK** |
+| `008` alkalmazva (`rpw_008_rls_lockdown_live`) | sikeres |
+
+**Eltérés a fájltól:** élesben a feltételes lista hiánya `raise exception`-nel állt volna
+meg (`WARNING` helyett) — szigorúbb, fail-closed. Hatásában azonos: mind a 12 függvény létezett.
+A repó fájlja `WARNING`-on marad, mert a fixture-teszt nem hozza létre a teljes feltételes készletet.
+
+**Mérés a lezárás után (csak olvasás):**
+| # | mérés | elvárt | kapott |
+|---|---|---|---|
+| 1 | policy az `rpw_jobs`-on | 0 | **0** |
+| 2 | anon/authenticated tábla-jog `rpw_*` táblán | 0 | **0** |
+| 3 | `rpw_*` tábla RLS nélkül vagy force nélkül | 0 | **0** |
+| 4 | anon által hívható `rpw`-függvény | a 008 listája | **23**, pontosan a lista |
+| 5 | tiltott régi utak közül hívható | egy sem | **egy sem** |
+| 6 | munkák száma | 7 | **7** |
+| 7 | anon `select … from rpw_jobs` | elutasítva | **`42501 permission denied`** |
+| 8 | `rpw_jobs_list` / `rpw_job_number` / `rpw2_pin_status` érvénytelen tokennel | `unauthorized`, nem jogosultsági hiba | **`unauthorized`** |
+| 9 | `rpw2_roster` (belépő képernyő) | a csapat | **11 fő** |
+
+**Hátravan:** a felhasználói go/no-go (5. pont 1–5, 7–8 sor) — Ferenc, PIN-nel, élő felületen.
+Bukás esetén: `008_rollback.sql`.

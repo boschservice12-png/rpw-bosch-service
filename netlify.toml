@@ -77,6 +77,20 @@
   status = 404
   force = true
 
+# RPW-003 (2026-11-08): a Supabase Edge Function forrása (a kapu logikája)
+# és a tároló-lezárás terve — belső anyag, nem szolgálható ki.
+[[redirects]]
+  from = "/supabase/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/RPW-003-TAROLO-LEZARAS-TERV.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
 [[redirects]]
   from = "/FUNKCIOK.md"
   to = "/404.html"

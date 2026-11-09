@@ -213,7 +213,7 @@ window.__rpwServerReady = (async function(){
     h+='</div>';
 
     app.innerHTML=h;
-    try{ if(window.RPWPhotos) RPWPhotos.hydrate(sb); }catch(e){}
+    try{ if(window.RPWPhotos) RPWPhotos.hydrate(sb,{client:true}); }catch(e){}
   }
 
   function compress(file){
@@ -238,10 +238,10 @@ window.__rpwServerReady = (async function(){
     var ext=isI?'jpg':(((file.name||'file').split('.').pop())||'bin').toLowerCase();
     var key=prefix+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
     var path=JOB.id+'/'+key+'.'+ext;
-    var up=await sb.storage.from(BUCKET).upload(path,blob,{contentType:blob.type||file.type||'application/octet-stream',upsert:true});
+    var up=await RPWPhotos.bucket(sb,BUCKET,{client:true}).upload(path,blob,{contentType:blob.type||file.type||'application/octet-stream',upsert:true});
     if(up.error)throw up.error;
     // P0.6: a bucket PRIVÁT — a publikus URL halott. Aláírt URL kell.
-    var url=await RPWPhotos.signedUrl(sb,path,{bucket:BUCKET});
+    var url=await RPWPhotos.signedUrl(sb,path,{bucket:BUCKET,client:true});
     return {key:key,path:path,url:url,name:file.name||(key+'.'+ext),type:blob.type||file.type||'',ts:new Date().toISOString(),src:'whatsapp'};
   }
 
