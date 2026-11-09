@@ -229,11 +229,26 @@ console.log('\n11. #14 / #15 — apróságok, amik némán nyeltek');
     ok(s4.indexOf("try{RPWCache.setJob(JOB)}catch(e){}}\n    try{RPWCache.setJob(JOB)}catch(e){}") < 0,
        n + ': #14 — nincs kétszeri gyorsítótárazás');
   });
+  // 2026-09-06: a #15 javítása KÖZÖS modulba került (rpw-photos.js
+  // fileToDataUrl), mert három lap külön másolata volt ugyanannak a hibának.
+  // Az őrszem ezért a HELYRE néz, ahol a hibakezelés MOST van — a követelmény
+  // változatlan: a fájlolvasás és a képformátum hibája is kezelve legyen, és
+  // a lap ne nyelje le. A lapokon nem lehet saját FileReader-másolat.
   ['rpw-reconstatare-red.html','rpw-inchidere-red.html'].forEach(n => {
     const s5 = R(n);
-    ok(/r\.onerror\s*=/.test(s5),   n + ': #15 — a fájlolvasás hibája kezelve');
-    ok(/img\.onerror\s*=/.test(s5), '  a hibás képformátum is');
+    ok(/RPWPhotos\.fileToDataUrl\(file/.test(s5),
+       n + ': #15 — a beolvasás a közös, hibakezelt modulból megy');
+    ok(/\.catch\(function\(err\)\{\s*hiba\(/.test(s5),
+       '  és a lap KIÍRJA a hibát (nem nyeli le)');
+    ok(!/new FileReader\(\)/.test(s5),
+       '  nincs többé saját FileReader-másolat a lapon');
   });
+  {
+    const fot = R('rpw-photos.js');
+    ok(/r\.onerror\s*=/.test(fot),   'rpw-photos.js: a fájlolvasás hibája kezelve (#15 új helye)');
+    ok(/img\.onerror\s*=/.test(fot), '  a hibás képformátum is');
+    ok(/setTimeout\(/.test(fot),      '  és időtúllépés is van — némán megállni sem tud');
+  }
 }
 
 console.log('\n12. #17 — a konfiguráció nem krónika');

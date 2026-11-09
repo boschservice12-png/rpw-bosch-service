@@ -100,6 +100,99 @@
     }catch(e){ return ''; }
   }
 
+  // ── dataURL → Blob, HÁLÓZAT NÉLKÜL ────────────────────────────────
+  // 2026-09-03 (Ferenc: „upload failed to fetch" — a telefonon):
+  // a feltöltés eddig `await fetch(dataUrl)`-lel csinált Blob-ot. Egy
+  // `data:` URL fetch-elése KAPCSOLATNAK számít, tehát a CSP
+  // `connect-src`-je szabályozza — abban pedig (helyesen) NINCS `data:`.
+  // A böngésző blokkolta, és a dobott hiba szó szerint:
+  //   TypeError: Failed to fetch
+  // Ugyanez a sor CSP nélkül is elhasalt volna a telefonon: több
+  // megabájtos data: URL fetch-elése mobilon memóriaigényes.
+  //
+  // A megoldás NEM a CSP tágítása (az gyengítené a védelmet), hanem
+  // hogy egyáltalán ne hálózaton keresztül dekódoljunk: a base64-ből
+  // helyben állítjuk elő a bájtokat. Így nincs CSP-függés, és nincs
+  // mobil memória-korlát sem.
+  //
+  // 2026-09-06 — EGY ÁTALAKÍTÓ VAN, NEM KETTŐ. Ugyanerre a hibára két
+  // javítás született párhuzamosan: `RPWUtil.dataUrlToBlob` (rpw-util.js)
+  // és egy másolat itt. A másolat pontosan az a szerkezeti hiba, amit
+  // ezen a fotó-úton javítunk, ezért ELTŰNT: ez a függvény már csak
+  // továbbadja a hívást. Az `rpw-util.js` MINDEN fotós lapon a
+  // `rpw-photos.js` ELŐTT töltődik be, tehát mire ez lefut, ott van;
+  // a `require` ág csak a Node-os teszteknek kell.
+  function _util(){
+    if(root.RPWUtil && typeof root.RPWUtil.dataUrlToBlob==='function') return root.RPWUtil;
+    if(typeof module!=='undefined' && module.exports && typeof require==='function'){
+      try{ return require('./rpw-util.js'); }catch(e){}
+    }
+    return null;
+  }
+  function dataUrlToBlob(dataUrl){
+    var u=_util();
+    // Némán visszaesni tilos: a hívó a bájtokra épít.
+    if(!u) throw new Error('rpw-util.js lipseste (dataUrlToBlob)');
+    return u.dataUrlToBlob(dataUrl);
+  }
+
+  // ── FÁJL → dataURL, EGYETLEN HELYEN ──────────────────────────────
+  // 2026-09-04 (Ferenc: „a fotók az avizare daună felén működnek, a
+  // recepción és a reconstatare-n nem — hiányzik a megoldás a
+  // rendszerből"). Igaza volt, és a kód meg is mutatta, miért:
+  //
+  //   rpw-upload.html (avizare daună) — MŰKÖDIK:
+  //       createObjectURL + img.onerror-ág + a Blob KÖZVETLEN feltöltése
+  //   rpw-recepcio  — `fetch(dataUrl)`  → a CSP blokkolta
+  //   rpw-reconstatare — saját `resize()`, HIBAÁG NÉLKÜL → néma elakadás,
+  //       és a lap a rpw-photos.js-t be sem töltötte
+  //
+  // Minden oldal újraírta a magáét, és elsodródtak. Ez az EGY
+  // implementáció a működő minta alapján készült:
+  //   · a dekódolás objectURL-ről megy (nincs több megabájtos data: URL)
+  //   · ha nem dekódolható (HEIC, PDF, sérült kép), az EREDETI fájl megy
+  //     tovább dataURL-ként — nem akad el némán
+  //   · időkorlát: nem vár örökké
+  function fileToDataUrl(file, opts){
+    opts = opts || {};
+    var max = opts.maxSide || 1600, q = opts.quality || 0.85, ms = opts.timeoutMs || 20000;
+    return new Promise(function(res, rej){
+      var done = false, url = null, tm = null;
+      function cleanup(){ if(url){ try{ URL.revokeObjectURL(url); }catch(e){} url=null; } clearTimeout(tm); }
+      function finish(v){ if(done) return; done=true; cleanup(); res(v); }
+      function fail(m){ if(done) return; done=true; cleanup(); rej(new Error(m)); }
+      // Visszaesés: az EREDETI fájl, változtatás nélkül, dataURL-ként.
+      function eredeti(){
+        var r = new FileReader();
+        r.onerror = function(){ fail('Fisierul nu a putut fi citit'); };
+        r.onload  = function(e){
+          var s = e.target.result;
+          if(typeof s === 'string' && s.indexOf('data:') === 0) finish(s);
+          else fail('Format de fisier necunoscut');
+        };
+        try{ r.readAsDataURL(file); }catch(e){ fail('Fisierul nu a putut fi citit'); }
+      }
+      tm = setTimeout(function(){ fail('Fisierul nu a putut fi citit (timeout)'); }, ms);
+      var img = new Image();
+      try{ url = URL.createObjectURL(file); }catch(e){ eredeti(); return; }
+      img.onerror = function(){ eredeti(); };
+      img.onload = function(){
+        try{
+          var w = img.width||0, h = img.height||0;
+          if(!w || !h){ eredeti(); return; }
+          var sc = Math.min(1, max/Math.max(w,h));
+          var c = document.createElement('canvas');
+          c.width  = Math.max(1, Math.round(w*sc));
+          c.height = Math.max(1, Math.round(h*sc));
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          var out = c.toDataURL('image/jpeg', q);
+          if(out && out.length > 1000) finish(out); else eredeti();
+        }catch(e){ eredeti(); }
+      };
+      img.src = url;
+    });
+  }
+
   // ── ÍRÁS-oldal (P0 #11): base64/dataURL → privát Storage, visszaad REF-et ──
   // A JOB JSON ezt a ref-et tárolja (nem base64). now/actor injektálható (teszt).
   function mimeOf(dataUrl){ var m=/^data:([^;]+);base64,/.exec(String(dataUrl||'')); return m?m[1]:'image/jpeg'; }
@@ -162,7 +255,8 @@
   }
 
   var API={ isFullUrl:isFullUrl, signedUrl:signedUrl, publicUrl:publicUrl, resolveRef:resolveRef, hydrate:hydrate,
-            storePhoto:storePhoto, isPrivate:isPrivate, bucket:bucket, gatewayOn:gatewayOn };
+            storePhoto:storePhoto, isPrivate:isPrivate, bucket:bucket, gatewayOn:gatewayOn,
+            dataUrlToBlob:dataUrlToBlob, fileToDataUrl:fileToDataUrl };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWPhotos=API;
 })(typeof self!=='undefined'?self:(typeof window!=='undefined'?window:globalThis));

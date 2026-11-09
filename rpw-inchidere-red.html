@@ -294,31 +294,25 @@ async function saveJ(){
   },500);
 }
 function toast(m,e){S.ts=m;S.te=e?1:0;render();setTimeout(function(){S.ts=null;render()},3000)}
-// KODREVIEW #15: se a FileReader, se az Image nem volt hibakezelve. Egy
-// serult vagy nem tamogatott kepfajl eseten SEMMI nem tortent: a dolgozo
-// megnyomta a gombot, es a foto egyszeruen nem jelent meg — hibauzenet
-// nelkul, ujraprobalas nelkul. Mostantol szol.
+/* ── 2026-09-04 / 2026-09-06 — A NEMA ELAKADAS, EGY HELYEN JAVITVA ──
+    * A regi `resize()` FileReader -> new Image() -> onload volt, hibaag
+    * nelkul: ha a bongeszo nem tudta megnyitni a fajlt, a `cb` SOHA nem
+    * hivodott meg. Ket javitas szuletett ra parhuzamosan; ez az osszevont
+    * valtozat. A hibauzenet a kodreview #15 harom nyelvu szovege, a
+    * beolvasas viszont a KOZOS implementacio (rpw-photos.js), amely a
+    * hosszabb oldal szerint kicsinyit (az allo telefonfotok eddig teljes
+    * meretben mentek fel), 20 mp utan idot lep, es ha a vaszon uresen jon
+    * vissza (iOS memoriakorlat), az EREDETI fajlt engedi tovabb.
+    * Egy lapnak sincs tobbe sajat masolata ebbol. */
 function resize(file,cb){
   var hiba=function(mit){
     try{ toast((typeof T==='function'?T('photoError'):'Fotografia nu s-a putut citi')+(mit?' ('+mit+')':''),1); }
     catch(e){ try{ console.error('resize',mit); }catch(_){} }
   };
-  var r=new FileReader();
-  r.onerror=function(){ hiba('citire'); };
-  r.onload=function(e){
-    var img=new Image();
-    img.onerror=function(){ hiba('format'); };
-    img.onload=function(){
-      try{
-        var c=document.createElement('canvas'),mx=1280,sc=img.width>mx?mx/img.width:1;
-        c.width=img.width*sc;c.height=img.height*sc;
-        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-        cb(c.toDataURL('image/jpeg',.82));
-      }catch(err){ hiba('conversie'); }
-    };
-    img.src=e.target.result;
-  };
-  try{ r.readAsDataURL(file); }catch(err){ hiba('citire'); }
+  if(!window.RPWPhotos||!RPWPhotos.fileToDataUrl){ hiba('modul'); return; }
+  RPWPhotos.fileToDataUrl(file,{maxSide:1280,quality:.82})
+    .then(cb)
+    .catch(function(err){ hiba((err&&err.message)||'eroare'); });
 }
 
 var VK=['fata','spate','stanga','dreapta','detaliu'];
@@ -591,7 +585,7 @@ async function uploadDevizFile(file){
   await saveJ();toast('Deviz încărcat ✓');render();
 }
 window.addDevizFile=function(e){var f=e.target.files&&e.target.files[0];if(!f)return;toast('Se încarcă...');uploadDevizFile(f).catch(function(err){toast('Eroare: '+(err&&err.message||err),1)})};
-window.addPh=function(x,e){var f=e.target.files&&e.target.files[0];if(!f)return;resize(f,async function(d){if(!JOB.closingPhotos)JOB.closingPhotos=[];while(JOB.closingPhotos.length<=x)JOB.closingPhotos.push(null);JOB.closingPhotos[x]={data:d,label:VK[x],ts:new Date().toISOString()};await saveJ();toast(T(VK[x])+' OK');render()})};
+window.addPh=function(x,e){var f=e.target.files&&e.target.files[0];if(!f)return;try{e.target.value=''}catch(_){}resize(f,async function(d){if(!JOB.closingPhotos)JOB.closingPhotos=[];while(JOB.closingPhotos.length<=x)JOB.closingPhotos.push(null);JOB.closingPhotos[x]={data:d,label:VK[x],ts:new Date().toISOString()};await saveJ();toast(T(VK[x])+' OK');render()})};
 window.delClosePhoto=async function(x){if(!JOB||!JOB.closingPhotos||!JOB.closingPhotos[x])return;if(!confirm('⚠️ Fotografia este o DOVADĂ. Sigur o ștergi DEFINITIV?'))return;JOB.closingPhotos[x]=null;await saveJ();render()};
 
 // KRITIKUS lezárás: megerősített (awaitolt) mentés — offline/hiba esetén NINCS siker + NINCS navigáció

@@ -2071,15 +2071,19 @@
     },
     {
       "id": "F-160",
-      "nev": "Ket apro, ami neman nyelt. (#14) A loadJob ketszer gyorsitotarazott ugyanabban a lefutasban — az egyik kikerult hat lapon. (#15) A resize() se a FileReader, se az Image hibajat nem kezelte: egy serult vagy nem tamogatott kepfajl eseten SEMMI nem tortent — a dolgozo megnyomta a gombot, es a foto nem jelent meg, hibauzenet nelkul. Mostantol szol, es megmondja, melyik lepesnel (olvasas / formatum / konverzio)",
+      "nev": "Ket apro, ami neman nyelt. (#14) A loadJob ketszer gyorsitotarazott ugyanabban a lefutasban — az egyik kikerult hat lapon. (#15) A resize() se a FileReader, se az Image hibajat nem kezelte: egy serult vagy nem tamogatott kepfajl eseten SEMMI nem tortent — a dolgozo megnyomta a gombot, es a foto nem jelent meg, hibauzenet nelkul. Mostantol szol, es megmondja, melyik lepesnel (olvasas / formatum / konverzio). 2026-09-06: a #15 javitasa a KOZOS foto-retegbe kerult (rpw-photos.js fileToDataUrl), mert harom lap kulon masolata volt ugyanannak a hibanak; a lapok mar csak hivjak es kiirjak a hibat",
       "fe": [
         [
+          "rpw-photos.js",
+          "img.onerror"
+        ],
+        [
           "rpw-inchidere-red.html",
-          "r.onerror=function(){ hiba('citire'); };"
+          "RPWPhotos.fileToDataUrl(file"
         ],
         [
           "rpw-reconstatare-red.html",
-          "img.onerror=function(){ hiba('format'); };"
+          "RPWPhotos.fileToDataUrl(file"
         ]
       ],
       "be": [],
@@ -2134,27 +2138,60 @@
     },
     {
       "id": "F-163",
-      "nev": "A FOTO NEM fetch(dataUrl)-LEL LESZ BLOB. A recepcio, az evaluare es a reconstatare fetch(dataUrl)-lel csinalt blobot a lefenykepezett kepbol; a fetch egy data: URL-re a CSP connect-src ala esik, abbol pedig 2026-08-25-en (87cfb18) kikerult a data:. Azota a recepcios fotozas nema hibaval elhalt (a kep sehova nem kerult), mikozben az ugyfel-link es a dossziélap mukodott, mert ott canvas.toBlob van. 2026-09-06-an Ferenc jelentette. A javitas nem a CSP visszatagitasa, hanem RPWUtil.dataUrlToBlob: a base64 kezi bontasa Blob-ba, halozat nelkul. A teszt a CSP-hez koti a tilalmat: amig a connect-src-ben nincs data:, egyetlen lap sem fetch-elhet data: URL-t.",
+      "nev": "A FOTO NEM fetch(dataUrl)-LEL LESZ BLOB. A recepcio, az evaluare es a reconstatare fetch(dataUrl)-lel csinalt blobot a lefenykepezett kepbol; a fetch egy data: URL-re a CSP connect-src ala esik, abbol pedig 2026-08-25-en (87cfb18) kikerult a data:. Azota a recepcios fotozas nema hibaval elhalt (a kep sehova nem kerult), mikozben az ugyfel-link es a dossziélap mukodott, mert ott canvas.toBlob van. 2026-09-06-an Ferenc jelentette. A javitas nem a CSP visszatagitasa, hanem RPWUtil.dataUrlToBlob: a base64 kezi bontasa Blob-ba, halozat nelkul. A teszt a CSP-hez koti a tilalmat: amig a connect-src-ben nincs data:, egyetlen lap sem fetch-elhet data: URL-t. 2026-09-06 (osszefesules): egyetlen atalakito maradt a rendszerben — a rpw-photos.js sajat masolata megszunt, tovabbadja a hivast a rpw-util.js-nek; a lapokon tartalek fetch sincs.",
       "fe": [
         [
           "rpw-util.js",
           "dataUrlToBlob"
         ],
         [
+          "rpw-photos.js",
+          "return u.dataUrlToBlob(dataUrl)"
+        ],
+        [
           "rpw-recepcio-red.html",
-          "uploadPhoto"
+          "RPWPhotos.dataUrlToBlob(dataUrl)"
         ],
         [
           "rpw-evaluare-red.html",
-          "uploadPhoto"
+          "RPWPhotos.dataUrlToBlob(dataUrl)"
         ],
         [
           "rpw-reconstatare-red.html",
-          "fetch(photos[x].data)"
+          "RPWPhotos.dataUrlToBlob(photos[x].data)"
         ]
       ],
       "be": [],
       "teszt": "_tests/unit/test-csp-data-url.js",
+      "allapot": "csak-frontend"
+    },
+    {
+      "id": "F-907",
+      "nev": "Az OCR szuroje ugyanazokat a mezoneveket ismeri, mint amit a prompt ker. A functions/ocr.js promptja brand / year / capacitate / owner / daune neven kerte az adatot, az OCR_SCHEMA viszont marca / an / proprietar / elemente neven engedett at: a validateOcr NEMAN eldobta a tobbit, es a valasz 200-zal, URESEN ment vissza. Igy veszett el a talon markaja/evjarata/tulajdonosa, a buletin neve es cime, a constatare KARLISTAJA, es igy bukott 502-re MINDEN Audatex-import. A daune tomb elemenkent megszurve jut at (max 200 elem, 20 kulcs, 300 karakter, beagyazott szerkezet nelkul); ismeretlen mezo tovabbra is kiesik, ertelmezhetetlen valasz tovabbra is 502.",
+      "fe": [],
+      "be": [],
+      "teszt": "_tests/unit/test-ocr-schema.js",
+      "allapot": "csak-backend"
+    },
+    {
+      "id": "F-908",
+      "nev": "Kozos foto-reteg: EGY fajl->dataURL implementacio (rpw-photos.js fileToDataUrl). Ferenc diagnozisa (2026-09-04): \"a fotok az avizare dauna felen mukodnek, a recepcion es a reconstatare-n nem — hianyzik a megoldas a rendszerbol\". Minden lapnak sajat masolata volt, kulon-kulon elsodrodva; a reconstatare be sem toltotte a foto-modult. Az egy implementacio a hosszabb oldal szerint kicsinyit (az allo telefonfotok eddig teljes meretben mentek fel), 20 mp utan idot lep, dekodolasi hibanal az EREDETI fajlt engedi tovabb, es ures vaszon (iOS memoriakorlat) eseten is. A recepcio irat-resei PDF-et is fogadnak: valodi kiterjesztes es tartalomtipus, formatumvaltasnal a regi fajl eltakaritva; amit nem lehet becsuletesen tarolni, azt nem toltjuk fel.",
+      "fe": [
+        [
+          "rpw-photos.js",
+          "fileToDataUrl"
+        ],
+        [
+          "rpw-reconstatare-red.html",
+          "rpw-photos.js"
+        ],
+        [
+          "rpw-recepcio-red.html",
+          "extOfMime"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/unit/test-ocr-schema.js",
       "allapot": "csak-frontend"
     }
   ]
