@@ -25,6 +25,22 @@ helyett a `public/vendor/` rögzített másolatai töltődnek. Adat: `var/rpw-lo
 Éles példa (PostgreSQL) a `.env.local`-ban:
 `DATABASE_URL="postgresql://rpw:JELSZO@127.0.0.1:5432/rpw?serverVersion=16&charset=utf8"`
 
+## OCR, iratbesorolás, levél
+
+A régi Netlify-függvények ugyanazon a címen (`/.netlify/functions/ocr|classify|sendmail`),
+belépéshez kötve, IP-fékkel, naplózva (tartalom nélkül). Beállítás a `.env.local`-ban:
+
+| Változó | Mire | Üresen |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | OCR (talon, buletin, constatare, Audatex) + iratbesorolás | `503 not_configured` — a felület kézi bevitellel megy tovább |
+| `RPW_AI_MODEL` | alapból `claude-sonnet-5` (a projekt korábbi döntése) | — |
+| `RESEND_API_KEY`, `SENDMAIL_FROM` | levél a biztosítónak | `503 not_configured` |
+
+Hivatalos Anthropic PHP SDK, **strukturált kimenettel**: a válasz garantáltan a felület által
+olvasott mezőnevekkel jön. Ez javít egy éles hibát: a régi függvényben a prompt és az
+ellenőrzés mezőnevei eltértek, ezért a talon fele, a kárlista és az **Audatex-órák elvesztek**
+(az Audatex-OCR mindig hibát adott). Szerződésteszt őrzi: `tests/Unit/DocumentAiTest.php`.
+
 ## Tesztek
 
 ```bash
@@ -34,7 +50,8 @@ RPW_TEST_EXISTING_SCHEMA=1 DATABASE_URL="postgresql://…" php vendor/bin/phpuni
                        # a RÉGI rendszer migrált sémáján (_migrations/001–018)
 ```
 
-Mért eredmény (2026-11-21): **53 teszt, 299 ellenőrzés — mindhárom módban zöld**
+Mért eredmény (2026-11-21): **60 teszt, 360 ellenőrzés zöld** (SQLite; a PostgreSQL-módok utoljára 53 teszttel futottak — az OCR/levél-tesztek adatbázis-függetlenek)
+· korábban: 53 teszt, 299 ellenőrzés — mindhárom módban zöld
 (SQLite 3.45 · PostgreSQL 18 friss séma · PostgreSQL 18 a régi migrációkkal).
 
 **Böngészős végponttól végpontig próba** (fut a `bin/rpw-local`, Node + Playwright kell):

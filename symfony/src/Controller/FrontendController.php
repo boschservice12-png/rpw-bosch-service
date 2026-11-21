@@ -6,7 +6,6 @@ namespace App\Controller;
 
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -68,14 +67,6 @@ final class FrontendController
         $res->headers->set('X-Content-Type-Options', 'nosniff');
 
         return $res;
-    }
-
-    /** A régi Netlify-függvények (OCR, besorolás, levél) helye — még nincs átvive. */
-    #[Route('/.netlify/functions/{name}', name: 'frontend_netlify_fn', methods: ['GET', 'POST'], requirements: ['name' => '[a-z0-9_-]{1,40}'])]
-    public function netlifyFunction(string $name): JsonResponse
-    {
-        return new JsonResponse(['ok' => false, 'error' => 'not_configured',
-            'message' => 'Funcția „'.$name.'” nu este încă disponibilă pe serverul nou.'], 503);
     }
 
     private function configOverride(): string

@@ -85,7 +85,7 @@ Ez megerősíti a 3. pont 1. kockázatát: **az éles adatbázist a `rpw:db:chec
 |---|---|
 | A dosszié a fotókat csak a régi `photos` listából számolja, a recepció már `photoKeys`-be ír | a dosszié 0/6 fotót mutat, pedig megvannak (élesben is) — külön feladat |
 | A záró fotók (7. fázis) base64-ként a munka JSON-jában | nagy adat, nem a tárolóban — külön feladat |
-| OCR, besorolás, e-mail (`/.netlify/functions/*`) | az új szerveren még `not_configured` — a 3. lépés |
+| OCR, besorolás, e-mail | ✅ átvive (`/.netlify/functions/*` ugyanazon a címen). **Javítva egy éles hiba:** a prompt és az ellenőrzés mezőnevei eltértek → a talon fele, a kárlista és az Audatex-órák elvesztek. Éles próba: `ANTHROPIC_API_KEY` és `RESEND_API_KEY` kell |
 
 ## 3. Kockázatok és döntési pontok
 
@@ -106,8 +106,8 @@ Ez megerősíti a 3. pont 1. kockázatát: **az éles adatbázist a `rpw:db:chec
  1. MAG          ✅  domain + API + tesztek                    (kész)
  2. FELÜLET      ✅  a meglévő 13 oldal az új backenden (Supabase-kompatibilis
                      felület), helyben mérve; a régi út = az SB_URL visszaállítása
- 3. SZOLGÁLTATÁS ⏳  ocr · classify · sendmail · fotótároló → Symfony
-                     (Messenger háttérfeladat, aláírt fotó-URL)
+ 3. SZOLGÁLTATÁS ✅  fotótároló, ocr, classify, sendmail → Symfony (hivatalos
+                     Anthropic SDK, strukturált kimenet); éles AI-próba: kulcs kell
  4. TELJES KÖR   ⏳  csapat/szerepkör/poszt-admin · „Ce facem azi” rangsor
                      szerveroldalon · GAP-statisztika
  5. ÁTÁLLÁS      ⏳  adatátvitel, számláló átvitele, a régi RPC-k lezárása

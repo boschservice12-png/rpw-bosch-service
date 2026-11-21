@@ -15,6 +15,17 @@ framework:
             limit: '%env(int:default:rpw.login_ip_limit:RPW_LOGIN_IP_LIMIT)%'
             interval: '15 minutes'
             lock_factory: null
+        # AI-hívások (OCR, besorolás) — fizetős API, a durva visszaélés ellen
+        ai:
+            policy: sliding_window
+            limit: 60
+            interval: '1 minute'
+            lock_factory: null
+        mail:
+            policy: sliding_window
+            limit: 20
+            interval: '1 minute'
+            lock_factory: null
 
 when@test:
     framework:

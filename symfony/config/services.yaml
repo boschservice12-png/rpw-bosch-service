@@ -1,5 +1,6 @@
 # RPW — szolgáltatások. A domain (src/Domain) keretrendszer-független, tiszta PHP.
 parameters:
+    rpw.mail_from: 'dosar@redassistance.com'
     rpw.login_ip_limit: 300
     rpw.storage_default: '%kernel.project_dir%/var/storage'
 
@@ -23,7 +24,34 @@ services:
             $root: '%env(default:rpw.storage_default:RPW_STORAGE_DIR)%'
             $secret: '%env(APP_SECRET)%'
 
+    # AI (OCR, besorolás): hivatalos Anthropic PHP SDK. Kulcs nélkül a funkció
+    # rendezetten `not_configured`-ot ad, a felület nem akad meg.
+    App\Infrastructure\Ai\AnthropicVisionModel:
+        arguments:
+            $apiKey: '%env(default::ANTHROPIC_API_KEY)%'
+            $modelId: '%env(default::RPW_AI_MODEL)%'
+    App\Infrastructure\Ai\VisionModel: '@App\Infrastructure\Ai\AnthropicVisionModel'
+
+    # Levél (Resend). Kulcs nélkül `not_configured`.
+    App\Infrastructure\Mail\ResendMailer:
+        arguments:
+            $apiKey: '%env(default::RESEND_API_KEY)%'
+            $from: '%env(default:rpw.mail_from:SENDMAIL_FROM)%'
+
     # Adatbázis: PostgreSQL élesben (a meglévő Supabase-adatbázis IS lehet), SQLite a tesztekben.
     Doctrine\DBAL\Connection:
         factory: ['App\Infrastructure\Db\ConnectionFactory', 'create']
         arguments: ['%env(resolve:DATABASE_URL)%']
+
+when@test:
+    services:
+        _defaults:
+            autowire: true
+            autoconfigure: true
+        App\Tests\Support\FakeVisionModel: ~
+        App\Infrastructure\Ai\VisionModel: '@App\Tests\Support\FakeVisionModel'
+        App\Infrastructure\Mail\ResendMailer:
+            arguments:
+                $apiKey: 'test-key'
+                $http: '@App\Tests\Support\FakeHttp'
+        App\Tests\Support\FakeHttp: ~
