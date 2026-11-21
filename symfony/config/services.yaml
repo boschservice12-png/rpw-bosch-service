@@ -1,5 +1,6 @@
 # RPW — szolgáltatások. A domain (src/Domain) keretrendszer-független, tiszta PHP.
 parameters:
+    rpw.session_max_hours: 24
     rpw.mail_from: 'dosar@redassistance.com'
     rpw.login_ip_limit: 300
     rpw.storage_default: '%kernel.project_dir%/var/storage'
@@ -37,6 +38,12 @@ services:
         arguments:
             $apiKey: '%env(default::RESEND_API_KEY)%'
             $from: '%env(default:rpw.mail_from:SENDMAIL_FROM)%'
+
+    # Titkosított mentés (RPW_BACKUP_KEY: 32 bájt base64 — rpw:backup --keygen)
+    App\Infrastructure\Backup\BackupService:
+        arguments:
+            $storageDir: '%env(default:rpw.storage_default:RPW_STORAGE_DIR)%'
+            $keyB64: '%env(default::RPW_BACKUP_KEY)%'
 
     # Adatbázis: PostgreSQL élesben (a meglévő Supabase-adatbázis IS lehet), SQLite a tesztekben.
     Doctrine\DBAL\Connection:

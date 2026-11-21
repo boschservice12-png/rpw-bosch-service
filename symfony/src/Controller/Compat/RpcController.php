@@ -150,7 +150,7 @@ final class RpcController
                 return ['ok' => true];
             })(),
             'rpw2_pin_set' => (function () use ($me, $a) {
-                $this->auth->setPin($me, $this->s($a, 'p_employee_id'), $this->s($a, 'p_new_pin'));
+                $this->auth->setPin($me, $this->s($a, 'p_employee_id'), $this->s($a, 'p_new_pin'), $this->s($a, 'p_token'));
 
                 return ['ok' => true];
             })(),

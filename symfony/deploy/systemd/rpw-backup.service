@@ -1,0 +1,16 @@
+[Unit]
+Description=RPW titkosított mentés (adatbázis + fotók), visszaellenőrzéssel
+After=network-online.target postgresql.service
+
+[Service]
+Type=oneshot
+User=rpw
+WorkingDirectory=/srv/rpw/symfony
+EnvironmentFile=/etc/rpw/rpw.env
+ExecStart=/usr/bin/php bin/console rpw:backup --to=/var/backups/rpw --keep=14
+# a mentés után a másolat a gépen KÍVÜLRE (pl. rclone egy tárhelyre) — 3-2-1 szabály
+# ExecStartPost=/usr/bin/rclone copy /var/backups/rpw remote:rpw-backups
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/backups/rpw /srv/rpw/symfony/var
+PrivateTmp=true

@@ -25,6 +25,13 @@ helyett a `public/vendor/` rögzített másolatai töltődnek. Adat: `var/rpw-lo
 Éles példa (PostgreSQL) a `.env.local`-ban:
 `DATABASE_URL="postgresql://rpw:JELSZO@127.0.0.1:5432/rpw?serverVersion=16&charset=utf8"`
 
+## Biztonság
+
+Többrétegű védelem (hálózat → web-határ → alkalmazás → adat → megfigyelés), rétegenként
+igazolva: **[SECURITY-LAYERS.md](SECURITY-LAYERS.md)**. Élesítés előtt: `bin/console rpw:security:check`.
+Mentés: `bin/console rpw:backup --keygen`, utána `rpw:backup` (titkosított, visszaellenőrzött).
+Szerversablonok: `deploy/`.
+
 ## OCR, iratbesorolás, levél
 
 A régi Netlify-függvények ugyanazon a címen (`/.netlify/functions/ocr|classify|sendmail`),

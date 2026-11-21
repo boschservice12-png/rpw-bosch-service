@@ -1,0 +1,50 @@
+# ════════════════════════════════════════════════════════════════
+#  RPW — Caddy (1–2. réteg): automatikus HTTPS (Let's Encrypt), HTTP→HTTPS,
+#  a statikus fájlok (public/vendor) és a PHP-FPM a Symfonyhoz.
+#  A biztonsági fejléceket a Symfony maga adja; itt a public/ fájlokra is.
+#  Csere: rpw.example.ro → a valódi domain.   Ellenőrzés: caddy validate
+# ════════════════════════════════════════════════════════════════
+{
+	email admin@example.ro
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+rpw.example.ro {
+	root * /srv/rpw/symfony/public
+	encode zstd gzip
+
+	# a kérés mérete: a legnagyobb legitim kérés a 12 MB-os levél/OCR
+	request_body {
+		max_size 16MB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+		-X-Powered-By
+	}
+
+	# rejtett és belső fájlok soha (pl. .env, .git)
+	@hidden path */.*
+	respond @hidden 404
+
+	php_fastcgi unix//run/php/php8.3-fpm.sock {
+		root /srv/rpw/symfony/public
+		index index.php
+		try_files {path} index.php
+	}
+	file_server
+
+	log {
+		output file /var/log/caddy/rpw-access.log {
+			roll_size 50MiB
+			roll_keep 10
+		}
+		format json
+	}
+}

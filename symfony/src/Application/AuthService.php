@@ -24,8 +24,14 @@ final class AuthService
 {
     private const EXTEND_AFTER_SECONDS = 600;
 
-    public function __construct(private readonly Connection $db, private readonly ClockInterface $clock)
-    {
+    public function __construct(
+        private readonly Connection $db,
+        private readonly ClockInterface $clock,
+        private readonly SecurityLog $sec,
+        // ABSZOLÚT felső határ: a csúszó lejárat sem hosszabbíthat ezen túl (egy műszak + tartalék)
+        #[\Symfony\Component\DependencyInjection\Attribute\Autowire('%env(int:default:rpw.session_max_hours:RPW_SESSION_MAX_HOURS)%')]
+        private readonly int $sessionMaxHours = 24,
+    ) {
     }
 
     /** Névsor a belépéshez — PIN nélkül, szándékosan nyilvános. */
@@ -53,13 +59,16 @@ final class AuthService
         $e = $this->db->fetchAssociative('SELECT id, pin_hash FROM rpw_employees WHERE id = :id AND shop_id = :shop AND active = :t',
             ['id' => $employeeId, 'shop' => $shopId, 't' => true], ['t' => \Doctrine\DBAL\ParameterType::BOOLEAN]);
         if ($e === false) {
+            $this->sec->event('login_unknown_employee', ['employee' => $employeeId], $shopId);
             throw new ApiError('not_found', [], 404);
         }
+        $name = (string) $this->db->fetchOne('SELECT name FROM rpw_employees WHERE id = :id', ['id' => $employeeId]);
         $now = $this->clock->now();
         $windowStart = $now->modify('-'.PinPolicy::LOCK_MINUTES.' minutes');
         $att = $this->db->fetchAssociative('SELECT window_start, n FROM rpw_pin_attempt WHERE employee_id = :id', ['id' => $employeeId]);
         $inWindow = $att !== false && new \DateTimeImmutable((string) $att['window_start']) > $windowStart;
         if ($inWindow && (int) $att['n'] >= PinPolicy::MAX_ATTEMPTS) {
+            $this->sec->event('login_while_locked', [], $shopId, $name);
             throw new ApiError('locked');
         }
 
@@ -71,6 +80,8 @@ final class AuthService
                    window_start = CASE WHEN rpw_pin_attempt.window_start > :ws THEN rpw_pin_attempt.window_start ELSE :now END',
                 ['id' => $employeeId, 'now' => Sql::ts($now), 'ws' => Sql::ts($windowStart)],
             );
+            $n = (int) $this->db->fetchOne('SELECT n FROM rpw_pin_attempt WHERE employee_id = :id', ['id' => $employeeId]);
+            $this->sec->event($n >= PinPolicy::MAX_ATTEMPTS ? 'account_locked' : 'bad_pin', ['attempts' => $n], $shopId, $name);
             throw new ApiError('bad_pin');
         }
 
@@ -82,12 +93,17 @@ final class AuthService
                 'exp' => Sql::ts($now->modify('+'.PinPolicy::SESSION_HOURS.' hours'))],
         );
         $this->db->executeStatement('UPDATE rpw_employees SET last_login = :now WHERE id = :id', ['now' => Sql::ts($now), 'id' => $employeeId]);
+        $this->sec->event('login_ok', [], $shopId, $name);
 
         return ['token' => $token, 'employee' => $this->actorFromToken($token)?->toArray()];
     }
 
     public function logout(string $token): void
     {
+        $a = $this->actorFromToken($token);
+        if ($a !== null) {
+            $this->sec->event('logout', [], $a->shopId, $a->name);
+        }
         $this->db->executeStatement('UPDATE rpw_sessions SET revoked_at = :now WHERE token_hash = :h AND revoked_at IS NULL',
             ['now' => Sql::ts($this->clock->now()), 'h' => hash('sha256', $token)]);
     }
@@ -100,7 +116,7 @@ final class AuthService
         }
         $h = hash('sha256', $token);
         $r = $this->db->fetchAssociative(
-            'SELECT e.id, e.name, e.shop_id, e.role_code, e.active, ro.can, s.expires_at, s.revoked_at
+            'SELECT e.id, e.name, e.shop_id, e.role_code, e.active, ro.can, s.expires_at, s.revoked_at, s.created_at
              FROM rpw_sessions s JOIN rpw_employees e ON e.id = s.employee_id
              LEFT JOIN rpw_roles ro ON ro.shop_id = e.shop_id AND ro.code = e.role_code AND ro.active = :t
              WHERE s.token_hash = :h AND s.shop_id = e.shop_id',
@@ -114,8 +130,17 @@ final class AuthService
         if ($exp <= $now) {
             return null;
         }
-        // csúszó lejárat — legfeljebb 10 percenként egy írás
+        // abszolút határ a létrehozástól — a használat sem tartja életben örökké
+        $hardEnd = $r['created_at'] !== null
+            ? (new \DateTimeImmutable((string) $r['created_at']))->modify('+'.$this->sessionMaxHours.' hours') : null;
+        if ($hardEnd !== null && $hardEnd <= $now) {
+            return null;
+        }
+        // csúszó lejárat — legfeljebb 10 percenként egy írás, de az abszolút határon túl soha
         $fresh = $now->modify('+'.PinPolicy::SESSION_HOURS.' hours');
+        if ($hardEnd !== null && $fresh > $hardEnd) {
+            $fresh = $hardEnd;
+        }
         if ($fresh->getTimestamp() - $exp->getTimestamp() > self::EXTEND_AFTER_SECONDS) {
             $this->db->executeStatement('UPDATE rpw_sessions SET expires_at = :exp WHERE token_hash = :h', ['exp' => Sql::ts($fresh), 'h' => $h]);
         }
@@ -137,7 +162,8 @@ final class AuthService
     }
 
     /** PIN beállítása: saját mindig, másé csak `team` joggal. Gyenge vagy ütköző PIN tiltva. */
-    public function setPin(Actor $a, string $employeeId, string $pin): void
+    /** @param ?string $keepToken a hívó saját munkamenete (saját PIN-cserénél megmarad) */
+    public function setPin(Actor $a, string $employeeId, string $pin, ?string $keepToken = null): void
     {
         if ($employeeId !== $a->id && !$a->can('team')) {
             throw new ApiError('not_allowed', ['need' => 'team']);
@@ -161,6 +187,10 @@ final class AuthService
             throw new ApiError('not_found');
         }
         $this->db->executeStatement('DELETE FROM rpw_pin_attempt WHERE employee_id = :id', ['id' => $employeeId]);
+        // új PIN → a dolgozó MINDEN más munkamenete megszűnik (pl. egy elveszett telefonon)
+        $this->db->executeStatement('UPDATE rpw_sessions SET revoked_at = :now WHERE employee_id = :id AND revoked_at IS NULL AND token_hash <> :keep',
+            ['now' => Sql::ts($now), 'id' => $employeeId, 'keep' => $keepToken !== null ? hash('sha256', $keepToken) : '']);
+        $this->sec->event('pin_set', ['employee' => $employeeId, 'self' => $a->id === $employeeId], $a->shopId, $a->name);
         $this->db->executeStatement('INSERT INTO rpw_pin_log (shop_id, employee_id, set_by, self_set, created_at) VALUES (:s, :e, :b, :self, :now)',
             ['s' => $a->shopId, 'e' => $employeeId, 'b' => $a->id, 'self' => $a->id === $employeeId, 'now' => Sql::ts($now)],
             ['self' => \Doctrine\DBAL\ParameterType::BOOLEAN]);
@@ -194,6 +224,9 @@ final class AuthService
             throw new ApiError('not_found');
         }
 
-        return (int) $this->db->executeStatement('DELETE FROM rpw_pin_attempt WHERE employee_id = :id', ['id' => $employeeId]);
+        $n = (int) $this->db->executeStatement('DELETE FROM rpw_pin_attempt WHERE employee_id = :id', ['id' => $employeeId]);
+        $this->sec->event('pin_unlock', ['employee' => $employeeId, 'cleared' => $n], $a->shopId, $a->name);
+
+        return $n;
     }
 }

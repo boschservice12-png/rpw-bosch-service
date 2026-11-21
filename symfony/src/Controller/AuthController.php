@@ -62,7 +62,7 @@ final class AuthController
     public function setPin(Request $r, #[CurrentUser] ActorUser $u): JsonResponse
     {
         $b = JsonInput::body($r);
-        $this->auth->setPin($u->actor, (string) (JsonInput::str($b, 'employee_id') ?? $u->actor->id), (string) JsonInput::str($b, 'pin'));
+        $this->auth->setPin($u->actor, (string) (JsonInput::str($b, 'employee_id') ?? $u->actor->id), (string) JsonInput::str($b, 'pin'), $u->token);
 
         return new JsonResponse(['ok' => true]);
     }
