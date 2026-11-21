@@ -1,0 +1,44 @@
+const OUT = process.env.E2E_OUT || require('path').resolve(__dirname, '../../var/e2e');
+const { start, login } = require('./lib');
+(async () => {
+  const { b, p, log } = await start();
+  const step = (t) => log.push('\n### ' + t);
+  step('belépés: Ferenc Admin');
+  await login(p, 'Ferenc Admin', '4826');
+  step('új munka');
+  await p.click('text=Lucrare noua'); await p.waitForURL(/rpw-recepcio-red/, { timeout: 15000 }); await p.waitForLoadState('networkidle'); await p.waitForFunction(() => window.JOB && JOB.id); await p.waitForTimeout(600);
+  await p.waitForLoadState('networkidle'); await p.waitForTimeout(700);
+  const jobId = await p.evaluate(() => (window.JOB && JOB.id) || new URL(location.href).searchParams.get('job'));
+  log.push('  munka: ' + jobId + '  url: ' + p.url());
+  step('saját zsebes kár + ügyféladat');
+  await p.click('text=Dauna auto');
+  await p.waitForFunction(() => document.querySelectorAll('input').length > 5, null, { timeout: 15000 });
+  await p.waitForTimeout(400);
+  const t = await p.$$('input:not([type=file]):visible');
+  await t[1].fill('Ion Popescu'); await t[2].fill('0740123456');
+  await p.keyboard.press('Tab'); await p.waitForTimeout(400);
+  step('talon fotó (Import)');
+  const talon = await p.$$('input[type=file][onchange="upTalon(event)"]');
+  await talon[1].setInputFiles(OUT + '/car.png'); await p.waitForTimeout(2500);
+  step('6 áttekintő fotó');
+  await p.evaluate(() => tS('photos')); await p.waitForTimeout(300);
+  for (let x = 0; x < 6; x++) {
+    const inp = await p.$$(`input[type=file][onchange="upOv(${x},event)"]`);
+    await inp[inp.length - 1].setInputFiles(OUT + '/car.png'); await p.waitForTimeout(1200);
+  }
+  step('23 karosszériaelem → OK');
+  await p.evaluate(() => tS('elems')); await p.waitForTimeout(300);
+  const n = await p.$$eval('.eb-ok', es => { es.forEach(e => e.click()); return es.length; });
+  log.push('  OK-ra állítva: ' + n);
+  await p.waitForTimeout(2500);
+  await p.screenshot({ path: OUT + '/04-reception-filled.png', fullPage: true });
+  step('fázis lezárása (closeR)');
+  await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await p.click('button[onclick="closeR()"]');
+  await p.waitForTimeout(3500);
+  log.push('  url most: ' + p.url());
+  await p.screenshot({ path: OUT + '/05-after-reception.png' });
+  require('fs').writeFileSync(OUT + '/job.txt', jobId || '');
+  console.log(log.join('\n'));
+  await b.close();
+})();

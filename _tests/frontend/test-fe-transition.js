@@ -176,6 +176,40 @@ console.log('\n5. A tölcsér a SZERVERRE megy (valódi modul, valódi hívás)'
   eq(JOB.phase, 2, '  a következő fázis aktív');
 }
 
+console.log('\n5b. RPW-004: SAVE_BEFORE_TRANSITION — előbb mentés, utána átmenet az ÚJ verzióval');
+{
+  const boot = bootPage('rpw-control-red.html', {
+    cfg: { SAVE_BEFORE_TRANSITION:true },
+    resp: {
+      rpw_patch_v3:   { data:{ ok:true, version:9, data:{ control:{ allDone:true } } }, error:null },
+      rpw_transition: { data:{ ok:true, version:10, data:{ phase:7 } }, error:null }
+    }
+  });
+  const w = boot.w;
+  w.RPWData.init(boot.sb, {});
+  const JOB = { id:'J-UI-2', version:8, phases:{'6':{status:'active'}}, rework:[], control:{ allDone:true } };
+  const saves = [];
+  const res = await w.RPWWorkflow.commitCriticalTransition(JOB, function(){
+    throw new Error('A HELYI MUTÁCIÓ NEM FUTHAT LE, ha a szerver dönt!');
+  }, { action:'complete', phase:6,
+       save:function(){ saves.push(JOB.version); return w.RPWSave.commitConfirmed(boot.sb, JOB); } });
+  eq(saves.length, 1, 'az előzetes mentés PONTOSAN egyszer futott');
+  eq(boot.RPC.map(r => r.name).join(','), 'rpw_patch_v3,rpw_transition', '  sorrend: mentés, utána átmenet');
+  eq(boot.RPC[1].args.p_expected_version, 9, '  az átmenet a mentés ÚJ verzióját viszi');
+  eq(res.ok, true, 'a művelet sikeres');
+  eq(JOB.version, 10, 'a végső verziót átvette');
+}
+{
+  // a kapcsoló NÉLKÜL a V4-szabály változatlan: a régi mentési út nem fut
+  const boot = bootPage('rpw-control-red.html', {
+    resp: { rpw_transition: { data:{ ok:false, error:'requirements_missing', message:'x', missing:[] }, error:null } }
+  });
+  boot.w.RPWData.init(boot.sb, {});
+  await boot.w.RPWWorkflow.commitCriticalTransition({ id:'J-UI-3', version:3, phases:{}, rework:[] }, null,
+    { action:'complete', phase:6, save:function(){ throw new Error('nem futhat'); } });
+  eq(boot.RPC.map(r => r.name).join(','), 'rpw_transition', 'kapcsoló nélkül csak az átmenet fut');
+}
+
 console.log('\n6. SZERVERELUTASÍTÁS után a helyi állapot VÁLTOZATLAN');
 {
   const boot = bootPage('rpw-recepcio-red.html', {

@@ -297,6 +297,9 @@
       var rej=serverRejection(d);
       if(rej) return {ok:false, kind:rej.kind, code:rej.code, error:rej};
       lsDel('rpw_pending_'+job.id);
+      // RPW-004: a szerver új verzióját vesszük át — enélkül a rá következő
+      // fázisváltás a RÉGI verziót küldené, és version_conflict-ot kapna.
+      if(d && typeof d.version === 'number') job.version = d.version;
       return {ok:true, data:(d&&d.data!==undefined)?d.data:d};
     }catch(e){
       return {ok:false, kind:(e&&e.message==='timeout')?'timeout':'network', error:e};

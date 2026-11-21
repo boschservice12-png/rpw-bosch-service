@@ -29,7 +29,21 @@ final class PatchGuardAndPolicyTest extends TestCase
         self::assertFalse($r['ok']);
         self::assertSame('close', $r['need']);
         self::assertSame(['closing.factura'], $r['fields']);
-        self::assertSame('work', PatchGuard::capabilityFor('ismeretlenMezo'), 'ismeretlen mezőt nem írhat bárki');
+        self::assertSame('any_write', PatchGuard::capabilityFor('ismeretlenMezo'));
+        self::assertTrue(PatchGuard::permission(['observatii' => 'x'], $rec)['ok'], 'ismeretlen mezőt bármely írási jog írhat');
+        self::assertFalse(PatchGuard::permission(['observatii' => 'x'], Fixtures::actor([]))['ok'], 'a csak-olvasó szerep nem');
+    }
+
+    public function testOnlyRealChangesCount(): void
+    {
+        $stored = ['client' => 'A', 'phase' => 2, 'phases' => ['1' => ['status' => 'done']], 'rows' => [1, 2], 'h' => 2];
+        $full = ['client' => 'B', 'phase' => 2, 'phases' => ['1' => ['status' => 'done']], 'rows' => [1, 2], 'h' => 2.0];
+        self::assertSame(['client' => 'B'], PatchGuard::changes($stored, $full));
+        self::assertSame([], PatchGuard::protectedHits(PatchGuard::changes($stored, $full)));
+        $forged = $full;
+        $forged['phases']['1']['status'] = 'pending';
+        self::assertSame(['phases.1.status'], PatchGuard::protectedHits(PatchGuard::changes($stored, $forged)));
+        self::assertSame(['rows' => [1]], PatchGuard::changes($stored, ['rows' => [1]]));
     }
 
     public function testDeepMerge(): void

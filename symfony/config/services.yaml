@@ -1,5 +1,7 @@
 # RPW — szolgáltatások. A domain (src/Domain) keretrendszer-független, tiszta PHP.
 parameters:
+    rpw.login_ip_limit: 300
+    rpw.storage_default: '%kernel.project_dir%/var/storage'
 
 services:
     _defaults:
@@ -14,6 +16,12 @@ services:
 
     # Az állapotgép állapotmentes, egy példány elég.
     App\Domain\Workflow\TransitionEngine: ~
+
+    # Fájltároló: helyi lemez, aláírt URL-ekkel (RPW_STORAGE_DIR felülírja).
+    App\Infrastructure\Storage\FileStore:
+        arguments:
+            $root: '%env(default:rpw.storage_default:RPW_STORAGE_DIR)%'
+            $secret: '%env(APP_SECRET)%'
 
     # Adatbázis: PostgreSQL élesben (a meglévő Supabase-adatbázis IS lehet), SQLite a tesztekben.
     Doctrine\DBAL\Connection:

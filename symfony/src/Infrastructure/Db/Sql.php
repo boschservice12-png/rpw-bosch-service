@@ -34,7 +34,7 @@ final class Sql
         if ($v === null || $v === '') {
             return [];
         }
-        $d = json_decode((string) $v, true, 512, \JSON_THROW_ON_ERROR);
+        $d = \App\Infrastructure\Json::decode((string) $v);
 
         return \is_array($d) ? $d : [];
     }

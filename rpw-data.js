@@ -250,7 +250,7 @@
       // 006: a `p_reason` EMBERI INDOKLÁS, a `p_rework_id` AZONOSÍTÓ,
       // a `p_note` a rework lezárási megjegyzése. A V3-ban mindhárom
       // ugyanabba a paraméterbe ment — pedig két külön dolog.
-      return ['rpw_transition', {
+      var args = {
         p_token: a.token,
         p_id: a.id,
         p_phase: (phase != null ? Number(phase) : null),
@@ -259,7 +259,11 @@
         p_reason:    (a.reason || null),
         p_rework_id: (a.reworkId || null),
         p_note:      (a.note || null)
-      }];
+      };
+      // RPW-004: a rework részletei (kategória, felelős, végrehajtó). CSAK ha
+      // vannak: a régi Supabase-függvény nem ismeri a paramétert.
+      if(a.extra && typeof a.extra === 'object') args.p_extra = a.extra;
+      return ['rpw_transition', args];
     }
     var TXN_RPC = {};
     Object.keys(TXN_ACTION).forEach(function(k){

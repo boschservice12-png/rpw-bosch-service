@@ -6,10 +6,13 @@ framework:
     trusted_proxies: '%env(default::TRUSTED_PROXIES)%'
 
     rate_limiter:
-        # IP-alapú fék a belépésre (a dolgozónkénti 10/15 perc zár MELLETT)
+        # IP-alapú fék a belépésre — a dolgozónkénti zár (10 rossz PIN / 15 perc) MELLETT.
+        # Egy műhelyben MINDENKI ugyanarról az IP-ről jön (közös hálózat), ezért a
+        # korlát a teljes csapat műszakkezdését bírja; a próbálgatás ellen a
+        # dolgozónkénti zár véd. Állítható: RPW_LOGIN_IP_LIMIT.
         login:
             policy: sliding_window
-            limit: 30
+            limit: '%env(int:default:rpw.login_ip_limit:RPW_LOGIN_IP_LIMIT)%'
             interval: '15 minutes'
             lock_factory: null
 

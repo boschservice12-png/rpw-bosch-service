@@ -123,6 +123,19 @@ final class AuthService
         return new Actor((string) $r['id'], (string) $r['name'], (string) $r['shop_id'], $r['role_code'], Actor::normalizeCaps($r['can']));
     }
 
+    /**
+     * A felület által várt dolgozói rekord: a `role` a szerepkör FELIRATA
+     * (pl. „Műszakvezető”), mert a kliens RPWRoles.mapEmployeeRole ezt képezi le.
+     */
+    public function employeeInfo(Actor $a): array
+    {
+        $label = $a->roleCode === null ? null : $this->db->fetchOne(
+            'SELECT label FROM rpw_roles WHERE shop_id = :s AND code = :c', ['s' => $a->shopId, 'c' => $a->roleCode]);
+
+        return ['id' => $a->id, 'name' => $a->name, 'shop_id' => $a->shopId, 'role' => $label === false || $label === null ? $a->roleCode : $label,
+            'role_code' => $a->roleCode, 'department' => null, 'can' => (object) $a->can];
+    }
+
     /** PIN beállítása: saját mindig, másé csak `team` joggal. Gyenge vagy ütköző PIN tiltva. */
     public function setPin(Actor $a, string $employeeId, string $pin): void
     {
@@ -164,16 +177,23 @@ final class AuthService
             'SELECT e.id, e.name, p.n, p.window_start FROM rpw_pin_attempt p JOIN rpw_employees e ON e.id = p.employee_id
              WHERE e.shop_id = :shop AND p.window_start > :ws', ['shop' => $a->shopId, 'ws' => Sql::ts($ws)]);
 
+        $now = $this->clock->now()->getTimestamp();
+
         return array_map(static fn (array $r) => ['id' => $r['id'], 'name' => $r['name'], 'attempts' => (int) $r['n'],
-            'locked' => (int) $r['n'] >= PinPolicy::MAX_ATTEMPTS], $rows);
+            'locked' => (int) $r['n'] >= PinPolicy::MAX_ATTEMPTS,
+            'minutesLeft' => max(0, (int) ceil(((new \DateTimeImmutable((string) $r['window_start']))->getTimestamp() + PinPolicy::LOCK_MINUTES * 60 - $now) / 60))], $rows);
     }
 
-    public function unlockPin(Actor $a, string $employeeId): void
+    /** @return int a törölt próbálkozás-sorok száma */
+    public function unlockPin(Actor $a, string $employeeId): int
     {
         if (!$a->can('team')) {
             throw new ApiError('not_allowed', ['need' => 'team']);
         }
-        $this->db->executeStatement('DELETE FROM rpw_pin_attempt WHERE employee_id IN (SELECT id FROM rpw_employees WHERE id = :id AND shop_id = :shop)',
-            ['id' => $employeeId, 'shop' => $a->shopId]);
+        if (!Uuid::isValid($employeeId) || $this->db->fetchOne('SELECT 1 FROM rpw_employees WHERE id = :id AND shop_id = :shop', ['id' => $employeeId, 'shop' => $a->shopId]) === false) {
+            throw new ApiError('not_found');
+        }
+
+        return (int) $this->db->executeStatement('DELETE FROM rpw_pin_attempt WHERE employee_id = :id', ['id' => $employeeId]);
     }
 }

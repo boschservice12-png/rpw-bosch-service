@@ -7,14 +7,20 @@ JSON-adatszerkezet (`rpw_jobs.data`). Ami változik: **a szabály egy helyen él
 
 Az átállás terve: [`../RPW-004-SYMFONY-ATALLAS.md`](../RPW-004-SYMFONY-ATALLAS.md).
 
-## Gyorsindítás (fejlesztés, SQLite)
+## A teljes rendszer helyben, egy paranccsal
 
 ```bash
-composer install
-php bin/console rpw:db:init
-php bin/console rpw:shop:seed "Bosch Service" "Név Vezetéknév" 4826
-php -S 127.0.0.1:8000 -t public
+symfony/bin/rpw-local
 ```
+
+Megnyitás: **http://localhost:8000/rpw-login.html** · belépés: *Ferenc Admin* · PIN **4826**
+(a mintacsapat PIN-jei a parancs kimenetében). Újrakezdés tiszta adattal: `symfony/bin/rpw-local --reset`.
+
+A Symfony a **meglévő felületet** szolgálja ki a repó gyökeréből — a 13 oldal kódja
+nem változik. Két dolgot igazít menet közben: a `rpw-config.js` a helyi szerverre mutat
+(biztonságos kapcsolókkal), és a CDN-es könyvtárak (supabase-js, jszip, jspdf, chart.js)
+helyett a `public/vendor/` rögzített másolatai töltődnek. Adat: `var/rpw-local.db`, fájlok:
+`var/storage/` — csak a te gépeden, az éles Supabase-hez nem nyúl.
 
 Éles példa (PostgreSQL) a `.env.local`-ban:
 `DATABASE_URL="postgresql://rpw:JELSZO@127.0.0.1:5432/rpw?serverVersion=16&charset=utf8"`
@@ -28,8 +34,18 @@ RPW_TEST_EXISTING_SCHEMA=1 DATABASE_URL="postgresql://…" php vendor/bin/phpuni
                        # a RÉGI rendszer migrált sémáján (_migrations/001–018)
 ```
 
-Mért eredmény (2026-11-21): **40 teszt, 182 ellenőrzés — mindhárom módban zöld**
+Mért eredmény (2026-11-21): **53 teszt, 299 ellenőrzés — mindhárom módban zöld**
 (SQLite 3.45 · PostgreSQL 18 friss séma · PostgreSQL 18 a régi migrációkkal).
+
+**Böngészős végponttól végpontig próba** (fut a `bin/rpw-local`, Node + Playwright kell):
+
+```bash
+symfony/tests/E2E/run.sh
+```
+
+Egy munka 1→7 a valódi oldalakon: recepció valódi fotófeltöltéssel, értékelés, lakatos,
+fényező, kontroll, lezárás — szerepkörönként más belépett dolgozóval, és egy elutasított
+lezárási kísérlettel. Mért: **sikeres**, minden fázist a valódi belépett ember neve zárt.
 
 ## Felépítés
 
@@ -45,7 +61,12 @@ src/Domain/            TISZTA PHP, keretrendszer nélkül — itt él az üzleti
 src/Application/       tranzakció, verziózár, audit, bérlő-szűrés
 src/Infrastructure/Db/ DBAL-kapcsolat, séma, séma-ellenőrzés
 src/Security/          Bearer-token hitelesítés, egységes JSON-hibaválasz
-src/Controller/        REST API
+src/Controller/        REST API (/api/…) + a meglévő felület kiszolgálása
+src/Controller/Compat/ a MEGLÉVŐ felület szerződése: /rest/v1/rpc/<fn>, /functions/v1/rpw-storage,
+                       /storage/v1/object/… — ugyanazok a nevek és válaszalakok, mint a Supabase-en
+src/Infrastructure/Storage  helyi fájltároló, aláírt, időkorlátos, egy fájlra szóló URL-ekkel
+src/Infrastructure/Json     JSON-dekódolás, amely MEGŐRZI az üres objektumot ({} ≠ [])
+tests/E2E/             böngészős végponttól végpontig próba (Playwright)
 src/Command/           rpw:db:init · rpw:db:check · rpw:shop:seed
 ```
 
@@ -60,6 +81,9 @@ src/Command/           rpw:db:init · rpw:db:check · rpw:shop:seed
 | Minden elutasítás naplózva | `denied:<kód>` az `rpw_audit`-ban, a tranzakció visszagörgetése után is |
 | PIN-zár | 10 rossz PIN / 15 perc → zár; + IP-alapú fék; gyenge és ütköző PIN tiltva |
 | Párhuzamos üzem | a PIN-hash `$2a$` (pgcrypto-kompatibilis); a tábla- és oszlopnevek a régiek |
+| Felülbírálás csak kifejezetten | az `override` JOG önmagában nem ugrik fázist / reworkot; ehhez indokolt `override` művelet kell, és az átlépett hiányok a fázison naplózódnak |
+| Nincs csendes adatvesztés | az üres `{}` objektum `{}` marad (a felület ebbe ír kulcsokat) |
+| Régi felület mentése | csak a TÉNYLEGES változás számít; a védett workflow-mezőket a szerver kiszűri (a régi kliens a teljes munkát küldi) — írni így sem lehet őket |
 
 ## API
 

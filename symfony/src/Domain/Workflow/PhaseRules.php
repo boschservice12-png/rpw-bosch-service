@@ -66,9 +66,20 @@ final class PhaseRules
         if (!\is_array($job['closing'] ?? null)) {
             $job['closing'] = [];
         }
-        if (!\is_array($job['control'] ?? null)) {
-            $job['control'] = ['results' => [], 'history' => [], 'allDone' => false, 'lastResult' => null];
+        // a kliens migrateJob-jával AZONOS alapmezők — különben egy teljes-munka
+        // mentés hamis „változást” mutatna (pl. egy recepciós closing-mezőt írna)
+        foreach (['vehicleOperational', 'finalControlConfirmed', 'documentsDeliveredToOffice', 'handoverBy', 'handoverAt'] as $f) {
+            if (!\array_key_exists($f, $job['closing'])) {
+                $job['closing'][$f] = null;
+            }
         }
+        if (!\is_array($job['control'] ?? null)) {
+            $job['control'] = ['results' => new \stdClass(), 'history' => [], 'allDone' => false, 'lastResult' => null];
+        }
+        if (!\is_array($job['control']['history'] ?? null)) {
+            $job['control']['history'] = [];
+        }
+        $job['workflowVersion'] = 1;
         $job['phase'] = self::currentActivePhase($job);
         if (!\is_bool($job['inchis'] ?? null)) {
             $job['inchis'] = $job['phases']['7']['status'] === Phase::DONE;

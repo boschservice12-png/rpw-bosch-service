@@ -22,7 +22,10 @@ final class JsonInput
             return [];
         }
         try {
-            $d = json_decode($raw, true, 64, \JSON_THROW_ON_ERROR);
+            $d = \App\Infrastructure\Json::decode($raw, 64);
+            if ($d instanceof \stdClass) {
+                $d = [];
+            }
         } catch (\JsonException) {
             throw new ApiError('bad_request', ['detail' => 'invalid json']);
         }

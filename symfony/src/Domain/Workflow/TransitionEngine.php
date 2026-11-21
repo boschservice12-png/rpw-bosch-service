@@ -77,8 +77,8 @@ final class TransitionEngine
             throw new TransitionDenied('already_done');
         }
         $override = $actor->can('override');
-        // a nyitott rework a pontosabb ok — előbb jelezzük, mint a sorrendet
-        if (PhaseRules::openReworks($job) !== [] && !$override) {
+        // Nyitott rework mellett NINCS lezárás — a jogosultság sem írja felül csendben.
+        if (PhaseRules::openReworks($job) !== []) {
             throw new TransitionDenied('open_rework');
         }
         $this->assertEnterable($job, $phase, $actor);
@@ -86,8 +86,14 @@ final class TransitionEngine
         if ($missing !== []) {
             throw new TransitionDenied('requirements_missing', ['missing' => $missing]);
         }
+        // a felülbírálási joggal ÁTLÉPETT (felülbírálható) hiányok nyoma a fázison és a naplóban
+        $overridden = $override ? array_values(array_diff(PhaseRules::missing($job, $phase), $missing)) : [];
+        if ($overridden !== []) {
+            $reason = trim($reason.' [override: '.implode(', ', $overridden).']');
+        }
 
-        $job = $this->set($job, $phase, Phase::DONE, ['finished' => $at, 'completedBy' => $actor->name], $at);
+        $job = $this->set($job, $phase, Phase::DONE, ['finished' => $at, 'completedBy' => $actor->name]
+            + ($overridden !== [] ? ['overriddenRequirements' => $overridden] : []), $at);
         $next = $this->activateNext($job, $phase, $at);
         $job = $next['job'];
         if ($phase === Phase::INCHIDERE) {
@@ -291,11 +297,12 @@ final class TransitionEngine
         }
     }
 
+    /**
+     * A fázissorrend. A felülbírálási JOG önmagában NEM ugrik át fázist: ehhez
+     * kifejezett, indokolt `override` művelet kell (dokumentált kivétel, grant).
+     */
     private function assertEnterable(array $job, int $phase, Actor $actor): void
     {
-        if ($actor->can('override')) {
-            return;
-        }
         $e = PhaseRules::canEnter($job, $phase);
         if (!$e['allowed']) {
             $prev = $phase - 1;

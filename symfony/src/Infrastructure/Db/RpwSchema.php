@@ -48,6 +48,9 @@ final class RpwSchema
             ['actor', Types::TEXT, false], ['action', Types::TEXT], ['phase', Types::TEXT, false], ['patch', Types::JSONB, false],
             ['prev_version', Types::INTEGER, false], ['new_version', Types::INTEGER, false], ['created_at', Types::DATETIMETZ_IMMUTABLE, false]],
             'pk' => ['id'], 'idx' => [['job_id']]],
+        'rpw_posts' => ['cols' => [['id', Types::GUID], ['shop_id', Types::GUID], ['code', Types::TEXT], ['label', Types::TEXT],
+            ['note', Types::TEXT, false], ['employee_id', Types::GUID, false], ['sort_order', Types::INTEGER, true, ['default' => 100]],
+            ['active', Types::BOOLEAN, true, ['default' => true]]], 'pk' => ['id'], 'uniq' => [['shop_id', 'code']]],
         'rpw_job_counters' => ['cols' => [['shop_id', Types::GUID], ['prefix', Types::TEXT], ['n', Types::INTEGER, true, ['default' => 0]]],
             'pk' => ['shop_id', 'prefix']],
     ];

@@ -57,6 +57,49 @@ final class ApiTest extends ApiTestCase
         self::assertSame('bad_request', $this->call('PATCH', '/api/jobs/J1', ['patch' => 'x'], $t)['error']);
     }
 
+    public function testFullJobSaveOnlyChecksRealChanges(): void
+    {
+        [$s, $ids] = $this->shop('A', ['receptie' => ['Rita Recepție', '4826']]);
+        $t = $this->login($s, $ids['receptie'], '4826');
+        $forged = $this->call('PATCH', '/api/jobs/J1', ['patch' => ['client' => 'X', 'phase' => 5, 'inchis' => true]], $t);
+        self::assertSame('protected_workflow_field', $forged['error'], 'a REST API szigorú: workflow-mező új munkán sem');
+        $job = $this->call('PATCH', '/api/jobs/J1', ['patch' => ['client' => 'X']], $t);
+        self::assertSame(1, $job['data']['phase']);
+        $full = $job['data'];
+        $full['client'] = 'Y';
+        $full['observatii'] = 'zgârietură';
+        $full['version'] = 1;
+        $r = $this->call('PATCH', '/api/jobs/J1', ['patch' => $full, 'expected_version' => 1], $t);
+        self::assertTrue($r['ok'], json_encode($r));
+        self::assertArrayNotHasKey('version', $r['data'], 'a metaadat nem kerül az adatba');
+        $full = $r['data'];
+        $full['phases']['1']['status'] = 'done';
+        $d = $this->call('PATCH', '/api/jobs/J1', ['patch' => $full, 'expected_version' => 2], $t);
+        self::assertSame('protected_workflow_field', $d['error']);
+        self::assertSame(['phases.1.status'], $d['fields']);
+        $same = $this->call('PATCH', '/api/jobs/J1', ['patch' => $r['data'], 'expected_version' => 2], $t);
+        self::assertSame(2, $same['version'], 'változás nélkül nincs új verzió');
+    }
+
+    public function testFreshJobKeepsPendingPhasesAndNullFillIsNoChange(): void
+    {
+        [$s, $ids] = $this->shop('A', ['receptie' => ['Rita Recepție', '4826']]);
+        $t = $this->login($s, $ids['receptie'], '4826');
+        $pending = array_fill_keys(['1', '2', '3', '4', '5', '6', '7'], ['status' => 'pending', 'started' => null]);
+        $c = $this->call('PATCH', '/api/jobs/J1', ['patch' => ['client' => 'X', 'phases' => $pending]], $t);
+        self::assertSame('pending', $c['data']['phases']['1']['status'], 'friss munka: az 1. fázist a recepció indítja');
+        $forged = $this->call('PATCH', '/api/jobs/J2', ['patch' => ['client' => 'Y', 'phases' => ['1' => ['status' => 'done']]]], $t);
+        self::assertSame('protected_workflow_field', $forged['error'], 'előrehaladott állapot nem hozható új munkán');
+        // a kliens migrációja null-mezőket pótol — ez nem írás
+        $full = $c['data'];
+        foreach ($full['phases'] as $k => $p) {
+            $full['phases'][$k] += ['finished' => null, 'completedBy' => null, 'lastChangedAt' => null];
+        }
+        $full['client'] = 'Z';
+        $r = $this->call('PATCH', '/api/jobs/J1', ['patch' => $full, 'expected_version' => 1], $t);
+        self::assertTrue($r['ok'], json_encode($r));
+    }
+
     public function testRoleBasedFieldAndPhasePermissions(): void
     {
         [$s, $ids] = $this->shop('A', ['receptie' => ['Rita Recepție', '4826'], 'auditor' => ['Sanyi Szerelő', '5937']]);

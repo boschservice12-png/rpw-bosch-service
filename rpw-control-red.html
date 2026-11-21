@@ -366,7 +366,9 @@ window.mkRework=async function(targetPhase,mode){
   var res=await RPWWorkflow.commitCriticalTransition(JOB, function(){
     return RPWWorkflow.createRework(JOB,{ category:category, targetPhase:(mode==='manager'?6:targetPhase),
       description:desc, assignedTo:who, createdBy:(ctrl||'').trim(), seed:(JOB.rework?JOB.rework.length:0) });
-  }, {action:'rework_open', phase:(mode==='manager'?6:targetPhase), reason:desc, save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  }, {action:'rework_open', phase:(mode==='manager'?6:targetPhase), reason:desc,
+       extra:{category:category, description:desc, assigned_to:who, created_by:(ctrl||'').trim()},
+       save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
   if(!res.ok){
     if(res.notSynced){ toast(RPWWorkflow.t('wf_saved_not_synced',_ln),1); render(); return; }
     var errs=(res.result&&res.result.errors)||[];

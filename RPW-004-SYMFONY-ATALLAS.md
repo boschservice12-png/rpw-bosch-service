@@ -1,6 +1,6 @@
 # RPW-004 — Átállás Symfony-ra
 
-*Állapot: 2026-11-21 · 1. lépés kész (backend-mag) · a műhely a régi rendszeren dolgozik tovább*
+*Állapot: 2026-11-21 · 1. és 2. lépés kész HELYBEN (backend-mag + a meglévő felület az új backenden) · a műhely a régi rendszeren dolgozik tovább*
 
 ---
 
@@ -52,6 +52,41 @@ Ez utóbbi igazolja, hogy a két rendszer **ugyanazon az adatbázison** futhat.
 
 ---
 
+## 2b. A meglévő felület az új backenden (2. lépés — helyben kész)
+
+A 13 oldal kódja **nem változott**: a Symfony ugyanazt a HTTP-felületet adja, amit a
+Supabase-kliens hív (`/rest/v1/rpc/<fn>`, `/functions/v1/rpw-storage`, `/storage/v1/…`),
+ugyanazokkal a függvénynevekkel és válaszalakokkal. Indítás: `symfony/bin/rpw-local`.
+
+**Mérve, valódi böngészőben (Playwright):** egy munka 1→7 végigment — recepció valódi
+fotófeltöltéssel, értékelés, lakatos, fényező, kontroll, lezárás; minden fázist a valódi
+belépett ember neve zárt le, a lakatos lezárási kísérletét a szerver elutasította.
+
+### A próba közben talált és javított hibák
+
+| # | Hiba | Hatás | Állapot |
+|---|---|---|---|
+| 1 | Üres `{}` objektum `[]`-ként jött vissza a szerverről | a karosszériaelemek állapota **csendben elveszett** | ✅ javítva, teszttel |
+| 2 | A felülbírálási JOG csendben átugrotta a fázissorrendet és a nyitott reworkot (a régi szerver szabálya) | a kontroll lezárható volt nyitott fényezés mellett | ✅ csak kifejezett, indokolt `override` |
+| 3 | `commitConfirmed` mentés után nem vette át a verziót | a rá következő fázisváltás ütközést kapott volna | ✅ javítva (`rpw-save.js`) |
+| 4 | Szerveroldali átmenetnél a beírt adat nem mentődött a váltás előtt | a szerver régi adat alapján döntött volna | ✅ `SAVE_BEFORE_TRANSITION` kapcsoló (csak az új backenden) |
+| 5 | A rework felelőse / megjegyzése nem jutott el a szerverhez | a szerver nem tudta volna érvényesíteni a rework-szabályt | ✅ `p_extra` (csak ha van; a régi szerver nem kapja) |
+| 6 | IP-fék 30 belépés / 15 perc | egy közös hálózatú műhely műszakkezdéskor kizárta volna magát | ✅ 300 / 15 perc, állítható |
+| 7 | A felület külső CDN-ről tölti a könyvtárakat | CDN-kiesésnél nincs ZIP / PDF / statisztika | ✅ helyi rögzített másolat |
+
+### Az éles rendszer és a migrációs fájlok közti eltérések (a felület szerint igazítva)
+
+`rpw2_roster` sima listát, `rpw_job_get` lapos választ ad élesben — a 002-es fájl mást ír.
+Ez megerősíti a 3. pont 1. kockázatát: **az éles adatbázist a `rpw:db:check` előtt nem kötjük be.**
+
+### Nyitott, nem az átállás okozta
+
+| Mit | Miért számít |
+|---|---|
+| A dosszié a fotókat csak a régi `photos` listából számolja, a recepció már `photoKeys`-be ír | a dosszié 0/6 fotót mutat, pedig megvannak (élesben is) — külön feladat |
+| A záró fotók (7. fázis) base64-ként a munka JSON-jában | nagy adat, nem a tárolóban — külön feladat |
+| OCR, besorolás, e-mail (`/.netlify/functions/*`) | az új szerveren még `not_configured` — a 3. lépés |
+
 ## 3. Kockázatok és döntési pontok
 
 | # | Kockázat | Súly | Kezelés |
@@ -69,8 +104,8 @@ Ez utóbbi igazolja, hogy a két rendszer **ugyanazon az adatbázison** futhat.
 
 ```
  1. MAG          ✅  domain + API + tesztek                    (kész)
- 2. ADAPTER      ⏳  rpw-db.js / rpw-data.js: BACKEND='symfony' kapcsoló,
-                     oldalanként; a régi út visszakapcsolható
+ 2. FELÜLET      ✅  a meglévő 13 oldal az új backenden (Supabase-kompatibilis
+                     felület), helyben mérve; a régi út = az SB_URL visszaállítása
  3. SZOLGÁLTATÁS ⏳  ocr · classify · sendmail · fotótároló → Symfony
                      (Messenger háttérfeladat, aláírt fotó-URL)
  4. TELJES KÖR   ⏳  csapat/szerepkör/poszt-admin · „Ce facem azi” rangsor

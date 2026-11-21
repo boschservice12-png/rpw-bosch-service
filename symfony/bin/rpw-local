@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════
+#  RPW — HELYI RENDSZER EGY PARANCCSAL (felület + Symfony backend)
+#
+#    symfony/bin/rpw-local            indítás (első futáskor telepít + mintaadat)
+#    symfony/bin/rpw-local --reset    a helyi adatbázis és fájlok TÖRLÉSE, újrakezdés
+#
+#  Adat: symfony/var/rpw-local.db (SQLite) és symfony/var/storage/ — csak a
+#  te gépeden. Az éles Supabase-adatbázishoz NEM nyúl.
+# ════════════════════════════════════════════════════════════════
+set -euo pipefail
+cd "$(dirname "$0")/.."
+PORT="${RPW_PORT:-8000}"
+
+command -v php >/dev/null || { echo "Hiányzik: PHP 8.2+"; exit 1; }
+php -r 'exit(PHP_VERSION_ID >= 80200 ? 0 : 1);' || { echo "PHP 8.2+ kell (most: $(php -r 'echo PHP_VERSION;'))"; exit 1; }
+for ext in pdo_sqlite intl mbstring; do php -m | grep -qi "^$ext$" || echo "Figyelem: hiányzó PHP-bővítmény: $ext"; done
+
+if [ "${1:-}" = "--reset" ]; then
+  rm -f var/rpw-local.db; rm -rf var/storage; rm -f .env.local
+  echo "Helyi adat törölve."
+fi
+
+[ -d vendor ] || COMPOSER_ALLOW_SUPERUSER=1 composer install --no-interaction --no-progress
+
+if [ ! -f .env.local ]; then
+  SHOP_ID="$(php -r 'require "vendor/autoload.php"; echo Symfony\Component\Uid\Uuid::v4();')"
+  cat > .env.local <<ENV
+APP_ENV=dev
+APP_SECRET=$(php -r 'echo bin2hex(random_bytes(24));')
+DATABASE_URL="sqlite:///%kernel.project_dir%/var/rpw-local.db"
+RPW_SHOP_ID=$SHOP_ID
+ENV
+  echo "Létrehozva: .env.local (helyi beállítás, nem kerül a repóba)"
+fi
+SHOP_ID="$(grep '^RPW_SHOP_ID=' .env.local | cut -d= -f2)"
+
+php bin/console rpw:db:init
+php bin/console rpw:shop:seed "Bosch Service (helyi)" "Ferenc Admin" 4826 --id="$SHOP_ID" --demo
+
+echo
+echo "════════════════════════════════════════════════════════"
+echo "  RPW fut:  http://localhost:$PORT/rpw-login.html"
+echo "  Admin:    Ferenc Admin · PIN 4826   (a mintacsapat fent)"
+echo "  Leállítás: Ctrl+C"
+echo "════════════════════════════════════════════════════════"
+exec php -S "0.0.0.0:$PORT" -t public public/router.php

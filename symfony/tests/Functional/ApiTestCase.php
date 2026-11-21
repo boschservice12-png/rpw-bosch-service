@@ -25,7 +25,7 @@ abstract class ApiTestCase extends WebTestCase
         // RPW_TEST_EXISTING_SCHEMA=1: a régi rendszer VALÓDI sémáján fut (a _migrations/001–018
         // eredménye) — ez igazolja, hogy a két rendszer egy adatbázison párhuzamosan üzemelhet.
         if (($_SERVER['RPW_TEST_EXISTING_SCHEMA'] ?? getenv('RPW_TEST_EXISTING_SCHEMA')) === '1') {
-            $this->db->executeStatement('TRUNCATE shops, rpw_audit, rpw_job_counters, rpw_pin_attempt, rpw_pin_log, rpw_jobs, rpw_sessions, rpw_employees, rpw_roles CASCADE');
+            $this->db->executeStatement('TRUNCATE shops, rpw_audit, rpw_job_counters, rpw_pin_attempt, rpw_pin_log, rpw_jobs, rpw_sessions, rpw_posts, rpw_employees, rpw_roles CASCADE');
 
             return;
         }

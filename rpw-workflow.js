@@ -797,6 +797,14 @@
     }catch(e){ return false; }
   }
 
+  // RPW-004: előzetes mentés a fázisváltás előtt. CSAK az új (Symfony)
+  // backenden kapcsolt: az a mentésben csak a TÉNYLEGES változást ellenőrzi,
+  // ezért a teljes munka is menthető. A régi Supabase-szerveren a V4-szabály
+  // marad: szerveroldali átmenetnél a régi mentési út nem fut.
+  function saveBeforeTransition(){
+    try{ return (root.RPW_CFG || {}).SAVE_BEFORE_TRANSITION === true; }catch(e){ return false; }
+  }
+
   // Offline: kritikus műveletet NEM hajtunk végre automatikusan.
   function isOffline(){
     try{ return (typeof navigator !== 'undefined') && navigator.onLine === false; }
@@ -864,12 +872,27 @@
         // a mentés új verziót adott — azt használjuk az átmenethez
         if(typeof job.version === 'number') expected = job.version;
       }
+    } else if(typeof opts.save === 'function' && saveBeforeTransition()){
+      // RPW-004: az oldal a fázisváltás ELŐTT normál mezőket állíthat be
+      // (pl. control.allDone, a munkasor elvégzése). Ezeket a rendes mentési
+      // úton ELŐBB ki kell írni, különben a szerver a régi adat alapján dönt.
+      // A workflow-mezőket a mentés nem írja (a szerver csak a tényleges
+      // változást ellenőrzi, és itt helyben semmi workflow-mező nem változott).
+      var pres0;
+      try{ pres0 = await opts.save(); }catch(e){ pres0 = {failed:true}; }
+      if(!saveConfirmed(pres0)){
+        return { ok:false, saved:false, notSynced:true,
+                 result:{ok:false, errors:['not_synced']},
+                 error:{ code:'not_synced', message:'Datele nu s-au salvat. Încearcă din nou.' } };
+      }
+      if(typeof job.version === 'number') expected = job.version;
     }
 
     var res = await api.serverTransition(opts.action, {
       id: job.id, phase: opts.phase, expectedVersion: expected,
       reason: opts.reason || null, reworkId: opts.reworkId || null,
-      note: opts.note || null, fromPhase: opts.phase, toPhase: opts.phase
+      note: opts.note || null, fromPhase: opts.phase, toPhase: opts.phase,
+      extra: opts.extra || null
     });
 
     if(!res || res.ok !== true){

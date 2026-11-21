@@ -129,6 +129,30 @@ final class TransitionEngineTest extends TestCase
         self::assertSame('override_invalid', $this->denied(fn () => $this->e->apply([], 4, 'override', Fixtures::admin(), $this->now, ['reason' => 'rövid'])));
     }
 
+    public function testOverrideRightAloneDoesNotSkipOrderOrRework(): void
+    {
+        $admin = Fixtures::admin();
+        $j = ['phases' => array_fill_keys(['1', '2', '3', '4'], ['status' => 'done']) + ['5' => ['status' => 'active']],
+            'control' => ['allDone' => true, 'lastResult' => 'ok']];
+        self::assertSame('prev_not_closed', $this->denied(fn () => $this->e->apply($j, 6, 'complete', $admin, $this->now)),
+            'a vezető sem zárhatja le a kontrollt, amíg a fényezés nyitott — csak kifejezett override-dal');
+        $g = $this->e->apply($j, 6, 'override', $admin, $this->now, ['reason' => 'Vopsitoria externă, confirmată telefonic']);
+        $g = $this->e->apply($g, 6, 'complete', $admin, $this->now);
+        self::assertSame('done', $g['phases']['6']['status'], 'a dokumentált grant után igen');
+        $r = $j;
+        $r['rework'] = [['id' => 'rw1', 'status' => 'open', 'sourcePhase' => 5]];
+        self::assertSame('open_rework', $this->denied(fn () => $this->e->apply($r, 5, 'complete', $admin, $this->now)));
+    }
+
+    public function testOverriddenRequirementsAreRecorded(): void
+    {
+        $j = Fixtures::closingReady(['phases' => array_fill_keys(['1', '2', '3', '4', '5', '6'], ['status' => 'done'])]);
+        $j['closingPhotos'] = [];
+        $j = $this->e->apply($j, 7, 'complete', Fixtures::admin(), $this->now);
+        self::assertSame(['wf_photos_not_five'], $j['phases']['7']['overriddenRequirements']);
+        self::assertStringContainsString('wf_photos_not_five', end($j['workflowHistory'])['reason']);
+    }
+
     public function testInvalidInput(): void
     {
         self::assertSame('bad_phase', $this->denied(fn () => $this->e->apply([], 8, 'start', Fixtures::admin(), $this->now)));

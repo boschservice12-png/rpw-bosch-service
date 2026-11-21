@@ -504,7 +504,8 @@ window.resolveRw=async function(id){
   if(note===null)return;
   var res=await RPWWorkflow.commitCriticalTransition(JOB, function(){
     return RPWWorkflow.resolveRework(JOB,id,{resolvedBy:who,resolutionNote:note});
-  }, {action:'rework_close', phase:(JOB.phase||1), reworkId:id, save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  }, {action:'rework_close', phase:(JOB.phase||1), reworkId:id, note:note,
+       extra:{resolved_by:who, note:note}, save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
   if(!res.ok){
     if(res.notSynced){ toast(RPWWorkflow.t('wf_saved_not_synced',_ln),1); render(); return; }
     var errs=(res.result&&res.result.errors)||[];

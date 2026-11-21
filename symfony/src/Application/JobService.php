@@ -52,52 +52,101 @@ final class JobService
     }
 
     // ── mentés ────────────────────────────────────────────────────────
-    public function patch(Actor $a, string $id, array $patch, ?int $expectedVersion, ?string $phase = null): array
+    /**
+     * Mentés. Két mód:
+     *  · SZIGORÚ (REST API): védett workflow-mező a patch-ben → elutasítás.
+     *  · KISZŰRŐ ($stripProtected, a régi felület útja): a védett mezőket a
+     *    szerver figyelmen kívül hagyja — a régi kliens a teljes munkát küldi,
+     *    benne a helyben levezetett fázisadatokkal. Írni így SEM lehet őket:
+     *    a workflow-állapotot kizárólag az állapotgép változtatja.
+     * Mindkét módban csak a TÉNYLEGES változás számít írásnak.
+     */
+    public function patch(Actor $a, string $id, array $patch, ?int $expectedVersion, ?string $phase = null, bool $stripProtected = false): array
     {
         $this->assertId($id);
         if ($patch === [] || array_is_list($patch)) {
             throw new ApiError('bad_request', ['detail' => 'patch must be a non-empty object']);
         }
-        $hits = PatchGuard::protectedHits($patch);
-        if ($hits !== []) {
-            $this->audit->deny($a->shopId, $id, $a->name, null, 'patch', 'protected_workflow_field', ['fields' => $hits]);
-            throw new ApiError('protected_workflow_field', ['fields' => $hits]);
+        foreach (PatchGuard::META_KEYS as $k) {
+            unset($patch[$k]);
+        }
+        // friss munka fázislistája (csak új munkán érdekes; a kiszűrés előtt kell kiolvasni)
+        $fresh = self::freshPhases($patch['phases'] ?? null);
+        $ignored = [];
+        if ($stripProtected) {
+            [$patch, $ignored] = PatchGuard::withoutProtected($patch);
         }
 
-        return $this->tx(function () use ($a, $id, $patch, $expectedVersion, $phase) {
-            $row = $this->db->fetchAssociative('SELECT shop_id, version, deleted_at FROM rpw_jobs WHERE id = :id'.$this->lock(), ['id' => $id]);
+        return $this->tx(function () use ($a, $id, $patch, $expectedVersion, $phase, $fresh, $ignored, $stripProtected) {
+            $row = $this->db->fetchAssociative('SELECT shop_id, version, deleted_at, data FROM rpw_jobs WHERE id = :id'.$this->lock(), ['id' => $id]);
 
+            // ── ÚJ MUNKA ─────────────────────────────────────────────
             if ($row === false) {
+                // előrehaladott workflow-állapot nem hozható; egyetlen kivétel a FRISS
+                // munka (minden fázis `pending`: az 1. fázist a recepció `start`-ja indítja)
+                [$plain, $wf] = PatchGuard::withoutProtected(array_diff_key($patch, ['id' => 1]));
+                if (!$stripProtected && array_diff($wf, self::phasePaths($patch['phases'] ?? null, $fresh !== null)) !== []) {
+                    $hits = array_values(array_diff($wf, self::phasePaths($patch['phases'] ?? null, $fresh !== null)));
+                    $this->audit->deny($a->shopId, $id, $a->name, null, 'create', 'protected_workflow_field', ['fields' => $hits]);
+                    throw new ApiError('protected_workflow_field', ['fields' => $hits]);
+                }
                 if (!$a->can('open')) {
                     $this->audit->deny($a->shopId, $id, $a->name, null, 'create', 'not_allowed', ['need' => 'open']);
                     throw new ApiError('not_allowed', ['need' => 'open']);
                 }
-                $this->assertPermission($a, $id, $patch);
-                $data = PhaseRules::normalize($patch);
+                $plain = (isset($patch['id']) ? ['id' => $patch['id']] : []) + $plain;
+                $this->assertPermission($a, $id, $plain);
+                $data = PhaseRules::normalize($fresh !== null ? $plain + ['phases' => $fresh] : $plain);
                 $now = Sql::ts($this->clock->now());
                 $this->db->executeStatement(
                     'INSERT INTO rpw_jobs (id, shop_id, data, version, created_at, updated_at) VALUES (:id, :shop, '
                     .Sql::json($this->db, 'data').', 1, :now, :now)',
                     ['id' => $id, 'shop' => $a->shopId, 'data' => Sql::encode($data), 'now' => $now],
                 );
-                $this->audit->write($a->shopId, $id, $a->name, 'create', $phase, $patch, null, 1);
+                $this->audit->write($a->shopId, $id, $a->name, 'create', $phase, $plain, null, 1);
 
                 return ['id' => $id, 'data' => $data, 'version' => 1];
             }
 
+            // ── MEGLÉVŐ MUNKA ────────────────────────────────────────
             if ($row['shop_id'] !== $a->shopId || $row['deleted_at'] !== null) {
                 throw new ApiError('not_found');
             }
-            $this->assertPermission($a, $id, $patch);
+            $stored = Sql::decode($row['data']);
+            $changes = PatchGuard::changes($stored, $patch);
+            $hits = PatchGuard::protectedHits($changes);
+            if ($hits !== []) {
+                $this->audit->deny($a->shopId, $id, $a->name, null, 'patch', 'protected_workflow_field', ['fields' => $hits]);
+                throw new ApiError('protected_workflow_field', ['fields' => $hits]);
+            }
+            $this->assertPermission($a, $id, $changes);
             if ($expectedVersion === null) {
                 $this->audit->deny($a->shopId, $id, $a->name, null, 'patch', 'expected_version_required');
                 throw new ApiError('expected_version_required');
             }
-            $current = $this->load($a, $id);
-            $merged = PatchGuard::deepMerge(Sql::decode($current['data']), $patch);
+            if ($changes === []) {
+                // semmi nem változott: nincs új verzió, de az ütközést így is jelezzük
+                if ((int) $row['version'] !== $expectedVersion) {
+                    throw new ApiError('version_conflict', ['server_version' => (int) $row['version']]);
+                }
 
-            return $this->save($a, $id, $merged, $expectedVersion, 'patch', $phase, $patch);
+                return ['id' => $id, 'data' => $stored, 'version' => (int) $row['version']];
+            }
+            $merged = PhaseRules::normalize(PatchGuard::deepMerge($stored, $changes));
+            $auditPatch = $ignored === [] ? $changes : $changes + ['_ignored_workflow_fields' => \count($ignored)];
+
+            return $this->save($a, $id, $merged, $expectedVersion, 'patch', $phase, $auditPatch);
         });
+    }
+
+    /** A friss fázislista útjai (ezek új munkán nem számítanak workflow-írásnak). */
+    private static function phasePaths(mixed $phases, bool $fresh): array
+    {
+        if (!$fresh || !\is_array($phases)) {
+            return [];
+        }
+
+        return array_merge(['phases'], array_map(static fn (string $p) => 'phases.'.$p, PatchGuard::paths($phases)));
     }
 
     // ── fázisátmenet ──────────────────────────────────────────────────
@@ -206,13 +255,41 @@ final class JobService
         $this->audit->write($a->shopId, $id, $a->name, 'purge');
     }
 
+    /** Végleges törlés a karbantartó lapról: kötelező indoklással, auditálva. */
+    public function hardDelete(Actor $a, string $id, string $reason): void
+    {
+        $this->needDelete($a, $id, 'hard_delete');
+        if (trim($reason) === '') {
+            throw new ApiError('reason_required');
+        }
+        $n = $this->db->executeStatement('DELETE FROM rpw_jobs WHERE id = :id AND shop_id = :shop AND deleted_at IS NOT NULL', ['id' => $id, 'shop' => $a->shopId]);
+        if ($n === 0) {
+            throw new ApiError('not_found');
+        }
+        $this->audit->write($a->shopId, $id, $a->name, 'hard_delete', null, ['reason' => mb_substr($reason, 0, 500)]);
+    }
+
+    /** A kosár tartalma a karbantartó laphoz. */
+    public function cleanupList(Actor $a): array
+    {
+        if (!$a->can('delete')) {
+            throw new ApiError('not_allowed', ['need' => 'delete']);
+        }
+
+        return array_map(static function (array $r) {
+            $d = Sql::decode($r['data']);
+
+            return ['uid' => $r['id'], 'plate' => $d['plate'] ?? null, 'number' => $d['number'] ?? null, 'deleted_at' => $r['deleted_at']];
+        }, $this->db->fetchAllAssociative('SELECT id, data, deleted_at FROM rpw_jobs WHERE shop_id = :s AND deleted_at IS NOT NULL ORDER BY deleted_at DESC', ['s' => $a->shopId]));
+    }
+
     /** Atomi munkaszám: két egyidejű nyitás sem kaphatja ugyanazt. */
     public function nextNumber(Actor $a, string $prefix = 'RPW'): array
     {
         if (!$a->can('open')) {
             throw new ApiError('not_allowed', ['need' => 'open']);
         }
-        if (preg_match('/^[A-Z0-9]{1,10}$/', $prefix) !== 1) {
+        if (preg_match('/^[A-Z0-9][A-Z0-9-]{0,11}$/', $prefix) !== 1) {
             throw new ApiError('bad_request', ['detail' => 'prefix']);
         }
         $n = (int) $this->db->fetchOne(
@@ -221,7 +298,10 @@ final class JobService
             ['shop' => $a->shopId, 'prefix' => $prefix],
         );
 
-        return ['n' => $n, 'number' => $prefix.'-'.str_pad((string) $n, 5, '0', \STR_PAD_LEFT)];
+        // „MS-26-” típusú előtag (a műhely mai formátuma) → MS-26-87; egyébként RPW-00001
+        $number = str_ends_with($prefix, '-') ? $prefix.$n : $prefix.'-'.str_pad((string) $n, 5, '0', \STR_PAD_LEFT);
+
+        return ['n' => $n, 'number' => $number];
     }
 
     // ── belső ─────────────────────────────────────────────────────────
@@ -262,6 +342,31 @@ final class JobService
         }
 
         return $row;
+    }
+
+    /**
+     * A kliens fázislistája CSAK akkor fogadható el új munkán, ha minden fázis
+     * `pending` és nincs benne időbélyeg / végrehajtó — vagyis friss munka.
+     */
+    private static function freshPhases(mixed $phases): ?array
+    {
+        if (!\is_array($phases) || $phases === []) {
+            return null;
+        }
+        $out = [];
+        foreach ($phases as $k => $p) {
+            if (!\in_array((int) $k, \App\Domain\Workflow\Phase::ALL, true) || !\is_array($p) || ($p['status'] ?? null) !== 'pending') {
+                return null;
+            }
+            foreach ($p as $f => $v) {
+                if ($f !== 'status' && $v !== null) {
+                    return null;
+                }
+            }
+            $out[(string) (int) $k] = ['status' => 'pending'];
+        }
+
+        return $out;
     }
 
     /** Tranzakció, utána az elutasítás-napló kiírása (siker és hiba esetén is). */
