@@ -311,6 +311,38 @@
     if(c===0){ c=realPhotoCount(arr(job.photos).filter(function(q){return q&&q.type==='overview';})); }
     return c;
   }
+  // ── RPW-004 (2026-11-21): HOL VAN A FOTÓ? — EGY HELYEN ──────────────
+  // A dosszié eddig csak a régi, beágyazott `photos` listát nézte, a recepció
+  // viszont a tárolóba tölt (`photoKeys` + <munka>/ov_N.jpg), a kárdosszié az
+  // iratlistába (`dosarActe`), a régi base64-migráció pedig `path`-ra cseréli a
+  // `data`-t. Ezért mutatott a dosszié 0/6 fotót, miközben a recepció lezárult.
+  // Ez a függvény UGYANAZOKAT a forrásokat nézi, mint a lezárási szabály
+  // (overviewPhotoCount), így a számláló és a szabály nem csúszhat szét.
+  // Egy hivatkozás: {data?, url?, path?} — a megjelenítést a RPWPhotos végzi.
+  function photoRefOf(p){
+    if(!p || typeof p!=='object') return null;
+    var r={ data:(nonEmpty(p.data)?p.data:null), url:(nonEmpty(p.url)?p.url:null),
+            path:(nonEmpty(p.path)?p.path:(p.ref&&nonEmpty(p.ref.path)?p.ref.path:null)) };
+    return (r.data||r.url||r.path) ? r : null;
+  }
+  function photoRefs(job){
+    job=job||{};
+    var pk=job.photoKeys||{};
+    function stored(k){ return (pk[k] && nonEmpty(job.id)) ? {data:null,url:null,path:job.id+'/'+k+'.jpg'} : null; }
+    function acte(slot){
+      var a=job.dosarActe?job.dosarActe[slot]:null; var l=Array.isArray(a)?a:(a?[a]:[]);
+      for(var i=0;i<l.length;i++){ var r=photoRefOf(l[i]); if(r) return r; }
+      return null;
+    }
+    var ov=[], i;
+    for(i=0;i<OV_POZ.length;i++){ ov.push(stored('ov_'+i) || stored('ov_'+OV_POZ[i]) || acte(OV_ACTE[OV_POZ[i]]) || null); }
+    var legacy=arr(job.photos).filter(function(q){ return q && q.type==='overview' && isRealPhoto(q); });
+    if(!ov.some(Boolean)){ for(i=0;i<legacy.length && i<6;i++) ov[i]=photoRefOf(legacy[i]); }
+    var tl=arr(job.photos).filter(function(q){ return q && q.type==='talon' && isRealPhoto(q); })[0];
+    var talon=stored('talon') || stored('photo_talon') || acte('pag_talon_fata') || photoRefOf(tl);
+    return { talon:talon, overview:ov, overviewCount:ov.filter(Boolean).length };
+  }
+
   function elemStatus(e){ return e ? (e.statusV2 || e.status) : null; }
   function isDamagedStatus(s){ return s==='damaged'||s==='avariata'||s==='suggested'||s==='recomandata'; }
   function elemHasProof(job, key, e){
@@ -1412,6 +1444,7 @@
     installPageGuard: installPageGuard,
     currentActivePhase: currentActivePhase,
     hasExecutableWork: hasExecutableWork,
+    photoRefs: photoRefs,
     isRealPerson: isRealPerson,
     hasOverrideGrant: hasOverrideGrant,
     commitCriticalTransition: commitCriticalTransition,

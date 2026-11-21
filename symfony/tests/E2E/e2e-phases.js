@@ -101,6 +101,21 @@ const state = async p => p.evaluate(() => JSON.stringify({ phase: JOB.phase, inc
   step('Végállapot a szerverről');
   await onPage('Ferenc Admin', '4826', 'rpw-dosar.html', async p => {
     out.push('  ' + await state(p));
+    // RPW-004: a dosszié a tárolóban lévő fotókat is mutatja (eddig 0/6 volt)
+    await p.waitForTimeout(2500);   // a hydrate friss aláírt URL-eket kér
+    const ph = await p.evaluate(() => {
+      const badges = [...document.querySelectorAll('.sec-h')].map(h => h.innerText.replace(/\s+/g, ' '));
+      const imgs = [...document.querySelectorAll('.pslot img, img[alt="talon"]')];
+      return { badges: badges.filter(b => /Talon|ansamblu/i.test(b)), imgs: imgs.length,
+        loaded: imgs.filter(i => i.complete && i.naturalWidth > 0).length };
+    });
+    out.push('  dosszié fotók: ' + JSON.stringify(ph));
+    out.push(ph.imgs === 7 && ph.loaded === 7 && ph.badges.some(b => /6\/6/.test(b)) ? '  FOTÓK: OK' : '  FOTÓK: HIBA');
+    const cl = await p.evaluate(() => (JOB.closingPhotos || []).map(c => c ? (c.path ? 'path' : (c.data ? 'base64' : '?')) : '-'));
+    out.push('  záró fotók: ' + cl.join(','));
+    out.push(cl.filter(x => x === 'path').length === 5 && cl.indexOf('base64') < 0 ? '  ZÁRÓ FOTÓK: OK (tárolóban)' : '  ZÁRÓ FOTÓK: HIBA');
+    await p.evaluate(() => { tS('photos'); tS('talon'); });
+    await p.waitForTimeout(1500);
     await shot(p, '08-dosar-final');
   });
   console.log(out.join('\n'));

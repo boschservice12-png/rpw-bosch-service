@@ -16,4 +16,5 @@ python3 mkpng.py "$E2E_OUT/car.png"
 node e2e-reception.js
 node e2e-phases.js | tee "$E2E_OUT/phases.log"
 grep -q '"inchis":true' "$E2E_OUT/phases.log" && grep -q '"7":"done"' "$E2E_OUT/phases.log" \
+  && grep -q 'FOTÓK: OK' "$E2E_OUT/phases.log" && grep -q 'ZÁRÓ FOTÓK: OK' "$E2E_OUT/phases.log" \
   && echo "E2E: SIKERES — a munka 1→7 lezárva" || { echo "E2E: SIKERTELEN"; exit 1; }

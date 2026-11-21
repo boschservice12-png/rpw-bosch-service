@@ -496,7 +496,7 @@ function render(){
   h+='<div class="sec"><div class="sec-h"><div class="sec-t">'+T('photosFinal')+'</div><span class="sec-badge '+(_valosFoto>=5?'sb-ok':'sb-nd')+'">'+_valosFoto+'/5</span></div><div class="sec-bd"><div class="pgrid">';
   for(var x=0;x<5;x++){
     var p=photos[x];
-    h+='<div class="pslot '+(p?'done':'')+'">'+(p?'<img src="'+escU(p.data)+'"/><div class="pslot-chk">'+IC.chk+'</div>'+(isClosed?'':'<button onclick="delClosePhoto('+x+')" title="Șterge" style="position:absolute;top:4px;left:4px;width:20px;height:20px;background:#E11D2E;color:#fff;border:none;border-radius:50%;font-weight:800;font-size:13px;line-height:1;cursor:pointer;z-index:3;padding:0">×</button>'):IC.cam)+'<div class="pslot-n">'+T(VK[x])+'</div>'+(isClosed?'':'<input type="file" accept="image/*" onchange="addPh('+x+',event)"/>')+'</div>';
+    h+='<div class="pslot '+(p?'done':'')+'">'+(p?'<img '+((window.RPWPhotos&&RPWPhotos.imgAttrs)?RPWPhotos.imgAttrs(p):'')+' alt=""/><div class="pslot-chk">'+IC.chk+'</div>'+(isClosed?'':'<button onclick="delClosePhoto('+x+')" title="Șterge" style="position:absolute;top:4px;left:4px;width:20px;height:20px;background:#E11D2E;color:#fff;border:none;border-radius:50%;font-weight:800;font-size:13px;line-height:1;cursor:pointer;z-index:3;padding:0">×</button>'):IC.cam)+'<div class="pslot-n">'+T(VK[x])+'</div>'+(isClosed?'':'<input type="file" accept="image/*" onchange="addPh('+x+',event)"/>')+'</div>';
   }
   h+='</div></div></div>';
 
@@ -536,7 +536,7 @@ function render(){
     var elPhotos=0;for(var ek in elements){if(elements[ek].photo)elPhotos++}
     var ovCnt=0;['ov_front','ov_back','ov_left','ov_right','ov_serieCaros','ov_km'].forEach(function(k){if(photoKeys[k])ovCnt++});
     var customCnt=customDocs.length;
-    var closingCnt=(job.closingPhotos||[]).filter(function(p){return p&&p.data}).length;
+    var closingCnt=(job.closingPhotos||[]).filter(function(p){return p&&(p.data||p.path||(p.ref&&p.ref.path))}).length;
 
     h+='<div class="modal-bg" onclick="if(event.target===this)closeExp()">';
     h+='<div class="modal">';
@@ -575,6 +575,7 @@ function render(){
 
   if(S.ts)h+='<div class="toast '+(S.te?'err':'')+'">'+S.ts+'</div>';
   document.getElementById('app').innerHTML=h;
+  try{ if(window.RPWPhotos) RPWPhotos.hydrate(sb); }catch(e){}
 }
 
 window.uCl=async function(f,v){if(!JOB.closing)JOB.closing={};JOB.closing[f]=v;await saveJ();render()};
@@ -591,7 +592,23 @@ async function uploadDevizFile(file){
   await saveJ();toast('Deviz încărcat ✓');render();
 }
 window.addDevizFile=function(e){var f=e.target.files&&e.target.files[0];if(!f)return;toast('Se încarcă...');uploadDevizFile(f).catch(function(err){toast('Eroare: '+(err&&err.message||err),1)})};
-window.addPh=function(x,e){var f=e.target.files&&e.target.files[0];if(!f)return;resize(f,async function(d){if(!JOB.closingPhotos)JOB.closingPhotos=[];while(JOB.closingPhotos.length<=x)JOB.closingPhotos.push(null);JOB.closingPhotos[x]={data:d,label:VK[x],ts:new Date().toISOString()};await saveJ();toast(T(VK[x])+' OK');render()})};
+// RPW-004 (2026-11-21): a záró fotó a TÁROLÓBA megy (<munka>/closing_N.jpg), a munkába
+// csak a hivatkozás kerül — eddig base64-ként a munka JSON-jában ült (nagy, lassú
+// mentés, és a dosszié-ZIP is ebből dolgozott). Ha a feltöltés nem sikerül (pl.
+// offline), a régi módon mentjük: a bizonyíték nem veszhet el.
+window.addPh=function(x,e){var f=e.target.files&&e.target.files[0];if(!f)return;resize(f,async function(d){
+  if(!JOB.closingPhotos)JOB.closingPhotos=[];while(JOB.closingPhotos.length<=x)JOB.closingPhotos.push(null);
+  var item={label:VK[x],ts:new Date().toISOString()}, stored=false;
+  try{
+    if(window.RPWPhotos&&RPWPhotos.storePhoto&&window.RPWUtil&&RPWUtil.dataUrlToBlob){
+      var r=await RPWPhotos.storePhoto(sb,JOB.id,d,{key:'closing_'+x,decode:RPWUtil.dataUrlToBlob,category:'closing',
+        createdBy:(window.RPWAuth&&RPWAuth.name&&RPWAuth.name())||null});
+      if(r&&r.ok){item.path=r.path;item.ref=r.ref;stored=true;}
+    }
+  }catch(err){ console.warn('[RPW] záró fotó: tárolás sikertelen, beágyazva mentem',err); }
+  if(!stored){ item.data=d; toast('Foto salvată local (fără server de fișiere) — va fi încărcată la migrare',1); }
+  JOB.closingPhotos[x]=item;await saveJ();if(stored)toast(T(VK[x])+' OK');render();
+})};
 window.delClosePhoto=async function(x){if(!JOB||!JOB.closingPhotos||!JOB.closingPhotos[x])return;if(!confirm('⚠️ Fotografia este o DOVADĂ. Sigur o ștergi DEFINITIV?'))return;JOB.closingPhotos[x]=null;await saveJ();render()};
 
 // KRITIKUS lezárás: megerősített (awaitolt) mentés — offline/hiba esetén NINCS siker + NINCS navigáció
@@ -805,8 +822,10 @@ window.doExportZip=async function(){
       var clPhotos=JOB.closingPhotos||[];
       var VK_LOCAL=['fata','spate','stanga','dreapta','detaliu'];
       for(var pi=0;pi<clPhotos.length;pi++){
-        var p=clPhotos[pi];if(!p||!p.data)continue;   // torolt hely: nem hianyzas
-        var b=dataUrlToBlob(p.data);
+        var p=clPhotos[pi];if(!p||!(p.data||p.path||(p.ref&&p.ref.path)))continue;   // torolt hely: nem hianyzas
+        // RPW-004: beágyazott VAGY tárolt fotó — a tároltat aláírt URL-ről töltjük le
+        var b=p.data?dataUrlToBlob(p.data):await RPWPhotos.refToBlob(sb,{path:p.path||(p.ref&&p.ref.path)});
+        if(!b)continue;
         _tedd(clFolder,'reparat_'+(VK_LOCAL[pi]||('foto'+(pi+1)))+'.jpg',b);
       }
       S.expProgress=80;render();

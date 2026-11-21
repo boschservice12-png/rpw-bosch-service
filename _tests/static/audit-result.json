@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-21T22:16:30.819Z",
+  "generated": "2026-11-21T22:48:38.806Z",
   "files": 33,
   "total": 28,
   "allowed": 28,
@@ -95,7 +95,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 652,
+      "sor": 655,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
@@ -103,7 +103,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 696,
+      "sor": 699,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
@@ -215,7 +215,7 @@
     },
     {
       "fajl": "rpw-workflow.js",
-      "sor": 546,
+      "sor": 578,
       "mezo": "phase",
       "ok": "a helyi UX-előnézet és a fejlesztői (szerver nélküli) út",
       "ut": "a rpw-workflow.js a kliensoldali modell. Élesben (SERVER_TRANSITIONS=true) a commitCriticalTransition NEM futtatja a helyi mutációt — a rpw_transition dönt. Ezt a frontend-integrációs teszt bizonyítja: a mutate() kivételt dob, és nem következik be.",
@@ -223,7 +223,7 @@
     },
     {
       "fajl": "rpw-workflow.js",
-      "sor": 672,
+      "sor": 704,
       "mezo": "phase",
       "ok": "a helyi UX-előnézet és a fejlesztői (szerver nélküli) út",
       "ut": "a rpw-workflow.js a kliensoldali modell. Élesben (SERVER_TRANSITIONS=true) a commitCriticalTransition NEM futtatja a helyi mutációt — a rpw_transition dönt. Ezt a frontend-integrációs teszt bizonyítja: a mutate() kivételt dob, és nem következik be.",

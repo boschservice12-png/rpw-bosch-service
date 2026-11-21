@@ -140,6 +140,30 @@
     return '';
   }
 
+  // ── RPW-004: <img> attribútumok egy fotó-hivatkozásból ({data,url,path}) ──
+  // · beágyazott kép (csak data:image/…) → azonnal src
+  // · tárolt fájl (path) → data-rpw-path; a hydrate() FRISS aláírt URL-t ír bele
+  //   (a rekordban maradt aláírt URL egy óra múlva lejár, ezért arra nem építünk)
+  // · teljes http(s) URL csak path hiányában. Más séma (javascript: …) soha.
+  function imgAttrs(ref){
+    if(!ref) return '';
+    var U=root.RPWUtil||{}, ea=U.escAttr||function(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); };
+    if(typeof ref==='string') ref = /^data:image\//i.test(ref) ? {data:ref} : (/^https?:/i.test(ref) ? {url:ref} : {path:ref});
+    if(ref.data && /^data:image\//i.test(ref.data)) return 'src="'+ea(ref.data)+'"';
+    if(ref.path) return 'data-rpw-path="'+ea(ref.path)+'"';
+    if(ref.url && /^https?:/i.test(ref.url)) return 'src="'+ea(ref.url)+'"';
+    return '';
+  }
+
+  // Egy fotó-hivatkozás → Blob (ZIP-exporthoz): beágyazottból vagy a tárolóból.
+  async function refToBlob(sb, ref, opts){
+    if(!ref) return null;
+    if(ref.data && /^data:/i.test(ref.data)) return (root.RPWUtil&&root.RPWUtil.dataUrlToBlob) ? root.RPWUtil.dataUrlToBlob(ref.data) : null;
+    var u = ref.path ? await signedUrl(sb, ref.path, opts) : (ref.url||'');
+    if(!u) return null;
+    try{ var r=await (opts&&opts.fetch||root.fetch)(u); return r.ok ? await r.blob() : null; }catch(e){ return null; }
+  }
+
   // DOM-hidratálás: minden <img data-rpw-path="..."> src-jét aláírt URL-re cseréli.
   // (A fázisoldalak kimenetébe elég a data-rpw-path attribútum — a megjelenítés nem változik.)
   async function hydrate(sb, opts){
@@ -162,7 +186,8 @@
   }
 
   var API={ isFullUrl:isFullUrl, signedUrl:signedUrl, publicUrl:publicUrl, resolveRef:resolveRef, hydrate:hydrate,
-            storePhoto:storePhoto, isPrivate:isPrivate, bucket:bucket, gatewayOn:gatewayOn };
+            storePhoto:storePhoto, isPrivate:isPrivate, bucket:bucket, gatewayOn:gatewayOn,
+            imgAttrs:imgAttrs, refToBlob:refToBlob };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
   root.RPWPhotos=API;
 })(typeof self!=='undefined'?self:(typeof window!=='undefined'?window:globalThis));
