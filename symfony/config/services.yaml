@@ -1,0 +1,21 @@
+# RPW — szolgáltatások. A domain (src/Domain) keretrendszer-független, tiszta PHP.
+parameters:
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/Domain/'
+            - '../src/Kernel.php'
+
+    # Az állapotgép állapotmentes, egy példány elég.
+    App\Domain\Workflow\TransitionEngine: ~
+
+    # Adatbázis: PostgreSQL élesben (a meglévő Supabase-adatbázis IS lehet), SQLite a tesztekben.
+    Doctrine\DBAL\Connection:
+        factory: ['App\Infrastructure\Db\ConnectionFactory', 'create']
+        arguments: ['%env(resolve:DATABASE_URL)%']

@@ -91,6 +91,21 @@
   status = 404
   force = true
 
+# RPW-004 (2026-11-21): az új Symfony backend forrása (src, config, .env,
+# tesztek) és az átállási terv — belső anyag, a statikus oldal NEM
+# szolgálhatja ki. A backend saját szerveren fut, nem a Netlifyn.
+[[redirects]]
+  from = "/symfony/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/RPW-004-SYMFONY-ATALLAS.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
 [[redirects]]
   from = "/FUNKCIOK.md"
   to = "/404.html"

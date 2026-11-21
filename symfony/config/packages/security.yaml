@@ -1,0 +1,20 @@
+security:
+    providers:
+        # A felhasználót a TokenAuthenticator tölti be a tokenből; nincs külön user provider.
+        none: { memory: null }
+
+    firewalls:
+        dev:
+            pattern: ^/(_profiler|_wdt)
+            security: false
+        api:
+            pattern: ^/api
+            stateless: true
+            provider: none
+            custom_authenticators:
+                - App\Security\TokenAuthenticator
+            entry_point: App\Security\TokenAuthenticator
+
+    access_control:
+        - { path: ^/api/(health|login|roster), roles: PUBLIC_ACCESS }
+        - { path: ^/api, roles: ROLE_USER }

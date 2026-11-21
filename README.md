@@ -38,6 +38,7 @@ _tests/frontend/           VALÓDI oldalkód jsdom-ban
 _tests/static/             statikus workflow-audit
 _tests/run-all.js          háromkategóriás futtató
 _db/                       séma, adatmodell-terv
+symfony/                   ÚJ Symfony 7.4 backend (átállás alatt, lásd RPW-004)
 ```
 
 | Dokumentum | Mit tartalmaz |
@@ -49,6 +50,8 @@ _db/                       séma, adatmodell-terv
 | `MANUAL-STAGING-CHECKLIST.md` | amit gép nem tud ellenőrizni |
 | `FILE-CHANGES.md` | mi változott a v2-höz képest |
 | `CHANGELOG.md` | változásnapló |
+| `RPW-004-SYMFONY-ATALLAS.md` | átállás Symfony-ra: állapot, kockázatok, ütemterv |
+| `symfony/README.md` | az új backend: indítás, tesztek, API |
 
 ## Belépés
 
