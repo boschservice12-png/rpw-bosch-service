@@ -9,7 +9,7 @@ szám nélkül, azt is megmondja.
 
 | összesen | él | csak frontend | csak backend | nincs bekötve | teszt nélkül |
 |---|---|---|---|---|---|
-| 125 | 30 | 82 | 5 | 8 | 7 |
+| 126 | 30 | 83 | 5 | 8 | 7 |
 
 ## F-0xx · Belépés és jogosultság
 
@@ -107,6 +107,7 @@ szám nélkül, azt is megmondja.
 | **F-202** | Deschide dosar dauna - a dossziet MI nyitjuk (urlap nelkul, egybol a dosszie lapra) | `index.html` | — | `unit/test-entry.js` | 🟦 csak frontend |
 | **F-203** | Preluare dosar dauna - meglevo dosszie atvetele fajlbol | `index.html` | — | `unit/test-dosare.js` | 🟦 csak frontend |
 | **F-215** | Duplikatum-figyelmeztetes a dosszie lapon (ugyanaz a rendszam + biztosito + karszam) | `rpw-dosar.html` | `rpw_jobs_list` | `unit/test-dup-dosar.js` | ✅ él |
+| **F-216** | A dosszie lap fotoi ugyanabbol a forrasbol, mint a fazis-kapu. Eddig a lap CSAK a regi job.photos tombot nezte, a recepcio viszont (RPW-003 ota) photoKeys + tarolo-fajl formaban ir — egy szabalyosan lezart recepcio igy 'Talon —' es '0/6' lett a dosszien. Mostantol a szamlalo, a talon-jelzes es a belyegkepek az RPWWorkflow.overviewPhotoRefs / talonRef fuggvenybol jonnek (photoKeys -> dosarActe -> regi photos), a kep alairt URL-t kap a tarolo-kapun at (data-rpw-path + RPWPhotos.hydrate). A tarolasi formatum NEM valtozott | `rpw-workflow.js` `rpw-dosar.html` | — | `frontend/test-fe-dosar-foto.js` | 🟦 csak frontend |
 | **F-204** | Dosszie oldal iratrekeszekkel | `rpw-dosar.html` | — | `unit/test-dosarflux.js` | 🟦 csak frontend |
 | **F-205** | Irat feltoltese egy rekeszbe | `rpw-dosar.html` | — | `unit/test-classify.js` | 🟦 csak frontend |
 | **F-206** | Irat torlese a rekeszbol | `rpw-dosar.html` | — | `unit/test-dialogs.js` | 🟦 csak frontend |

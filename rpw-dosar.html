@@ -347,7 +347,9 @@ function render(){
   var ln=gL(),job=JOB;
   if(!job){document.getElementById('app').innerHTML='<div class="loading">'+T('noJob')+'<br><br><button style="margin-top:12px;padding:10px 24px;border:none;border-radius:10px;background:var(--r);color:#fff;font-weight:700;font-family:inherit;cursor:pointer" onclick="location.assign(\'index.html\')">'+T('openD')+'</button></div>';return}
 
-  var ph=job.photos||[],docs=job.docs||[],el=job.elements||{},ovP=ph.filter(function(p){return p.type==='overview'}),tP=ph.find(function(p){return p.type==='talon'});
+  // A fotók forrása UGYANAZ, mint a fázis-kapué (RPWWorkflow): photoKeys + tároló,
+  // iratlista-rekesz (dosarActe), végül a régi photos tömb. Lásd overviewPhotoRefs.
+  var docs=job.docs||[],el=job.elements||{},ovP=RPWWorkflow.overviewPhotoRefs(job),tP=RPWWorkflow.talonRef(job);
   var elC=0,dmgC=0,okC=0,sugC=0;for(var k in el){elC++;if(el[k].status==='ok')okC++;if(el[k].status==='damaged')dmgC++;if(el[k].status==='suggested')sugC++}
 
   var _ac0=(typeof acteCountFor==='function')?acteCountFor(job):null;
@@ -494,7 +496,7 @@ function render(){
 
   // Talon
   h+='<div class="sec"><div class="sec-h" onclick="tS(\'talon\')"><div class="sec-t"><span class="step-n">1</span> '+T('talon')+'</div><span class="sec-badge '+(tP?'sb-ok':'sb-nd')+'">'+(tP?'OK':'—')+'</span></div><div class="sec-bd '+(S.sec.talon?'open':'')+'">';
-  if(tP)h+='<img src="'+escU(tP.data)+'" style="width:100%;border-radius:8px;border:1px solid var(--b);cursor:pointer" onclick="openLB(this.src)"/>';
+  if(tP)h+='<img '+(tP.url?'src="'+escU(tP.url)+'" ':'')+'data-rpw-path="'+escA(tP.path||'')+'" data-rpw-src="'+escA(tP.source)+'" style="width:100%;border-radius:8px;border:1px solid var(--b);cursor:pointer" onclick="openLB(this.src)"/>';
   else h+='<div class="empty">—</div>';
   h+='</div></div>';
 
@@ -511,7 +513,7 @@ function render(){
   h+='<div class="sec"><div class="sec-h" onclick="tS(\'photos\')"><div class="sec-t"><span class="step-n">3</span> '+T('photos')+'</div><span class="sec-badge '+(ovP.length>=6?'sb-ok':ovP.length?'sb-pt':'sb-nd')+'">'+ovP.length+'/6</span></div><div class="sec-bd '+(S.sec.photos?'open':'')+'">';
   if(ovP.length){
     h+='<div class="pgrid">';
-    ovP.forEach(function(p,idx){h+='<div class="pslot" style="cursor:pointer" onclick="openLB(this.querySelector(\'img\').src)"><img src="'+escU(p.data)+'"/><div class="pslot-label">'+T(VK[idx]||'')+'</div></div>'});
+    ovP.forEach(function(p,idx){h+='<div class="pslot" style="cursor:pointer" onclick="openLB(this.querySelector(\'img\').src)"><img '+(p.url?'src="'+escU(p.url)+'" ':'')+'data-rpw-path="'+escA(p.path||'')+'" data-rpw-src="'+escA(p.source)+'"/><div class="pslot-label">'+T(p.pos||VK[idx]||'')+'</div></div>'});
     h+='</div>';
   }else h+='<div class="empty">—</div>';
   h+='</div></div>';

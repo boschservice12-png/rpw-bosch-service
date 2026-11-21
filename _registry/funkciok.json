@@ -713,6 +713,31 @@
       "allapot": "el"
     },
     {
+      "id": "F-216",
+      "nev": "A dosszie lap fotoi ugyanabbol a forrasbol, mint a fazis-kapu. Eddig a lap CSAK a regi job.photos tombot nezte, a recepcio viszont (RPW-003 ota) photoKeys + tarolo-fajl formaban ir — egy szabalyosan lezart recepcio igy 'Talon —' es '0/6' lett a dosszien. Mostantol a szamlalo, a talon-jelzes es a belyegkepek az RPWWorkflow.overviewPhotoRefs / talonRef fuggvenybol jonnek (photoKeys -> dosarActe -> regi photos), a kep alairt URL-t kap a tarolo-kapun at (data-rpw-path + RPWPhotos.hydrate). A tarolasi formatum NEM valtozott",
+      "fe": [
+        [
+          "rpw-workflow.js",
+          "function overviewPhotoRefs(job){"
+        ],
+        [
+          "rpw-workflow.js",
+          "function talonRef(job){"
+        ],
+        [
+          "rpw-workflow.js",
+          "function overviewPhotoCount(job){ return overviewPhotoRefs(job).length; }"
+        ],
+        [
+          "rpw-dosar.html",
+          "ovP=RPWWorkflow.overviewPhotoRefs(job),tP=RPWWorkflow.talonRef(job)"
+        ]
+      ],
+      "be": [],
+      "teszt": "_tests/frontend/test-fe-dosar-foto.js",
+      "allapot": "csak-frontend"
+    },
+    {
       "id": "F-204",
       "nev": "Dosszie oldal iratrekeszekkel",
       "fe": [
@@ -2096,11 +2121,11 @@
         ],
         [
           "rpw-workflow.js",
-          "if(pk['ov_'+i] || pk['ov_'+p] || acteFotoVan(job, OV_ACTE[p])) c++;"
+          "r=pkRef(job,'ov_'+i) || pkRef(job,'ov_'+p) || acteRef(job, OV_ACTE[p]);"
         ],
         [
           "rpw-workflow.js",
-          "acteFotoVan(job,'pag_talon_fata')"
+          "acteRef(job,'pag_talon_fata')"
         ],
         [
           "rpw-config.js",

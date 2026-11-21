@@ -299,18 +299,76 @@
     return hiany;
   }
 
-  function overviewPhotoCount(job){
-    var pk=job.photoKeys||{}, c=0, i, p;
-    // Pozíciónként EGYSZER számolunk, három forrásból: indexelt kulcs,
-    // nevesített kulcs, vagy az iratlista megfelelő rekesze (a híd).
+  // ── EGY FORRÁS-LOGIKA A FOTÓKRA (2026-11-21) ─────────────────────
+  // A dosszié-lap eddig CSAK a régi `job.photos` tömböt nézte, miközben
+  // a recepció (RPW-003 óta) `photoKeys` + tároló-fájl formában ír. Így
+  // egy szabályosan lezárt recepció a dosszién „0/6"-ot mutatott.
+  // Mostantól a számláló ÉS a lap ugyanebből a függvényből dolgozik:
+  // nem lehet, hogy a kapu átenged, a dosszié pedig hiányt mutat.
+  // A tárolási formátum NEM változik — csak olvasunk.
+  //
+  // Hivatkozás-alak: {pos, idx, source, key, path, url}
+  //   source: 'photoKeys' | 'dosarActe' | 'photos'
+  //   path  : tároló-útvonal (aláírt URL-hez: RPWPhotos.signedUrl/resolveRef)
+  //   url   : tárolt URL / dataURL (lejárhat — a path az elsődleges)
+  function pkPath(job, key, v){
+    if(v && typeof v==='object' && nonEmpty(v.path)) return String(v.path);
+    if(typeof v==='string' && nonEmpty(v) && v!=='true' && !/^(https?:|data:|blob:)/i.test(v)) return v;
+    // a recepció uploadPhoto() útvonala: <jobId>/<kulcs>.jpg
+    return (job && nonEmpty(job.id)) ? (job.id+'/'+key+'.jpg') : '';
+  }
+  function pkRef(job, key){
+    var pk=(job&&job.photoKeys)||{}, pu=(job&&job.photoUrls)||{}, v=pk[key];
+    if(!v) return null;
+    var url=(v&&typeof v==='object'&&nonEmpty(v.url))?v.url:(nonEmpty(pu[key])?pu[key]:'');
+    return {source:'photoKeys', key:key, path:pkPath(job,key,v), url:url};
+  }
+  function acteRef(job, slot){
+    var a=(job && job.dosarActe) ? job.dosarActe[slot] : null;
+    if(!a) return null;
+    var lista=Array.isArray(a)?a:[a];
+    for(var i=0;i<lista.length;i++){
+      var f=lista[i];
+      if(f && (nonEmpty(f.url)||nonEmpty(f.path)||nonEmpty(f.key)||nonEmpty(f.data)||nonEmpty(f.ref))){
+        return {source:'dosarActe', key:slot, path:nonEmpty(f.path)?String(f.path):'',
+                url:nonEmpty(f.url)?f.url:(nonEmpty(f.data)?f.data:'')};
+      }
+    }
+    return null;
+  }
+  function legacyRef(q, idx){
+    return {source:'photos', key:(q&&q.key)||null, path:nonEmpty(q&&q.path)?String(q.path):'',
+            url:nonEmpty(q&&q.data)?q.data:(nonEmpty(q&&q.url)?q.url:'')};
+  }
+
+  // Áttekintő fotók — pozíciónként EGYSZER, három forrásból: indexelt
+  // kulcs (ov_0..ov_5), nevesített kulcs (ov_front…), vagy az iratlista
+  // rekesze (a híd). A régi `photos` tömb csak akkor, ha ezekből semmi.
+  function overviewPhotoRefs(job){
+    job=job||{};
+    var out=[], i, p, r;
     for(i=0;i<OV_POZ.length;i++){
       p=OV_POZ[i];
-      if(pk['ov_'+i] || pk['ov_'+p] || acteFotoVan(job, OV_ACTE[p])) c++;
+      r=pkRef(job,'ov_'+i) || pkRef(job,'ov_'+p) || acteRef(job, OV_ACTE[p]);
+      if(r){ r.pos=p; r.idx=i; out.push(r); }
     }
-    // legacy photos tömb (type:'overview') — csak ha a fentiekből semmi
-    if(c===0){ c=realPhotoCount(arr(job.photos).filter(function(q){return q&&q.type==='overview';})); }
-    return c;
+    if(!out.length){
+      arr(job.photos).filter(function(q){return q&&q.type==='overview'&&isRealPhoto(q);})
+        .forEach(function(q,ix){ r=legacyRef(q,ix); r.pos=OV_POZ[ix]||null; r.idx=ix; out.push(r); });
+    }
+    return out;
   }
+  function overviewPhotoCount(job){ return overviewPhotoRefs(job).length; }
+
+  // Talon — ugyanaz a sorrend, mint a recepció kapujában (checkPhase1).
+  function talonRef(job){
+    job=job||{};
+    var r=pkRef(job,'talon') || pkRef(job,'photo_talon') || acteRef(job,'pag_talon_fata');
+    if(r) return r;
+    var q=arr(job.photos).filter(function(x){return x&&x.type==='talon'&&isRealPhoto(x);})[0];
+    return q ? legacyRef(q,0) : null;
+  }
+  function hasTalon(job){ return !!talonRef(job); }
   function elemStatus(e){ return e ? (e.statusV2 || e.status) : null; }
   function isDamagedStatus(s){ return s==='damaged'||s==='avariata'||s==='suggested'||s==='recomandata'; }
   function elemHasProof(job, key, e){
@@ -344,9 +402,7 @@
     if(!nonEmpty(job.damageType) && !nonEmpty(job.workType)) m.push('wf_worktype_missing');
     var pk=job.photoKeys||{};
     // HÍD: a talon-fotó az iratlistából is elfogadható (pag_talon_fata).
-    var hasTalon = !!pk.talon || !!pk.photo_talon || acteFotoVan(job,'pag_talon_fata') ||
-                   realPhotoCount(arr(job.photos).filter(function(p){return p&&p.type==='talon';}))>0;
-    if(!hasTalon) m.push('wf_talon_missing');
+    if(!hasTalon(job)) m.push('wf_talon_missing');
     if(job.damageType==='asig'){
       var karDoc = !!(pk.doc_constatare) || arr(job.docs).some(function(d){return d&&/constatare|proces/i.test(d.type||'');}) || (job.dosarActe&&Object.keys(job.dosarActe).length);
       // A karszam CSAK akkor kovetelheto, ha a dosszie mar nyitva van a
@@ -1352,6 +1408,10 @@
     csakDosszie: csakDosszie,
     acteHianyzo: acteHianyzo,
     overviewPhotoCount: overviewPhotoCount,
+    overviewPhotoRefs: overviewPhotoRefs,
+    talonRef: talonRef,
+    hasTalon: hasTalon,
+    OV_POZ: OV_POZ,
     realPhotoCount: realPhotoCount,
     reconstApprovedItems: reconstApprovedItems,
     canAcceptEval: function(job){ return {ok:canAcceptEval(job).length===0, missing:canAcceptEval(job)}; },
