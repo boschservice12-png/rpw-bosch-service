@@ -8,7 +8,7 @@ use App\Application\AuthService;
 use App\Security\ActorUser;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
@@ -33,7 +33,7 @@ final class AuthController
 
     /** IP-alapú fékkel is: a dolgozónkénti zár mellett a tömeges próbálgatást is lassítja. */
     #[Route('/login', methods: ['POST'])]
-    public function login(Request $r, RateLimiterFactory $loginLimiter): JsonResponse
+    public function login(Request $r, RateLimiterFactoryInterface $loginLimiter): JsonResponse
     {
         if (!$loginLimiter->create($r->getClientIp() ?? 'x')->consume()->isAccepted()) {
             throw new \App\Application\ApiError('locked');

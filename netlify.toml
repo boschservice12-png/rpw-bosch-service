@@ -106,6 +106,32 @@
   status = 404
   force = true
 
+# RPW-004 (2026-11-21): a helyi kipróbálás Docker-csomagja (építési leírás,
+# indítószkript) — belső anyag, a statikus oldal nem szolgálhatja ki.
+[[redirects]]
+  from = "/Dockerfile"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/docker-compose.yml"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.dockerignore"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/docker/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
 [[redirects]]
   from = "/FUNKCIOK.md"
   to = "/404.html"

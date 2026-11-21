@@ -6,6 +6,26 @@ biztosítói határidőkkel és mért munkaidővel.
 Keretrendszer nélkül: nincs build, a böngésző közvetlenül futtatja.
 Backend: Supabase (Postgres + RPC) · Netlify functions (OCR, osztályozás, levél).
 
+## Kipróbálás a saját gépeden (Docker) — az új Symfony backenddel
+
+Kell hozzá: **Docker Desktop** (Windows / Mac) vagy Docker (Linux). Más nem.
+
+```bash
+git clone https://github.com/boschservice12-png/rpw-bosch-service.git
+cd rpw-bosch-service
+git checkout claude/bold-goodall-4mu3zu
+docker compose up --build
+```
+
+Az első építés pár perc. Utána: **http://localhost:8000/rpw-login.html** →
+*Ferenc Admin* · PIN **4826** (a mintacsapat PIN-jei az indulási kiírásban).
+
+- Saját, helyi adatbázissal fut — **az éles Supabase-adatokhoz nem nyúl**.
+- Az adat (munkák, fotók) újraindítás után is megmarad; tiszta újrakezdés: `docker compose down -v`.
+- OCR / levélküldés opcionális: `ANTHROPIC_API_KEY=… RESEND_API_KEY=… docker compose up`.
+- Telefonról a helyi hálózaton: `http://<a gép IP-címe>:8000/rpw-login.html`
+  (a kamera a böngészőben csak HTTPS-en vagy localhoston működik — ehhez a staging-szerver kell).
+
 ## Ellenőrzés
 
 ```bash

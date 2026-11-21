@@ -1,0 +1,17 @@
+# RPW — helyi kipróbálás:  docker compose up --build   →  http://localhost:8000/rpw-login.html
+# Leállítás: Ctrl+C · Újrakezdés tiszta adattal: docker compose down -v
+services:
+  rpw:
+    build: .
+    image: rpw-local
+    ports:
+      - "8000:8000"
+    volumes:
+      - rpw-data:/data          # adatbázis + fotók + titkok — megmarad újraindításkor
+    environment:
+      # opcionális: OCR / iratbesorolás és levélküldés (üresen a funkció "nincs beállítva")
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+    restart: unless-stopped
+volumes:
+  rpw-data:

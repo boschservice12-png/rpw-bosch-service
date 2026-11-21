@@ -16,7 +16,7 @@ use App\Domain\Workflow\PhaseRules;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -55,7 +55,7 @@ final class RpcController
     }
 
     #[Route('/rest/v1/rpc/{fn}', name: 'compat_rpc', methods: ['POST'], requirements: ['fn' => '[a-z0-9_]{1,64}'])]
-    public function rpc(string $fn, Request $r, RateLimiterFactory $loginLimiter): JsonResponse
+    public function rpc(string $fn, Request $r, RateLimiterFactoryInterface $loginLimiter): JsonResponse
     {
         if (!\in_array($fn, self::FUNCTIONS, true)) {
             return new JsonResponse(['code' => 'PGRST202', 'message' => 'Could not find the function public.'.$fn, 'details' => null, 'hint' => null], 404);

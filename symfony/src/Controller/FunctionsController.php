@@ -12,7 +12,7 @@ use App\Infrastructure\Mail\ResendMailer;
 use App\Security\TokenAuthenticator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -35,7 +35,7 @@ final class FunctionsController
     }
 
     #[Route('/.netlify/functions/{name}', name: 'functions', methods: ['POST', 'OPTIONS'], requirements: ['name' => 'ocr|classify|sendmail'])]
-    public function call(string $name, Request $r, RateLimiterFactory $aiLimiter, RateLimiterFactory $mailLimiter): JsonResponse
+    public function call(string $name, Request $r, RateLimiterFactoryInterface $aiLimiter, RateLimiterFactoryInterface $mailLimiter): JsonResponse
     {
         if ($r->getMethod() === 'OPTIONS') {
             return new JsonResponse(null, 204);
