@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Compat;
 
 use App\Application\ApiError;
+use App\Controller\JsonInput;
 use App\Application\AuthService;
 use App\Application\ClientUploadService;
 use App\Application\JobService;
@@ -61,6 +62,10 @@ final class RpcController
             return new JsonResponse(['code' => 'PGRST202', 'message' => 'Could not find the function public.'.$fn, 'details' => null, 'hint' => null], 404);
         }
         $raw = $r->getContent();
+        if (\strlen($raw) > JsonInput::MAX_BYTES) {
+            // érthető hiba a félrevezető „Invalid JSON body” helyett (a felület ezt mutatja a dolgozónak)
+            return new JsonResponse(['code' => 'PGRST413', 'error' => 'payload_too_large', 'message' => JsonInput::TOO_LARGE_RO], 413);
+        }
         try {
             $a = $raw === '' ? [] : \App\Infrastructure\Json::decode($raw, 64);
         } catch (\JsonException) {
@@ -69,7 +74,7 @@ final class RpcController
         if ($a instanceof \stdClass) {
             $a = [];
         }
-        if (!\is_array($a) || \strlen($raw) > 2_000_000) {
+        if (!\is_array($a)) {
             return new JsonResponse(['code' => 'PGRST102', 'message' => 'Invalid JSON body'], 400);
         }
         if ($fn === 'rpw2_login' && !$loginLimiter->create($r->getClientIp() ?? 'x')->consume()->isAccepted()) {

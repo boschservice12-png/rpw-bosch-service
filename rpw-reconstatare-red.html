@@ -15,6 +15,7 @@
 <script src="rpw-config.js"></script>
 <script src="rpw-guard.js"></script>
 <script src="rpw-util.js"></script>
+<script src="rpw-photos.js"></script>
 <script>window.escH=window.escH||(window.RPWUtil?RPWUtil.esc:function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})});window.escA=window.escH;window.escU=window.escU||(window.RPWUtil?RPWUtil.escUrl:window.escH);</script>
 <script src="rpw-workflow.js"></script>
 <script src="rpw-auth.js"></script>
@@ -322,6 +323,45 @@ function shellHtml(job,ln){
   h+='</div>';return h;
 }
 
+// ── RPW-005 (2026-11-22): a reconstatare fotói a TÁROLÓBA mennek ───────────────────
+// Eddig base64-ként a munka adatában ültek. A mentés minden alkalommal a TELJES munkát küldi,
+// és az új szerver 2 MB-nál nagyobb mentést nem fogad: ~9 fotó után a mentés elakadt volna.
+// Most: a fotó a tárba, a munkába csak a hivatkozás ({path}). Internet nélkül a régi módon,
+// helyben marad (a fotó bizonyíték, nem veszhet el). A régi base64-es fotók változatlanul működnek.
+var RC_BUCKET=(window.RPW_CFG&&RPW_CFG.BUCKET)||'rpw-photos';
+async function rcStore(d,kind){
+  var ts=new Date().toISOString();
+  if(!(window.RPWPhotos&&RPWPhotos.gatewayOn&&RPWPhotos.gatewayOn()&&window.RPWUtil&&RPWUtil.dataUrlToBlob&&JOB&&JOB.id))return {data:d,ts:ts};
+  try{
+    var path=JOB.id+'/reconst_'+kind+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)+'.jpg';
+    var up=await RPWPhotos.bucket(sb,RC_BUCKET).upload(path,RPWUtil.dataUrlToBlob(d),{contentType:'image/jpeg',upsert:true});
+    if(up&&!up.error)return {path:path,ts:ts};
+    throw (up&&up.error)||new Error('upload');
+  }catch(e){
+    try{console.warn('[RPW] reconstatare-foto: a tároló nem érhető el, a fotó helyben marad',e)}catch(_){}
+    toast('Fotografia păstrată local (fără conexiune) — se trimite oricum',1);
+    return {data:d,ts:ts};
+  }
+}
+function rcRef(p){ return typeof p==='string'?{data:p}:(p||null); }
+function rcImg(p){
+  p=rcRef(p); if(!p)return '';
+  if(p.path&&window.RPWPhotos&&RPWPhotos.imgAttrs)return RPWPhotos.imgAttrs(p,{thumb:true});
+  return (p.data&&/^data:image\//i.test(p.data))?'src="'+escU(p.data)+'"':'';
+}
+async function rcBlob(p){
+  p=rcRef(p); if(!p)return null;
+  if(p.data)return (window.RPWUtil&&RPWUtil.dataUrlToBlob)?RPWUtil.dataUrlToBlob(p.data):null;
+  if(p.path&&window.RPWPhotos)return await RPWPhotos.refToBlob(sb,p);
+  return null;
+}
+async function rcB64(p){
+  p=rcRef(p); if(!p)return null;
+  if(p.data&&p.data.indexOf(',')>0)return p.data.split(',')[1];
+  var b=await rcBlob(p); if(!b)return null;
+  return await new Promise(function(res){var r=new FileReader();r.onload=function(){res(String(r.result).split(',')[1]||null)};r.onerror=function(){res(null)};r.readAsDataURL(b);});
+}
+
 function render(){
   var ln=gL(),job=JOB;
   if(!job){document.getElementById('app').innerHTML='<div class="loading">'+T('noJob')+'<br><br><button class="btn btn-b" style="width:auto;padding:10px 24px;display:inline-flex" onclick="location.assign(\'index.html\')">'+T('openD')+'</button></div>';return}
@@ -397,7 +437,7 @@ function render(){
   h+='<div class="photo-sec"><div class="photo-title"><span>'+T('photos')+'</span><span style="font-size:10px;color:var(--t3)">'+((window.RPWWorkflow&&RPWWorkflow.realPhotoCount)?RPWWorkflow.realPhotoCount(photos):photos.filter(function(p){return p&&(p.data||p.url||p.key||p.path||p.ref)}).length)+'/20</span></div><div class="pgrid">';
   for(var x=0;x<20;x++){
     var p=photos[x];
-    h+='<div class="pslot '+(p?'done':'')+'">'+(p?'<img src="'+escU(p.data)+'"/><button class="pslot-x" onclick="delPh('+x+')">×</button>':IC.cam)+'<div class="pslot-n">'+(x+1)+'</div><input type="file" accept="image/*" onchange="addPh('+x+',event)"/></div>';
+    h+='<div class="pslot '+(p?'done':'')+'">'+(p?'<img '+rcImg(p)+'/><button class="pslot-x" onclick="delPh('+x+')">×</button>':IC.cam)+'<div class="pslot-n">'+(x+1)+'</div><input type="file" accept="image/*" onchange="addPh('+x+',event)"/></div>';
   }
   h+='</div></div>';
 
@@ -409,6 +449,7 @@ function render(){
   h+='<div class="bpad"></div>';
   if(S.ts)h+='<div class="toast '+(S.te?'err':'')+'">'+S.ts+'</div>';
   document.getElementById('app').innerHTML=h;
+  try{ if(window.RPWPhotos&&RPWPhotos.hydrate) RPWPhotos.hydrate(sb); }catch(e){}
 }
 
 window.uRC=async function(f,v){if(!JOB)return;if(!JOB.reconst)JOB.reconst={};JOB.reconst[f]=v;await saveJ()};
@@ -418,7 +459,7 @@ window.aRow=async function(){if(!JOB)return;if(!JOB.reconst)JOB.reconst={};if(!J
 window.saveRow=async function(x){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[x])return;var r=JOB.reconst.rows[x];if(!r.name){alert('Completeaza numele elementului');return}r.editing=false;await saveJ();render()};
 window.editRow=async function(x){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[x])return;JOB.reconst.rows[x].editing=true;await saveJ();render()};
 window.setRowOp=async function(idx,op){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[idx])return;var r=JOB.reconst.rows[idx];r.op=(r.op===op?'':op);await saveJ();render()};
-window.addRowPhoto=function(idx,e){var f=e.target.files&&e.target.files[0];if(!f)return;resize(f,async function(d){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[idx])return;if(!JOB.reconst.rows[idx].photos)JOB.reconst.rows[idx].photos=[];JOB.reconst.rows[idx].photos.push(d);await saveJ();toast(T('saved'));render()})};
+window.addRowPhoto=function(idx,e){var f=e.target.files&&e.target.files[0];if(!f)return;resize(f,async function(d){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[idx])return;var ref=await rcStore(d,'el');if(!JOB.reconst.rows[idx].photos)JOB.reconst.rows[idx].photos=[];JOB.reconst.rows[idx].photos.push(ref);await saveJ();toast(T('saved'));render()})};
 window.delRowPhoto=async function(idx,pidx){if(!JOB||!JOB.reconst||!JOB.reconst.rows||!JOB.reconst.rows[idx]||!JOB.reconst.rows[idx].photos)return;if(!confirm('\u26A0\uFE0F Fotografia este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;JOB.reconst.rows[idx].photos.splice(pidx,1);await saveJ();render()};
 window.uDoc=async function(f,v){if(!JOB||!JOB.reconst)return;JOB.reconst.docs[f]=v;await saveJ()};
 // Reconstatare Acceptat → a plusz sorok a termelésbe (evalData.suplimentare), az evaluare pótmunkáit megőrizve
@@ -446,7 +487,7 @@ window.rcResponse=async function(st){
   await saveJ();render();
   toast(st==='accepted'?'Acceptat ✓':'Refuzat ✗');
 };
-window.addPh=function(x,e){var f=e.target.files&&e.target.files[0];if(!f)return;resize(f,async function(d){if(!JOB.reconstPhotos)JOB.reconstPhotos=[];if(JOB.reconstPhotos.length>x)JOB.reconstPhotos[x]={data:d,ts:new Date().toISOString()};else JOB.reconstPhotos.push({data:d,ts:new Date().toISOString()});await saveJ();toast(T('saved'));render()})};
+window.addPh=function(x,e){var f=e.target.files&&e.target.files[0];if(!f)return;resize(f,async function(d){var ref=await rcStore(d,'ov');if(!JOB.reconstPhotos)JOB.reconstPhotos=[];if(JOB.reconstPhotos.length>x)JOB.reconstPhotos[x]=ref;else JOB.reconstPhotos.push(ref);await saveJ();toast(T('saved'));render()})};
 window.delPh=async function(x){if(!JOB||!JOB.reconstPhotos||!JOB.reconstPhotos[x])return;if(!confirm('\u26A0\uFE0F Fotografia '+(x+1)+' este o DOVAD\u0102. Sigur o \u0219tergi DEFINITIV?'))return;JOB.reconstPhotos.splice(x,1);await saveJ();render()};
 window.advPh=async function(){
   if(!JOB)return;
@@ -485,7 +526,7 @@ function renderRcCard(r,x){
   var phs=r.photos||[];
   if(r.editing!==true){
     var o='<div class="rc-line"><div class="rc-card-nr">'+(x+1)+'</div><div class="rc-line-nm">'+esc(r.name||'—')+'</div>'+(r.op&&opL[r.op]?'<span class="op-btn on '+opC[r.op]+'" style="cursor:default">'+opL[r.op]+'</span>':'')+'<span class="rc-line-h">'+(r.hours?r.hours+' ore':'')+'</span>'+(r.tipAvarie?'<span class="rc-line-obs">'+esc(r.tipAvarie)+'</span>':'');
-    for(var p=0;p<phs.length;p++){o+='<span class="rc-line-phw"><img class="rc-line-ph" src="'+phs[p]+'"/><button class="rc-line-phx" onclick="delRowPhoto('+x+','+p+')">×</button></span>'}
+    for(var p=0;p<phs.length;p++){o+='<span class="rc-line-phw"><img class="rc-line-ph" '+rcImg(phs[p])+'/><button class="rc-line-phx" onclick="delRowPhoto('+x+','+p+')">×</button></span>'}
     o+='<button class="rc-line-edit" onclick="editRow('+x+')">✎</button><button class="rc-card-del" onclick="dRow('+x+')">×</button></div>';
     return o;
   }
@@ -495,7 +536,7 @@ function renderRcCard(r,x){
   o+='</div>';
   o+='<div class="rc-row2"><div class="rc-ora"><input type="number" step="0.25" min="0" value="'+(r.hours||'')+'" onchange="uRow('+x+',\'hours\',this.value)"/><span class="rc-ora-lbl">ore</span></div><input class="rc-obs" value="'+esc(r.tipAvarie)+'" placeholder="Tip avarie / obs." onchange="uRow('+x+',\'tipAvarie\',this.value)"/></div>';
   o+='<div class="rc-phs">';
-  for(var p=0;p<phs.length;p++){o+='<div class="rc-ph done"><img src="'+phs[p]+'"/><button class="rc-ph-del" onclick="delRowPhoto('+x+','+p+')">×</button></div>'}
+  for(var p=0;p<phs.length;p++){o+='<div class="rc-ph done"><img '+rcImg(phs[p])+'/><button class="rc-ph-del" onclick="delRowPhoto('+x+','+p+')">×</button></div>'}
   o+='<div class="rc-ph"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><input type="file" accept="image/*" onchange="addRowPhoto('+x+',event)"/></div>';
   o+='</div><button class="rc-save" onclick="saveRow('+x+')">✓ Salveaza rand</button></div>';
   return o;
@@ -607,12 +648,12 @@ window.emailReconst=async function(){
     var pdfB64=await buildReconstPdf();
     var atts=[{filename:'Nota_reconstatare_'+(JOB.plate||'auto').replace(/[^A-Za-z0-9]/g,'')+'.pdf',content:pdfB64}];
     var photos=JOB.reconstPhotos||[];
-    for(var x=0;x<photos.length;x++){if(photos[x]&&photos[x].data&&photos[x].data.indexOf(',')>0){atts.push({filename:'foto_'+(x+1)+'.jpg',content:photos[x].data.split(',')[1]})}}
+    for(var x=0;x<photos.length;x++){var c1=await rcB64(photos[x]);if(c1)atts.push({filename:'foto_'+(x+1)+'.jpg',content:c1})}
     var rws=(JOB.reconst&&JOB.reconst.rows)||[];
     for(var ri=0;ri<rws.length;ri++){
       var rp=rws[ri].photos||[];
       var nmF=String(rws[ri].name||('element_'+(ri+1))).replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,30)||('element_'+(ri+1));
-      for(var pi=0;pi<rp.length;pi++){if(rp[pi]&&rp[pi].indexOf(',')>0)atts.push({filename:(ri+1)+'_'+nmF+'_'+(pi+1)+'.jpg',content:rp[pi].split(',')[1]})}
+      for(var pi=0;pi<rp.length;pi++){var c2=await rcB64(rp[pi]);if(c2)atts.push({filename:(ri+1)+'_'+nmF+'_'+(pi+1)+'.jpg',content:c2})}
     }
     // 2026-11-22: levelenként max. 10 melléklet / 10 MB → több levél, „(1/3)” jelöléssel, sorban.
     // Ha egy levél elbukik, megállunk és megmondjuk, hányadik — a többit nem küldjük vakon.
@@ -634,11 +675,11 @@ window.shareReconst=async function(){
   if(!JOB)return;
   var photos=JOB.reconstPhotos||[],files=[];
   for(var x=0;x<photos.length;x++){
-    if(photos[x]&&photos[x].data){
+    if(photos[x]){
       try{
-        // 2026-09-06: NEM fetch(dataUrl) — azt a CSP connect-src tiltja (lasd rpw-util.js dataUrlToBlob)
-        var blob=(window.RPWUtil&&RPWUtil.dataUrlToBlob)?RPWUtil.dataUrlToBlob(photos[x].data):await (await fetch(photos[x].data)).blob();
-        files.push(new File([blob],'reconst_'+(x+1)+'.jpg',{type:'image/jpeg'}));
+        // 2026-09-06: NEM fetch(dataUrl) — azt a CSP connect-src tiltja (rcBlob: dataUrlToBlob / tárolt fájl)
+        var blob=await rcBlob(photos[x]);
+        if(blob)files.push(new File([blob],'reconst_'+(x+1)+'.jpg',{type:'image/jpeg'}));
       }catch(e){}
     }
   }

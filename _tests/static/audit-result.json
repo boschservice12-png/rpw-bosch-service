@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-22T20:02:56.684Z",
+  "generated": "2026-11-22T20:13:31.073Z",
   "files": 33,
   "total": 28,
   "allowed": 28,
@@ -143,7 +143,7 @@
     },
     {
       "fajl": "rpw-reconstatare-red.html",
-      "sor": 193,
+      "sor": 194,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",
@@ -151,7 +151,7 @@
     },
     {
       "fajl": "rpw-reconstatare-red.html",
-      "sor": 198,
+      "sor": 199,
       "mezo": "phases[]",
       "ok": "szerverválasz alkalmazása",
       "ut": "a szerverről (vagy a gyorsítótárból) betöltött teljes állapot átvétele",

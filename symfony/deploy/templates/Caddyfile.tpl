@@ -8,9 +8,16 @@
 (rpw_app) {
 	root * __RPW_HOME__/current/symfony/public
 	encode zstd gzip
-	# a legnagyobb legitim kérés a 12 MB-os levél/OCR
-	request_body {
-		max_size 16MB
+	# MÉRET-LÁNC (2026-11-22, tests/Unit/LimitsChainTest.php őrzi):
+	#   fotó/irat feltöltése a helyi tárba: az alkalmazás max. 25 MB-ot fogad → itt 26 MB
+	#   minden más (OCR, levél: max. 12 MB; mentés: max. 2 MB) → itt 13 MB
+	@upload path /storage/v1/object/upload/*
+	@notupload not path /storage/v1/object/upload/*
+	request_body @upload {
+		max_size 26MB
+	}
+	request_body @notupload {
+		max_size 13MB
 	}
 	# rejtett és belső fájlok soha (.env, .git, …)
 	@hidden path */.*

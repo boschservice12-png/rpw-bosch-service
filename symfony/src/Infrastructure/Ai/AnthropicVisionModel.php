@@ -24,6 +24,9 @@ use Psr\Log\LoggerInterface;
  */
 final class AnthropicVisionModel implements VisionModel
 {
+    public const TIMEOUT_SEC = 40.0;
+    public const MAX_RETRIES = 1;
+
     public const DEFAULT_MODEL = 'claude-sonnet-5';
 
     private ?Client $client = null;
@@ -50,7 +53,10 @@ final class AnthropicVisionModel implements VisionModel
         if (!$this->configured()) {
             return ['ok' => false, 'error' => 'not_configured'];
         }
-        $this->client ??= new Client(apiKey: $this->apiKey, requestOptions: ['timeout' => 60.0, 'maxRetries' => 2]);
+        // IDŐKORLÁT-LÁNC (2026-11-22): a PHP-FPM 90 mp után leállítja a kérést (request_terminate_timeout).
+        // 40 mp × (1 + 1 újrapróba) + várakozás < 90 mp → lassú AI-nál is RENDEZETT hibaüzenet, nem néma 502.
+        // (Korábban 60 mp × 3 próba ≈ 3 perc: a dolgozó üzenet nélküli szerverhibát kapott volna.)
+        $this->client ??= new Client(apiKey: $this->apiKey, requestOptions: ['timeout' => self::TIMEOUT_SEC, 'maxRetries' => self::MAX_RETRIES]);
         $model = $this->model();
         try {
             $message = $this->client->messages->create(

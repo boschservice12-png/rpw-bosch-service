@@ -10,13 +10,15 @@ use Symfony\Component\HttpFoundation\Request;
 /** Szigorú JSON-bemenet: rossz JSON → bad_request, nem 500. */
 final class JsonInput
 {
+    /** Egy munka mentése (a teljes munka-JSON) legfeljebb ennyi. A fotók a TÁROLÓBAN vannak, nem a munkában. */
     public const MAX_BYTES = 2_000_000;
+    public const TOO_LARGE_RO = 'Dosarul are prea multe date de salvat (max. 2 MB). Fotografiile trebuie să fie în arhiva foto — anunțați administratorul.';
 
     public static function body(Request $r): array
     {
         $raw = $r->getContent();
         if (\strlen($raw) > self::MAX_BYTES) {
-            throw new ApiError('bad_request', ['detail' => 'payload too large'], 413);
+            throw new ApiError('bad_request', ['detail' => 'payload too large', 'message' => self::TOO_LARGE_RO], 413);
         }
         if ($raw === '') {
             return [];

@@ -27,6 +27,8 @@ final class DocumentAi
         'permis_verso', 'declaratie_dauna', 'polita_rca', 'imputernicire', 'foto_fata', 'foto_spate', 'foto_stanga', 'foto_dreapta',
         'foto_serie_caroserie', 'foto_avarii', 'altceva'];
     public const MAX_IMAGE_CHARS = 7_000_000;
+    /** Az AI-szolgáltató képenként legfeljebb 5 MB-ot fogad (visszafejtve); PDF-nél a kérés 12 MB-os határa dönt. */
+    public const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
     private const OCR_MAX_TOKENS = 1500;
     private const CLASSIFY_MAX_TOKENS = 256;
 
@@ -62,6 +64,9 @@ final class DocumentAi
             return ['status' => 413, 'body' => ['error' => 'Image too large (max ~5MB)']];
         }
         $m = self::detectMedia($image);
+        if ($m !== null && $m['kind'] === 'image' && (int) floor(\strlen($m['data']) * 3 / 4) > self::MAX_IMAGE_BYTES) {
+            return ['status' => 413, 'body' => ['error' => 'Imaginea este prea mare (max. 5 MB). Fotografiați din nou.']];
+        }
         if ($m === null) {
             return ['status' => 415, 'body' => ['error' => 'Format nerecunoscut. Acceptăm: JPEG, PNG, WebP, GIF, PDF.']];
         }

@@ -2150,7 +2150,7 @@
         ],
         [
           "rpw-reconstatare-red.html",
-          "fetch(photos[x].data)"
+          "rcBlob(photos[x])"
         ]
       ],
       "be": [],

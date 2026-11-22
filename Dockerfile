@@ -21,7 +21,7 @@ RUN composer install --no-dev --no-scripts --no-interaction --no-progress --pref
 FROM php:8.3-cli-alpine
 RUN addgroup -S rpw && adduser -S -G rpw -h /app rpw \
     && { echo 'expose_php=Off'; echo 'display_errors=Off'; echo 'log_errors=On'; \
-         echo 'memory_limit=256M'; echo 'post_max_size=16M'; echo 'max_execution_time=90'; \
+         echo 'memory_limit=256M'; echo 'post_max_size=26M'; echo 'max_execution_time=90'; \
          echo 'opcache.enable_cli=1'; } > /usr/local/etc/php/conf.d/99-rpw.ini
 WORKDIR /app
 # a meglévő felület (a repó gyökere) + a Symfony backend

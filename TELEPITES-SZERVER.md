@@ -199,6 +199,19 @@ A kiírt sort tedd a **jelszókezelődbe**, a gép jelszava mellé. Ne e-mailben
 | Fotók vissza a másolatból (katasztrófa után) | `… rpw:storage:replicate --reverse` |
 | Domain / beállítás módosítása | `nano /etc/rpw/rpw.conf`, utána `bash /opt/rpw/repo/symfony/deploy/configure.sh` |
 
+## Méret- és időkorlátok (2026-11-22 — a lánc-teszt őrzi: `symfony/tests/Unit/LimitsChainTest.php`)
+
+| Mi | Korlát | Hol dől el |
+|---|---|---|
+| Fotó / irat feltöltése | **max. 25 MB** (a telefon 0,3–0,5 MB-ra tömörít) | objektumtár: az aláírásban · helyi: Caddy 26 MB → PHP 26 MB → alkalmazás 25 MB |
+| Csak JPG / PDF | a bájtokból is ellenőrizve | kapu + helyi tár |
+| OCR-kép | **max. 5 MB** (az AI-szolgáltató határa) | alkalmazás |
+| OCR / levél kérése | max. 12 MB | Caddy 13 MB → alkalmazás 12 MB |
+| Egy levél mellékletei | max. 10 db / 10 MB — több fotónál automatikusan több levél | böngésző (9,5 MB-os csomagok) → levélküldő |
+| Egy munka mentése | **max. 2 MB** — a fotók a tárban, nem a munkában | alkalmazás (érthető román hibaüzenet) · az átállás előtt a `rpw:db:check` jelzi a túl nagy régi munkát |
+| AI-hívás ideje | 40 mp × 2 próba < 90 mp | a PHP 90 mp után leállít — előtte rendezett hibaüzenet |
+| Memória | 256 MB / folyamat, max. 10 folyamat | 8 GB-os gépen bőven elfér |
+
 ## Mi hol van
 
 ```
@@ -292,6 +305,8 @@ A végén: a `RPW_LEGACY_S3_*` sorok törlése, a Supabase-kulcs visszavonása.
 | Csak valódi JPG/PDF | kapu: csak `.jpg/.jpeg/.pdf`; a helyi tár a bájtokat is nézi; a böngésző nem tölt fel hamis JPG-t; a másoló jelzi a régi hamis JPG-ket | `StorageFormatTest` |
 | Méretkorlát a közvetlen feltöltésre | a pontos méret az aláírás része (max. 25 MB) — a tár minden más méretet elutasít | `S3ObjectStoreTest`, `StorageS3GatewayTest` |
 | Meglévő fotók átvitele | `rpw:storage:migrate` helyi lemezről vagy a régi Supabase-tárból, cégenkénti kulcsra | `MigrateTest` (a régi tárba semmit nem ír) |
+| Szakvélemény-fotók a munkában (2 MB-os mentési határ) | a reconstatare fotói a tárba mennek; internet nélkül helyben maradnak | `test-reconst-photos.js` (valódi oldalkóddal) |
+| Méret- és időkorlátok összehangolása | Caddy útvonalanként, PHP 26 MB, AI 40 mp × 2, OCR-kép 5 MB, érthető 413 | `LimitsChainTest` (szándékos hibával is kipróbálva), `SizeLimitsTest` |
 | Sok fotó e-mailben | levelenként max. 10 melléklet / 10 MB → automatikusan több levél „(1/3)” | `test-mail-split.js` |
 
 ## Ami a telepítés után jön (a terv: `RPW-004-SYMFONY-ATALLAS.md`)
