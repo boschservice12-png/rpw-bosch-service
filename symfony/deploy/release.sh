@@ -41,8 +41,15 @@ ln -s "$RPW_SHARED/log" var/log            # a napló kiadásokon át megmarad (
 
 step "Mentés telepítés előtt"
 if [ -n "$prev_rel" ]; then
-  console_in "$prev_rel" rpw:backup --to="$RPW_BACKUPS/pre-deploy" --keep=5 > /dev/null && ok "kész: $RPW_BACKUPS/pre-deploy" \
-    || die "a mentés nem sikerült — a telepítés megállt, az élő kiadás változatlan"
+  # Elsőként az ÉLŐ kód ment (az ismeri biztosan a mai sémát). Ha éppen a mentésben van a hiba, a javítás
+  # e nélkül soha nem kerülhetne fel → második próba az ÚJ kóddal. Mentés nélkül NEM telepítünk.
+  if console_in "$prev_rel" rpw:backup --to="$RPW_BACKUPS/pre-deploy" --keep=5 > /dev/null 2>&1; then
+    ok "kész (élő kóddal): $RPW_BACKUPS/pre-deploy"
+  elif console_in "$rel" rpw:backup --to="$RPW_BACKUPS/pre-deploy" --keep=5 > /dev/null; then
+    ok "kész (az új kóddal — az élő kód mentése elbukott): $RPW_BACKUPS/pre-deploy"
+  else
+    die "a mentés nem sikerült — a telepítés megállt, az élő kiadás változatlan"
+  fi
 else
   info "első kiadás — nincs mit menteni"
 fi

@@ -41,6 +41,17 @@ final class BackupService
         if (!mkdir($dir, 0700, true) && !is_dir($dir)) {
             throw new \RuntimeException('A mentési mappa nem hozható létre: '.$dir);
         }
+        try {
+            return $this->createIn($dir, $key);
+        } catch (\Throwable $e) {
+            // félkész mentés nem maradhat: a „legutóbbi mentés” soha ne egy hibás mappa legyen
+            self::removeTree($dir);
+            throw $e;
+        }
+    }
+
+    private function createIn(string $dir, ?string $key): array
+    {
         $tmp = $dir.'/.tmp';
         mkdir($tmp, 0700);
         $plain = [];
@@ -75,6 +86,18 @@ final class BackupService
         chmod($dir.'/MANIFEST.json', 0600);
 
         return ['dir' => $dir, 'files' => $manifest['files']];
+    }
+
+    private static function removeTree(string $dir): void
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+        $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS), \RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($it as $f) {
+            $f->isDir() && !$f->isLink() ? rmdir($f->getPathname()) : unlink($f->getPathname());
+        }
+        rmdir($dir);
     }
 
     /** Visszaellenőrzés: kibontás egy ideiglenes helyre + sha256-összevetés. */

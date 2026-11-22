@@ -105,4 +105,20 @@ final class SecurityLayersTest extends ApiTestCase
         self::assertTrue($svc->verify($full['dir'])['ok']);
         self::assertFileExists($full['dir'].'/storage.tar.enc', 'a fotók is bekerülnek');
     }
+
+    /** Sikertelen mentés nem hagy félkész mappát (különben a „legutóbbi mentés” egy hibás mappa lenne). */
+    public function testFailedBackupLeavesNothingBehind(): void
+    {
+        $this->shop('A', ['admin' => ['Ana Admin', '4826']]);
+        $dir = sys_get_temp_dir().'/rpwb-'.bin2hex(random_bytes(4));
+        mkdir($dir.'/storage', 0700, true);
+        symlink('/nonexistent/rpw-'.bin2hex(random_bytes(4)), $dir.'/storage/broken.jpg');   // olvashatatlan elem → a mentés elbukik
+        $svc = new BackupService($this->db, $dir.'/storage', base64_encode(sodium_crypto_secretstream_xchacha20poly1305_keygen()));
+        try {
+            $svc->create($dir.'/bk');
+            self::fail('a mentésnek el kell buknia');
+        } catch (\UnexpectedValueException) {
+            self::assertSame([], glob($dir.'/bk/rpw-*') ?: [], 'nem maradt félkész mentés');
+        }
+    }
 }
