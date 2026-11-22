@@ -34,6 +34,8 @@ final class StorageController
     public const LIMITS = ['readPaths' => 60, 'removePaths' => 20];
     private const JOB_RE = '/^RPW-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/';
     private const REST_RE = '/^(?:[A-Za-z0-9_-]{1,40}\/)?[A-Za-z0-9_.-]{1,160}$/';
+    /** Feltölteni CSAK JPG és PDF lehet: ezt kéri a biztosító, az e-mail és az Audatex (Ferenc, 2026-11-22). */
+    public const UPLOAD_EXT = ['jpg', 'jpeg', 'pdf'];
     private const CLIENT_NAME_RE = '/^(?:acta_[A-Za-z0-9_-]{1,60}|client)_[0-9]{10,16}_[a-z0-9]{1,8}\.[a-z0-9]{1,6}$/';
 
     public function __construct(
@@ -83,6 +85,9 @@ final class StorageController
                 if ($x === null) {
                     return $this->out(400, 'bad_path');
                 }
+                if (!self::allowedUpload($x['path'])) {
+                    return $this->out(400, 'format');
+                }
                 if (!$this->owns($actor, $x['jobId'])) {
                     return $this->out(403, 'not_allowed');
                 }
@@ -116,6 +121,9 @@ final class StorageController
             $x = self::parsePath($body['path'] ?? null);
             if ($x === null) {
                 return $this->out(400, 'bad_path');
+            }
+            if (!self::allowedUpload($x['path'])) {
+                return $this->out(400, 'format');
             }
             $shop = preg_match(self::CLIENT_NAME_RE, $x['rest']) === 1 ? $this->client->openJobShop($x['jobId']) : null;
             if ($shop === null) {
@@ -164,6 +172,10 @@ final class StorageController
         if (\strlen($bytes) > FileStore::MAX_BYTES) {
             return new JsonResponse(['statusCode' => '413', 'error' => 'TooLarge', 'message' => 'file too large'], 413);
         }
+        if (!self::bytesMatchExtension($path, $bytes)) {
+            // a „.jpg” névvel érkező HEIC/PNG/egyéb nem kerülhet be: e-mailben és Audatexben hibás fájl lenne
+            return new JsonResponse(['statusCode' => '415', 'error' => 'format', 'message' => 'only real JPG or PDF'], 415);
+        }
         $this->store->put($bucket, $path, $bytes, self::safeMime($mime, $bytes));
 
         return new JsonResponse(['Key' => $bucket.'/'.$path, 'Id' => hash('sha1', $bucket.'/'.$path)]);
@@ -204,6 +216,21 @@ final class StorageController
         $urls = $this->objects->readUrls($shop, array_values(array_unique(array_column($xs, 'path'))), $base);
 
         return new JsonResponse(['ok' => true, 'urls' => array_map(static fn ($x) => ['path' => $x['path'], 'signedUrl' => $urls[$x['path']] ?? null], $xs)]);
+    }
+
+    /** A tartalom a bájtokból: JPG = FF D8 FF, PDF = %PDF- — a név nem elég. */
+    public static function bytesMatchExtension(string $path, string $bytes): bool
+    {
+        return match (strtolower(pathinfo($path, \PATHINFO_EXTENSION))) {
+            'jpg', 'jpeg' => str_starts_with($bytes, "\xFF\xD8\xFF"),
+            'pdf' => str_starts_with($bytes, '%PDF-'),
+            default => false,
+        };
+    }
+
+    public static function allowedUpload(string $path): bool
+    {
+        return \in_array(strtolower(pathinfo($path, \PATHINFO_EXTENSION)), self::UPLOAD_EXT, true);
     }
 
     private function parseAll(mixed $paths, int $max): ?array

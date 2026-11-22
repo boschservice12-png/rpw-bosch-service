@@ -440,9 +440,14 @@ function saveConfig(){try{localStorage.setItem('rpw_config',JSON.stringify(CONFI
 // ====== SUPABASE STORAGE FOTO-API (recepcióval azonos: elem_<key> kulcs) ======
 function resizeFile(file){
   return new Promise(function(res){
+    // 2026-11-22: ha a kép nem nyitható meg (pl. iPhone HEIC egy androidos/asztali böngészőben),
+    // eddig a fotó csendben nem jelent meg. Most szól — és hamis JPG nem kerül fel.
+    var hiba=function(){ try{ toast('Fotografia nu a putut fi citită ca JPG. Fotografiați din nou.',1); }catch(_){ } };
     var r=new FileReader();
+    r.onerror=hiba;
     r.onload=function(e){
       var img=new Image();
+      img.onerror=hiba;
       img.onload=function(){
         var c=document.createElement('canvas'),mx=1600,sc=img.width>mx?mx/img.width:1;
         c.width=img.width*sc;c.height=img.height*sc;

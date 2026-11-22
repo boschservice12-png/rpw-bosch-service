@@ -47,6 +47,9 @@ final class S3ObjectStore implements ObjectStore
             throw new \DomainException('exists');
         }
         $mime = self::mimeOf($path);
+        if ($mime !== 'image/jpeg' && $mime !== 'application/pdf') {
+            throw new \InvalidArgumentException('format');   // a kapu már kiszűri; itt a második zár
+        }
 
         return ['signedUrl' => $this->signer->presign('PUT', $key, self::UPLOAD_TTL, ['content-type' => $mime]),
             'token' => '', 'direct' => true, 'contentType' => $mime];

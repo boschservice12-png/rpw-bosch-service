@@ -536,9 +536,14 @@ function uid(){return 'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)}
 /* Kepmeret csokkentes feltoltes elott */
 function resizeFile(file){
   return new Promise(function(res){
+    // 2026-11-22: ha a kép nem nyitható meg (pl. iPhone HEIC egy androidos/asztali böngészőben),
+    // eddig a fotó csendben nem jelent meg. Most szól — és hamis JPG nem kerül fel.
+    var hiba=function(){ try{ toast('Fotografia nu a putut fi citită ca JPG. Fotografiați din nou.','err'); }catch(_){ } };
     var r=new FileReader();
+    r.onerror=hiba;
     r.onload=function(e){
       var img=new Image();
+      img.onerror=hiba;
       img.onload=function(){
         var c=document.createElement('canvas'),mx=1600,sc=img.width>mx?mx/img.width:1;
         c.width=img.width*sc;c.height=img.height*sc;

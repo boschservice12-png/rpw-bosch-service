@@ -234,7 +234,9 @@ window.__rpwServerReady = (async function(){
 
   async function put(file,prefix){
     var blob=await compress(file);
-    var isI=/^image\//.test(blob.type||file.type||'');
+    // 2026-11-22: kép CSAK valódi JPG-ként (e-mail, Audatex) — hamis .jpg nem kerülhet fel
+    var isI=/^image\//.test(file.type||'')||/\.(heic|heif|png|webp|gif|jpe?g)$/i.test(file.name||'');
+    if(isI&&blob.type!=='image/jpeg')throw new Error('Fotografia nu a putut fi convertită în JPG. Fotografiați din nou sau alegeți o poză JPG.');
     var ext=isI?'jpg':(((file.name||'file').split('.').pop())||'bin').toLowerCase();
     var key=prefix+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
     var path=JOB.id+'/'+key+'.'+ext;

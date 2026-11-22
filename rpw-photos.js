@@ -42,6 +42,7 @@
     try{ body=await r.json(); }catch(e){ body=null; }
     if(!r.ok || !body || body.ok!==true){
       var err={ message:(body&&body.error)||('HTTP '+r.status), status:r.status };
+      if(body&&body.error==='format') err.message='Doar fișiere JPG sau PDF';
       try{ console.warn('[RPW] tároló-kapu: '+op+' elutasítva', err); }catch(e){}
       return { error:err };
     }

@@ -124,7 +124,23 @@
     return new Blob([u8], {type:mime});
   }
 
-  var API={ uuid:uuid, jobId:jobId, esc:esc, escAttr:escAttr, escUrl:escUrl, safeName:safeName,
+  // 2026-11-22 (Ferenc: „a fotókat e-mailen kell küldözgessem”): a levélküldő szerver levelenként
+  // legfeljebb 10 mellékletet és 10 MB-ot (base64) fogad. Sok fotónál a küldés eddig elutasítva.
+  // Most a mellékleteket csomagokra bontjuk; a SORREND marad (az első levélben az első — pl. a PDF).
+  // Egyetlen, a korlátnál nagyobb melléklet saját csomagot kap (a szerver akkor is szól, nem csendes).
+  function splitAttachments(atts, o){
+    o=o||{}; var maxN=o.maxCount||10, maxB=o.maxBytes||(9.5*1024*1024);
+    var out=[], cur=[], size=0;
+    for(var i=0;i<(atts||[]).length;i++){
+      var a=atts[i], n=String((a&&a.content)||'').length;
+      if(cur.length && (cur.length>=maxN || size+n>maxB)){ out.push(cur); cur=[]; size=0; }
+      cur.push(a); size+=n;
+    }
+    if(cur.length) out.push(cur);
+    return out;
+  }
+
+  var API={ splitAttachments:splitAttachments, uuid:uuid, jobId:jobId, esc:esc, escAttr:escAttr, escUrl:escUrl, safeName:safeName,
             betoltesHibaHtml:betoltesHibaHtml, mutasdBetoltesHibat:mutasdBetoltesHibat,
             dataUrlToBlob:dataUrlToBlob };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }
