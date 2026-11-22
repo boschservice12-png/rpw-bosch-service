@@ -85,4 +85,24 @@ final class SecurityLayersTest extends ApiTestCase
         $this->expectException(\RuntimeException::class);
         (new BackupService($this->db, $dir, null))->create($dir);   // kulcs nélkül nem ment
     }
+
+    /** Friss szerver: a fotótár létezik, de üres — a mentésnek ilyenkor is sikerülnie kell (2026-11-22, próbatelepítésen talált hiba). */
+    public function testBackupWithEmptyAndFilledStorage(): void
+    {
+        $this->shop('A', ['admin' => ['Ana Admin', '4826']]);
+        $dir = sys_get_temp_dir().'/rpwb-'.bin2hex(random_bytes(4));
+        mkdir($dir.'/storage', 0700, true);
+        $svc = new BackupService($this->db, $dir.'/storage', base64_encode(sodium_crypto_secretstream_xchacha20poly1305_keygen()));
+
+        $empty = $svc->create($dir.'/bk');
+        self::assertTrue($svc->verify($empty['dir'])['ok'], 'üres fotótárral is ellenőrizhető mentés');
+        self::assertFileDoesNotExist($empty['dir'].'/storage.tar.enc');
+
+        mkdir($dir.'/storage/job-1', 0700);
+        file_put_contents($dir.'/storage/job-1/ov_0.jpg', random_bytes(2048));
+        sleep(1);   // a mentési mappa neve másodperc pontosságú
+        $full = $svc->create($dir.'/bk');
+        self::assertTrue($svc->verify($full['dir'])['ok']);
+        self::assertFileExists($full['dir'].'/storage.tar.enc', 'a fotók is bekerülnek');
+    }
 }

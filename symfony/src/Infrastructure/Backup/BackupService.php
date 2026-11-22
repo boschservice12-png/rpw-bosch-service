@@ -55,7 +55,12 @@ final class BackupService
             $tar = $tmp.'/storage.tar';
             $ph = new \PharData($tar);
             $ph->buildFromDirectory($this->storageDir);
-            $plain['storage.tar'] = $tar;
+            unset($ph);
+            // Üres fotótárból (friss szerver) a PharData NEM ír fájlt — ilyenkor nincs mit menteni.
+            // Korábban ez a titkosításnál összeomlott: az első éjszakai mentés és minden telepítés megállt.
+            if (is_file($tar)) {
+                $plain['storage.tar'] = $tar;
+            }
         }
         $manifest = ['created' => gmdate(\DATE_ATOM), 'encrypted' => $key !== null, 'files' => []];
         foreach ($plain as $name => $src) {
@@ -127,6 +132,9 @@ final class BackupService
         [$state, $header] = sodium_crypto_secretstream_xchacha20poly1305_init_push($key);
         $in = fopen($src, 'rb');
         $out = fopen($dst, 'wb');
+        if ($in === false || $out === false) {
+            throw new \RuntimeException('A mentés fájlja nem nyitható meg: '.basename($src));
+        }
         fwrite($out, $header);
         do {
             $chunk = (string) fread($in, self::CHUNK);
