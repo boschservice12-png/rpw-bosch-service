@@ -28,10 +28,11 @@ console.log('\n2. A jel megmondja, mit kell tenni');
 });
 ok(/title="'\+waTitle\+'"/.test(html),'a jelen ott a magyarazo cimke');
 
-console.log('\n3. A kapu szabalya VALTOZATLAN (nem lazitottunk)');
+console.log('\n3. 2026-11-23 (Ferenc: "a WhatsApp opcionalis"): NINCS kapu — a gomb kinezete jelzi, a hiany rogzitodik');
 ok(/var canOpen=cnd\.whatsapp/.test(html),'canOpen tovabbra is a whatsapp feltetel');
-ok(/if\(!job\.conditions\|\|!job\.conditions\.whatsapp\)\{toast\(T\('no_wa_yet'\),1\);return\}/.test(html),
-   'deschideLucrare() szerver-oldali ellenorzese erintetlen — a gomb megkerulese sem mukodik');
+ok(!/if\(!job\.conditions\|\|!job\.conditions\.whatsapp\)\{toast\(T\('no_wa_yet'\),1\);return\}/.test(html),
+   'deschideLucrare(): a WhatsApp NEM kapu (Ferenc, 2026-11-23)');
+ok(/job\.intrare=\{[^}]*lipsa:_lipsa/.test(html),'  helyette a hiany rogzitodik (job.intrare.lipsa)');
 
 console.log('\n4. A kezi bejeloles utja letezik (a "B" resz)');
 ok(/cond_q_wa/.test(html),'feltetel-modalban ott a WhatsApp sor');

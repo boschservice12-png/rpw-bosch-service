@@ -1,5 +1,14 @@
 # CHANGELOG.md
 
+## 2026-11-23 (4) — „Eșec salvare" a saját gépen + a WhatsApp opcionális
+
+> Ferenc: „a WhatsApp opcionális — most leblokkol" (képernyőkép: „✗ Eșec salvare – reîncearcă"). Csak frontend, migráció nincs.
+
+- **„Eșec salvare" — régi hiba, a helyi (Symfony) szerveren:** a Panou `freshJob()` eldobta a szerver verzióját, a `saveJob()` mentés után nem vette át az újat. Az éles Supabase ezt eltűrte (`p_expected_version:null`), a Symfony nem (`expected_version_required`). Most a verzió megmarad és frissül. Reprodukálva és igazolva a valódi helyi szerveren (böngészővel, két egymás utáni mentés: „✓ Salvat pe server").
+- **A WhatsApp nem kapu többé** (felülírja a 2026-08-26-i döntést): a „Recepție auto" mindig nyit, a hiányzó feltételek — a WhatsApp is — a `job.intrare.lipsa`-ba kerülnek. A gomb kinézete továbbra is jelzi, ha még nincs egyeztetve. A sávon nincs „kapu"-szegmens; a felirat: „Lipsesc condiții — se poate primi, se înregistrează".
+- **Echipă a helyi szerveren:** a Symfony `employees`/`rows` mezőt ad (`team`/`posts` helyett) és nincs `can_team` — a felület most mindkét alakot elfogadja. A feltétel-ablak a dolgozók nevét a belépőlap névsorából (`rpw2_roster`) is veszi — a recepciós is látja, csapat-jog nélkül.
+- Tesztek: a kaput őrző régi állítások az új szabályra átírva (`test-progres`, `test-wa`, `test-acceptance`, `test-fe-panou`); új: `test-ugy-folyamat` 11–12 (verzió, válaszalakok), mutációval ellenőrizve.
+
 ## 2026-11-23 (3) — Programare: 6 feltétel, hely és ember név szerint, duplikációmentes Preluare
 
 > Ferenc: „Programare nouă: beprogramáljuk az autót javításra — kondíció, dátum, alkatrész rendelés, hely, ember, akták rendben legyenek · Avizare: felvesszük az ügyfél adatait és kinyitjuk a biztosítási dossziét · Lucrare nouă: minden kondíció stimmel, betesszük az autót javítani · Preluare: ha valaki e-mailen, WhatsAppon küldi a javítási kondíciókat vagy a telefon felületről csinálja". Döntések: 1 „nem, csak jegyezzük" · 2 „igen" (név szerint) · 3 „e-mail utána". Csak frontend, migráció nincs.

@@ -88,6 +88,7 @@ function mk(o){return Object.assign({id:'T'+Math.random(),number:'MS-26-'+Math.f
 
 setTimeout(async ()=>{
 try{
+  const realSave=w.saveJob, realFresh=w.freshJob;
   hookSave();
   w.JOBS.length=0; w.__db.length=0;
 
@@ -262,6 +263,35 @@ try{
   w.JOBS.push(closed);
   ocr({plate:'MS-98-OLD',nrDosar:'X-1',asigurator:'Euroins'}); await send();
   eq(w.JOBS.length,6,'lezárt ügyhöz NEM csatolunk → új ügy');
+
+  grp('11 · A VERZIÓ NEM VÉSZ EL („Eșec salvare” a Symfony-szerveren, 2026-11-23)');
+  const VJ={id:'V-1',plate:'MS-77-VER',conditions:{}};
+  w.JOBS.length=0; w.JOBS.push(VJ);
+  w.RPWDb.getRow=function(){return Promise.resolve({data:{id:'V-1',data:{id:'V-1',plate:'MS-77-VER',conditions:{}},version:5},error:null})};
+  const fj=await realFresh('V-1');
+  eq(fj.version,5,'a friss betöltés megtartja a szerver verzióját');
+  let sentVer=null;
+  w.RPWDb.patch=function(sb,job){sentVer=job.version;return Promise.resolve({data:{ok:true,version:job.version+1},error:null})};
+  await realSave(fj);
+  eq(sentVer,5,'a mentés a verzióval megy');
+  eq(fj.version,6,'mentés után az új verzió átvéve');
+  await realSave(fj);
+  eq(sentVer,6,'  a következő mentés már az újjal (nincs version_conflict)');
+
+  grp('12 · ECHIPĂ — mindkét szerver válaszalakja (Supabase: team/posts · Symfony: employees/rows)');
+  const realRpc=w.sb.rpc; w.ecTok=function(){return 'tok'};
+  w.sb.rpc=function(n){ if(n==='rpw2_team')return Promise.resolve({data:{ok:true,employees:[{id:'e9',name:'Ion Pop',active:true}],roles:[]}});
+    if(n==='rpw_posts_get')return Promise.resolve({data:{ok:true,rows:[{code:'P9',label:'Post 9',active:true}]}});
+    if(n==='rpw2_roster')return Promise.resolve({data:[{id:'e9',name:'Ion Pop',role:'x'}]});
+    return Promise.resolve({data:{ok:true,rows:[]}}) };
+  w.EC.loaded=false; w.EC.team=[]; w.EC.posts=[]; w.S.screen='lucrari';
+  await w.ecLoad(true);
+  eq(w.EC.team.map(e=>e.name).join(','),'Ion Pop','Symfony „employees” → EC.team');
+  eq(w.EC.posts.map(p=>p.label).join(','),'Post 9','Symfony „rows” → EC.posts');
+  ok(w.EC.manager===true,'  a sikeres csapat-válasz = csapat-jog');
+  w.S.condRoster=null; await w.condRosterLoad();
+  eq(w.S.condRoster.map(e=>e.name).join(','),'Ion Pop','a névsor (rpw2_roster) a feltétel-ablakhoz, csapat-jog nélkül is');
+  w.sb.rpc=realRpc;
 }catch(e){ fail++; console.log('   ✗ KIVÉTEL: '+e.message+'\n'+(e.stack||'').split('\n').slice(0,4).join('\n')); }
 console.log('\n'+(fail?'✗ ':'✓ ')+pass+' pass / '+fail+' fail');
 process.exit(fail?1:0);

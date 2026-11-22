@@ -572,7 +572,10 @@ async function saveJob(job){
   try{
     var p=RPWDb.patch(sb,job);
     var t=new Promise(function(_,rej){setTimeout(function(){rej('timeout')},4000)});
-    await Promise.race([p,t]);
+    var res=await Promise.race([p,t]);
+    // 2026-11-23: a szerver uj verziojat atvesszuk — kulonben a KOVETKEZO mentes
+    // elavult verzioval menne (Symfony: version_conflict / expected_version_required).
+    if(res&&res.data&&typeof res.data.version==='number')job.version=res.data.version;
   }catch(e){console.warn('SB offline, localStorage OK')}
 }
 var _freshAt={};
@@ -584,7 +587,7 @@ async function freshJob(id){
     var p=RPWDb.getRow(sb,id,'data,updated_at');
     var t=new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'))},3000)});
     var r=await Promise.race([p,t]);
-    if(r&&r.data&&r.data.data)j=r.data.data;
+    if(r&&r.data&&r.data.data){j=r.data.data; if(typeof r.data.version==='number')j.version=r.data.version;}   // 2026-11-23: a verzio NEM veszhet el (a Symfony-szerver megkoveteli)
   }catch(e){}
   if(!j){try{var c=(RPWCache.getFullJobJson?RPWCache.getFullJobJson(id):null);if(c)j=JSON.parse(c)}catch(e){}}   // KODREVIEW #2
   if(!j&&idx>=0)j=JOBS[idx];
@@ -756,6 +759,7 @@ pr_proces:{ro:'Proces',en:'Process',hu:'Folyamat'},
 pr_acte:{ro:'acte',en:'docs',hu:'irat'},
 pr_lepes:{ro:'pasi',en:'steps',hu:'lepes'},
 pr_fazis:{ro:'faze',en:'phases',hu:'fazis'},
+pr_cond_lipsa:{ro:'Lipsesc condiții — se poate primi, se înregistrează',en:'Conditions missing — can be received, recorded',hu:'Hianyzo feltetel — fogadhato, rogzitjuk'},
 pr_feltetel:{ro:'conditii',en:'conditions',hu:'feltetel'},
 pr_gata:{ro:'Gata de receptie',en:'Ready for reception',hu:'Fogadasra kesz'},
 pr_var_wa:{ro:'Asteapta WhatsApp',en:'Waiting for WhatsApp',hu:'WhatsAppra var'},
@@ -1527,7 +1531,7 @@ function renderPanou(){
       + '<th>'+T('contact')+'</th><th>'+T('actions')+'</th></tr></thead><tbody>';
     displayed.forEach(function(j){
       var cnd=computeConditions(j);
-      var canOpen=cnd.whatsapp; // CSAK a WhatsApp kotelezo!
+      var canOpen=cnd.whatsapp; // 2026-11-23 (Ferenc: "a WhatsApp opcionalis"): CSAK a gomb kinezete (meg nem egyeztetve) — NEM tilt; a deschideLucrare mindig enged, a hiany rogzitodik
       // ── A SARGA SOR-TONUS KIVEZETVE (Ferenc, 2026-08-26) ─────────
       // A "3-bol 4 feltetel megvan" allapotot eddig sarga hatter jelezte
       // az egesz soron. Ezt most a Proces oszlop sava mondja el
@@ -2676,7 +2680,7 @@ function condModalHtml(){
     }
     h+='</div></div>';
     // om — NEV SZERINT: ki
-    var _team=((window.EC&&EC.team)||[]).filter(function(e){return e.active!==false&&!e.left_at});
+    var _team=((window.EC&&EC.team&&EC.team.length)?EC.team:(S.condRoster||[])).filter(function(e){return e.active!==false&&!e.left_at});
     h+='<div class="cond-q"><span class="cond-q-label">👤 '+T('cond_q_om')+'</span><div class="cond-btns">';
     if(_team.length){
       h+='<select class="nj-in cond-sel" onchange="setCondPick(\'om\',this.value)"><option value="">'+escH(T('cond_om_alege'))+'</option>';
@@ -2731,11 +2735,24 @@ window.openCondModal=async function(jobId){
   render();
   // a post- es a dolgozo-lista (Echipa) — ha meg nincs betoltve, betoltjuk; az ecLoad ujrarajzol
   try{ if(window.ecLoad && !(window.EC&&EC.loaded)) ecLoad(false); }catch(e){}
+  // a dolgozok NEVE a belepolap nevsorabol is (csapat-jog nelkul: a recepcios is lassa)
+  try{ condRosterLoad(); }catch(e){}
 };
 window.closeCondModal=function(){S.showCondModal=0;S.condDraft=null;render()};
 // 2026-11-23: a soron belüli ✎ szerkesztés megszűnt — ellenőrzés nélkül írt (a munkaszámot is).
 // A ✎ mostantól a rendes, ellenőrző szerkesztő ablakot nyitja (openEditJob).
 window.updJobField=async function(id,f,v){var j=await freshJob(id);if(!j)return;if(f==='plate'||f==='vin')v=String(v).toUpperCase();j[f]=v;await saveJob(j)};
+// A nevsor (rpw2_roster) — ugyanaz, amit a belepolap mutat: csak nev + szerep, jog nelkul is.
+window.condRosterLoad=async function(){
+  if(S.condRoster&&S.condRoster.length)return;
+  try{
+    var r=await sb.rpc('rpw2_roster',{p_shop_id:(window.RPW_CFG&&RPW_CFG.SHOP_ID)||''});
+    var d=r&&r.data; if(typeof d==='string'){try{d=JSON.parse(d)}catch(e){d=null}}
+    var L=Array.isArray(d)?d:((d&&(d.rows||d.team))||[]);
+    S.condRoster=L.map(function(x){return {id:x.id,name:x.name,active:true}});
+    if(S.showCondModal)render();
+  }catch(e){}
+};
 // a lista-valasztas: ures = nincs kivalasztva (loc/om = false), kulonben a NEV es true
 window.setCondPick=function(key,val){
   if(!S.condDraft)return;
@@ -2771,7 +2788,7 @@ window.saveCondModal=async function(){
 window.deschideLucrare=async function(jobId){
   var job=await freshJob(jobId);
   if(!job)return;
-  if(!job.conditions||!job.conditions.whatsapp){toast(T('no_wa_yet'),1);return}
+  // 2026-11-23 (Ferenc: "a WhatsApp opcionalis"): NINCS kapu — a hianya is csak rogzitodik (job.intrare.lipsa).
   if(!job.programare)job.programare={};
   job.sosire='sosit'; syncMirror(job);
   // v4: a `phase` workflow-mező; helyben csak a MEGJELENÍTÉSHEZ
@@ -2781,7 +2798,7 @@ window.deschideLucrare=async function(jobId){
   for(var p=1;p<=7;p++){if(!job.phases[p])job.phases[p]={status:'pending'}}
   if(job.phases[1].status==='pending'){job.phases[1].status='active';job.phases[1].started=new Date().toISOString()}
   // 2026-11-23 (Ferenc: "nem, csak jegyezzuk"): a hianyzo feltetel NEM tilt — de
-  // rogzitjuk, mi hianyzott, ki engedte be es mikor. A WhatsApp-kapu valtozatlan.
+  // rogzitjuk, mi hianyzott, ki engedte be es mikor. 2026-11-23: a WhatsApp sem kapu.
   var _cl=(window.RPWProgres&&RPWProgres.conditions)?RPWProgres.conditions(job,{T:T}):[];
   var _lipsa=_cl.filter(function(x){return !x.ok}).map(function(x){return x.key});
   job.intrare={at:new Date().toISOString(), by:(window.RPWAuth&&RPWAuth.actor)?RPWAuth.actor():null,
@@ -3202,10 +3219,13 @@ window.ecLoad=async function(force){
   try{
     var t=await sb.rpc('rpw2_team',{p_token:tok, p_include_left:!!EC.showLeft});
     var d=t&&t.data; if(typeof d==='string'){try{d=JSON.parse(d)}catch(e){d=null}}
-    if(d&&d.ok){ EC.team=d.team||[]; EC.roles=d.roles||[]; EC.manager=(d.can_team===true); EC.me=d.me||null; }
+    // 2026-11-23: a Symfony-szerver 'employees'-t ad 'team' helyett, es nincs 'can_team' —
+    // a sikeres valasz ott mar csapat-jogot jelent (a szerver kovetelte). Mindket alakot elfogadjuk.
+    if(d&&d.ok){ EC.team=d.team||d.employees||[]; EC.roles=d.roles||[];
+      EC.manager=(d.can_team===true)||(d.can_team===undefined&&Array.isArray(d.employees)); EC.me=d.me||null; }
     var a=await sb.rpc('rpw_posts_get',{p_token:tok});
     var pg=a&&a.data; if(typeof pg==='string'){try{pg=JSON.parse(pg)}catch(e){pg=null}}
-    if(pg&&pg.ok) EC.posts=pg.posts||[];
+    if(pg&&pg.ok) EC.posts=pg.posts||pg.rows||[];   // Supabase: posts · Symfony: rows
 
     // PIN-zárolás állapota — ki hány rossz próbálkozásnál tart, ki zárolt.
     // Csak csapatkezelőnek ad adatot; a szerver ellenőrzi a jogot.

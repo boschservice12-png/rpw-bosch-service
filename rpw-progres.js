@@ -98,8 +98,9 @@
        om          az ember — NEV SZERINT (ki): conditions.omName
        piese       nu_trebuie | livrat = kesz; false | comandat = nem
        acte        UJ: biztositos ugynel karszam + constatare/PV; sajat zsebnel kesz
-       whatsapp    az ugyfel visszaigazolta — EZ A KAPU (Ferenc 2026-08-26; a
-                   2026-11-23-i dontes: a tobbi NEM tilt, csak rogzitjuk)          */
+       whatsapp    az ugyfel visszaigazolta — 2026-11-23 (Ferenc: "a WhatsApp
+                   opcionalis"): NINCS kapu; egyik feltetel sem tilt, a hiany
+                   a belepeskor rogzitodik (job.intrare.lipsa)                    */
   function acteOk(j){
     if(!j||j.damageType!=='asig') return true;
     if(!String(j.nrDosar||'').trim()) return false;
@@ -117,7 +118,7 @@
       {key:'om',         label:T('cond_om'),         ok:!!c.om,  value:c.omName||''},
       {key:'piese',      label:T('cond_piese'),      ok:piese, value:(c.piese===true?'livrat':(c.piese||''))},
       {key:'acte',       label:T('cond_acte'),       ok:acteOk(j)},
-      {key:'whatsapp',   label:T('cond_whatsapp'),   ok:!!c.whatsapp, gate:true}
+      {key:'whatsapp',   label:T('cond_whatsapp'),   ok:!!c.whatsapp}
     ];
   }
 
@@ -165,12 +166,12 @@
       var n=0;
       var st2=raw.map(function(r){
         if(r.ok){n++; return {label:r.label, state:'done'}}
-        /* A KAPU a WhatsApp — csak az blokkol, a tobbi tajekoztat. */
-        return {label:r.label, state: r.gate?'block':'todo'};
+        /* 2026-11-23: nincs kapu — a hianyzo feltetel tajekoztat, nem blokkol. */
+        return {label:r.label, state:'todo'};
       });
-      var kapu=!!((j.conditions||{}).whatsapp);
+      var mind=(n===raw.length);
       return {kind: ratat?'ratat':'astept', steps:st2,
-              label: ratat ? T('pr_ratat') : (kapu ? T('pr_gata') : T('pr_var_wa')),
+              label: ratat ? T('pr_ratat') : (mind ? T('pr_gata') : T('pr_cond_lipsa')),
               proc:procName(j,T),
               counter:n+' / '+raw.length+' '+T('pr_feltetel'),
               /* Az elmaradt programalas MINDIG kesesnek szamit — ez a

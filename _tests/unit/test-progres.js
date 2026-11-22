@@ -68,9 +68,9 @@ console.log('\n2. Varakozas — HAT feltetel (2026-11-23: + akta), EGY kapu');
 {
   const c=P.chain({sosire:'programat',conditions:{programare:true,loc:true}},{T});
   eq(c.kind,'astept','felismeri a varakozast');
-  eq(shape(c),'DD..DB','a WhatsApp BLOKKOL, a tobbi hianyzas csak vilagos (sajat zseb: az akta kesz)');
+  eq(shape(c),'DD..D.','NINCS kapu: minden hianyzo feltetel csak vilagos (2026-11-23)');
   eq(c.counter,'3 / 6 pr_feltetel','feltetel-szamlalo');
-  eq(c.label,'pr_var_wa','a felirat megmondja, mire var');
+  eq(c.label,'pr_cond_lipsa','a felirat: hianyzik feltetel, de fogadhato');
 
   const kesz=P.chain({sosire:'programat',
     conditions:{programare:true,loc:true,om:true,piese:'livrat',whatsapp:true}},{T});
@@ -80,19 +80,19 @@ console.log('\n2. Varakozas — HAT feltetel (2026-11-23: + akta), EGY kapu');
   // A KAPU akkor is nyitva van, ha mas hianyzik — ez a szabaly nem lazult.
   const csakWa=P.chain({sosire:'programat',conditions:{whatsapp:true}},{T});
   eq(shape(csakWa),'....DD','csak a WhatsApp (+ a sajat zsebes akta) van meg');
-  ok(csakWa.label==='pr_gata','  es a kapu nyitva: fogadasra kesz');
+  ok(csakWa.label==='pr_cond_lipsa','  a WhatsApp egymagaban nem jelent "kesz"-t (nincs kapu)');
 
   // piese: a 'livrat' szamit keszne, a 'comandat' nem
-  eq(shape(P.chain({sosire:'programat',conditions:{piese:'comandat'}},{T})),'....DB','comandat != livrat');
-  eq(shape(P.chain({sosire:'programat',conditions:{piese:'livrat'}},{T})),'...DDB','livrat kesz');
+  eq(shape(P.chain({sosire:'programat',conditions:{piese:'comandat'}},{T})),'....D.','comandat != livrat');
+  eq(shape(P.chain({sosire:'programat',conditions:{piese:'livrat'}},{T})),'...DD.','livrat kesz');
   // 2026-11-23: "nem kell alkatresz" — kulonben a feltetel orokre hianyozna
-  eq(shape(P.chain({sosire:'programat',conditions:{piese:'nu_trebuie'}},{T})),'...DDB','nem kell alkatresz = kesz');
+  eq(shape(P.chain({sosire:'programat',conditions:{piese:'nu_trebuie'}},{T})),'...DD.','nem kell alkatresz = kesz');
   // AZ AKTA (Ferenc: "aktak rendben legyenek")
-  eq(shape(P.chain({sosire:'programat',damageType:'asig',conditions:{}},{T})),'.....B','biztositos, karszam nelkul: az akta HIANYZIK');
-  eq(shape(P.chain({sosire:'programat',damageType:'asig',nrDosar:'GR-1',conditions:{}},{T})),'.....B','  karszam van, constatare nincs: meg hianyzik');
-  eq(shape(P.chain({sosire:'programat',damageType:'asig',docs:[{type:'constatare'}],conditions:{}},{T})),'.....B','  constatare van, karszam NINCS: meg hianyzik');
-  eq(shape(P.chain({sosire:'programat',damageType:'asig',nrDosar:'GR-1',dosarActe:{proces_verbal:[{path:'x'}]},conditions:{}},{T})),'....DB','  karszam + PV: kesz');
-  eq(shape(P.chain({sosire:'programat',damageType:'asig',nrDosar:'GR-1',docs:[{type:'constatare'}],conditions:{}},{T})),'....DB','  karszam + constatare (Preluare): kesz');
+  eq(shape(P.chain({sosire:'programat',damageType:'asig',conditions:{}},{T})),'......','biztositos, karszam nelkul: az akta HIANYZIK');
+  eq(shape(P.chain({sosire:'programat',damageType:'asig',nrDosar:'GR-1',conditions:{}},{T})),'......','  karszam van, constatare nincs: meg hianyzik');
+  eq(shape(P.chain({sosire:'programat',damageType:'asig',docs:[{type:'constatare'}],conditions:{}},{T})),'......','  constatare van, karszam NINCS: meg hianyzik');
+  eq(shape(P.chain({sosire:'programat',damageType:'asig',nrDosar:'GR-1',dosarActe:{proces_verbal:[{path:'x'}]},conditions:{}},{T})),'....D.','  karszam + PV: kesz');
+  eq(shape(P.chain({sosire:'programat',damageType:'asig',nrDosar:'GR-1',docs:[{type:'constatare'}],conditions:{}},{T})),'....D.','  karszam + constatare (Preluare): kesz');
   eq(P.conditions({conditions:{loc:true,locPost:'Post 2',om:true,omName:'Lajos'}}).filter(x=>x.key==='loc'||x.key==='om').map(x=>x.value).join('|'),'Post 2|Lajos','a hely es az ember NEV SZERINT');
 }
 
@@ -104,7 +104,7 @@ console.log('\n2b. RATAT — ugyanaz a logika, mint a varakozasnal (Ferenc)');
   const r=P.chain({sosire:'ratat',conditions:{programare:true,loc:true}},{T});
   eq(r.kind,'ratat','sajat fajta, de a varakozas lancaval');
   eq(r.steps.length,6,'hat feltetel — NEM het fazis');
-  eq(shape(r),'DD..DB','ugyanaz az alakzat, mint a varakozasnal');
+  eq(shape(r),'DD..D.','ugyanaz az alakzat, mint a varakozasnal');
   eq(r.label,'pr_ratat','a felirat: nem jott el');
   eq(r.counter,'3 / 6 pr_feltetel','feltetel-szamlalo');
   ok(r.late===true,'az elmaradt programalas MINDIG keses');

@@ -207,14 +207,16 @@ try{
   eq(j.sosire,'programat','visszahozva');
   eq(w.categorizeJob(j),'viitoare','→ újra Viitoare');
 
-  grp('10 · A WHATSAPP-KAPU');
+  grp('10 · A WHATSAPP — 2026-11-23 óta NEM kapu (Ferenc: „a WhatsApp opcionális”), a hiány rögzítődik');
   w.JOBS.length=0; w.__db.length=0;
   j=await nyit('prog',{njPlate:'MS-60-GGG',njPhone:'0740666666',njTip:'auto',njDate:today()});
   eq(j.conditions.whatsapp,false,'új előjegyzésnél még nincs kapcsolat');
   NAV=null;
   await w.deschideLucrare(j.id);
-  ok(NAV===null,'kapcsolat nélkül NEM enged recepcióra');
-  eq(w.JOBS[0].sosire,'programat','  és nem is állítja át');
+  ok(NAV!==null,'kapcsolat nélkül is enged a recepcióra');
+  eq(w.JOBS[0].sosire,'sosit','  és átállítja');
+  ok(w.JOBS[0].intrare&&w.JOBS[0].intrare.lipsa.indexOf('whatsapp')>=0,'  a hiányzó WhatsApp rögzítve (job.intrare.lipsa)');
+  w.JOBS[0].sosire='programat';
   await w.clickWhatsApp(j.id,'0740666666');
   eq(w.JOBS[0].conditions.whatsapp,true,'a 💬 gomb megjelöli');
   await w.deschideLucrare(j.id);

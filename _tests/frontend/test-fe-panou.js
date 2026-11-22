@@ -139,7 +139,7 @@ console.log('\n1g. Folyamatjelző oszlop a listán (Ferenc: A · mindkettő)');
   const dos=R('MS-11-AAA'), var_=R('MS-33-CCC');
   ok(dos && dos.querySelectorAll('.pr-seg').length===3,'kárdosszié → 3 szegmens');
   ok(var_ && var_.querySelectorAll('.pr-seg').length===6,'várakozó javítás → 6 szegmens (2026-11-23: + akta)');
-  ok(var_ && var_.querySelector('.pr-seg.pr-block'),'  a WhatsApp-kapu borostyán szegmens');
+  ok(var_ && !var_.querySelector('.pr-seg.pr-block'),'  nincs kapu-szegmens: egyik feltétel sem blokkol (Ferenc, 2026-11-23)');
   ok(!/onclick/.test(dos.querySelector('.pr-wrap').outerHTML),'a sáv NEM kattintható (D-5)');
   ok(!!w.document.getElementById('rpw-progres-css'),'a modul betette a saját stílusát');
 }
