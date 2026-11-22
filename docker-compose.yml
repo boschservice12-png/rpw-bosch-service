@@ -1,5 +1,7 @@
 # RPW — helyi kipróbálás:  docker compose up --build   →  http://localhost:8000/rpw-login.html
 # Leállítás: Ctrl+C · Újrakezdés tiszta adattal: docker compose down -v
+# Rögzített projektnév: a mappa átnevezése / új ZIP után is UGYANAZ az adatkötet (rpw_rpw-data) — az adat megmarad.
+name: rpw
 services:
   rpw:
     build: .

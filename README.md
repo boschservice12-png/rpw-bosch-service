@@ -6,25 +6,34 @@ biztosítói határidőkkel és mért munkaidővel.
 Keretrendszer nélkül: nincs build, a böngésző közvetlenül futtatja.
 Backend: Supabase (Postgres + RPC) · Netlify functions (OCR, osztályozás, levél).
 
-## Kipróbálás a saját gépeden (Docker) — az új Symfony backenddel
+## A saját gépeden (Windows) — amíg a szerver elkészül
 
-Kell hozzá: **Docker Desktop** (Windows / Mac) vagy Docker (Linux). Más nem.
+Kell hozzá: **Docker Desktop** (docker.com → Download for Windows). Más nem — git sem.
 
-```bash
-git clone https://github.com/boschservice12-png/rpw-bosch-service.git
-cd rpw-bosch-service
-git checkout claude/bold-goodall-4mu3zu
-docker compose up --build
-```
+1. **Letöltés:** ezt a címet nyisd meg a böngészőben, és csomagold ki a ZIP-et (pl. `C:\RPW`):
+   `https://github.com/boschservice12-png/rpw-bosch-service/archive/refs/heads/claude/relaxed-shannon-poab6p.zip`
+2. **Docker Desktop** elindítása — várd meg, amíg zöld lesz.
+3. A kicsomagolt mappában dupla kattintás: **`RPW-inditas.bat`** (az első indítás pár perc).
+   Megnyílik a böngésző: *Ferenc Admin* · PIN **4826**. Az ablak kiírja a **telefonos címet** is (ugyanazon a wifin).
 
-Az első építés pár perc. Utána: **http://localhost:8000/rpw-login.html** →
-*Ferenc Admin* · PIN **4826** (a mintacsapat PIN-jei az indulási kiírásban).
+| Fájl | Mit csinál |
+|---|---|
+| `RPW-inditas.bat` | elindítja (vagy frissítés után újraépíti) és megnyitja |
+| `RPW-leallitas.bat` | leállítja — **az adat megmarad** |
+| `RPW-mentes.bat` | mentés most + visszatöltési próba + a mentések kimásolása a `mentesek\` mappába (innen OneDrive / pendrive) |
 
-- Saját, helyi adatbázissal fut — **az éles Supabase-adatokhoz nem nyúl**.
-- Az adat (munkák, fotók) újraindítás után is megmarad; tiszta újrakezdés: `docker compose down -v`.
-- OCR / levélküldés opcionális: `ANTHROPIC_API_KEY=… RESEND_API_KEY=… docker compose up`.
-- Telefonról a helyi hálózaton: `http://<a gép IP-címe>:8000/rpw-login.html`
-  (a kamera a böngészőben csak HTTPS-en vagy localhoston működik — ehhez a staging-szerver kell).
+- Saját, helyi adatbázis — **az éles rendszerhez nem nyúl**. Mentés éjjel magától is (14 marad).
+- A mentés titkosított: a **mentési kulcsot** egyszer írd fel a jelszókezelődbe:
+  `docker compose exec rpw grep RPW_BACKUP_KEY /data/.rpw-secrets`
+- Frissítés új verzióra: új ZIP ugyanabba a mappába, utána `RPW-inditas.bat` — az adat megmarad.
+- Tiszta újrakezdés (MINDEN adat törlődik): `docker compose down -v`.
+- OCR / levél: `ANTHROPIC_API_KEY` és `RESEND_API_KEY` — a gép környezeti változójaként (nélküle kézi bevitel).
+- Telefonon a fotó a fájl-gombbal készül (ez HTTP-n is működik). Ha egy telefon mégsem engedné a kamerát,
+  az a valódi szerver HTTPS-ét igényli.
+- **Ez próbaüzem, nem éles rendszer:** a gép kikapcsolásakor az RPW sem érhető el, és a mentés csak akkor
+  véd, ha a `mentesek\` mappát rendszeresen a gépen kívülre is másolod.
+
+Linux / Mac: `docker compose up -d --build`, utána http://localhost:8000/rpw-login.html
 
 ## Ellenőrzés
 

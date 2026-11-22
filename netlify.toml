@@ -121,6 +121,31 @@
   status = 404
   force = true
 
+# 2026-11-22: a saját gépes indító fájlok (Windows) és a git-beállítás — nem a weboldal része.
+[[redirects]]
+  from = "/RPW-inditas.bat"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/RPW-leallitas.bat"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/RPW-mentes.bat"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.gitattributes"
+  to = "/404.html"
+  status = 404
+  force = true
+
 [[redirects]]
   from = "/docker-compose.yml"
   to = "/404.html"
