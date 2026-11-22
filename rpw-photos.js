@@ -43,6 +43,7 @@
     if(!r.ok || !body || body.ok!==true){
       var err={ message:(body&&body.error)||('HTTP '+r.status), status:r.status };
       if(body&&body.error==='format') err.message='Doar fișiere JPG sau PDF';
+      if(body&&body.error==='too_large') err.message='Fișierul este prea mare (max. 25 MB)';
       try{ console.warn('[RPW] tároló-kapu: '+op+' elutasítva', err); }catch(e){}
       return { error:err };
     }
@@ -54,7 +55,9 @@
     var client=!!opts.client;
     return {
       upload: async function(path, body, o){
-        var s=await gw(client?'client-sign-upload':'sign-upload', {path:path}, opts);
+        // RPW-005: a pontos méret is megy — objektumtárnál az aláírás része (méretkorlát, max. 25 MB)
+        var size=body&&(typeof body.size==='number'?body.size:(typeof body.byteLength==='number'?body.byteLength:null));
+        var s=await gw(client?'client-sign-upload':'sign-upload', size==null?{path:path}:{path:path,size:size}, opts);
         if(s.error) return { data:null, error:s.error };
         // RPW-005 (2026-11-22): objektumtár — a kép KÖZVETLENÜL a tárba megy (nem a szerveren át),
         // nyers törzzsel és PONTOSAN azzal a típussal, amit a szerver az aláírásba tett.

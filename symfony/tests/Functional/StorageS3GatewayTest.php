@@ -59,26 +59,31 @@ final class StorageS3GatewayTest extends ApiTestCase
         $path = $id.'/ov_0.jpg';
 
         // a jogosultság változatlan: token nélkül 401, idegen cég 403
-        self::assertSame(401, $this->gw(['op' => 'sign-upload', 'path' => $path])[0]);
-        self::assertSame(403, $this->gw(['op' => 'sign-upload', 'path' => $path], $tb)[0]);
+        self::assertSame(401, $this->gw(['op' => 'sign-upload', 'path' => $path, 'size' => 1000])[0]);
+        self::assertSame(403, $this->gw(['op' => 'sign-upload', 'path' => $path, 'size' => 1000], $tb)[0]);
+        // méretkorlát: méret nélkül 400, 25 MB fölött 413
+        self::assertSame(400, $this->gw(['op' => 'sign-upload', 'path' => $path], $ta)[0]);
+        self::assertSame(413, $this->gw(['op' => 'sign-upload', 'path' => $path, 'size' => 26 * 1024 * 1024], $ta)[0]);
 
-        [$st, $t] = $this->gw(['op' => 'sign-upload', 'path' => $path], $ta);
+        [$st, $t] = $this->gw(['op' => 'sign-upload', 'path' => $path, 'size' => 412345], $ta);
         self::assertSame(200, $st);
         self::assertTrue($t['direct']);
         self::assertSame('image/jpeg', $t['contentType']);
         self::assertStringStartsWith("https://eu2.contabostorage.com/rpw/$a/$path?", $t['signedUrl'], 'a kulcs elején A cég');
+        self::assertStringContainsString('content-length%3Bcontent-type', $t['signedUrl'], 'a pontos méret aláírva');
         self::assertStringNotContainsString('SKTEST', json_encode($t), 'a titkos kulcs nem megy ki');
 
         // ügyfél (WhatsApp-link): a cég a MUNKÁBÓL jön, nem a böngészőből
         $cp = $id.'/client_1732200000000_ab12.jpg';
-        [$cs, $ct] = $this->gw(['op' => 'client-sign-upload', 'path' => $cp]);
+        self::assertSame(400, $this->gw(['op' => 'client-sign-upload', 'path' => $cp])[0], 'az ügyfélnek is kell a méret');
+        [$cs, $ct] = $this->gw(['op' => 'client-sign-upload', 'path' => $cp, 'size' => 50000]);
         self::assertSame(200, $cs);
         self::assertStringStartsWith("https://eu2.contabostorage.com/rpw/$a/$cp?", $ct['signedUrl']);
         // ügyfél meglévőt nem írhat felül
         FakeS3::$existing["/rpw/$a/$cp"] = true;
-        self::assertSame(409, $this->gw(['op' => 'client-sign-upload', 'path' => $cp])[0]);
+        self::assertSame(409, $this->gw(['op' => 'client-sign-upload', 'path' => $cp, 'size' => 50000])[0]);
         // ügyfél dolgozói fotót nem kérhet
-        self::assertSame(403, $this->gw(['op' => 'client-sign-upload', 'path' => $path])[0]);
+        self::assertSame(403, $this->gw(['op' => 'client-sign-upload', 'path' => $path, 'size' => 50000])[0]);
 
         // olvasás: meglévőre aláírt GET a tárba, hiányzóra null
         FakeS3::$existing["/rpw/$a/$path"] = true;

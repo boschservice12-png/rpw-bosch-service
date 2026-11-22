@@ -15,7 +15,7 @@ final class LocalObjectStore implements ObjectStore
     {
     }
 
-    public function uploadTicket(string $shop, string $path, bool $upsert, string $baseUrl): array
+    public function uploadTicket(string $shop, string $path, bool $upsert, string $baseUrl, ?int $size = null): array
     {
         $token = $this->files->sign('upload', $this->bucket, $path, self::UPLOAD_TTL, $upsert);
 

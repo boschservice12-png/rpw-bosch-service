@@ -39,9 +39,17 @@ final class S3ObjectStore implements ObjectStore
         return self::MIME[strtolower(pathinfo($path, \PATHINFO_EXTENSION))] ?? 'application/octet-stream';
     }
 
-    public function uploadTicket(string $shop, string $path, bool $upsert, string $baseUrl): array
+    public function uploadTicket(string $shop, string $path, bool $upsert, string $baseUrl, ?int $size = null): array
     {
         $key = self::key($shop, $path);
+        // MÉRETKORLÁT: a pontos méret az aláírás része (Content-Length) — a tár minden más méretet elutasít.
+        // A böngésző a Content-Length-et magától a fájl méretére állítja, így nem is tudna mást küldeni.
+        if ($size === null) {
+            throw new \LengthException('size_required');
+        }
+        if ($size < 1 || $size > FileStore::MAX_BYTES) {
+            throw new \LengthException('too_large');
+        }
         if (!$upsert && $this->exists($shop, $path)) {
             // az ügyfél meglévő fájlt nem írhat felül (a helyi tár 409-ével azonos szabály)
             throw new \DomainException('exists');
@@ -51,7 +59,7 @@ final class S3ObjectStore implements ObjectStore
             throw new \InvalidArgumentException('format');   // a kapu már kiszűri; itt a második zár
         }
 
-        return ['signedUrl' => $this->signer->presign('PUT', $key, self::UPLOAD_TTL, ['content-type' => $mime]),
+        return ['signedUrl' => $this->signer->presign('PUT', $key, self::UPLOAD_TTL, ['content-type' => $mime, 'content-length' => (string) $size]),
             'token' => '', 'direct' => true, 'contentType' => $mime];
     }
 

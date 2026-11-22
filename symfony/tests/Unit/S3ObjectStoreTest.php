@@ -37,12 +37,12 @@ final class S3ObjectStoreTest extends TestCase
 
     public function testDirectUploadTicketIsTenantPrefixedAndTypeBound(): void
     {
-        $t = $this->store([])->uploadTicket(self::SHOP, self::PATH, true, 'https://rpw.example');
+        $t = $this->store([])->uploadTicket(self::SHOP, self::PATH, true, 'https://rpw.example', 412_345);
 
         self::assertTrue($t['direct'], 'a telefon közvetlenül a tárba tölt');
         self::assertSame('image/jpeg', $t['contentType']);
         self::assertStringStartsWith('https://eu2.contabostorage.com/rpw/'.self::SHOP.'/'.self::PATH.'?', $t['signedUrl'], '<cég>/<munka>/<fájl>');
-        self::assertStringContainsString('X-Amz-SignedHeaders=content-type%3Bhost', $t['signedUrl']);
+        self::assertStringContainsString('X-Amz-SignedHeaders=content-length%3Bcontent-type%3Bhost', $t['signedUrl'], 'a méret és a típus is az aláírás része');
         self::assertStringNotContainsString('SK', parse_url($t['signedUrl'], \PHP_URL_QUERY) ?? '', 'a titkos kulcs nincs az URL-ben');
     }
 
@@ -50,7 +50,21 @@ final class S3ObjectStoreTest extends TestCase
     {
         $store = $this->store([self::PATH => 200]);
         $this->expectException(\DomainException::class);
-        $store->uploadTicket(self::SHOP, self::PATH, false, '');
+        $store->uploadTicket(self::SHOP, self::PATH, false, '', 1000);
+    }
+
+    public function testSizeIsRequiredAndCapped(): void
+    {
+        $store = $this->store([]);
+        foreach ([[null, 'size_required'], [0, 'too_large'], [FileStore::MAX_BYTES + 1, 'too_large']] as [$size, $err]) {
+            try {
+                $store->uploadTicket(self::SHOP, self::PATH, true, '', $size);
+                self::fail('elfogadta: '.var_export($size, true));
+            } catch (\LengthException $e) {
+                self::assertSame($err, $e->getMessage());
+            }
+        }
+        self::assertNotEmpty($store->uploadTicket(self::SHOP, self::PATH, true, '', FileStore::MAX_BYTES)['signedUrl'], 'pont a határ: elfogadva');
     }
 
     public function testUnknownExtensionIsNeverServedAsActiveContent(): void

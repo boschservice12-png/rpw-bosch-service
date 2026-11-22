@@ -20,8 +20,12 @@ interface ObjectStore
     public const UPLOAD_TTL = 600;
     public const READ_TTL = 3600;
 
-    /** @return array{signedUrl:string, token:string, direct:bool, contentType:?string} */
-    public function uploadTicket(string $shop, string $path, bool $upsert, string $baseUrl): array;
+    /**
+     * @param ?int $size a feltöltendő fájl pontos mérete bájtban (objektumtárnál KÖTELEZŐ: az aláírás része)
+     *
+     * @return array{signedUrl:string, token:string, direct:bool, contentType:?string}
+     */
+    public function uploadTicket(string $shop, string $path, bool $upsert, string $baseUrl, ?int $size = null): array;
 
     /**
      * @param list<string> $paths

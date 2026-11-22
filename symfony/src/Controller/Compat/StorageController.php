@@ -92,7 +92,7 @@ final class StorageController
                     return $this->out(403, 'not_allowed');
                 }
 
-                return $this->uploadTicket($actor->shopId, $x['path'], true, $base);
+                return $this->uploadTicket($actor->shopId, $x['path'], true, $base, self::size($body));
             }
             $xs = $this->parseAll($body['paths'] ?? null, $op === 'remove' ? self::LIMITS['removePaths'] : self::LIMITS['readPaths']);
             if ($xs === null) {
@@ -130,7 +130,7 @@ final class StorageController
                 return $this->out(403, 'not_allowed');
             }
 
-            return $this->uploadTicket($shop, $x['path'], false, $base);   // az ügyfél meglévő fájlt NEM írhat felül
+            return $this->uploadTicket($shop, $x['path'], false, $base, self::size($body));   // az ügyfél meglévő fájlt NEM írhat felül
         }
         if ($op === 'client-sign-read') {
             $xs = $this->parseAll($body['paths'] ?? null, self::LIMITS['readPaths']);
@@ -200,12 +200,14 @@ final class StorageController
 
     // ── belső ─────────────────────────────────────────────────────────
     /** direct=true: a böngésző a signedUrl-re NYERS törzzsel, a megadott contentType-pal PUT-ol (objektumtár). */
-    private function uploadTicket(string $shop, string $path, bool $upsert, string $base): JsonResponse
+    private function uploadTicket(string $shop, string $path, bool $upsert, string $base, ?int $size): JsonResponse
     {
         try {
-            $t = $this->objects->uploadTicket($shop, $path, $upsert, $base);
+            $t = $this->objects->uploadTicket($shop, $path, $upsert, $base, $size);
         } catch (\DomainException) {
             return $this->out(409, 'exists');
+        } catch (\LengthException $e) {
+            return $this->out($e->getMessage() === 'too_large' ? 413 : 400, $e->getMessage());
         }
 
         return new JsonResponse(['ok' => true, 'path' => $path] + $t);
@@ -226,6 +228,13 @@ final class StorageController
             'pdf' => str_starts_with($bytes, '%PDF-'),
             default => false,
         };
+    }
+
+    private static function size(array $body): ?int
+    {
+        $s = $body['size'] ?? null;
+
+        return \is_int($s) ? $s : (\is_string($s) && ctype_digit($s) ? (int) $s : null);
     }
 
     public static function allowedUpload(string $path): bool

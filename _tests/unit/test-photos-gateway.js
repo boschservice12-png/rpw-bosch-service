@@ -117,6 +117,7 @@ function setup(cfg, gwReply){
     ok(puts.length === 1 && puts[0].url.startsWith('https://eu2.contabostorage.com/rpw/SHOP/'), 'a PUT a tárba megy, nem a szerverre');
     ok(puts[0].init.headers['Content-Type'] === 'image/jpeg', 'a szerver által aláírt típus megy (nem a hívó által kért)');
     ok(puts[0].init.body === blob, 'nyers törzs (nem multipart)');
+    ok(log.fetch[0].body.size === 3, 'a kapu megkapja a pontos méretet (az aláírás része)');
     ok(log.signedUp.length === 0 && log.direct.length === 0, 'a régi supabase-út NEM fut');
     const bad = await P.bucket(sb, 'rpw-photos', { fetch }).upload(J1 + '/rossz.jpg', blob);
     ok(bad.error && bad.error.status === 403 && bad.data === null, 'elutasított PUT → látható hiba, nem csendes siker');
