@@ -230,6 +230,17 @@ html:not([data-sb="wide"]) .sb-toggle span{display:none}
 .stat-cell{background:var(--w);padding:12px 16px}
 .stat-cell-label{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px}
 .stat-cell-val{font-size:22px;font-weight:800;margin-top:2px}
+.pc-t{border:0;text-align:left;font:inherit;cursor:pointer;display:flex;flex-direction:column}
+.pc-t .stat-cell-label i{font-style:normal;color:#2563eb;text-transform:none;letter-spacing:0}
+.pc-st{font-size:11px;font-weight:800;margin-top:4px}
+.pc-ok{background:#f2fbf5}.pc-ok .pc-st,.pc-ok .stat-cell-val{color:#15803d}
+.pc-red{background:#fdf0f0}.pc-red .pc-st,.pc-red .stat-cell-val{color:var(--r)}
+.pc-caz.pc-ok{background:#f3f7ff}.pc-caz.pc-ok .stat-cell-val,.pc-caz.pc-ok .pc-st{color:#1d4ed8}
+.pc-t.on{box-shadow:inset 0 0 0 3px #15181C}
+.pc-f{margin:10px 24px 0}
+.ci-bar{margin:12px 24px 0;background:#fffbeb;border:1px solid #fcd34d;border-radius:var(--rd);padding:10px 14px}
+.ci-t{font-weight:800;font-size:13px;color:#92400e}.ci-t span{font-weight:500}
+.ci-r{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:13px;flex-wrap:wrap}.ci-r span{flex:1;color:var(--t3)}
 .tbl-wrap{margin:16px 24px;background:var(--w);border:1px solid var(--b);border-radius:var(--rd);overflow-x:auto}
 .tbl{width:100%;border-collapse:collapse;min-width:600px}
 .tbl thead th{padding:12px 16px;text-align:left;font-size:12.5px;font-weight:700;color:var(--r);letter-spacing:.2px;border-bottom:1px solid var(--b)}
@@ -581,7 +592,17 @@ listJobs:{ro:'LISTA LUCRARI',en:'JOB LIST',hu:'MUNKAK LISTAJA'},
 jobMgmt:{ro:'Gestiune lucrari',en:'Job management',hu:'Munka kezeles'},
 ph1:{ro:'Receptie',en:'Reception',hu:'Recepcio'},ph2:{ro:'Evaluare',en:'Assessment',hu:'Karfelmeres'},
 ph3:{ro:'Reconstatare',en:'Re-assessment',hu:'Ujrafelm.'},ph4:{ro:'Tinichigerie',en:'Bodywork',hu:'Lakatos'},ph5:{ro:'Vopsitorie',en:'Paint',hu:'Festode'},
-ph6:{ro:'Control',en:'Check',hu:'Kontrol'},ph7:{ro:'Inchis',en:'Closed',hu:'Lezart'},
+ph6:{ro:'Control',en:'Check',hu:'Kontrol'},ph7:{ro:'Închidere',en:'Closing',hu:'Lezaras'},
+ci_t:{ro:'Ciorne: {n}',en:'Drafts: {n}',hu:'Piszkozat: {n}'},
+ci_s:{ro:' — începute fără nicio dată (nr. înmatriculare, client). Nu intră în cifre și în „Ce facem azi”.',en:' — started without any data (plate, client). Not counted in figures or in “What are we doing today”.',hu:' — adat nelkul inditva (rendszam, ugyfel). Nem szamit a szamokba es a "Mit csinalunk ma"-ba.'},
+ci_cont:{ro:'Continuă',en:'Continue',hu:'Folytatas'},
+pc_in:{ro:'Recepție · Evaluare',en:'Reception · Assessment',hu:'Recepcio · Felmeres'},
+pc_ins:{ro:'Așteaptă asigurătorul',en:'Waiting for insurer',hu:'Biztositora var'},
+pc_out:{ro:'Control · Închidere',en:'Check · Closing',hu:'Kontroll · Lezaras'},
+pc_ok:{ro:'✓ în termen',en:'✓ on time',hu:'✓ rendben'},
+pc_late:{ro:'⚠ {n} de rezolvat',en:'⚠ {n} to resolve',hu:'⚠ {n} teendo'},
+pc_caz:{ro:'caz · reconstatare',en:'case · re-assessment',hu:'ugy · ujrafelmeres'},
+pc_filter:{ro:'Filtru: {f} — arată tot',en:'Filter: {f} — show all',hu:'Szuro: {f} — mind'},
 newJob:{ro:'Lucrare noua',en:'New job',hu:'Uj munka'},
 nr:{ro:'Nr.',en:'No.',hu:'Szam'},auto:{ro:'Auto',en:'Car',hu:'Auto'},
 client:{ro:'Client',en:'Client',hu:'Ugyfel'},phase:{ro:'Faza',en:'Phase',hu:'Fazis'},
@@ -1113,15 +1134,16 @@ function render(){
   if(S.screen==='echipa'){renderEchipa();return}
   var ln=gL(),allJobs=JOBS;
   var jobs=allJobs.filter(function(j){return categorizeJob(j)==='lucrari'});
-  var act=jobs.filter(function(j){return j.phase<7}).length;
-  var pc=[0,0,0,0,0,0,0];jobs.forEach(function(j){if(j.phase>=1&&j.phase<=7)pc[j.phase-1]++});
+  var PG=procGroups(jobs);
+  if(S.lucF&&PG[S.lucF])jobs=PG[S.lucF].list;
   var loc=ln==='hu'?'hu-HU':ln==='ro'?'ro-RO':'en-GB';
 
   var h=sbNav('lucrari');
 
   h+='<div class="main">';
   h+='<div class="page-hdr"><div><div class="ph-label">'+T('listJobs')+'</div><div class="ph-title">'+T('jobMgmt')+'</div></div><div style="display:flex;gap:8px"><button class="btn btn-o" onclick="triggerImport()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import ZIP</button><button class="btn btn-r" onclick="openNewJob()">'+IC.plus+' '+T('newJob')+'</button></div></div><input type="file" id="zipImportInput" accept=".zip" style="display:none" onchange="importZIP(event)">';
-  h+='<div class="stat-row"><div class="stat-cell"><div class="stat-cell-label">'+T('ph1')+'</div><div class="stat-cell-val" style="color:var(--r)">'+pc[0]+'</div></div><div class="stat-cell"><div class="stat-cell-label">'+T('ph2')+'</div><div class="stat-cell-val" style="color:var(--r)">'+pc[1]+'</div></div><div class="stat-cell"><div class="stat-cell-label">'+T('ph3')+'</div><div class="stat-cell-val" style="color:var(--y)">'+pc[2]+'</div></div><div class="stat-cell"><div class="stat-cell-label">'+T('ph4')+'/'+T('ph5')+'</div><div class="stat-cell-val" style="color:var(--r)">'+(pc[3]+pc[4])+'</div></div><div class="stat-cell"><div class="stat-cell-label">'+T('ph6')+'/'+T('ph7')+'</div><div class="stat-cell-val" style="color:var(--g)">'+(pc[5]+pc[6])+'</div></div></div>';
+  h+=procTilesHtml(PG);
+  h+=ciorneHtml();
 
   h+='<div class="tbl-wrap">';
   if(!jobs.length){h+='<div class="empty"><div style="font-size:16px;font-weight:700;margin-bottom:6px">'+T('noJobs')+'</div><div style="font-size:12px">'+T('addFirst')+'</div></div>'}
@@ -1161,6 +1183,50 @@ function render(){
   document.getElementById('app').innerHTML=h;if(window.njAfterRender)njAfterRender();
 }
 
+// ── FOLYAMAT-CSEMPEK (2026-11-23, Ferenc: "kezeljuk az ugyeket es a folyamatokat") ──
+// KORABBAN: 5 szamlalo, a SZIN A HELYTOL fuggott (Control mindig zold), nem volt
+// kattinthato, a lakatos+festo ossze volt vonva, a 7. fazis "Inchis" felirattal
+// (pedig a lezaras ALATT allokat szamolta), a Reconstatare a muhely munkajakent.
+// MOSTANTOL: a szin az ALLAPOT (piros = keses / beragadt), a csempe szur, lakatos
+// es festo kulon, a Reconstatare kulon jelolve: az UGY resze (a biztositot varjuk).
+function _pcWorkdaysSince(iso){
+  if(!iso)return 0;var d=new Date(String(iso).slice(0,10)+'T00:00:00'),t=new Date(),n=0;t.setHours(0,0,0,0);
+  while(d<t){d.setDate(d.getDate()+1);var w=d.getDay();if(w!==0&&w!==6)n++}
+  return n;
+}
+function procLate(j){
+  var p=j.phase||1, st=((j.phases||{})[p]||{}), azi=new Date().toISOString().slice(0,10);
+  if(p<=2) return _pcWorkdaysSince(st.started)>=2;                 // a kovetkezo munkanapon tul is itt all
+  if(p===3) return _pcWorkdaysSince(st.started)>5;                 // a biztosito 5 munkanapnal tovabb var
+  if(p===4||p===5){ var m=(window.RPWWorkflow&&RPWWorkflow.workMetrics)?RPWWorkflow.workMetrics(j):null;
+    return !!(m&&m.over) || st.status==='rework' || st.status==='blocked'; }
+  return !!(j.termenPredare && String(j.termenPredare).slice(0,10)<=azi);   // 6-7: az atadas ma / lejart
+}
+function procGroups(jobs){
+  var D={pin:[1,2],ins:[3],tin:[4],vop:[5],out:[6,7]}, G={};
+  Object.keys(D).forEach(function(k){
+    var list=jobs.filter(function(j){return D[k].indexOf(j.phase||1)>=0&&!isCiorna(j)});
+    G[k]={list:list,late:list.filter(procLate).length};
+  });
+  return G;
+}
+function procTilesHtml(G){
+  var DEF=[['pin',T('pc_in'),''],['tin',T('ph4'),''],['vop',T('ph5'),''],['out',T('pc_out'),''],['ins',T('pc_ins'),T('pc_caz')]];
+  var h='<div class="stat-row">';
+  DEF.forEach(function(d){
+    var g=G[d[0]], red=g.late>0, on=(S.lucF===d[0]);
+    h+='<button type="button" class="stat-cell pc-t '+(d[0]==='ins'?'pc-caz ':'')+(red?'pc-red':'pc-ok')+(on?' on':'')+'" aria-pressed="'+on+'" onclick="lucFilter(\''+d[0]+'\')">';
+    h+='<div class="stat-cell-label">'+escH(d[1])+(d[2]?' <i>'+escH(d[2])+'</i>':'')+'</div>';
+    h+='<div class="stat-cell-val">'+g.list.length+'</div>';
+    h+='<div class="pc-st">'+escH(red?T('pc_late').replace('{n}',g.late):T('pc_ok'))+'</div></button>';
+  });
+  h+='</div>';
+  if(S.lucF&&G[S.lucF]){var nm={pin:T('pc_in'),tin:T('ph4'),vop:T('ph5'),out:T('pc_out'),ins:T('pc_ins')}[S.lucF];
+    h+='<div class="pc-f"><button type="button" class="btn btn-o" onclick="lucFilter(null)">'+escH(T('pc_filter').replace('{f}',nm))+' ✕</button></div>'}
+  return h;
+}
+window.lucFilter=function(k){S.lucF=(k&&S.lucF!==k)?k:null;render()};
+
 // ════════════════════════════════════════════════════════════════
 // PANOU MODUL — Lean Dashboard 5 konditiokkal
 // ════════════════════════════════════════════════════════════════
@@ -1195,6 +1261,38 @@ function categorizeJob(job){
   if(job.flux==='doar_dosar')   return 'viitoare';
   if(job.sosire==='programat')  return 'viitoare';
   return 'lucrari';
+}
+
+function _ciEmpty(v){
+  if(v==null)return true;
+  if(Array.isArray(v))return v.length===0;
+  if(typeof v==='object')return Object.keys(v).length===0;
+  return String(v).trim()==='';
+}
+// CIORNA (2026-11-23): a Lucrare noua / Avizare dauna gomb mar a kattintaskor
+// letrehozza a rekordot (Ferenc, 2026-08-25: nincs dupla urlap), es a rekord a
+// listaban marad, hogy megtalalhato legyen (Ferenc, 2026-08-26). Amig nincs benne
+// SEMMI azonosito adat, NEM szamit bele a folyamat-csempekbe es a "Ce facem azi"
+// teendoibe — a Ciorne savon folytathato vagy torolheto.
+function isCiorna(job){
+  if(!job||typeof job!=='object')return false;
+  return _ciEmpty(job.plate)&&_ciEmpty(job.client)&&_ciEmpty(job.vin)&&_ciEmpty(job.phone)&&
+    _ciEmpty(job.nrDosar)&&_ciEmpty(job.photos)&&_ciEmpty(job.docs)&&_ciEmpty(job.dosarActe)&&
+    _ciEmpty(job.photoKeys)&&_ciEmpty(job.clientUploads);
+}
+// A ciorne-sav: folytatas (ugyanoda visz, ahova a gomb vitt) vagy torles.
+function ciorneHtml(){
+  var L=JOBS.filter(function(j){return !j.inchis&&!j.separat&&isCiorna(j)});
+  if(!L.length)return '';
+  var h='<div class="ci-bar"><div class="ci-t">'+escH(T('ci_t').replace('{n}',L.length))+'<span>'+escH(T('ci_s'))+'</span></div>';
+  L.forEach(function(j){
+    var dd=(j.flux==='doar_dosar');
+    var when=j.created?new Date(j.created).toLocaleString(gL()==='hu'?'hu-HU':gL()==='ro'?'ro-RO':'en-GB',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+    h+='<div class="ci-r"><b>'+escH(j.number||'')+'</b><span>'+escH(dd?T('dosar_dauna'):T('btn_lucrare_noua'))+' · '+escH(when)+'</span>';
+    h+='<button class="btn btn-o" onclick="'+(dd?'deschideDosar(\''+j.id+'\')':'oP(\''+j.id+'\',1)')+'">'+escH(T('ci_cont'))+'</button>';
+    h+='<button class="btn btn-o" onclick="dJ(\''+j.id+'\')">'+escH(T('dlg_sterge'))+'</button></div>';
+  });
+  return h+'</div>';
 }
 
 // ── MIGRACIO: a regi ket allapotgepbol az uj, egyertelmu mezokbe ──
@@ -1277,6 +1375,7 @@ function renderPanou(){
   // Header + Programare noua gomb
   h+='<div class="panou-hdr-actions"><div><div class="panou-label">'+T('panou_label')+'</div><div class="panou-title">'+T('panou_title')+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn" style="background:#15181C;color:#fff;border-color:#15181C" onclick="azOpen()">'+T('az_q')+'</button>'+'<button class="btn-prog-new" style="--c:var(--r)" onclick="openNewJob(\'prog\')">&#128197; '+T('btn_prog_nou')+'</button><button class="btn-prog-new" style="--c:#2563eb" onclick="dosarTarziu()">🛡 '+T('dosar_dauna')+'</button><label class="btn-prog-new" style="--c:#374151;position:relative;display:inline-flex;cursor:pointer;box-sizing:border-box" title="'+T('dosar_fisier')+'">📄 '+T('dosar_fisier')+'<input type="file" accept="image/*,.pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0" onchange="dosarFisier(event)"/></label><button class="btn-prog-new" style="--c:#16a34a" onclick="lucrareAcum()">&#128295; '+T('btn_lucrare_noua')+'</button></div></div>';
 
+  h+=ciorneHtml();
   // Tabs
   h+='<div class="panou-tabs">';
   h+='<button class="panou-tab '+(tab==='viitoare'?'on':'')+'" onclick="setPanouTab(\'viitoare\')">'+T('panou_viitoare')+'<span class="tab-count">'+deAzi.length+'</span></button>';
@@ -2336,9 +2435,14 @@ window.dosarFisier=function(e){
         // Enélkül a panel ELŐJEGYZÉSNEK látta (📅), nem dossziénak
         // (📁), mert az `_dd` a `flux`/`doarDosar` mezőt vizsgálja
         // (1197. sor). Így nem is lehetett tovább vinni a dossziét.
-        flux:'doar_dosar',        // csak dosszié — az autó még nincs itt
-        doarDosar:true,           // a régi mező is, a visszafelé olvasáshoz
-        dosarStatus:'deschid',    // most nyitjuk a biztosító felé
+        // ── JAVÍTÁS (2026-11-23): a PRELUARE = a dosszié MÁR NYITVA van a
+        // biztosítónál (a constatare a bizonyíték). Korábban 'doar_dosar' +
+        // 'deschid' lett belőle: a rendszer a TELJES iratcsomagot kérte, mintha
+        // mi nyitnánk, és az 1. fázist elindította, pedig az autó nincs itt.
+        // Mostantól: javítási ügy, a constatare alapján, az autó később jön.
+        flux:'reparatie',
+        doarDosar:false,
+        dosarStatus:'deschis',    // már nyitva: elég a constatare + fotók + kárszám
         sosire:'programat',       // a rendszer csak programat/ratat/sosit
                                   // értéket ismer — a `viitor` nem létezett
         inchis:false,
@@ -2346,8 +2450,8 @@ window.dosarFisier=function(e){
         nrDosar:v(p.nrDosar),proprietarDosar:v(p.proprietar),asigurator:v(p.asigurator),
         photos:[],docs:[{type:'constatare',data:dataUrl,ts:now}],panels:{},elements:{},materials:[],
         programare:{date:null,time:null,confirmed:false,status:'viitor'},
-        conditions:{programare:true,loc:false,om:false,piese:false,whatsapp:false},
-        phases:{1:{status:'active',started:now},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}}
+        conditions:{programare:false,loc:false,om:false,piese:false,whatsapp:false},
+        phases:{1:{status:'pending'},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}}
       };
       if(p.daune)j.listaDauneRaw=JSON.stringify(p.daune,null,2);
       JOBS.push(j);
@@ -2612,14 +2716,14 @@ function azBuild(){
   var kesett=JOBS.filter(function(j){var p=(j.programare||{});
     return j.sosire==='programat'&&p.date&&p.date<azi});
   var ragadt=JOBS.filter(function(j){return j.sosire==='ratat'});
-  var itt=JOBS.filter(function(j){return categorizeJob(j)==='lucrari'});
+  var itt=JOBS.filter(function(j){return categorizeJob(j)==='lucrari'&&!isCiorna(j)});
   var chk=azCheckList();
   // A kozos lista ota a 'dosare' kategoria nem letezik — a FLUX dont.
   var dos=JOBS.filter(function(j){
-    return ((j.flux==='doar_dosar')||(j.flux==null&&j.doarDosar===true))&&!j.inchis&&j.sosire!=='ratat'&&!j.separat;
+    return ((j.flux==='doar_dosar')||(j.flux==null&&j.doarDosar===true))&&!j.inchis&&j.sosire!=='ratat'&&!j.separat&&!isCiorna(j);
   });
   var gond=JOBS.filter(function(j){
-    if(j.damageType!=='asig')return false;
+    if(j.damageType!=='asig'||isCiorna(j))return false;
     return (!String(j.asigurator||'').trim()&&!String(j.nrDosar||'').trim())||!String(j.client||'').trim();
   });
 

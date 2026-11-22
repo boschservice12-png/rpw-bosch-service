@@ -1,5 +1,15 @@
 # CHANGELOG.md
 
+## 2026-11-23 — Ügy + folyamat: a belépő gombok és a fázis-számlálók javítása
+
+> Ferenc: „kezdjük előről — kezeljük az ügyeket és kezeljük a folyamatokat" · „javíts mindent logika szerint". Csak frontend, migráció nincs.
+
+- **Ciornă (piszkozat).** A *Lucrare nouă* és az *Avizare daună* a kattintáskor létrehozza a rekordot (2026-08-25-i döntés: nincs dupla űrlap), és a listában marad (2026-08-26). Amíg semmilyen azonosító adat nincs benne, **nem számít bele** a folyamat-csempékbe és a „Ce facem azi" teendőibe (Dosare daună, De pus în ordine, În atelier); a *Ciorne* sávon **Continuă** / **Șterge**.
+- **Preluare dosar daună** — a dosszié már nyitva van a biztosítónál: `flux:'reparatie'`, `dosarStatus:'deschis'` (eddig `doar_dosar` + `deschid` → a teljes iratcsomagot kérte), az 1. fázis **nem** indul (az autó nincs itt), `conditions.programare:false` (nincs időpont).
+- **Fázis-számlálók → folyamat-csempék.** A szín az **állapot** (zöld: rendben, piros: késik / beragadt), nem a hely; kattintásra szűrnek; *Tinichigerie* és *Vopsitorie* külön; a *Reconstatare* „Așteaptă asigurătorul" néven, ügyként jelölve; a 7. fázis neve **Închidere** (eddig „Inchis", pedig a lezárás alatt állókat számolta).
+- **Helyesbítés az elemzéshez:** a „fizető nélkül induló munka" nem valós rés — a recepció (1. fázis) nem zárható munkatípus / fizető nélkül (`wf_worktype_missing`, `rpw-workflow.js`).
+- Teszt: `_tests/unit/test-ugy-folyamat.js` (39 állítás; mutációval ellenőrizve — 5 visszarontásból 5-öt elkap).
+
 ## 2026-08-25 (5) — „Nem tudok törölni" — két hiba egy úton
 
 Két, egymástól független hiba ült a törlés útján. Egyiket sem fogta meg
