@@ -21,6 +21,7 @@ Kell hozzá: **Docker Desktop** (docker.com → Download for Windows). Más nem 
 | `RPW-inditas.bat` | elindítja (vagy frissítés után újraépíti) és megnyitja |
 | `RPW-leallitas.bat` | leállítja — **az adat megmarad** |
 | `RPW-mentes.bat` | mentés most + visszatöltési próba + a mentések kimásolása a `mentesek\` mappába (innen OneDrive / pendrive) |
+| `RPW-PIN-csere.bat` | Ferenc Admin PIN-jének cseréje / elfelejtett PIN visszaállítása (a zárolást is törli). **Az első indítás után azonnal** — a 4826 nyilvános |
 
 - Saját, helyi adatbázis — **az éles rendszerhez nem nyúl**. Mentés éjjel magától is (14 marad).
 - A mentés titkosított: a **mentési kulcsot** egyszer írd fel a jelszókezelődbe:
