@@ -55,8 +55,10 @@ else
 fi
 
 step "Adatbázis + cache"
-console_in "$rel" rpw:db:init > /dev/null
-console_in "$rel" cache:warmup > /dev/null
+console_in "$rel" rpw:db:init > /dev/null \
+  || die "az új kiadás nem indul el (rpw:db:init) — az élő kiadás változatlan; a hiba fent látszik"
+console_in "$rel" cache:warmup > /dev/null \
+  || die "az új kiadás nem indul el (cache) — az élő kiadás változatlan; a hiba fent látszik"
 ok "a hiányzó táblák létrehozva (meglévőhöz nem nyúl) · cache kész"
 
 step "Átkapcsolás"
