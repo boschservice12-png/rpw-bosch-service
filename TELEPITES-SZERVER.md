@@ -248,12 +248,39 @@ kiadás azonosítóját is összeveti.
 
 ## ⚠ Nyitott — az éles adat átköltöztetése ELŐTT kötelező
 
-- **A helyi fotók átvitele a tárba** (`rpw:storage:migrate` — a staging-fotókhoz / a Supabase-fotókhoz).
-- **Feltöltési méretkorlát objektumtár módban:** az aláírt PUT a méretet nem korlátozza (a helyi tár 25 MB-ot igen).
-  Ma: 10 perces, egy fájlra szóló link, a felület 0,3–0,5 MB-ra tömörít. Később: méretkorlátos aláírt POST.
 
 - **A fotó-másolat méretezése:** egy futás a két tár listáját veti össze — ~1 millió fotóig jó (150 cégnél kb. 1–2 év).
   Előtte: feltöltési sor (a kapu jegyzi az új fotót, a másoló csak azt viszi) + heti teljes összevetés.
+
+## A meglévő fotók átvitele a tárba (átálláskor, egyszer)
+
+**Sorrend:** előbb az ADATOK (munkák) kerülnek át — a parancs a munkából tudja, melyik cégé a fotó.
+Újrafuttatható: csak a hiányzót viszi, a forráshoz csak olvasva nyúl.
+
+Helyi lemezről (staging / próba):
+
+```bash
+cd /opt/rpw/current/symfony && runuser -u rpw -- php bin/console rpw:storage:migrate --from-local=/opt/rpw/shared/storage --dry-run
+```
+
+A régi rendszer Supabase-tárából — Supabase-felület → *Storage* → *Settings* → **S3 Connection**: bekapcsolás,
+**Access key** létrehozása. Ez a kulcs a teljes tárhoz hozzáfér: **csak az átvitel idejére**, utána töröld a Supabase-felületen.
+A `.env.local`-ba:
+
+```
+RPW_LEGACY_S3_ENDPOINT=https://<projekt>.supabase.co/storage/v1/s3
+RPW_LEGACY_S3_REGION=<a Supabase-felület mutatja>
+RPW_LEGACY_S3_BUCKET=rpw-photos
+RPW_LEGACY_S3_ACCESS_KEY=<…>
+RPW_LEGACY_S3_SECRET_KEY=<…>
+```
+
+```bash
+cd /opt/rpw/current/symfony && runuser -u rpw -- php bin/console rpw:storage:migrate --from-legacy --dry-run
+```
+
+Ha a próbafuttatás rendben (cégenkénti darabszám, 0 „ismeretlen munka”), ugyanez `--dry-run` nélkül.
+A végén: a `RPW_LEGACY_S3_*` sorok törlése, a Supabase-kulcs visszavonása.
 
 ## ✅ Megoldva (2026-11-22)
 
@@ -263,6 +290,8 @@ kiadás azonosítóját is összeveti.
 | Havi visszatöltési próba | `rpw-restore-drill.timer` (1-jén 04:10), eredmény a `status.sh`-ban | `RestoreTest` |
 | Fotók másik szolgáltatónál | `rpw:storage:replicate` óránként; a célban soha nem töröl; `--reverse` vissza | `ReplicaTest` (3 teszt, törlés-figyelővel) |
 | Csak valódi JPG/PDF | kapu: csak `.jpg/.jpeg/.pdf`; a helyi tár a bájtokat is nézi; a böngésző nem tölt fel hamis JPG-t; a másoló jelzi a régi hamis JPG-ket | `StorageFormatTest` |
+| Méretkorlát a közvetlen feltöltésre | a pontos méret az aláírás része (max. 25 MB) — a tár minden más méretet elutasít | `S3ObjectStoreTest`, `StorageS3GatewayTest` |
+| Meglévő fotók átvitele | `rpw:storage:migrate` helyi lemezről vagy a régi Supabase-tárból, cégenkénti kulcsra | `MigrateTest` (a régi tárba semmit nem ír) |
 | Sok fotó e-mailben | levelenként max. 10 melléklet / 10 MB → automatikusan több levél „(1/3)” | `test-mail-split.js` |
 
 ## Ami a telepítés után jön (a terv: `RPW-004-SYMFONY-ATALLAS.md`)

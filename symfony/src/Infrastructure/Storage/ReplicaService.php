@@ -137,7 +137,17 @@ final class ReplicaService
 
             return;
         }
-        $root = rtrim($this->storageDir, '/').'/'.self::BUCKET_DIR;
+        yield from self::localKeys($this->storageDir, $this->shopOf(...));
+    }
+
+    /**
+     * A helyi fotótár fájljai <cég>/<munka>/<fájl> kulccsal (a cég a munkából).
+     *
+     * @return \Generator<string, callable(): ?string>
+     */
+    public static function localKeys(string $storageDir, callable $shopOf): \Generator
+    {
+        $root = rtrim($storageDir, '/').'/'.self::BUCKET_DIR;
         if (!is_dir($root)) {
             return;
         }
@@ -148,14 +158,14 @@ final class ReplicaService
             if (!$f->isFile() || str_ends_with($rel, '.meta') || str_contains($rel, '.tmp-')) {
                 continue;
             }
-            $job = strtok($rel, '/');
-            $shops[$job] ??= $this->shopOf((string) $job);
+            $job = (string) strtok($rel, '/');
+            $shops[$job] ??= $shopOf($job);
             $path = $f->getPathname();
             yield $shops[$job].'/'.$rel => static fn () => is_file($path) ? (string) file_get_contents($path) : null;
         }
     }
 
-    private function shopOf(string $job): string
+    public function shopOf(string $job): string
     {
         $s = $this->db->fetchOne('SELECT shop_id FROM rpw_jobs WHERE id = ?', [$job]);
 
