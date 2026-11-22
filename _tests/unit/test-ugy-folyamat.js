@@ -149,10 +149,10 @@ try{
 
   grp('5 · SZŰRÉS — a csempe a táblázatot szűri');
   w.lucFilter('tin'); h=app();
-  eq((h.match(/<tr><td class="mono"/g)||[]).length,2,'Tinichigerie: 2 sor');
+  eq((h.match(/onclick="lucDeschide\(/g)||[]).length,2,'Tinichigerie: 2 sor');
   ok(/Filtru:/.test(h),'„Filtru … arată tot” gomb');
   w.lucFilter('tin'); h=app();
-  eq((h.match(/<tr><td class="mono"/g)||[]).length,8,'újra kattintva: mind a 8');
+  eq((h.match(/onclick="lucDeschide\(/g)||[]).length,8,'újra kattintva: mind a 8');
 
   grp('6 · PRELUARE DOSAR DAUNĂ — a dosszié MÁR nyitva van');
   w.JOBS.length=0; NAV=null;
@@ -171,6 +171,37 @@ try{
   eq(j.nrDosar,'GR-123','kárszám az OCR-ből');
   eq(w.categorizeJob(j),'viitoare','→ a közös lista (programálásra vár)');
   ok(!w.isCiorna(j),'adattal → nem piszkozat');
+
+  grp('7 · AZ ÜGYEK AKTÁI — a Lucrări táblázat');
+  w.JOBS.length=0;
+  const past=new Date(Date.now()-2*864e5).toISOString().slice(0,10), fut='2099-01-01';
+  const A=mk({number:'MS-26-A',plate:'MS-71-AAA',phase:4,termenPredare:fut,evalData:{piese:[{id:'p1',denumire:'aripa'}]},conditions:{piese:false}});
+  const Bj=mk({number:'MS-26-B',plate:'MS-72-BBB',phase:5,termenPredare:past,damageType:'asig',asigurator:'Groupama',nrDosar:'GR-9',dosarStatus:'deschis'});
+  const C=mk({number:'MS-26-C',plate:'MS-73-CCC',phase:2,termenPredare:fut,damageType:'asig',asigurator:'',nrDosar:''});
+  const D=mk({number:'MS-26-D',plate:'MS-74-DDD',phase:6,evalData:{piese:[{id:'p2'}]},conditions:{piese:'livrat'}});
+  const E=mk({number:'MS-26-E',plate:'',client:'',phase:1});
+  w.JOBS.push(A,Bj,C,D,E);
+  w.RPWWorkflow.workMetrics=function(){return {over:false,gap:0}};
+  w.S.screen='lucrari'; w.S.lucF=null; w.render(); h=app();
+  ok(/Client · Dosar/.test(h)&&/Blocaj/.test(h)&&/Predare/.test(h),'oszlopok: Client · Dosar · Blocaj · Predare');
+  ok(!/cond-row/.test(h.slice(h.indexOf('<table'))),'a táblázatban nincs többé az 5 érkezési feltétel');
+  ok(!/cell-inp/.test(h)&&typeof w.toggleEditJob==='undefined','nincs soron belüli, ellenőrizetlen szerkesztés');
+  ok(/onclick="openEditJob\('/.test(h),'a ✎ a rendes, ellenőrző ablakot nyitja');
+  eq(w.lucBlocaje(A).map(x=>x[1]),['piese necomandate'],'alkatrész kell, nincs rendelve → akadály');
+  eq(w.lucBlocaje(D).length,0,'alkatrész megérkezett → nincs akadály');
+  eq(w.lucBlocaje(mk({phase:4})).length,0,'nincs alkatrészlista → nincs piros zaj');
+  eq(w.lucBlocaje(mk({phase:5,phases:{5:{status:'rework'}}})).map(x=>x[1]),['remediere deschisă'],'nyitott javítás → akadály');
+  ok(/Groupama/.test(w.lucCaz(Bj))&&/GR-9/.test(w.lucCaz(Bj))&&/acte \d+\/\d+/.test(w.lucCaz(Bj)),'biztosítós akta: biztosító + kárszám + iratszám');
+  ok(/fără nr\. dosar/.test(w.lucCaz(C))&&/asigurător \?/.test(w.lucCaz(C)),'hiányzó kárszám / biztosító látszik');
+  ok(/plătitor nestabilit/.test(w.lucCaz(mk({damageType:null}))),'fizető nélkül: jelzi');
+  eq(w.lucPredare(Bj).c,'late','lejárt átadás → late');
+  const order=w.JOBS.slice().sort(w.lucOrder).map(x=>x.number);
+  eq(order[0],'MS-26-B','a lejárt átadás áll elöl');
+  eq(order[order.length-1],'MS-26-E','a piszkozat a végén');
+  eq((h.slice(h.indexOf('<table')).match(/onclick="dJ\('/g)||[]).length,1,'törlés gomb a táblázatban csak a piszkozatnál (1)');
+  eq(w.lucPage(A),'rpw-tinichigerie-red.html?job='+encodeURIComponent(A.id),'„Deschide faza” → a fázis saját lapja (4 → Tinichigerie)');
+  eq(w.lucPage(D).split('?')[0],'rpw-control-red.html','  6 → Control');
+  NAV=null; w.lucDeschide(A.id); ok(NAV!==null,'  és navigál');
 }catch(e){ fail++; console.log('   ✗ KIVÉTEL: '+e.message+'\n'+(e.stack||'').split('\n').slice(0,4).join('\n')); }
 console.log('\n'+(fail?'✗ ':'✓ ')+pass+' pass / '+fail+' fail');
 process.exit(fail?1:0);

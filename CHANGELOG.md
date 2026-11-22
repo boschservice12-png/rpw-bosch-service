@@ -1,5 +1,19 @@
 # CHANGELOG.md
 
+## 2026-11-23 (2) — A Lucrări táblázat: az ügyek aktái
+
+> Ferenc: „igen csináld — vedd számításba: ez az ügyek aktáinak rendszerezése". Csak frontend, migráció nincs.
+
+- **Egy sor = egy ügy aktája:** *Auto* (rendszám nagyban, alatta márka · munkaszám) · *Client · Dosar* (ki fizet: biztosító + kárszám + iratszám, vagy „plată client"; hiányzó kárszám / fizető pirossal) · *Proces* (a sáv + késés a devizhez) · *Blocaj* · *Predare* · *Acțiuni*.
+- **Blocaj a Condiții helyett:** csak ami a munkát most megállítja — alkatrész (ha az evaluáció alkatrészt ír, és nem érkezett meg), nyitott javítás, blokkolt fázis, hiányzó iratok (1–2. fázis), hiányzó késési ok. Nincs többé piros ✗ minden soron.
+- **Predare a Data helyett:** átadási határidő — „depășit +Nz" / „predare azi" / „T-Nz".
+- **Sorrend sürgősség szerint:** lejárt átadás → ma esedékes → akadályos → határidő szerint; piszkozat a végén.
+- **Deschide faza:** egyenesen az aktuális fázis lapjára (eddig a dosszié lapra, onnan még egy kattintás).
+- **A soron belüli ✎ szerkesztés megszűnt** (ellenőrzés nélkül írt, a munkaszámot is): a ✎ a rendes, ellenőrző ablakot nyitja (`openEditJob`, munkaszám nélkül).
+- **Törlés** a táblázatban csak piszkozatnál.
+- Nem készült el: a fázis *felelőse* — az adatmodellben nincs ilyen mező (csak a munkasor végrehajtója).
+- Teszt: `test-ugy-folyamat.js` 7. csoport (57 állítás összesen; mutációval ellenőrizve).
+
 ## 2026-11-23 — Ügy + folyamat: a belépő gombok és a fázis-számlálók javítása
 
 > Ferenc: „kezdjük előről — kezeljük az ügyeket és kezeljük a folyamatokat" · „javíts mindent logika szerint". Csak frontend, migráció nincs.
