@@ -89,6 +89,38 @@
 
   /* ── A LANC — a modul szive ───────────────────────────────────── */
   /* opts: {T:fn, acteCount:fn, threshold:number, lateProg:bool} */
+  /* ── A PROGRAMALAS 6 FELTETELE — EGYETLEN FORRAS (Ferenc, 2026-11-23) ──
+     "beprogramaljuk az autot javitasra: kondicio, datum, alkatresz rendeles,
+      hely, ember, aktak rendben legyenek". A sav, a Panou sora es a feltetel-
+      ablak MIND innen olvas.
+       programare  a datum / az idopont rogzitve
+       loc         a hely — NEV SZERINT (melyik post): conditions.locPost
+       om          az ember — NEV SZERINT (ki): conditions.omName
+       piese       nu_trebuie | livrat = kesz; false | comandat = nem
+       acte        UJ: biztositos ugynel karszam + constatare/PV; sajat zsebnel kesz
+       whatsapp    az ugyfel visszaigazolta — EZ A KAPU (Ferenc 2026-08-26; a
+                   2026-11-23-i dontes: a tobbi NEM tilt, csak rogzitjuk)          */
+  function acteOk(j){
+    if(!j||j.damageType!=='asig') return true;
+    if(!String(j.nrDosar||'').trim()) return false;
+    var a=j.dosarActe||{}, docs=j.docs||[], pk=j.photoKeys||{};
+    function has(k){var v=a[k];return !!(v&&(!Array.isArray(v)||v.length))}
+    return has('constatare_amiabila')||has('proces_verbal')||!!pk.doc_constatare||
+      docs.some(function(d){return d&&/constatare|proces/i.test(String(d.type||''))});
+  }
+  function conditions(j,opts){
+    var T=(opts&&opts.T)||function(k){return k}, c=(j&&j.conditions)||{};
+    var piese=(c.piese==='livrat')||(c.piese===true)||(c.piese==='nu_trebuie');
+    return [
+      {key:'programare', label:T('cond_programare'), ok:!!c.programare},
+      {key:'loc',        label:T('cond_loc'),        ok:!!c.loc, value:c.locPost||''},
+      {key:'om',         label:T('cond_om'),         ok:!!c.om,  value:c.omName||''},
+      {key:'piese',      label:T('cond_piese'),      ok:piese, value:(c.piese===true?'livrat':(c.piese||''))},
+      {key:'acte',       label:T('cond_acte'),       ok:acteOk(j)},
+      {key:'whatsapp',   label:T('cond_whatsapp'),   ok:!!c.whatsapp, gate:true}
+    ];
+  }
+
   function chain(job, opts){
     opts=opts||{};
     var T=opts.T||function(k){return k};
@@ -129,29 +161,21 @@
        fazisokat kell mutatni neki, mert egy fazis sem indult el. */
     if(j.sosire==='programat' || j.sosire==='ratat'){
       var ratat=(j.sosire==='ratat');
-      var c=j.conditions||{};
-      var piese=(c.piese==='livrat')||(c.piese===true);
-      var raw=[
-        {label:T('cond_programare'), ok:!!c.programare},
-        {label:T('cond_loc'),        ok:!!c.loc},
-        {label:T('cond_om'),         ok:!!c.om},
-        {label:T('cond_piese'),      ok:piese},
-        {label:T('cond_whatsapp'),   ok:!!c.whatsapp, gate:true}
-      ];
+      var raw=conditions(j,opts);
       var n=0;
       var st2=raw.map(function(r){
         if(r.ok){n++; return {label:r.label, state:'done'}}
         /* A KAPU a WhatsApp — csak az blokkol, a tobbi tajekoztat. */
         return {label:r.label, state: r.gate?'block':'todo'};
       });
-      var kapu=!!c.whatsapp;
+      var kapu=!!((j.conditions||{}).whatsapp);
       return {kind: ratat?'ratat':'astept', steps:st2,
               label: ratat ? T('pr_ratat') : (kapu ? T('pr_gata') : T('pr_var_wa')),
               proc:procName(j,T),
-              counter:n+' / 5 '+T('pr_feltetel'),
+              counter:n+' / '+raw.length+' '+T('pr_feltetel'),
               /* Az elmaradt programalas MINDIG kesesnek szamit — ez a
                  lenyege. */
-              late: ratat || !!opts.lateProg, done:n, total:5};
+              late: ratat || !!opts.lateProg, done:n, total:raw.length};
     }
 
     /* ── 3. JAVITAS FOLYAMATBAN ────────────────────────────────── */
@@ -218,7 +242,7 @@
     return h;
   }
 
-  var api={chain:chain, html:html, injectCss:injectCss, CSS:CSS};
+  var api={chain:chain, html:html, conditions:conditions, acteOk:acteOk, injectCss:injectCss, CSS:CSS};
   if(typeof module!=='undefined' && module.exports) module.exports=api;
   root.RPWProgres=api;
   if(typeof document!=='undefined') injectCss(document);

@@ -64,27 +64,36 @@ console.log('\n1b. Ha az iratok osszegyultek, azt KI KELL MONDANI (Ferenc)');
      '  felig kesz dossziera nem');
 }
 
-console.log('\n2. Varakozas — ot feltetel, EGY kapu');
+console.log('\n2. Varakozas — HAT feltetel (2026-11-23: + akta), EGY kapu');
 {
   const c=P.chain({sosire:'programat',conditions:{programare:true,loc:true}},{T});
   eq(c.kind,'astept','felismeri a varakozast');
-  eq(shape(c),'DD..B','a WhatsApp BLOKKOL, a tobbi hianyzas csak vilagos');
-  eq(c.counter,'2 / 5 pr_feltetel','feltetel-szamlalo');
+  eq(shape(c),'DD..DB','a WhatsApp BLOKKOL, a tobbi hianyzas csak vilagos (sajat zseb: az akta kesz)');
+  eq(c.counter,'3 / 6 pr_feltetel','feltetel-szamlalo');
   eq(c.label,'pr_var_wa','a felirat megmondja, mire var');
 
   const kesz=P.chain({sosire:'programat',
     conditions:{programare:true,loc:true,om:true,piese:'livrat',whatsapp:true}},{T});
-  eq(shape(kesz),'DDDDD','minden feltetel megvan');
+  eq(shape(kesz),'DDDDDD','minden feltetel megvan');
   eq(kesz.label,'pr_gata','a felirat: fogadasra kesz');
 
   // A KAPU akkor is nyitva van, ha mas hianyzik — ez a szabaly nem lazult.
   const csakWa=P.chain({sosire:'programat',conditions:{whatsapp:true}},{T});
-  eq(shape(csakWa),'....D','csak a WhatsApp van meg -> az utolso szegmens kesz');
+  eq(shape(csakWa),'....DD','csak a WhatsApp (+ a sajat zsebes akta) van meg');
   ok(csakWa.label==='pr_gata','  es a kapu nyitva: fogadasra kesz');
 
   // piese: a 'livrat' szamit keszne, a 'comandat' nem
-  eq(shape(P.chain({sosire:'programat',conditions:{piese:'comandat'}},{T})),'....B','comandat != livrat');
-  eq(shape(P.chain({sosire:'programat',conditions:{piese:'livrat'}},{T})),'...DB','livrat kesz');
+  eq(shape(P.chain({sosire:'programat',conditions:{piese:'comandat'}},{T})),'....DB','comandat != livrat');
+  eq(shape(P.chain({sosire:'programat',conditions:{piese:'livrat'}},{T})),'...DDB','livrat kesz');
+  // 2026-11-23: "nem kell alkatresz" — kulonben a feltetel orokre hianyozna
+  eq(shape(P.chain({sosire:'programat',conditions:{piese:'nu_trebuie'}},{T})),'...DDB','nem kell alkatresz = kesz');
+  // AZ AKTA (Ferenc: "aktak rendben legyenek")
+  eq(shape(P.chain({sosire:'programat',damageType:'asig',conditions:{}},{T})),'.....B','biztositos, karszam nelkul: az akta HIANYZIK');
+  eq(shape(P.chain({sosire:'programat',damageType:'asig',nrDosar:'GR-1',conditions:{}},{T})),'.....B','  karszam van, constatare nincs: meg hianyzik');
+  eq(shape(P.chain({sosire:'programat',damageType:'asig',docs:[{type:'constatare'}],conditions:{}},{T})),'.....B','  constatare van, karszam NINCS: meg hianyzik');
+  eq(shape(P.chain({sosire:'programat',damageType:'asig',nrDosar:'GR-1',dosarActe:{proces_verbal:[{path:'x'}]},conditions:{}},{T})),'....DB','  karszam + PV: kesz');
+  eq(shape(P.chain({sosire:'programat',damageType:'asig',nrDosar:'GR-1',docs:[{type:'constatare'}],conditions:{}},{T})),'....DB','  karszam + constatare (Preluare): kesz');
+  eq(P.conditions({conditions:{loc:true,locPost:'Post 2',om:true,omName:'Lajos'}}).filter(x=>x.key==='loc'||x.key==='om').map(x=>x.value).join('|'),'Post 2|Lajos','a hely es az ember NEV SZERINT');
 }
 
 console.log('\n2b. RATAT — ugyanaz a logika, mint a varakozasnal (Ferenc)');
@@ -94,10 +103,10 @@ console.log('\n2b. RATAT — ugyanaz a logika, mint a varakozasnal (Ferenc)');
   // varakozas — csak a felirat mas, es MINDIG kesesnek szamit.
   const r=P.chain({sosire:'ratat',conditions:{programare:true,loc:true}},{T});
   eq(r.kind,'ratat','sajat fajta, de a varakozas lancaval');
-  eq(r.steps.length,5,'ot feltetel — NEM het fazis');
-  eq(shape(r),'DD..B','ugyanaz az alakzat, mint a varakozasnal');
+  eq(r.steps.length,6,'hat feltetel — NEM het fazis');
+  eq(shape(r),'DD..DB','ugyanaz az alakzat, mint a varakozasnal');
   eq(r.label,'pr_ratat','a felirat: nem jott el');
-  eq(r.counter,'2 / 5 pr_feltetel','feltetel-szamlalo');
+  eq(r.counter,'3 / 6 pr_feltetel','feltetel-szamlalo');
   ok(r.late===true,'az elmaradt programalas MINDIG keses');
   ok(/pr-l-late/.test(P.html({sosire:'ratat',conditions:{}},{T})),'a rajzon is jelzi');
   // A viitoare es a ratate EGYFORMA: azonos alakzat azonos feltetelekkel.

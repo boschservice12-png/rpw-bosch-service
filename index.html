@@ -238,6 +238,11 @@ html:not([data-sb="wide"]) .sb-toggle span{display:none}
 .pc-caz.pc-ok{background:#f3f7ff}.pc-caz.pc-ok .stat-cell-val,.pc-caz.pc-ok .pc-st{color:#1d4ed8}
 .pc-t.on{box-shadow:inset 0 0 0 3px #15181C}
 .pc-f{margin:10px 24px 0}
+.cond-sel{min-width:200px}.cond-hint{font-size:11px;color:var(--t3);margin-left:6px}
+.cond-acte{font-size:12px;font-weight:700;border-radius:8px;padding:6px 10px}.cond-acte.ok{background:#e9f7ee;color:#15803d}.cond-acte.no{background:#fdecec;color:#b91c1c}
+.pg-conds{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.pg-cd{font-size:10.5px;font-weight:700;border-radius:8px;padding:2px 7px;background:#e9f7ee;color:#15803d}
+.pg-cd.no{background:#fdecec;color:#b91c1c}.pg-cd.gate{outline:1px solid #b91c1c}
 .lt-sub{font-size:11px;color:var(--t3)}
 .lt-pay,.lt-nd,.lt-acte{display:inline-block;font-size:10.5px;font-weight:700;border-radius:10px;padding:2px 8px;margin:4px 4px 0 0}
 .lt-pay.asig{background:#e8f0fe;color:#1d4ed8}.lt-pay.client{background:#fff4dd;color:#a16207}.lt-pay.none{background:#fdecec;color:#b91c1c}
@@ -685,6 +690,17 @@ cond_loc:{ro:'Loc',en:'Place',hu:'Hely'},
 cond_om:{ro:'Om',en:'Person',hu:'Ember'},
 cond_piese:{ro:'Piese',en:'Parts',hu:'Alkatresz'},
 cond_whatsapp:{ro:'WhatsApp',en:'WhatsApp',hu:'WhatsApp'},
+cond_acte:{ro:'Acte',en:'Documents',hu:'Akta'},
+cond_q_acte:{ro:'Acte în ordine? (nr. dosar + constatare / PV)',en:'Documents in order? (claim no. + assessment / police report)',hu:'Akta rendben? (karszam + constatare / PV)'},
+cond_acte_auto:{ro:'Plată client — nu e nevoie de dosar',en:'Client pays — no claim file needed',hu:'Ugyfel fizet — nem kell dosszie'},
+cond_acte_ok:{ro:'Nr. dosar și constatarea sunt în dosar',en:'Claim no. and assessment are in the file',hu:'A karszam es a constatare megvan'},
+cond_acte_lipsa:{ro:'Lipsește nr. dosarului sau constatarea — se completează în dosar',en:'Claim no. or assessment missing — complete it in the file',hu:'Hianyzik a karszam vagy a constatare — a dosszien potold'},
+cond_post_alege:{ro:'— alege postul —',en:'— choose the bay —',hu:'— valaszd a postot —'},
+cond_om_alege:{ro:'— alege omul —',en:'— choose the person —',hu:'— valaszd az embert —'},
+cond_lista_goala:{ro:'Lista e goală — se completează în Echipă',en:'The list is empty — fill it in Team',hu:'A lista ures — az Echipa lapon toltsd ki'},
+piese_nu_trebuie:{ro:'Nu e nevoie',en:'Not needed',hu:'Nem kell'},
+intr_lipsa:{ro:'Intrat în lucru fără: {l} — s-a înregistrat',en:'Started without: {l} — recorded',hu:'Bement javitasra ezek nelkul: {l} — rogzitve'},
+prel_atasat:{ro:'Atașat la dosarul existent: {p}',en:'Attached to the existing file: {p}',hu:'A meglevo dossziehoz csatolva: {p}'},
 cond_blocked_by:{ro:'Blocat de',en:'Blocked by',hu:'Akadalyozo'},
 status_cond:{ro:'Status / Conditii',en:'Status / Conditions',hu:'Allapot / Felteteles'},
 contact:{ro:'Contact',en:'Contact',hu:'Kapcsolat'},
@@ -959,8 +975,8 @@ no_wa_yet:{ro:'Trimite WhatsApp pentru a debloca',en:'Send WhatsApp to unlock',h
 // === Conditii modal ===
 cond_modal_title:{ro:'Conditii lucrare',en:'Job conditions',hu:'Munka feltetelek'},
 cond_q_prog:{ro:'Programare confirmata?',en:'Schedule confirmed?',hu:'Idopont megerositve?'},
-cond_q_loc:{ro:'Loc / Box rezervat?',en:'Place / Box reserved?',hu:'Hely / Box lefoglalva?'},
-cond_q_om:{ro:'Mecanic asignat?',en:'Mechanic assigned?',hu:'Szerelo hozzarendelve?'},
+cond_q_loc:{ro:'Loc / Post rezervat — care?',en:'Place / Bay reserved — which?',hu:'Hely / Post lefoglalva — melyik?'},
+cond_q_om:{ro:'Om asignat — cine?',en:'Person assigned — who?',hu:'Ember hozzarendelve — ki?'},
 cond_q_piese:{ro:'Piese?',en:'Parts?',hu:'Alkatresz?'},
 cond_q_wa:{ro:'WhatsApp trimis?',en:'WhatsApp sent?',hu:'WhatsApp elkuldve?'},
 piese_nu:{ro:'Necomandate',en:'Not ordered',hu:'Nincs rendelve'},
@@ -982,7 +998,7 @@ sumar_anual:{ro:'Sumar anual',en:'Annual summary',hu:'Eves osszegzes'},
 luna_lbl:{ro:'Luna',en:'Month',hu:'Honap'},
 field_saved:{ro:'Salvat',en:'Saved',hu:'Mentve'},
 edit_date:{ro:'Editeaza date',en:'Edit data',hu:'Adatok szerkesztese'},
-double_click_hint:{ro:'Dublu-click pe rand pentru a edita conditiile',en:'Double-click row to edit conditions',hu:'Dupla-klikk a sorra a feltetelek szerkesztesehez'},
+double_click_hint:{ro:'Atinge condițiile de sub bară (sau dublu-click pe rând) pentru a le edita',en:'Tap the conditions under the bar (or double-click the row) to edit them',hu:'Kattints a sav alatti feltetelekre (vagy dupla-klikk a sorra) a szerkeszteshez'},
 
 // === Statistici modul ===
 statTitle:{ro:'STATISTICI WORKFLOW',en:'WORKFLOW STATS',hu:'WORKFLOW STATISZTIKA'},
@@ -1258,6 +1274,25 @@ function procTilesHtml(G){
 }
 window.lucFilter=function(k){S.lucF=(k&&S.lucF!==k)?k:null;render()};
 
+// ── A PROGRAMALAS 6 FELTETELE A SORBAN (2026-11-23) ──
+// Eddig csak dupla kattintasra latszott. Most a Proces cellaban, a sav alatt —
+// ugyanazon a nyelven (ugyanabbol a fuggvenybol), nem kulon oszlopkent.
+// A hely es az ember NEVVEL; a hianyzo pirossal; a WhatsApp a kapu (keretezve).
+function pgCondsHtml(j){
+  if(!(j.sosire==='programat'||j.sosire==='ratat')||j.flux==='doar_dosar'||isCiorna(j))return '';
+  var L=(window.RPWProgres&&RPWProgres.conditions)?RPWProgres.conditions(j,{T:T}):[];
+  if(!L.length)return '';
+  var c=j.conditions||{};
+  return '<div class="pg-conds" onclick="event.stopPropagation();openCondModal(\''+j.id+'\')" title="'+escA(T('cond_modal_title'))+'">'+L.map(function(x){
+    var t=x.label;
+    if(x.key==='loc'&&x.value)t=x.value;
+    if(x.key==='om'&&x.value)t=x.value;
+    if(x.key==='piese'&&c.piese==='nu_trebuie')t=T('cond_piese')+': '+T('piese_nu_trebuie');
+    if(x.key==='piese'&&c.piese==='comandat')t=T('cond_piese')+': '+T('piese_comandat');
+    return '<span class="pg-cd'+(x.ok?'':' no')+(x.gate&&!x.ok?' gate':'')+'">'+(x.ok?'✓ ':'✗ ')+escH(t)+'</span>';
+  }).join('')+'</div>';
+}
+
 // ── Az akta-sor építőkövei ──
 var LUC_PAGES={1:'rpw-recepcio-red.html',2:'rpw-evaluare-red.html',3:'rpw-reconstatare-red.html',4:'rpw-tinichigerie-red.html',5:'rpw-vopsitorie-red.html',6:'rpw-control-red.html',7:'rpw-inchidere-red.html'};
 // A sor fő gombja az AKTUÁLIS fázis lapjára visz (eddig: mindig a dosszié lapra, onnan még egy kattintás).
@@ -1317,18 +1352,17 @@ function lucOrder(a,b){
 // ════════════════════════════════════════════════════════════════
 
 function computeConditions(job){
+  // 2026-11-23: EGY FORRAS — a 6 feltetelt a rpw-progres.js adja (a sav is onnan olvas).
   var c=job.conditions||{};
-  var prog=!!c.programare, loc=!!c.loc, om=!!c.om, wa=!!c.whatsapp;
-  // piese: false / 'comandat' / 'livrat'  (backward-compat: true → 'livrat')
-  var piese=c.piese;
-  if(piese===true)piese='livrat';
-  if(!piese)piese=false;
-  var pieseOK=(piese==='livrat');
-  return {
-    programare:prog, loc:loc, om:om, piese:piese, whatsapp:wa,
-    all: prog && loc && om && pieseOK && wa,
-    count: (prog?1:0)+(loc?1:0)+(om?1:0)+(pieseOK?1:0)+(wa?1:0)
-  };
+  var piese=c.piese; if(piese===true)piese='livrat'; if(!piese)piese=false;
+  var L=(window.RPWProgres&&RPWProgres.conditions)?RPWProgres.conditions(job,{T:T}):null;
+  var ok=function(k){ if(L){for(var i=0;i<L.length;i++)if(L[i].key===k)return L[i].ok;} return k==='acte'?true:!!c[k]; };
+  var r={programare:ok('programare'), loc:ok('loc'), om:ok('om'), piese:piese, pieseOk:ok('piese'),
+         acte:ok('acte'), whatsapp:ok('whatsapp'), locPost:c.locPost||'', omName:c.omName||''};
+  r.count=['programare','loc','om','pieseOk','acte','whatsapp'].filter(function(k){return r[k]}).length;
+  r.all=(r.count===6);
+  r.list=L;
+  return r;
 }
 
 function categorizeJob(job){
@@ -1417,7 +1451,7 @@ function syncMirror(job){
 function renderCondIcon(state, type){
   // type: 'piese' → 3 allapot, false/comandat/livrat
   if(type==='piese'){
-    if(state==='livrat') return '<span class="cond-ic ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>';
+    if(state==='livrat'||state==='nu_trebuie') return '<span class="cond-ic ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>';
     if(state==='comandat') return '<span class="cond-ic comandat"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>';
     return '<span class="cond-ic no"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>';
   }
@@ -1557,7 +1591,7 @@ function renderPanou(){
         h+='<td>'+(window.RPWProgres
           ? RPWProgres.html(j,{T:T, acteCount:window.acteCount, threshold:S.statThreshold,
                                lateProg:(progInfo(j).state==='late')})
-          : '')+'</td>';
+          : '')+pgCondsHtml(j)+'</td>';
       }
       // ── A KAPCSOLAT A WHATSAPP JELE (Ferenc, 2026-08-26) ─────────────
       // Emoji helyett a VALODI WhatsApp jel: zold, ha mar egyeztettunk;
@@ -2488,7 +2522,9 @@ window.lucrareAcum=async function(){
       photos:[],docs:[],panels:{},elements:{},materials:[],
       programare:{date:njDay(0),time:hh,confirmed:true,reprogramari:0,istoric:[]},
       conditions:{programare:true,loc:true,om:true,piese:false,whatsapp:true},
-      phases:{1:{status:'active',started:now},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}}
+      phases:{1:{status:'active',started:now},2:{status:'pending'},3:{status:'pending'},4:{status:'pending'},5:{status:'pending'},6:{status:'pending'},7:{status:'pending'}},
+      // 2026-11-23: az erkezes rogzitve — programalas nelkul jott (a feltetelek nem voltak elore egyeztetve)
+      intrare:{at:now, by:(window.RPWAuth&&RPWAuth.actor)?RPWAuth.actor():null, cu_programare:false, lipsa:[]}
     };
     syncMirror(j);
     JOBS.push(j);
@@ -2497,6 +2533,25 @@ window.lucrareAcum=async function(){
   }catch(e){ toast('Error: '+e.message,1) }
 };
 
+// Melyik meglevo ugyhoz tartozik a beerkezett constatare?
+//  1. ugyanaz a karszam (es ha mindketton van biztosito: ugyanaz)  — biztos egyezes
+//  2. ugyanaz a rendszam, biztositos, NYITOTT, es meg NINCS karszama — az avizare, ami
+//     a biztosito valaszara var. Ha tobb ilyen van: a legujabb.
+// Lezart / kosarba tett / kulon tett ugyhoz NEM csatolunk.
+function prelMatch(plate, nrDosar, asig){
+  var N=function(x){return String(x||'').trim().toUpperCase().replace(/\s+/g,'')};
+  var open=JOBS.filter(function(j){return !j.inchis&&!j.separat&&!j.deleted});
+  if(N(nrDosar)){
+    var a=open.filter(function(j){return N(j.nrDosar)===N(nrDosar)&&(!N(asig)||!N(j.asigurator)||N(j.asigurator)===N(asig))});
+    if(a.length)return a[0];
+  }
+  if(N(plate)){
+    var b=open.filter(function(j){return N(j.plate)===N(plate)&&j.damageType==='asig'&&!N(j.nrDosar)})
+              .sort(function(x,y){return String(y.created||'').localeCompare(String(x.created||''))});
+    if(b.length)return b[0];
+  }
+  return null;
+}
 window.dosarFisier=function(e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
   var r=new FileReader();
@@ -2509,6 +2564,29 @@ window.dosarFisier=function(e){
       var p=await res.json().catch(function(){return{}});
       if(!res.ok)throw new Error(p.error||('HTTP '+res.status));
       function v(x){return (x&&x!=='null')?String(x):''}
+      // ── 2026-11-23: ELOBB A MEGLEVO UGY ────────────────────────────
+      // A tipikus eset: mi nyitottuk az avizare-t, a biztosito visszakuldi a
+      // constatare-t / jovahagyast (e-mailen, WhatsAppon, telefonrol). Eddig ez
+      // MINDIG uj ugyet nyitott: ket akta ugyanarrol az esetrol. Mostantol:
+      // ha van egyezo ugy, AHHOZ csatoljuk (a karszam / biztosito kitoltodik,
+      // az akta-feltetel zold lesz), es csak egyezes nelkul nyitunk ujat.
+      var hit=prelMatch(v(p.plate).toUpperCase(), v(p.nrDosar), v(p.asigurator));
+      if(hit){
+        var nowA=new Date().toISOString();
+        if(!Array.isArray(hit.docs))hit.docs=[];
+        hit.docs.push({type:'constatare',data:dataUrl,ts:nowA});
+        if(!String(hit.nrDosar||'').trim()&&v(p.nrDosar))hit.nrDosar=v(p.nrDosar);
+        if(!String(hit.asigurator||'').trim()&&v(p.asigurator))hit.asigurator=v(p.asigurator);
+        if(!String(hit.proprietarDosar||'').trim()&&v(p.proprietar))hit.proprietarDosar=v(p.proprietar);
+        if(!String(hit.plate||'').trim()&&v(p.plate))hit.plate=v(p.plate).toUpperCase();
+        hit.damageType='asig';
+        if(p.daune)hit.listaDauneRaw=JSON.stringify(p.daune,null,2);
+        await saveJob(hit);
+        toast(T('prel_atasat').replace('{p}',(hit.plate||hit.number||'')+' · '+(hit.nrDosar||'')));
+        render();
+        setTimeout(function(){ location.assign('rpw-dosar.html?job='+encodeURIComponent(hit.id)); }, 700);
+        return;
+      }
       var num=await njNextNumber();
       var now=new Date().toISOString();
       var j={
@@ -2584,22 +2662,47 @@ function condModalHtml(){
     h+='<button class="cb '+(d.programare===false?'no-on':'')+'" onclick="setCondDraft(\'programare\',false)">'+T('no_nu')+'</button>';
     h+='<button class="cb '+(d.programare===true?'yes-on':'')+'" onclick="setCondDraft(\'programare\',true)">'+T('yes_da')+'</button>';
     h+='</div></div>';
-    // loc
+    // loc — NEV SZERINT (Ferenc, 2026-11-23): melyik post
+    var _posts=((window.EC&&EC.posts)||[]).filter(function(p){return p.active!==false});
     h+='<div class="cond-q"><span class="cond-q-label">🏢 '+T('cond_q_loc')+'</span><div class="cond-btns">';
-    h+='<button class="cb '+(d.loc===false?'no-on':'')+'" onclick="setCondDraft(\'loc\',false)">'+T('no_nu')+'</button>';
-    h+='<button class="cb '+(d.loc===true?'yes-on':'')+'" onclick="setCondDraft(\'loc\',true)">'+T('yes_da')+'</button>';
+    if(_posts.length){
+      h+='<select class="nj-in cond-sel" onchange="setCondPick(\'loc\',this.value)"><option value="">'+escH(T('cond_post_alege'))+'</option>';
+      _posts.forEach(function(p){var l=p.label||p.code;h+='<option value="'+escA(l)+'"'+(d.locPost===l?' selected':'')+'>'+escH(l)+'</option>'});
+      h+='</select>';
+    } else {
+      h+='<button class="cb '+(d.loc===false?'no-on':'')+'" onclick="setCondDraft(\'loc\',false)">'+T('no_nu')+'</button>';
+      h+='<button class="cb '+(d.loc===true?'yes-on':'')+'" onclick="setCondDraft(\'loc\',true)">'+T('yes_da')+'</button>';
+      h+='<i class="cond-hint">'+escH(T('cond_lista_goala'))+'</i>';
+    }
     h+='</div></div>';
-    // om
+    // om — NEV SZERINT: ki
+    var _team=((window.EC&&EC.team)||[]).filter(function(e){return e.active!==false&&!e.left_at});
     h+='<div class="cond-q"><span class="cond-q-label">👤 '+T('cond_q_om')+'</span><div class="cond-btns">';
-    h+='<button class="cb '+(d.om===false?'no-on':'')+'" onclick="setCondDraft(\'om\',false)">'+T('no_nu')+'</button>';
-    h+='<button class="cb '+(d.om===true?'yes-on':'')+'" onclick="setCondDraft(\'om\',true)">'+T('yes_da')+'</button>';
+    if(_team.length){
+      h+='<select class="nj-in cond-sel" onchange="setCondPick(\'om\',this.value)"><option value="">'+escH(T('cond_om_alege'))+'</option>';
+      _team.forEach(function(e){h+='<option value="'+escA(e.name)+'"'+(d.omName===e.name?' selected':'')+'>'+escH(e.name)+'</option>'});
+      h+='</select>';
+    } else {
+      h+='<button class="cb '+(d.om===false?'no-on':'')+'" onclick="setCondDraft(\'om\',false)">'+T('no_nu')+'</button>';
+      h+='<button class="cb '+(d.om===true?'yes-on':'')+'" onclick="setCondDraft(\'om\',true)">'+T('yes_da')+'</button>';
+      h+='<i class="cond-hint">'+escH(T('cond_lista_goala'))+'</i>';
+    }
     h+='</div></div>';
-    // piese — 3 allapot
+    // piese — 4 allapot (2026-11-23: + "nu e nevoie")
     h+='<div class="cond-q"><span class="cond-q-label">📦 '+T('cond_q_piese')+'</span><div class="cond-btns">';
+    h+='<button class="cb '+(d.piese==='nu_trebuie'?'yes-on':'')+'" onclick="setCondDraft(\'piese\',\'nu_trebuie\')">'+T('piese_nu_trebuie')+'</button>';
     h+='<button class="cb '+(!d.piese||d.piese===false?'no-on':'')+'" onclick="setCondDraft(\'piese\',false)">'+T('piese_nu')+'</button>';
     h+='<button class="cb '+(d.piese==='comandat'?'cmd-on':'')+'" onclick="setCondDraft(\'piese\',\'comandat\')">'+T('piese_comandat')+'</button>';
     h+='<button class="cb '+(d.piese==='livrat'?'yes-on':'')+'" onclick="setCondDraft(\'piese\',\'livrat\')">'+T('piese_livrat')+'</button>';
     h+='</div></div>';
+    // acte — SZAMOLT, nem pipalhato: a dosszie dont (karszam + constatare)
+    if(dj){
+      var _aOk=(window.RPWProgres&&RPWProgres.acteOk)?RPWProgres.acteOk(dj):true;
+      h+='<div class="cond-q"><span class="cond-q-label">📋 '+T('cond_q_acte')+'</span><div class="cond-btns">';
+      h+='<span class="cond-acte '+(_aOk?'ok':'no')+'">'+escH(dj.damageType!=='asig'?T('cond_acte_auto'):(_aOk?T('cond_acte_ok'):T('cond_acte_lipsa')))+'</span>';
+      if(dj.damageType==='asig'&&!_aOk)h+='<button class="cb" onclick="closeCondModal();deschideDosar(\''+dj.id+'\')">'+T('open_dosar_btn')+'</button>';
+      h+='</div></div>';
+    }
     // whatsapp
     h+='<div class="cond-q"><span class="cond-q-label">💬 '+T('cond_q_wa')+'</span><div class="cond-btns">';
     h+='<button class="cb '+(d.whatsapp===false?'no-on':'')+'" onclick="setCondDraft(\'whatsapp\',false)">'+T('no_nu')+'</button>';
@@ -2619,18 +2722,27 @@ window.openCondModal=async function(jobId){
   var piese=c.piese; if(piese===true)piese='livrat'; if(!piese)piese=false;
   S.condDraft={
     programare: !!c.programare,
-    loc: !!c.loc,
-    om: !!c.om,
+    loc: !!c.loc, locPost: c.locPost||'',
+    om: !!c.om,   omName: c.omName||'',
     piese: piese,
     whatsapp: !!c.whatsapp
   };
   S.showCondModal=jobId;
   render();
+  // a post- es a dolgozo-lista (Echipa) — ha meg nincs betoltve, betoltjuk; az ecLoad ujrarajzol
+  try{ if(window.ecLoad && !(window.EC&&EC.loaded)) ecLoad(false); }catch(e){}
 };
 window.closeCondModal=function(){S.showCondModal=0;S.condDraft=null;render()};
 // 2026-11-23: a soron belüli ✎ szerkesztés megszűnt — ellenőrzés nélkül írt (a munkaszámot is).
 // A ✎ mostantól a rendes, ellenőrző szerkesztő ablakot nyitja (openEditJob).
 window.updJobField=async function(id,f,v){var j=await freshJob(id);if(!j)return;if(f==='plate'||f==='vin')v=String(v).toUpperCase();j[f]=v;await saveJob(j)};
+// a lista-valasztas: ures = nincs kivalasztva (loc/om = false), kulonben a NEV es true
+window.setCondPick=function(key,val){
+  if(!S.condDraft)return;
+  if(key==='loc'){S.condDraft.locPost=val||'';S.condDraft.loc=!!val}
+  if(key==='om'){S.condDraft.omName=val||'';S.condDraft.om=!!val}
+  render();
+};
 window.setCondDraft=function(key,val){
   if(!S.condDraft)return;
   S.condDraft[key]=val;
@@ -2643,7 +2755,9 @@ window.saveCondModal=async function(){
   if(!job.conditions)job.conditions={};
   job.conditions.programare = S.condDraft.programare;
   job.conditions.loc = S.condDraft.loc;
+  job.conditions.locPost = S.condDraft.loc ? (S.condDraft.locPost||'') : '';
   job.conditions.om = S.condDraft.om;
+  job.conditions.omName = S.condDraft.om ? (S.condDraft.omName||'') : '';
   job.conditions.piese = S.condDraft.piese;
   job.conditions.whatsapp = S.condDraft.whatsapp;
   await saveJob(job);
@@ -2666,7 +2780,15 @@ window.deschideLucrare=async function(jobId){
   if(!job.phases)job.phases={};
   for(var p=1;p<=7;p++){if(!job.phases[p])job.phases[p]={status:'pending'}}
   if(job.phases[1].status==='pending'){job.phases[1].status='active';job.phases[1].started=new Date().toISOString()}
+  // 2026-11-23 (Ferenc: "nem, csak jegyezzuk"): a hianyzo feltetel NEM tilt — de
+  // rogzitjuk, mi hianyzott, ki engedte be es mikor. A WhatsApp-kapu valtozatlan.
+  var _cl=(window.RPWProgres&&RPWProgres.conditions)?RPWProgres.conditions(job,{T:T}):[];
+  var _lipsa=_cl.filter(function(x){return !x.ok}).map(function(x){return x.key});
+  job.intrare={at:new Date().toISOString(), by:(window.RPWAuth&&RPWAuth.actor)?RPWAuth.actor():null,
+               cu_programare:true, lipsa:_lipsa,
+               loc:(job.conditions||{}).locPost||'', om:(job.conditions||{}).omName||''};
   await saveJob(job);
+  if(_lipsa.length){ toast(T('intr_lipsa').replace('{l}',_cl.filter(function(x){return !x.ok}).map(function(x){return x.label}).join(', '))); }
   location.assign('rpw-recepcio-red.html?job='+job.id);
 };
 

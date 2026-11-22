@@ -1,5 +1,18 @@
 # CHANGELOG.md
 
+## 2026-11-23 (3) — Programare: 6 feltétel, hely és ember név szerint, duplikációmentes Preluare
+
+> Ferenc: „Programare nouă: beprogramáljuk az autót javításra — kondíció, dátum, alkatrész rendelés, hely, ember, akták rendben legyenek · Avizare: felvesszük az ügyfél adatait és kinyitjuk a biztosítási dossziét · Lucrare nouă: minden kondíció stimmel, betesszük az autót javítani · Preluare: ha valaki e-mailen, WhatsAppon küldi a javítási kondíciókat vagy a telefon felületről csinálja". Döntések: 1 „nem, csak jegyezzük" · 2 „igen" (név szerint) · 3 „e-mail utána". Csak frontend, migráció nincs.
+
+- **6 feltétel, egy forrásból** (`RPWProgres.conditions`): Programare · Loc · Om · Piese · **Acte (új)** · WhatsApp. Az akta: biztosítós ügynél kárszám + constatare/PV, saját zsebnél kész.
+- **Hely és ember NÉV SZERINT:** a feltétel-ablak az Echipă postjaiból és dolgozóiból kínál (`conditions.locPost`, `conditions.omName`); üres listánál marad az igen/nem.
+- **Alkatrész: „Nu e nevoie"** — eddig a „nem kell" és a „nincs rendelve" ugyanaz volt, a sor soha nem lehetett zöld.
+- **A Panou sorában látszanak a feltételek** (a sáv alatt, névvel, a hiányzó pirossal) — eddig csak dupla kattintásra.
+- **Bemegy javításra: nem tilt, de rögzít** — `job.intrare` = mikor, ki, programálással vagy anélkül, mely feltételek hiányoztak, melyik post / ki. A WhatsApp-kapu változatlan (2026-08-26).
+- **Preluare: előbb a meglévő ügy** — azonos kárszám (azonos vagy hiányzó biztosítóval), vagy azonos rendszámú, nyitott, kárszám nélküli biztosítós ügy (az avizare) → ahhoz csatolja a constatare-t, kitölti a kárszámot / biztosítót. Lezárt ügyhöz nem csatol; eltérő biztosító → új ügy.
+- Tesztek: `test-ugy-folyamat.js` 8–10. csoport, `test-progres.js` (6 feltétel, akta, „nem kell"); mutációval ellenőrizve (7/7).
+- Hátra: e-mailes beérkezés (Ferenc: „utána").
+
 ## 2026-11-23 (2) — A Lucrări táblázat: az ügyek aktái
 
 > Ferenc: „igen csináld — vedd számításba: ez az ügyek aktáinak rendszerezése". Csak frontend, migráció nincs.

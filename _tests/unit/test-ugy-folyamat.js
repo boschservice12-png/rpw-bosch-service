@@ -202,6 +202,66 @@ try{
   eq(w.lucPage(A),'rpw-tinichigerie-red.html?job='+encodeURIComponent(A.id),'„Deschide faza” → a fázis saját lapja (4 → Tinichigerie)');
   eq(w.lucPage(D).split('?')[0],'rpw-control-red.html','  6 → Control');
   NAV=null; w.lucDeschide(A.id); ok(NAV!==null,'  és navigál');
+
+  grp('8 · PROGRAMARE — 6 feltétel, hely és ember NÉV SZERINT');
+  w.JOBS.length=0;
+  w.EC.posts=[{code:'P1',label:'Post 1',active:true},{code:'P2',label:'Post 2 · vopsitorie',active:true}];
+  w.EC.team=[{id:'e1',name:'Lajos Lakatos',active:true},{id:'e2',name:'Vasile Festő',active:true}];
+  w.EC.loaded=true;
+  const P1=mk({number:'MS-26-P1',plate:'MS-81-AAA',sosire:'programat',phase:1,phases:{1:{status:'pending'}},
+    programare:{date:'2099-01-01',time:'08:00'},conditions:{programare:true,whatsapp:true}});
+  w.JOBS.push(P1);
+  await w.openCondModal(P1.id); h=app();
+  ok(/Post 2 · vopsitorie/.test(h)&&/Lajos Lakatos/.test(h),'a feltétel-ablak a postot és az embert LISTÁBÓL kínálja');
+  ok(/Nu e nevoie/.test(h),'alkatrész: „Nu e nevoie” választható');
+  ok(/Plată client — nu e nevoie de dosar/.test(h),'saját zsebnél az akta: nem kell dosszié');
+  w.setCondPick('loc','Post 2 · vopsitorie'); w.setCondPick('om','Lajos Lakatos'); w.setCondDraft('piese','nu_trebuie');
+  await w.saveCondModal();
+  eq([P1.conditions.loc,P1.conditions.locPost,P1.conditions.om,P1.conditions.omName,P1.conditions.piese].join('|'),
+     'true|Post 2 · vopsitorie|true|Lajos Lakatos|nu_trebuie','elmentve: hely + ember névvel, alkatrész nem kell');
+  const cc=w.computeConditions(P1);
+  ok(cc.all===true&&cc.count===6,'mind a 6 feltétel rendben');
+  w.S.screen='panou'; w.S.panouTab='viitoare'; w.render(); h=app();
+  ok(/pg-conds/.test(h)&&/Post 2 · vopsitorie/.test(h)&&/Lajos Lakatos/.test(h),'a Panou sorában látszik a hely és az ember neve');
+  w.setCondPick && null;
+  const P2=mk({number:'MS-26-P2',plate:'MS-82-BBB',sosire:'programat',phase:1,phases:{1:{status:'pending'}},damageType:'asig',
+    programare:{date:'2099-01-01',time:'09:00'},conditions:{programare:true,whatsapp:true}});
+  w.JOBS.push(P2); w.render(); h=app();
+  ok(/pg-cd no[^>]*>✗ Acte/.test(h),'biztosítós ügy kárszám nélkül: az „Acte” piros');
+
+  grp('9 · BEMEGY JAVÍTÁSRA — nem tilt, de RÖGZÍT (Ferenc: „nem, csak jegyezzük”)');
+  NAV=null; await w.deschideLucrare(P2.id);
+  eq(P2.sosire,'sosit','a WhatsApp megvan → bemegy (a kapu változatlan)');
+  ok(P2.intrare&&P2.intrare.cu_programare===true,'az érkezés rögzítve');
+  eq(P2.intrare.lipsa.join(','),'loc,om,piese,acte','  a hiányzó feltételek névvel rögzítve');
+  ok(NAV!==null,'  és a recepcióra navigál');
+  await w.lucrareAcum(); const W=w.JOBS[w.JOBS.length-1];
+  ok(W.intrare&&W.intrare.cu_programare===false,'Lucrare nouă (programálás nélkül): ez is rögzítve');
+
+  grp('10 · PRELUARE — előbb a MEGLÉVŐ ügy (nincs dupla akta)');
+  w.JOBS.length=0;
+  const AV=mk({number:'MS-26-AV',plate:'MS-91-XYZ',flux:'doar_dosar',sosire:'programat',damageType:'asig',dosarStatus:'deschid',nrDosar:'',asigurator:'',docs:[]});
+  const OTHER=mk({number:'MS-26-OT',plate:'MS-92-QQQ',damageType:'asig',nrDosar:'AL-7',asigurator:'Allianz'});
+  w.JOBS.push(AV,OTHER);
+  const ocr=(o)=>{w.fetch=function(){return Promise.resolve({ok:true,json:function(){return Promise.resolve(o)}})}};
+  const send=async()=>{w.dosarFisier({target:{files:[new w.Blob(['%PDF'],{type:'application/pdf'})]}});await new Promise(r=>setTimeout(r,400))};
+  ocr({plate:'ms-91-xyz',proprietar:'Pop Ion',asigurator:'Groupama',nrDosar:'GR-55'}); await send();
+  eq(w.JOBS.length,2,'avizare + visszaküldött constatare → NEM nyílt új ügy');
+  eq(AV.nrDosar,'GR-55','  a kárszám a meglévő ügybe került');
+  eq(AV.asigurator,'Groupama','  a biztosító is');
+  eq(AV.docs.length,1,'  a constatare a meglévő aktához csatolva');
+  ok(w.RPWProgres.acteOk(AV),'  → az akta-feltétel zöld');
+  ocr({plate:'',nrDosar:'GR-55',asigurator:'Groupama'}); await send();
+  eq(w.JOBS.length,2,'ugyanaz a kárszám másodszor → ugyanahhoz az ügyhöz');
+  eq(AV.docs.length,2,'  (második irat)');
+  ocr({plate:'MS-91-XYZ',nrDosar:'GR-55',asigurator:'Allianz'}); await send();
+  eq(w.JOBS.length,3,'ugyanaz a kárszám, MÁS biztosító → új ügy (nem keverjük)');
+  ocr({plate:'MS-99-NEW',nrDosar:'OM-1',asigurator:'Omniasig'}); await send();
+  eq(w.JOBS.length,4,'ismeretlen eset → új ügy');
+  const closed=mk({plate:'MS-98-OLD',damageType:'asig',nrDosar:'',inchis:true});
+  w.JOBS.push(closed);
+  ocr({plate:'MS-98-OLD',nrDosar:'X-1',asigurator:'Euroins'}); await send();
+  eq(w.JOBS.length,6,'lezárt ügyhöz NEM csatolunk → új ügy');
 }catch(e){ fail++; console.log('   ✗ KIVÉTEL: '+e.message+'\n'+(e.stack||'').split('\n').slice(0,4).join('\n')); }
 console.log('\n'+(fail?'✗ ':'✓ ')+pass+' pass / '+fail+' fail');
 process.exit(fail?1:0);

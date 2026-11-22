@@ -3,7 +3,7 @@
 > **Ez a fájl generált.** Forrás: `_tests/last-run.json`.
 > Újragenerálás: `npm test && node _tests/gen-report.js`
 
-*Generálva: 2026-11-22T22:41:17.931Z*
+*Generálva: 2026-11-22T23:01:37.824Z*
 
 ---
 
@@ -40,13 +40,13 @@ Staging:               NOT VERIFIED
 
 | Kategória | Fájl | Állítás | Sikeres | Sikertelen | El sem indult |
 |---|---:|---:|---:|---:|---:|
-| **Unit** | 57 | 3475 | 3475 | 0 | 0 |
+| **Unit** | 57 | 3504 | 3504 | 0 | 0 |
 | **Database integration** | 5 | 355 | 355 | 0 | 0 |
 | **Frontend integration** | 5 | 486 | 486 | 0 | 0 |
 | **Static workflow audit** | 1 | 2 | 2 | 0 | 0 |
 | **Staging** | — | — | — | — | — |
 
-**Futási idő:** 49.2 s
+**Futási idő:** 47.9 s
 
 > ⚠ **A staging NEM igazolt** — a MANUAL-STAGING-CHECKLIST.md nincs kitöltve
 > Ezért a „minden teszt sikeres" állítás NEM tehető meg.
@@ -114,7 +114,7 @@ Ez fedi a brief 6. pontjának mind a 12 esetét és a 13. pont regresszióit.
 | unit | `test-photos-gateway.js` | 30 | 0 | ✅ |
 | unit | `test-pin-dialog.js` | 24 | 0 | ✅ |
 | unit | `test-prog.js` | 30 | 0 | ✅ |
-| unit | `test-progres.js` | 67 | 0 | ✅ |
+| unit | `test-progres.js` | 74 | 0 | ✅ |
 | unit | `test-queue.js` | 44 | 0 | ✅ |
 | unit | `test-reconst-photos.js` | 17 | 0 | ✅ |
 | unit | `test-registry.js` | 1095 | 0 | ✅ |
@@ -129,7 +129,7 @@ Ez fedi a brief 6. pontjának mind a 12 esetét és a 13. pont regresszióit.
 | unit | `test-tenant.js` | 12 | 0 | ✅ |
 | unit | `test-thumbs.js` | 18 | 0 | ✅ |
 | unit | `test-typo.js` | 19 | 0 | ✅ |
-| unit | `test-ugy-folyamat.js` | 57 | 0 | ✅ |
+| unit | `test-ugy-folyamat.js` | 79 | 0 | ✅ |
 | unit | `test-wa.js` | 19 | 0 | ✅ |
 | unit | `test-xss.js` | 95 | 0 | ✅ |
 | integration | `test-int-migrations.js` | 48 | 0 | ✅ |
