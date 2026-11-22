@@ -145,6 +145,34 @@ A kiírt sort tedd a **jelszókezelődbe**, a gép jelszava mellé. Ne e-mailben
 **Később (ajánlott):** SSH csak kulccsal. Ehhez előbb kulcs kell a gépeden — külön, lépésenként segítek;
 addig a jelszavas belépést a fail2ban és a tűzfal fékje védi.
 
+## Helyben igazolva (2026-11-22, próbatelepítés systemd és Caddy nélkül)
+
+| Próba | Eredmény |
+|---|---|
+| Első telepítés üres gépre (titkok, adatbázis, kiadás, szerviz + admin) | ✅ 65 mp |
+| Belépés-lista, felület, `rpw-config.js` a saját szerviz-azonosítóval | ✅ |
+| `.env.local` a weben | ✅ 404 |
+| Frissítés: mentés előtte, vendor újrahasznosítva | ✅ 9 mp |
+| Frissítés egy olyan élő kiadásról, amelynek a mentése hibás | ✅ az új kód menti (lásd lent) |
+| Kiadás, amely el sem indul | ✅ megáll az átkapcsolás előtt, az élő változatlan |
+| Kiadás, amely elindul, de hibás → **automatikus visszaállás** | ✅ |
+| `rollback.sh` kézzel | ✅ |
+| Mentés visszaellenőrzése (visszafejtés + hash) | ✅ |
+| `install.sh` újrafuttatása | ✅ titok, szerviz változatlan |
+
+**A próba közben talált és javított hibák:** (1) üres fotótárral (friss szerver) a mentés összeomlott → minden
+telepítés megállt volna; (2) a mentés hibája a saját javítását is kizárta volna; (3) sikertelen mentés félkész
+mappát hagyott; (4) az egészség-ellenőrzés egy gyorsítótárazott régi kiadást is elfogadott — most a futó
+kiadás azonosítóját is összeveti.
+
+**NEM IGAZOLT (csak a valódi gépen mérhető):** Caddy + HTTPS, a php-fpm készlet, fail2ban, tűzfal, éjszakai időzítő.
+
+## ⚠ Nyitott — az éles adat átköltöztetése ELŐTT kötelező
+
+- **Visszatöltés a mentésből (`rpw:restore`)** — ma a mentés készül, titkosított és visszaellenőrzött, de
+  visszatölteni csak kézzel lehetne. Kell hozzá parancs + rendszeres visszatöltési próba (a TyreFleet `restore-drill` mintájára).
+- **Másolat a gépen kívülre** (3-2-1 szabály).
+
 ## Ami a telepítés után jön (a terv: `RPW-004-SYMFONY-ATALLAS.md`)
 
 1. **Staging:** az éles Supabase másolata erre a gépre → `rpw:db:check` → séma-eltérések kiegyenlítése.
