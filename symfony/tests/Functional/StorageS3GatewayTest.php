@@ -82,6 +82,8 @@ final class StorageS3GatewayTest extends ApiTestCase
         // ügyfél meglévőt nem írhat felül
         FakeS3::$existing["/rpw/$a/$cp"] = true;
         self::assertSame(409, $this->gw(['op' => 'client-sign-upload', 'path' => $cp, 'size' => 50000])[0]);
+        // az ügyfél fotójának előnézete (RPW-005) is az ügyfélé
+        self::assertSame(200, $this->gw(['op' => 'client-sign-upload', 'path' => $id.'/client_1732200000000_ab12.t.jpg', 'size' => 9000])[0]);
         // ügyfél dolgozói fotót nem kérhet
         self::assertSame(403, $this->gw(['op' => 'client-sign-upload', 'path' => $path, 'size' => 50000])[0]);
 

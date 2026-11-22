@@ -36,7 +36,8 @@ final class StorageController
     private const REST_RE = '/^(?:[A-Za-z0-9_-]{1,40}\/)?[A-Za-z0-9_.-]{1,160}$/';
     /** Feltölteni CSAK JPG és PDF lehet: ezt kéri a biztosító, az e-mail és az Audatex (Ferenc, 2026-11-22). */
     public const UPLOAD_EXT = ['jpg', 'jpeg', 'pdf'];
-    private const CLIENT_NAME_RE = '/^(?:acta_[A-Za-z0-9_-]{1,60}|client)_[0-9]{10,16}_[a-z0-9]{1,8}\.[a-z0-9]{1,6}$/';
+    // a „.t” az előnézet (RPW-005): client_…_ab12.t.jpg az ügyfél saját fotójának kicsinyített mása
+    private const CLIENT_NAME_RE = '/^(?:acta_[A-Za-z0-9_-]{1,60}|client)_[0-9]{10,16}_[a-z0-9]{1,8}(?:\.t)?\.[a-z0-9]{1,6}$/';
 
     public function __construct(
         private readonly FileStore $store,

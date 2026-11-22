@@ -49,6 +49,26 @@
     }
     return { data:body };
   }
+  // ── RPW-005 (2026-11-22): ELŐNÉZET (400 px) — a listák mobilneten is gyorsak ─────────
+  // A telefon készíti (nincs szerveroldali képfeldolgozás), a fotó MELLÉ: <név>.t.jpg.
+  // Csak az új backenden (THUMBS) és csak JPG-nél; hibája SOHA nem akasztja meg a fotózást.
+  function thumbsOn(){ return !!(root.RPW_CFG && root.RPW_CFG.THUMBS); }
+  function thumbPath(p){ return /\.t\.jpe?g$/i.test(p) ? null : (/\.jpe?g$/i.test(p) ? p.replace(/\.jpe?g$/i, '.t.jpg') : null); }
+  async function makeThumb(blob){
+    if(typeof document==='undefined' || typeof createImageBitmap!=='function') return null;
+    var bm=await createImageBitmap(blob), mx=400, r=Math.min(1, mx/Math.max(bm.width, bm.height));
+    var c=document.createElement('canvas'); c.width=Math.max(1,Math.round(bm.width*r)); c.height=Math.max(1,Math.round(bm.height*r));
+    c.getContext('2d').drawImage(bm, 0, 0, c.width, c.height);
+    return await new Promise(function(res){ c.toBlob(function(b){ res(b); }, 'image/jpeg', .7); });
+  }
+  function thumbAfter(sb, name, opts, path, body){
+    var tp=thumbPath(path||'');
+    if(!thumbsOn() || !tp || !body || typeof body.size!=='number') return;
+    (opts.makeThumb||makeThumb)(body).then(function(t){
+      if(t && t.size) return bucket(sb, name, opts).upload(tp, t, {contentType:'image/jpeg', upsert:true});
+    }).catch(function(e){ try{ console.warn('[RPW] előnézet kimaradt (a fotó rendben)', e); }catch(_){} });
+  }
+
   function bucket(sb, name, opts){
     opts=opts||{};
     if(!gatewayOn()) return sb.storage.from(name);
@@ -71,11 +91,13 @@
             try{ console.warn('[RPW] fotó-feltöltés a tárba elutasítva', err); }catch(e){}
             return { data:null, error:err };
           }
+          thumbAfter(sb, name, opts, s.data.path, body);
           return { data:{ path:s.data.path }, error:null };
         }
         var up=await sb.storage.from(name).uploadToSignedUrl(s.data.path, s.data.token, body,
                                                              {contentType:(o&&o.contentType)||undefined});
         if(up && up.error) return { data:null, error:up.error };
+        thumbAfter(sb, name, opts, s.data.path, body);
         return { data:{ path:s.data.path }, error:null };
       },
       remove: async function(paths){
@@ -163,12 +185,12 @@
   // · tárolt fájl (path) → data-rpw-path; a hydrate() FRISS aláírt URL-t ír bele
   //   (a rekordban maradt aláírt URL egy óra múlva lejár, ezért arra nem építünk)
   // · teljes http(s) URL csak path hiányában. Más séma (javascript: …) soha.
-  function imgAttrs(ref){
+  function imgAttrs(ref, o){
     if(!ref) return '';
     var U=root.RPWUtil||{}, ea=U.escAttr||function(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); };
     if(typeof ref==='string') ref = /^data:image\//i.test(ref) ? {data:ref} : (/^https?:/i.test(ref) ? {url:ref} : {path:ref});
     if(ref.data && /^data:image\//i.test(ref.data)) return 'src="'+ea(ref.data)+'"';
-    if(ref.path) return 'data-rpw-path="'+ea(ref.path)+'"';
+    if(ref.path) return 'data-rpw-path="'+ea(ref.path)+'"'+((o&&o.thumb&&thumbPath(ref.path))?' data-rpw-thumb="1"':'');
     if(ref.url && /^https?:/i.test(ref.url)) return 'src="'+ea(ref.url)+'"';
     return '';
   }
@@ -191,6 +213,11 @@
     // MINDIG a path-bol irunk friss alairast — kepre az src-t, linkre
     // a href-et. (Ferenc, 2026-08-27: "a fotok hianyoznak".)
     var el=document.querySelectorAll('[data-rpw-path]:not([data-rpw-done])');
+    // RPW-005: egy kérés a teljes oldalra (60-asával), nem elemenként — egy 50 fotós dosszié 1 körút.
+    // Előnézetnél előbb a .t.jpg-t kéri; ha nincs (régi fotó), az eredetit. Hibánál: a régi, elemenkénti út.
+    if(gatewayOn() && el.length){
+      try{ await hydrateBatch(sb, opts||{}, el); return; }catch(e){ /* lent: elemenként */ }
+    }
     for(var i=0;i<el.length;i++){
       (function(n){
         var p=n.getAttribute('data-rpw-path');
@@ -203,7 +230,36 @@
     }
   }
 
-  var API={ isFullUrl:isFullUrl, signedUrl:signedUrl, publicUrl:publicUrl, resolveRef:resolveRef, hydrate:hydrate,
+  async function hydrateBatch(sb, opts, el){
+    var want={}, nodes=[];
+    for(var i=0;i<el.length;i++){
+      var p=el[i].getAttribute('data-rpw-path'); if(!p) continue;
+      var t=(el[i].tagName==='IMG' && el[i].getAttribute('data-rpw-thumb')==='1') ? thumbPath(p) : null;
+      nodes.push([el[i], p, t]); want[p]=1; if(t) want[t]=1;
+    }
+    var paths=Object.keys(want), url={};
+    for(var k=0;k<paths.length;k+=60){
+      var r=await gw(opts.client?'client-sign-read':'sign-read', {paths:paths.slice(k,k+60)}, opts);
+      if(r.error) throw r.error;
+      (r.data.urls||[]).forEach(function(u){ url[u.path]=u.signedUrl||null; });
+    }
+    nodes.forEach(function(x){
+      var n=x[0], u=(x[2]&&url[x[2]]) || url[x[1]];
+      if(u){ if(n.tagName==='IMG') n.src=u; else n.href=u; }
+      if(x[2]&&url[x[2]]) n.setAttribute('data-rpw-shown','thumb');
+      n.setAttribute('data-rpw-done','1');
+    });
+  }
+
+  // A nagyításhoz MINDIG az eredeti: ha az <img> előnézetet mutat, friss aláírt URL az eredeti útra.
+  async function fullSrc(sb, imgEl, opts){
+    if(!imgEl) return '';
+    var p=imgEl.getAttribute && imgEl.getAttribute('data-rpw-path');
+    if(p && imgEl.getAttribute('data-rpw-shown')==='thumb') return await signedUrl(sb, p, opts);
+    return imgEl.src||'';
+  }
+
+  var API={ thumbPath:thumbPath, fullSrc:fullSrc, isFullUrl:isFullUrl, signedUrl:signedUrl, publicUrl:publicUrl, resolveRef:resolveRef, hydrate:hydrate,
             storePhoto:storePhoto, isPrivate:isPrivate, bucket:bucket, gatewayOn:gatewayOn,
             imgAttrs:imgAttrs, refToBlob:refToBlob };
   if(typeof module!=='undefined' && module.exports){ module.exports=API; }

@@ -350,7 +350,7 @@ function render(){
   // RPW-004: a fotók forrása KÖZÖS a lezárási szabállyal (recepció → tároló, kárdosszié → iratlista, régi → base64)
   var docs=job.docs||[],el=job.elements||{},_pr=(window.RPWWorkflow&&RPWWorkflow.photoRefs)?RPWWorkflow.photoRefs(job):{talon:null,overview:[],overviewCount:0};
   var tP=_pr.talon,ovP=_pr.overview;
-  function _img(ref){ return (window.RPWPhotos&&RPWPhotos.imgAttrs)?RPWPhotos.imgAttrs(ref):''; }
+  function _img(ref){ return (window.RPWPhotos&&RPWPhotos.imgAttrs)?RPWPhotos.imgAttrs(ref,{thumb:true}):''; }
   var elC=0,dmgC=0,okC=0,sugC=0;for(var k in el){elC++;if(el[k].status==='ok')okC++;if(el[k].status==='damaged')dmgC++;if(el[k].status==='suggested')sugC++}
 
   var _ac0=(typeof acteCountFor==='function')?acteCountFor(job):null;
@@ -483,7 +483,7 @@ function render(){
         if(has){
           h+='<div class="acte-thumbs">';
           fs.forEach(function(u,ix){var im=/\.(jpg|jpeg|png|webp)(\?|$)/i.test(u.url||'')||(u.type||'').indexOf('image')===0;
-            h+='<div class="acte-th">'+(im?'<img src="'+escU(u.url)+'" data-rpw-path="'+escA(u.path||'')+'" onclick="openLB(this.src)">':'<a href="'+escU(u.url)+'" data-rpw-path="'+escA(u.path||'')+'" target="_blank" class="acte-doc">📄 PDF</a>')+'<span class="acte-del" onclick="delActa(\''+it.key+'\','+ix+')">×</span></div>';});
+            h+='<div class="acte-th">'+(im?'<img src="'+escU(u.url)+'" data-rpw-path="'+escA(u.path||'')+'"'+((window.RPWPhotos&&RPWPhotos.thumbPath&&RPWPhotos.thumbPath(u.path||''))?' data-rpw-thumb="1"':'')+' onclick="openLB(this)">':'<a href="'+escU(u.url)+'" data-rpw-path="'+escA(u.path||'')+'" target="_blank" class="acte-doc">📄 PDF</a>')+'<span class="acte-del" onclick="delActa(\''+it.key+'\','+ix+')">×</span></div>';});
           h+='</div>';
         }
         h+='</div>';
@@ -497,7 +497,7 @@ function render(){
 
   // Talon
   h+='<div class="sec"><div class="sec-h" onclick="tS(\'talon\')"><div class="sec-t"><span class="step-n">1</span> '+T('talon')+'</div><span class="sec-badge '+(tP?'sb-ok':'sb-nd')+'">'+(tP?'OK':'—')+'</span></div><div class="sec-bd '+(S.sec.talon?'open':'')+'">';
-  if(tP)h+='<img '+_img(tP)+' alt="talon" style="width:100%;border-radius:8px;border:1px solid var(--b);cursor:pointer" onclick="openLB(this.src)"/>';
+  if(tP)h+='<img '+_img(tP)+' alt="talon" style="width:100%;border-radius:8px;border:1px solid var(--b);cursor:pointer" onclick="openLB(this)"/>';
   else h+='<div class="empty">—</div>';
   h+='</div></div>';
 
@@ -514,7 +514,7 @@ function render(){
   h+='<div class="sec"><div class="sec-h" onclick="tS(\'photos\')"><div class="sec-t"><span class="step-n">3</span> '+T('photos')+'</div><span class="sec-badge '+(_pr.overviewCount>=6?'sb-ok':_pr.overviewCount?'sb-pt':'sb-nd')+'">'+_pr.overviewCount+'/6</span></div><div class="sec-bd '+(S.sec.photos?'open':'')+'">';
   if(_pr.overviewCount){
     h+='<div class="pgrid">';
-    ovP.forEach(function(p,idx){if(!p)return;h+='<div class="pslot" style="cursor:pointer" onclick="openLB(this.querySelector(\'img\').src)"><img '+_img(p)+' alt=""/><div class="pslot-label">'+T(VK[idx]||'')+'</div></div>'});
+    ovP.forEach(function(p,idx){if(!p)return;h+='<div class="pslot" style="cursor:pointer" onclick="openLB(this.querySelector(\'img\'))"><img '+_img(p)+' alt=""/><div class="pslot-label">'+T(VK[idx]||'')+'</div></div>'});
     h+='</div>';
   }else h+='<div class="empty">—</div>';
   h+='</div></div>';
@@ -582,7 +582,9 @@ window.tS=function(s){S.sec[s]=S.sec[s]?0:1;render()};
 // Korábban: lb.innerHTML='<img src="'+src+'"/>' — idézőjelet tartalmazó
 // vagy javascript: sémájú érték kitörhetett az attribútumból.
 // Most: DOM-építés + sémaellenőrzés (csak http/https/data:image/blob).
-window.openLB=function(src){
+window.openLB=async function(src){
+  // RPW-005: <img> elemet is kaphat — előnézet esetén a nagyítás az EREDETIT mutatja
+  if(src&&src.tagName){ src=(window.RPWPhotos&&RPWPhotos.fullSrc)?await RPWPhotos.fullSrc(sb,src):src.src; }
   var u=String(src||'');
   if(!/^(https?:|data:image\/|blob:)/i.test(u)) return;      // más séma: nem nyitjuk meg
   var lb=document.createElement('div');

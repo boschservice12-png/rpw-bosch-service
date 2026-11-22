@@ -90,6 +90,7 @@ final class FrontendController
   c.STORAGE_PRIVATE = true;
   c.STORAGE_GATEWAY = true;
   c.CLIENT_RPC = true;
+  c.THUMBS = true;
 })();
 
 JS;

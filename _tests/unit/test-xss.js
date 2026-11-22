@@ -57,7 +57,7 @@ console.log('\n3. A lightbox nem nyit meg javascript: sémájú forrást');
   const w = dom.window;
   // a valódi openLB kiemelése a forrásból
   const src = R('rpw-dosar.html');
-  const m = src.match(/window\.openLB\s*=\s*function[\s\S]*?\n\};/);
+  const m = src.match(/window\.openLB\s*=\s*(?:async\s+)?function[\s\S]*?\n\};/);
   ok(!!m, 'az openLB megtalálható');
   w.eval(m[0]);
   ['javascript:alert(1)', 'JaVaScRiPt:alert(1)', 'vbscript:msgbox(1)',
