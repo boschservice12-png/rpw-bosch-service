@@ -11,6 +11,7 @@ use App\Application\ClientUploadService;
 use App\Application\JobService;
 use App\Domain\Auth\Actor;
 use App\Infrastructure\Storage\FileStore;
+use App\Infrastructure\Storage\ObjectStore;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,8 +29,8 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class StorageController
 {
-    public const READ_TTL = 3600;
-    public const UPLOAD_TTL = 600;
+    public const READ_TTL = ObjectStore::READ_TTL;
+    public const UPLOAD_TTL = ObjectStore::UPLOAD_TTL;
     public const LIMITS = ['readPaths' => 60, 'removePaths' => 20];
     private const JOB_RE = '/^RPW-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/';
     private const REST_RE = '/^(?:[A-Za-z0-9_-]{1,40}\/)?[A-Za-z0-9_.-]{1,160}$/';
@@ -37,6 +38,7 @@ final class StorageController
 
     public function __construct(
         private readonly FileStore $store,
+        private readonly ObjectStore $objects,
         private readonly AuthService $auth,
         private readonly JobService $jobs,
         private readonly ClientUploadService $client,
@@ -85,7 +87,7 @@ final class StorageController
                     return $this->out(403, 'not_allowed');
                 }
 
-                return $this->uploadTicket($x['path'], true, $base);
+                return $this->uploadTicket($actor->shopId, $x['path'], true, $base);
             }
             $xs = $this->parseAll($body['paths'] ?? null, $op === 'remove' ? self::LIMITS['removePaths'] : self::LIMITS['readPaths']);
             if ($xs === null) {
@@ -97,10 +99,10 @@ final class StorageController
                 }
             }
             if ($op === 'sign-read') {
-                return $this->readUrls($xs, $base);
+                return $this->readUrls($actor->shopId, $xs, $base);
             }
             foreach ($xs as $x) {
-                $this->store->remove($this->bucket, $x['path']);
+                $this->objects->remove($actor->shopId, $x['path']);
             }
             foreach (array_unique(array_column($xs, 'jobId')) as $j) {
                 $this->audit->write($actor->shopId, $j, $actor->name, 'photo_remove', null,
@@ -115,11 +117,12 @@ final class StorageController
             if ($x === null) {
                 return $this->out(400, 'bad_path');
             }
-            if (preg_match(self::CLIENT_NAME_RE, $x['rest']) !== 1 || ($this->client->get($x['jobId'])['ok'] ?? false) !== true) {
+            $shop = preg_match(self::CLIENT_NAME_RE, $x['rest']) === 1 ? $this->client->openJobShop($x['jobId']) : null;
+            if ($shop === null) {
                 return $this->out(403, 'not_allowed');
             }
 
-            return $this->uploadTicket($x['path'], false, $base);   // az ügyfél meglévő fájlt NEM írhat felül
+            return $this->uploadTicket($shop, $x['path'], false, $base);   // az ügyfél meglévő fájlt NEM írhat felül
         }
         if ($op === 'client-sign-read') {
             $xs = $this->parseAll($body['paths'] ?? null, self::LIMITS['readPaths']);
@@ -132,11 +135,12 @@ final class StorageController
                     return $this->out(403, 'not_allowed');
                 }
             }
-            if (\count($jobs) !== 1 || ($this->client->get($jobs[0])['ok'] ?? false) !== true) {
+            $shop = \count($jobs) === 1 ? $this->client->openJobShop($jobs[0]) : null;
+            if ($shop === null) {
                 return $this->out(403, 'not_allowed');
             }
 
-            return $this->readUrls($xs, $base);
+            return $this->readUrls($shop, $xs, $base);
         }
 
         return $this->out(400, 'unknown_op');
@@ -183,19 +187,23 @@ final class StorageController
     }
 
     // ── belső ─────────────────────────────────────────────────────────
-    private function uploadTicket(string $path, bool $upsert, string $base): JsonResponse
+    /** direct=true: a böngésző a signedUrl-re NYERS törzzsel, a megadott contentType-pal PUT-ol (objektumtár). */
+    private function uploadTicket(string $shop, string $path, bool $upsert, string $base): JsonResponse
     {
-        $token = $this->store->sign('upload', $this->bucket, $path, self::UPLOAD_TTL, $upsert);
+        try {
+            $t = $this->objects->uploadTicket($shop, $path, $upsert, $base);
+        } catch (\DomainException) {
+            return $this->out(409, 'exists');
+        }
 
-        return new JsonResponse(['ok' => true, 'path' => $path, 'token' => $token,
-            'signedUrl' => $base.'/storage/v1/object/upload/sign/'.$this->bucket.'/'.$path.'?token='.$token]);
+        return new JsonResponse(['ok' => true, 'path' => $path] + $t);
     }
 
-    private function readUrls(array $xs, string $base): JsonResponse
+    private function readUrls(string $shop, array $xs, string $base): JsonResponse
     {
-        return new JsonResponse(['ok' => true, 'urls' => array_map(fn ($x) => ['path' => $x['path'], 'signedUrl' => $this->store->exists($this->bucket, $x['path'])
-            ? $base.'/storage/v1/object/sign/'.$this->bucket.'/'.$x['path'].'?token='.$this->store->sign('read', $this->bucket, $x['path'], self::READ_TTL)
-            : null], $xs)]);
+        $urls = $this->objects->readUrls($shop, array_values(array_unique(array_column($xs, 'path'))), $base);
+
+        return new JsonResponse(['ok' => true, 'urls' => array_map(static fn ($x) => ['path' => $x['path'], 'signedUrl' => $urls[$x['path']] ?? null], $xs)]);
     }
 
     private function parseAll(mixed $paths, int $max): ?array

@@ -4,6 +4,7 @@ parameters:
     rpw.mail_from: 'dosar@redassistance.com'
     rpw.login_ip_limit: 300
     rpw.storage_default: '%kernel.project_dir%/var/storage'
+    rpw.s3_path_style: '1'
 
 services:
     _defaults:
@@ -24,6 +25,18 @@ services:
         arguments:
             $root: '%env(default:rpw.storage_default:RPW_STORAGE_DIR)%'
             $secret: '%env(APP_SECRET)%'
+
+    # Fotótár: local (a szerver lemeze) vagy s3 (objektumtár, a telefon közvetlenül tölt) — ObjectStoreFactory
+    App\Infrastructure\Storage\ObjectStore:
+        factory: ['App\Infrastructure\Storage\ObjectStoreFactory', 'create']
+        arguments:
+            $backend: '%env(default::RPW_STORAGE_BACKEND)%'
+            $endpoint: '%env(default::RPW_S3_ENDPOINT)%'
+            $region: '%env(default::RPW_S3_REGION)%'
+            $bucket: '%env(default::RPW_S3_BUCKET)%'
+            $accessKey: '%env(default::RPW_S3_ACCESS_KEY)%'
+            $secretKey: '%env(default::RPW_S3_SECRET_KEY)%'
+            $pathStyle: '%env(default:rpw.s3_path_style:RPW_S3_PATH_STYLE)%'
 
     # AI (OCR, besorolás): hivatalos Anthropic PHP SDK. Kulcs nélkül a funkció
     # rendezetten `not_configured`-ot ad, a felület nem akad meg.
@@ -62,3 +75,4 @@ when@test:
                 $apiKey: 'test-key'
                 $http: '@App\Tests\Support\FakeHttp'
         App\Tests\Support\FakeHttp: ~
+        App\Tests\Support\FakeS3: ~

@@ -41,6 +41,17 @@ final class ClientUploadService
         ], static fn ($v) => $v !== null)];
     }
 
+    /** Az ügyfél-link mögötti NYITOTT munka cége — vagy null (a kapu ekkor 403-at ad, és nem árulja el, miért). */
+    public function openJobShop(string $id): ?string
+    {
+        if (($this->get($id)['ok'] ?? false) !== true) {
+            return null;
+        }
+        $shop = $this->db->fetchOne('SELECT shop_id FROM rpw_jobs WHERE id = :id AND deleted_at IS NULL', ['id' => $id]);
+
+        return \is_string($shop) && $shop !== '' ? $shop : null;
+    }
+
     public function upload(string $id, mixed $patch): array
     {
         if (!\is_array($patch) || $patch === [] || array_is_list($patch)) {

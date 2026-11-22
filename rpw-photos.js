@@ -55,6 +55,20 @@
       upload: async function(path, body, o){
         var s=await gw(client?'client-sign-upload':'sign-upload', {path:path}, opts);
         if(s.error) return { data:null, error:s.error };
+        // RPW-005 (2026-11-22): objektumtár — a kép KÖZVETLENÜL a tárba megy (nem a szerveren át),
+        // nyers törzzsel és PONTOSAN azzal a típussal, amit a szerver az aláírásba tett.
+        if(s.data.direct){
+          var f=opts.fetch||root.fetch, r;
+          try{
+            r=await f(s.data.signedUrl, {method:'PUT', headers:{'Content-Type':s.data.contentType||'application/octet-stream'}, body:body});
+          }catch(e){ return { data:null, error:{ message:'network', status:0 } }; }
+          if(!r || !r.ok){
+            var err={ message:'storage_put_'+(r?r.status:0), status:r?r.status:0 };
+            try{ console.warn('[RPW] fotó-feltöltés a tárba elutasítva', err); }catch(e){}
+            return { data:null, error:err };
+          }
+          return { data:{ path:s.data.path }, error:null };
+        }
         var up=await sb.storage.from(name).uploadToSignedUrl(s.data.path, s.data.token, body,
                                                              {contentType:(o&&o.contentType)||undefined});
         if(up && up.error) return { data:null, error:up.error };

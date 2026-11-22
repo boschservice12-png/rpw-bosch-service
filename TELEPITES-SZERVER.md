@@ -100,6 +100,47 @@ nano /opt/rpw/shared/.env.local
 systemctl reload php8.3-fpm
 ```
 
+## 5b. lépés — Fotótár: objektumtár (az ÉLES adat előtt kötelező)
+
+*Ferenc döntése (2026-11-22): 30–50 autó × 150 cég → ~1,1–1,8 TB/év. A fotók nem férnek el egy gép lemezén.*
+
+A telefon a képet **közvetlenül a tárba** tölti (nem a szerveren át), a szerver csak engedélyt ad: egy fájlra,
+10 percre (feltöltés) vagy 1 órára (olvasás). A tárban a kulcs: `<cég>/<munka>/<fájl>`.
+
+1. contabo.com → **Object Storage** → EU régió → a Contabo-felületen: **Bucket létrehozása** (név: `rpw`, *privát*), és
+   **S3-kulcspár** (Access Key + Secret Key). A kulcsot **ne** küldd el senkinek, a chatbe se.
+2. A szerveren:
+
+```bash
+nano /opt/rpw/shared/.env.local
+```
+
+```
+RPW_STORAGE_BACKEND=s3
+RPW_S3_ENDPOINT=https://eu2.contabostorage.com
+RPW_S3_REGION=default
+RPW_S3_BUCKET=rpw
+RPW_S3_ACCESS_KEY=<a Contabo-felületről>
+RPW_S3_SECRET_KEY=<a Contabo-felületről>
+```
+
+> Az `RPW_S3_ENDPOINT` pontos címét a Contabo-felület mutatja a bucket mellett (régiótól függ) — azt másold.
+
+3. Próba + a tár beállítása (a böngésző CSAK az RPW címéről tölthet fel):
+
+```bash
+cd /opt/rpw/current/symfony && runuser -u rpw -- php bin/console rpw:storage:check --cors=https://<az RPW címe>
+```
+
+Elvárt: hat ✔ (feltöltés, létezik, letöltés bájtra egyezik, törlés, eltűnt, aláírás nélkül elutasít) és `OK`.
+
+```bash
+systemctl reload php8.3-fpm
+```
+
+**Hiányos beállítással a szerver nem indul el csendben helyi tárral** — inkább hibát ad, mint hogy a fotó rossz helyre kerüljön.
+**Visszaút:** `RPW_STORAGE_BACKEND=local` + reload (a tárban lévő fotók ott maradnak).
+
 ## 6. lépés — A mentési kulcs megőrzése (KÖTELEZŐ, egyszer)
 
 A mentések titkosítottak. **Kulcs nélkül egyetlen mentés sem állítható vissza** — ha a gép elvész, a kulccsal együtt elvész minden.
@@ -168,6 +209,11 @@ kiadás azonosítóját is összeveti.
 **NEM IGAZOLT (csak a valódi gépen mérhető):** Caddy + HTTPS, a php-fpm készlet, fail2ban, tűzfal, éjszakai időzítő.
 
 ## ⚠ Nyitott — az éles adat átköltöztetése ELŐTT kötelező
+
+- **A fotók másolata egy MÁSIK szolgáltatónál** (csak hozzáírni tud, törölni nem) + napi ellenőrzés, hogy minden fotónak van másolata.
+- **A helyi fotók átvitele a tárba** (`rpw:storage:migrate` — a staging-fotókhoz / a Supabase-fotókhoz).
+- **Feltöltési méretkorlát objektumtár módban:** az aláírt PUT a méretet nem korlátozza (a helyi tár 25 MB-ot igen).
+  Ma: 10 perces, egy fájlra szóló link, a felület 0,3–0,5 MB-ra tömörít. Később: méretkorlátos aláírt POST.
 
 - **Visszatöltés a mentésből (`rpw:restore`)** — ma a mentés készül, titkosított és visszaellenőrzött, de
   visszatölteni csak kézzel lehetne. Kell hozzá parancs + rendszeres visszatöltési próba (a TyreFleet `restore-drill` mintájára).

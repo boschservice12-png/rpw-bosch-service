@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Security;
 
+use App\Infrastructure\Storage\ObjectStore;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -25,6 +26,21 @@ final class SecurityHeadersSubscriber implements EventSubscriberInterface
 
     private const DATA_PATHS = ['/api', '/rest/', '/functions/', '/storage/', '/.netlify/'];
 
+    /** Objektumtár módban a böngésző a fotókat közvetlenül a tárból tölti és oda tölt fel — CSAK ezt az egy eredetet engedjük. */
+    public function __construct(private readonly ?ObjectStore $objects = null)
+    {
+    }
+
+    public function csp(): string
+    {
+        $o = $this->objects?->browserOrigin();
+        if ($o === null || preg_match('#^https://[a-z0-9.-]+(:\d+)?$#', $o) !== 1) {
+            return self::CSP;
+        }
+
+        return str_replace(["img-src 'self' data: blob:;", "connect-src 'self';"], ["img-src 'self' data: blob: $o;", "connect-src 'self' $o;"], self::CSP);
+    }
+
     public static function getSubscribedEvents(): array
     {
         return [KernelEvents::RESPONSE => ['onResponse', -10]];
@@ -44,7 +60,7 @@ final class SecurityHeadersSubscriber implements EventSubscriberInterface
         $h->set('Cross-Origin-Opener-Policy', 'same-origin');
         $h->set('Cross-Origin-Resource-Policy', 'same-origin');
         if (!$h->has('Content-Security-Policy')) {          // a fájlkiszolgálás a saját, szigorúbb CSP-jét adja
-            $h->set('Content-Security-Policy', self::CSP);
+            $h->set('Content-Security-Policy', $this->csp());
         }
         if ($req->isSecure()) {
             $h->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');

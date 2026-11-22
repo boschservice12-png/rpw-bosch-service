@@ -93,6 +93,13 @@ RPW_SHOP_ID=$shop_id
 RPW_STORAGE_DIR=$RPW_SHARED/storage
 # A mentési kulcs: nélküle a mentés NEM állítható vissza → őrizd meg a gépen KÍVÜL is (TELEPITES.md 6. lépés).
 RPW_BACKUP_KEY=$backup_key
+# Fotótár: local = a szerver lemeze (próba, staging) · s3 = objektumtár (ÉLES ADAT ELŐTT KÖTELEZŐ — TELEPITES-SZERVER.md 5b)
+RPW_STORAGE_BACKEND=local
+RPW_S3_ENDPOINT=
+RPW_S3_REGION=
+RPW_S3_BUCKET=
+RPW_S3_ACCESS_KEY=
+RPW_S3_SECRET_KEY=
 # OCR / iratbesorolás / levél — üresen a felület kézi bevitellel megy tovább (bash $DEPLOY_DIR/set-key.sh)
 ANTHROPIC_API_KEY=
 RESEND_API_KEY=

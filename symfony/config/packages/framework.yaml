@@ -30,6 +30,9 @@ framework:
 when@test:
     framework:
         test: true
+        # a tesztekben semmi nem megy ki a hálózatra; a fotótár-kérések egy memóriabeli S3-at érnek el
+        http_client:
+            mock_response_factory: App\Tests\Support\FakeS3
         rate_limiter:
             login:
                 policy: sliding_window

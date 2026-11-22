@@ -100,6 +100,28 @@ function setup(cfg, gwReply){
     ok(log.fetch.length === 0 && log.direct.length === 1, 'STORAGE_GATEWAY=false → közvetlen');
   }
 
+  console.log('\n8. RPW-005: objektumtár — közvetlen feltöltés a tárba, az aláírt típussal');
+  {
+    const { P, sb, log } = setup();
+    const puts = [];
+    const fetch = async (url, init) => {
+      if (init.method === 'PUT') { puts.push({ url, init }); return { ok: url.includes('ok'), status: url.includes('ok') ? 200 : 403 }; }
+      const body = JSON.parse(init.body);
+      log.fetch.push({ url, body });
+      return { ok:true, status:200, json: async () => ({ ok:true, path:body.path, token:'', direct:true, contentType:'image/jpeg',
+        signedUrl: 'https://eu2.contabostorage.com/rpw/SHOP/' + body.path + (body.path.includes('rossz') ? '?sig=x' : '?ok=1') }) };
+    };
+    const blob = { size: 3 };
+    const r = await P.bucket(sb, 'rpw-photos', { fetch }).upload(J1 + '/ov_0.jpg', blob, { contentType:'image/png' });
+    ok(r.error === null && r.data.path === J1 + '/ov_0.jpg', 'sikeres közvetlen feltöltés → az út visszajön');
+    ok(puts.length === 1 && puts[0].url.startsWith('https://eu2.contabostorage.com/rpw/SHOP/'), 'a PUT a tárba megy, nem a szerverre');
+    ok(puts[0].init.headers['Content-Type'] === 'image/jpeg', 'a szerver által aláírt típus megy (nem a hívó által kért)');
+    ok(puts[0].init.body === blob, 'nyers törzs (nem multipart)');
+    ok(log.signedUp.length === 0 && log.direct.length === 0, 'a régi supabase-út NEM fut');
+    const bad = await P.bucket(sb, 'rpw-photos', { fetch }).upload(J1 + '/rossz.jpg', blob);
+    ok(bad.error && bad.error.status === 403 && bad.data === null, 'elutasított PUT → látható hiba, nem csendes siker');
+  }
+
   console.log('\n7. Statikus őr: a kiszolgált fájlok közül csak a rpw-photos.js nyúlhat a tárolóhoz');
   {
     const fajlok = fs.readdirSync(ROOT).filter(f => /\.(html|js)$/.test(f) && f !== 'rpw-photos.js'
