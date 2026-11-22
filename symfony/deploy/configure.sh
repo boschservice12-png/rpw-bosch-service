@@ -40,13 +40,13 @@ ok "$F2B_DIR/jail.d/rpw.conf"
 
 step "systemd: éjszakai mentés"
 install -d "$SYSTEMD_DIR"
-for u in rpw-backup.service rpw-backup.timer; do render "$T/$u" > "$SYSTEMD_DIR/$u"; done
-ok "rpw-backup.timer (02:30)"
+for u in rpw-backup.service rpw-backup.timer rpw-restore-drill.service rpw-restore-drill.timer; do render "$T/$u" > "$SYSTEMD_DIR/$u"; done
+ok "rpw-backup.timer (02:30) · rpw-restore-drill.timer (havonta: visszatöltési próba)"
 
 if [ "$RPW_NO_SYSTEMD" != "1" ]; then
   chown -R "$RPW_USER:$RPW_USER" "$RPW_SHARED/log" "$RPW_SHARED/storage"
   systemctl daemon-reload
-  systemctl enable --quiet --now rpw-backup.timer
+  systemctl enable --quiet --now rpw-backup.timer rpw-restore-drill.timer
   systemctl restart "$RPW_FPM_SERVICE"
   systemctl enable --quiet --now fail2ban; systemctl reload fail2ban || systemctl restart fail2ban
   systemctl reload caddy || systemctl restart caddy

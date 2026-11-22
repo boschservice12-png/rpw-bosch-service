@@ -118,10 +118,12 @@ if [ -n "$db_pw" ]; then
   if [ "$(runuser -u postgres -- psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='$RPW_USER'")" != "1" ]; then
     runuser -u postgres -- psql -q -v ON_ERROR_STOP=1 -c "CREATE ROLE $RPW_USER LOGIN PASSWORD '$db_pw'"
   fi
-  if [ "$(runuser -u postgres -- psql -tAc "SELECT 1 FROM pg_database WHERE datname='$RPW_DB'")" != "1" ]; then
-    runuser -u postgres -- createdb -O "$RPW_USER" -E UTF8 "$RPW_DB"
-  fi
-  ok "adatbázis: $RPW_DB, tulajdonos: $RPW_USER"
+  for db in "$RPW_DB" "${RPW_DB}_drill"; do   # _drill: a havi visszatöltési próba ide tölt, az élőhöz nem nyúl
+    if [ "$(runuser -u postgres -- psql -tAc "SELECT 1 FROM pg_database WHERE datname='$db'")" != "1" ]; then
+      runuser -u postgres -- createdb -O "$RPW_USER" -E UTF8 "$db"
+    fi
+  done
+  ok "adatbázis: $RPW_DB (+ ${RPW_DB}_drill a próbához), tulajdonos: $RPW_USER"
 else
   info "a DATABASE_URL nem helyi — a helyi adatbázist nem hozom létre"
 fi

@@ -1,0 +1,15 @@
+[Unit]
+Description=RPW visszatöltési próba — a legutóbbi mentés egy KÜLÖN adatbázisba (az élőhöz nem nyúl)
+After=network-online.target postgresql.service
+
+[Service]
+Type=oneshot
+User=rpw
+WorkingDirectory=__RPW_HOME__/current/symfony
+ExecStart=/usr/bin/php bin/console rpw:restore latest --from=__RPW_BACKUPS__ --report=__RPW_HOME__/shared/log/restore-drill.json --no-interaction
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=__RPW_HOME__/shared/log
+ReadOnlyPaths=__RPW_HOME__ __RPW_BACKUPS__
+PrivateTmp=true

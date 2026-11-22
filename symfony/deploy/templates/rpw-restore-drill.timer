@@ -1,0 +1,9 @@
+[Unit]
+Description=RPW visszatöltési próba havonta (1-jén 04:10), a mentés után
+
+[Timer]
+OnCalendar=*-*-01 04:10:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -58,6 +58,10 @@ services:
             $storageDir: '%env(default:rpw.storage_default:RPW_STORAGE_DIR)%'
             $keyB64: '%env(default::RPW_BACKUP_KEY)%'
 
+    App\Infrastructure\Backup\RestoreService:
+        arguments:
+            $storageDir: '%env(default:rpw.storage_default:RPW_STORAGE_DIR)%'
+
     # Adatbázis: PostgreSQL élesben (a meglévő Supabase-adatbázis IS lehet), SQLite a tesztekben.
     Doctrine\DBAL\Connection:
         factory: ['App\Infrastructure\Db\ConnectionFactory', 'create']
