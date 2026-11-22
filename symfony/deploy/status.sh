@@ -17,5 +17,11 @@ if [ -f "$drill" ]; then
 else
   echo "  visszatöltési próba: még nem futott (systemctl start rpw-restore-drill)"
 fi
+rep="$RPW_SHARED/log/replica.json"
+if [ -f "$rep" ]; then
+  echo "  fotó-másolat: $(php -r '$d=json_decode(file_get_contents($argv[1]),true); echo ($d["ok"]??false)?"OK ".$d["at"]." (".$d["source"]." fotó, mind a másolatban)":"HIBA ".($d["at"]??"")." — ".($d["error"]??(($d["missing_after"]??"?")." fotó másolat nélkül"));' "$rep")"
+else
+  echo "  fotó-másolat: még nem futott / nincs beállítva (TELEPITES-SZERVER.md 5c)"
+fi
 echo "  lemez:       $(df -h / | awk 'NR==2{print $4" szabad ("$5" foglalt)"}')"
 echo "  kitiltott IP: $(fail2ban-client status rpw 2>/dev/null | sed -n 's/.*Currently banned:[[:space:]]*//p')"

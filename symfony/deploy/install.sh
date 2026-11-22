@@ -100,6 +100,12 @@ RPW_S3_REGION=
 RPW_S3_BUCKET=
 RPW_S3_ACCESS_KEY=
 RPW_S3_SECRET_KEY=
+# A fotók másolata egy MÁSIK szolgáltatónál — a kulcs CSAK írni/olvasni tudjon, törölni NE (TELEPITES-SZERVER.md 5c)
+RPW_REPLICA_ENDPOINT=
+RPW_REPLICA_REGION=
+RPW_REPLICA_BUCKET=
+RPW_REPLICA_ACCESS_KEY=
+RPW_REPLICA_SECRET_KEY=
 # OCR / iratbesorolás / levél — üresen a felület kézi bevitellel megy tovább (bash $DEPLOY_DIR/set-key.sh)
 ANTHROPIC_API_KEY=
 RESEND_API_KEY=

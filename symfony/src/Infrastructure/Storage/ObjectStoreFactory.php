@@ -43,6 +43,17 @@ final class ObjectStoreFactory
             throw new \InvalidArgumentException('RPW_S3_ENDPOINT csak https:// lehet');
         }
 
+        return self::s3($http, $endpoint, $region, $bucket, $accessKey, $secretKey, $pathStyle);
+    }
+
+    /** Közvetlen S3-tár (a másolat céljához is). */
+    public static function s3(HttpClientInterface $http, string $endpoint, string $region, string $bucket, string $accessKey,
+        #[\SensitiveParameter] string $secretKey, string $pathStyle = '1'): S3ObjectStore
+    {
+        if (!str_starts_with($endpoint, 'https://') || $bucket === '' || $accessKey === '' || $secretKey === '') {
+            throw new \InvalidArgumentException('hiányos vagy nem https S3-beállítás');
+        }
+
         return new S3ObjectStore(new S3Signer($endpoint, $region !== '' ? $region : 'us-east-1', $bucket, $accessKey, $secretKey,
             !\in_array(strtolower($pathStyle), ['0', 'false', 'no'], true)), $http);
     }

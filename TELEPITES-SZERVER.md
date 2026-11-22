@@ -141,6 +141,40 @@ systemctl reload php8.3-fpm
 **Hiányos beállítással a szerver nem indul el csendben helyi tárral** — inkább hibát ad, mint hogy a fotó rossz helyre kerüljön.
 **Visszaút:** `RPW_STORAGE_BACKEND=local` + reload (a tárban lévő fotók ott maradnak).
 
+## 5c. lépés — A fotók másolata egy MÁSIK szolgáltatónál (az ÉLES adat előtt kötelező)
+
+Ha a Contabóval baj van (fiók, adatközpont, feltört szerver), a fotók akkor is megvannak. Óránként csak az **új**
+fotók mennek át; a másolatban a rendszer **soha nem töröl**. Minden átvitt fájlnál ellenőrzi, hogy valódi JPG/PDF-e.
+
+**Javaslat: Backblaze B2, EU Central (Amszterdam)** — S3-kompatibilis, EU-ban tárol, és olyan kulcs adható ki,
+amely **csak írni és olvasni tud, törölni nem**. Lépések a B2-felületen:
+
+1. **Bucket**: `rpw-masolat`, *Private*, régió **EU Central**. (Opcionális, ajánlott: *Object Lock*.)
+2. **Application Key**: csak erre a bucketre, jogok: `listFiles`, `readFiles`, `writeFiles` — **`deleteFiles` NE**.
+3. A szerveren (`nano /opt/rpw/shared/.env.local`):
+
+```
+RPW_REPLICA_ENDPOINT=https://s3.eu-central-003.backblazeb2.com
+RPW_REPLICA_REGION=eu-central-003
+RPW_REPLICA_BUCKET=rpw-masolat
+RPW_REPLICA_ACCESS_KEY=<keyID>
+RPW_REPLICA_SECRET_KEY=<applicationKey>
+```
+
+> Az endpoint pontos címét a B2 a bucket adatlapján mutatja („Endpoint”) — azt másold.
+
+4. Ellenőrzés — írás ✔, olvasás ✔, **törlés TILTVA** ✔:
+
+```bash
+cd /opt/rpw/current/symfony && runuser -u rpw -- php bin/console rpw:storage:check --replica
+```
+
+5. Első másolat most (utána óránként magától):
+
+```bash
+systemctl start rpw-replicate && bash /opt/rpw/repo/symfony/deploy/status.sh
+```
+
 ## 6. lépés — A mentési kulcs megőrzése (KÖTELEZŐ, egyszer)
 
 A mentések titkosítottak. **Kulcs nélkül egyetlen mentés sem állítható vissza** — ha a gép elvész, a kulccsal együtt elvész minden.
@@ -159,6 +193,10 @@ A kiírt sort tedd a **jelszókezelődbe**, a gép jelszava mellé. Ne e-mailben
 | Frissítés a legújabb kódra | `bash /opt/rpw/repo/symfony/deploy/update.sh` |
 | Visszaállás az előző kiadásra | `bash /opt/rpw/repo/symfony/deploy/rollback.sh` |
 | Mentés most | `systemctl start rpw-backup` |
+| Visszatöltési PRÓBA (az élőhöz nem nyúl) | `cd /opt/rpw/current/symfony && runuser -u rpw -- php bin/console rpw:restore latest` |
+| **Éles visszatöltés** (előtte biztonsági mentés) | `… rpw:restore <mentés mappája> --live` → írd be: `VISSZAALLITAS` |
+| Fotó-másolat most | `systemctl start rpw-replicate` |
+| Fotók vissza a másolatból (katasztrófa után) | `… rpw:storage:replicate --reverse` |
 | Domain / beállítás módosítása | `nano /etc/rpw/rpw.conf`, utána `bash /opt/rpw/repo/symfony/deploy/configure.sh` |
 
 ## Mi hol van
@@ -210,14 +248,22 @@ kiadás azonosítóját is összeveti.
 
 ## ⚠ Nyitott — az éles adat átköltöztetése ELŐTT kötelező
 
-- **A fotók másolata egy MÁSIK szolgáltatónál** (csak hozzáírni tud, törölni nem) + napi ellenőrzés, hogy minden fotónak van másolata.
 - **A helyi fotók átvitele a tárba** (`rpw:storage:migrate` — a staging-fotókhoz / a Supabase-fotókhoz).
 - **Feltöltési méretkorlát objektumtár módban:** az aláírt PUT a méretet nem korlátozza (a helyi tár 25 MB-ot igen).
   Ma: 10 perces, egy fájlra szóló link, a felület 0,3–0,5 MB-ra tömörít. Később: méretkorlátos aláírt POST.
 
-- **Visszatöltés a mentésből (`rpw:restore`)** — ma a mentés készül, titkosított és visszaellenőrzött, de
-  visszatölteni csak kézzel lehetne. Kell hozzá parancs + rendszeres visszatöltési próba (a TyreFleet `restore-drill` mintájára).
-- **Másolat a gépen kívülre** (3-2-1 szabály).
+- **A fotó-másolat méretezése:** egy futás a két tár listáját veti össze — ~1 millió fotóig jó (150 cégnél kb. 1–2 év).
+  Előtte: feltöltési sor (a kapu jegyzi az új fotót, a másoló csak azt viszi) + heti teljes összevetés.
+
+## ✅ Megoldva (2026-11-22)
+
+| Téma | Hogyan | Igazolás |
+|---|---|---|
+| Visszatöltés a mentésből | `rpw:restore` — próba külön adatbázisba; éles: előtte biztonsági mentés, EGY tranzakció | valódi PostgreSQL 16: próba ✔, éles ✔, hibás mentés → élő változatlan ✔ |
+| Havi visszatöltési próba | `rpw-restore-drill.timer` (1-jén 04:10), eredmény a `status.sh`-ban | `RestoreTest` |
+| Fotók másik szolgáltatónál | `rpw:storage:replicate` óránként; a célban soha nem töröl; `--reverse` vissza | `ReplicaTest` (3 teszt, törlés-figyelővel) |
+| Csak valódi JPG/PDF | kapu: csak `.jpg/.jpeg/.pdf`; a helyi tár a bájtokat is nézi; a böngésző nem tölt fel hamis JPG-t; a másoló jelzi a régi hamis JPG-ket | `StorageFormatTest` |
+| Sok fotó e-mailben | levelenként max. 10 melléklet / 10 MB → automatikusan több levél „(1/3)” | `test-mail-split.js` |
 
 ## Ami a telepítés után jön (a terv: `RPW-004-SYMFONY-ATALLAS.md`)
 

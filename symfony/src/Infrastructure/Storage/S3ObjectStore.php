@@ -98,6 +98,50 @@ final class S3ObjectStore implements ObjectStore
         return $this->signer->origin();
     }
 
+    // ── nyers kulcsos műveletek (másolat / visszaállítás) — a kulcs itt már <cég>/<munka>/<fájl> ──
+
+    /**
+     * Minden kulcs a tárban (ListObjectsV2, lapozva). A „_rpw-probe/” próbafájlok kimaradnak.
+     *
+     * @return \Generator<string>
+     */
+    public function listKeys(string $prefix = ''): \Generator
+    {
+        $token = null;
+        do {
+            $q = ['list-type' => '2', 'max-keys' => '1000'] + ($prefix !== '' ? ['prefix' => $prefix] : []) + ($token !== null ? ['continuation-token' => $token] : []);
+            $r = $this->http->request('GET', $this->signer->presignBucket('GET', $q, 120), ['timeout' => 60]);
+            if ($r->getStatusCode() !== 200) {
+                throw new \RuntimeException('listázás: HTTP '.$r->getStatusCode());
+            }
+            $x = new \SimpleXMLElement($r->getContent());
+            foreach ($x->Contents as $c) {
+                $k = (string) $c->Key;
+                if (!str_starts_with($k, '_rpw-probe/')) {
+                    yield $k;
+                }
+            }
+            $token = ((string) $x->IsTruncated) === 'true' ? (string) $x->NextContinuationToken : null;
+        } while ($token !== null && $token !== '');
+    }
+
+    public function getRaw(string $key): ?string
+    {
+        $r = $this->http->request('GET', $this->signer->presign('GET', $key, 120), ['timeout' => 60]);
+        $c = $r->getStatusCode();
+
+        return $c === 200 ? $r->getContent() : ($c === 404 ? null : throw new \RuntimeException('letöltés: HTTP '.$c));
+    }
+
+    public function putRaw(string $key, string $bytes, string $mime): void
+    {
+        $c = $this->http->request('PUT', $this->signer->presign('PUT', $key, 120, ['content-type' => $mime]),
+            ['headers' => ['content-type' => $mime], 'body' => $bytes, 'timeout' => 60])->getStatusCode();
+        if ($c !== 200) {
+            throw new \RuntimeException('feltöltés: HTTP '.$c);
+        }
+    }
+
     /**
      * Beüzemelési próba a VALÓDI tárral: feltöltés → létezik → letöltés (bájtra egyezik) → törlés → eltűnt.
      *
