@@ -93,6 +93,11 @@ final class S3ObjectStore implements ObjectStore
         return $this->http->request('HEAD', $this->signer->presign('HEAD', self::key($shop, $path), 60), ['timeout' => 10])->getStatusCode() === 200;
     }
 
+    public function putBytes(string $shop, string $path, string $bytes, string $mime): void
+    {
+        $this->putRaw(self::key($shop, $path), $bytes, $mime);
+    }
+
     public function remove(string $shop, string $path): void
     {
         $code = $this->http->request('DELETE', $this->signer->presign('DELETE', self::key($shop, $path), 60), ['timeout' => 10])->getStatusCode();

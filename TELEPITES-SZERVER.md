@@ -265,6 +265,24 @@ kiadás azonosítóját is összeveti.
 - **A fotó-másolat méretezése:** egy futás a két tár listáját veti össze — ~1 millió fotóig jó (150 cégnél kb. 1–2 év).
   Előtte: feltöltési sor (a kapu jegyzi az új fotót, a másoló csak azt viszi) + heti teljes összevetés.
 
+## A munkákba ágyazott régi fotók kiköltöztetése (átálláskor, az adatok átvitele után)
+
+A régi rendszerben a fotók egy része **base64-ként a munka adatában** ült (főleg a reconstatare). Az új szerver
+2 MB-nál nagyobb munkát nem tud menteni — ezért ezeket a fotókat a tárba kell költöztetni. A `rpw:db:check` megmutatja,
+melyik munka érintett. Próba (semmit nem ír, megmutatja a méretet előtte → utána):
+
+```bash
+cd /opt/rpw/current/symfony && runuser -u rpw -- php bin/console rpw:jobs:extract-photos --dry-run
+```
+
+Éles futtatás (előtte magától teljes mentést készít; újrafuttatható):
+
+```bash
+cd /opt/rpw/current/symfony && runuser -u rpw -- php bin/console rpw:jobs:extract-photos
+```
+
+Elvárt: egyetlen „✘ MÉG MINDIG TÚL NAGY” sor sincs, és a `rpw:db:check` újra `OK`.
+
 ## A meglévő fotók átvitele a tárba (átálláskor, egyszer)
 
 **Sorrend:** előbb az ADATOK (munkák) kerülnek át — a parancs a munkából tudja, melyik cégé a fotó.
@@ -307,6 +325,8 @@ A végén: a `RPW_LEGACY_S3_*` sorok törlése, a Supabase-kulcs visszavonása.
 | Meglévő fotók átvitele | `rpw:storage:migrate` helyi lemezről vagy a régi Supabase-tárból, cégenkénti kulcsra | `MigrateTest` (a régi tárba semmit nem ír) |
 | Szakvélemény-fotók a munkában (2 MB-os mentési határ) | a reconstatare fotói a tárba mennek; internet nélkül helyben maradnak | `test-reconst-photos.js` (valódi oldalkóddal) |
 | Méret- és időkorlátok összehangolása | Caddy útvonalanként, PHP 26 MB, AI 40 mp × 2, OCR-kép 5 MB, érthető 413 | `LimitsChainTest` (szándékos hibával is kipróbálva), `SizeLimitsTest` |
+| Régi, munkába ágyazott fotók (2 MB fölötti munkák) | `rpw:jobs:extract-photos`: előbb tárba + visszaellenőrzés, utána a munka; verziózár, napló, újrafuttatható; ismeretlen helyhez nem nyúl | `PhotoExtractTest` (23 ellenőrzés) |
+| Szakvélemény-fotók a dosszié-ZIP-ben | a tárolt fotók és a sorokhoz készült fotók is bekerülnek (eddig kimaradtak) | böngészős E2E |
 | Sok fotó e-mailben | levelenként max. 10 melléklet / 10 MB → automatikusan több levél „(1/3)” | `test-mail-split.js` |
 
 ## Ami a telepítés után jön (a terv: `RPW-004-SYMFONY-ATALLAS.md`)

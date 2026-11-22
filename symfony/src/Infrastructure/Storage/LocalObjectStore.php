@@ -40,6 +40,11 @@ final class LocalObjectStore implements ObjectStore
         return $this->files->exists($this->bucket, $path);
     }
 
+    public function putBytes(string $shop, string $path, string $bytes, string $mime): void
+    {
+        $this->files->put($this->bucket, $path, $bytes, $mime);
+    }
+
     public function remove(string $shop, string $path): void
     {
         $this->files->remove($this->bucket, $path);

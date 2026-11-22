@@ -36,6 +36,9 @@ interface ObjectStore
 
     public function exists(string $shop, string $path): bool;
 
+    /** Szerveroldali írás (pl. a munkába ágyazott régi fotók kiköltöztetése) — a böngésző ezt nem éri el. */
+    public function putBytes(string $shop, string $path, string $bytes, string $mime): void;
+
     public function remove(string $shop, string $path): void;
 
     /** A böngészőnek engedélyezendő külső eredet (CSP), vagy null, ha minden a saját szerveren megy. */

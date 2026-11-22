@@ -505,7 +505,7 @@ function render(){
   h+='<div class="sec"><div class="sec-h" onclick="tS(\'docs\')"><div class="sec-t"><span class="step-n">2</span> '+T('docs')+'</div><span class="sec-badge '+(docs.length?'sb-ok':'sb-nd')+'">'+docs.length+'</span></div><div class="sec-bd '+(S.sec.docs?'open':'')+'">';
   if(docs.length){
     h+='<div class="doc-grid">';
-    docs.forEach(function(d){h+='<div class="doc-card"><img src="'+escU(d.data)+'" onclick="openLB(this.src)" style="cursor:pointer"/><div class="doc-card-t">'+T(d.type)+'</div></div>'});
+    docs.forEach(function(d){h+='<div class="doc-card"><img '+(d.path?_img(d):'src="'+escU(d.data)+'"')+' onclick="openLB(this)" style="cursor:pointer"/><div class="doc-card-t">'+T(d.type)+'</div></div>'});
     h+='</div>';
   }else h+='<div class="empty">—</div>';
   h+='</div></div>';

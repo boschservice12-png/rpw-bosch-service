@@ -720,9 +720,16 @@ function ifEmpty(arr,msg){
 }
 
 // Reconstatare fotok base64 -> Blob
-function getReconstPhotoBlob(p){
+// RPW-005 (2026-11-22): a reconstatare fotói már a TÁROLÓBAN is lehetnek ({path}) — a ZIP-ből
+// (biztosító, Audatex) nem maradhatnak ki. Régi base64-es fotó és régi sor-fotó (szöveg) is működik.
+async function getReconstPhotoBlob(p){
+  if(typeof p==='string') p={data:p};
   if(p && p.data && typeof p.data==='string' && p.data.indexOf('data:')===0){
     return dataUrlToBlob(p.data);
+  }
+  var path=p&&(p.path||(p.ref&&p.ref.path));
+  if(path && window.RPWPhotos && RPWPhotos.refToBlob){
+    try{ return await RPWPhotos.refToBlob(sb,{path:path}); }catch(e){ return null; }
   }
   return null;
 }
@@ -934,7 +941,7 @@ window.doExportZip=async function(){
       if(rDocs && Object.keys(rDocs).length){
         h+='<h2>'+T('r_docs')+'</h2><pre style="background:#f5f5f3;padding:8px;font-size:10px;overflow:auto;border:1px solid #ddd">'+escHtml(JSON.stringify(rDocs,null,2))+'</pre>';
       }
-      h+='<h2>'+T('r_photos')+' ('+rPhotos.filter(function(p){return p&&p.data}).length+')</h2>';
+      h+='<h2>'+T('r_photos')+' ('+rPhotos.filter(function(p){return p&&(p.data||p.path||(p.ref&&p.ref.path))}).length+')</h2>';
       h+='<p style="color:#666;font-size:11px">Vezi mapa <code>fotografii_reconstatare/</code></p>';
       h+=htmlFooter();
       zip.file('reconstatare.html',h);
@@ -943,8 +950,16 @@ window.doExportZip=async function(){
       var rcFolder=zip.folder('fotografii_reconstatare');
       var rcCnt=0;
       for(var ri=0;ri<rPhotos.length;ri++){
-        var b=getReconstPhotoBlob(rPhotos[ri]);
+        var b=await getReconstPhotoBlob(rPhotos[ri]);
         if(b){rcCnt++;rcFolder.file('reconst_'+String(rcCnt).padStart(2,'0')+'.jpg',b)}
+      }
+      // a sorokhoz (elemenként) készült fotók is — eddig kimaradtak a ZIP-ből
+      for(var rr=0;rr<rRows.length;rr++){
+        var rps=rRows[rr].photos||[], nmR=String(rRows[rr].name||('element_'+(rr+1))).replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,30)||('element_'+(rr+1));
+        for(var rq=0;rq<rps.length;rq++){
+          var b2=await getReconstPhotoBlob(rps[rq]);
+          if(b2)rcFolder.file(String(rr+1).padStart(2,'0')+'_'+nmR+'_'+(rq+1)+'.jpg',b2);
+        }
       }
     }
 
