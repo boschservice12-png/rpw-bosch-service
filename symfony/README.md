@@ -30,7 +30,7 @@ helyett a `public/vendor/` rögzített másolatai töltődnek. Adat: `var/rpw-lo
 Többrétegű védelem (hálózat → web-határ → alkalmazás → adat → megfigyelés), rétegenként
 igazolva: **[SECURITY-LAYERS.md](SECURITY-LAYERS.md)**. Élesítés előtt: `bin/console rpw:security:check`.
 Mentés: `bin/console rpw:backup --keygen`, utána `rpw:backup` (titkosított, visszaellenőrzött).
-Szerversablonok: `deploy/`.
+Szerver-telepítő: `deploy/` — leírás: [`../TELEPITES-SZERVER.md`](../TELEPITES-SZERVER.md).
 
 ## OCR, iratbesorolás, levél
 

@@ -106,6 +106,13 @@
   status = 404
   force = true
 
+# 2026-11-22: a saját szerver telepítési leírása — belső üzemeltetési anyag.
+[[redirects]]
+  from = "/TELEPITES-SZERVER.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
 # RPW-004 (2026-11-21): a helyi kipróbálás Docker-csomagja (építési leírás,
 # indítószkript) — belső anyag, a statikus oldal nem szolgálhatja ki.
 [[redirects]]

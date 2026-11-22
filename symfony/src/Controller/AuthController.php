@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Application\AuthService;
 use App\Security\ActorUser;
+use Doctrine\DBAL\Connection;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
@@ -15,14 +16,22 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 #[Route('/api')]
 final class AuthController
 {
-    public function __construct(private readonly AuthService $auth)
+    public function __construct(private readonly AuthService $auth, private readonly Connection $db)
     {
     }
 
     #[Route('/health', methods: ['GET'])]
     public function health(): JsonResponse
     {
-        return new JsonResponse(['ok' => true, 'service' => 'rpw-symfony', 'time' => gmdate(\DATE_ATOM)]);
+        // Az adatbázist is megszólítja: a telepítő egészség-ellenőrzése így a valódi működést méri,
+        // nem csak azt, hogy a PHP elindul. Hibarészletet nem ad ki.
+        try {
+            $db = $this->db->fetchOne('SELECT 1') !== false;
+        } catch (\Throwable) {
+            $db = false;
+        }
+
+        return new JsonResponse(['ok' => $db, 'service' => 'rpw-symfony', 'db' => $db, 'time' => gmdate(\DATE_ATOM)], $db ? 200 : 503);
     }
 
     #[Route('/roster/{shopId}', methods: ['GET'])]

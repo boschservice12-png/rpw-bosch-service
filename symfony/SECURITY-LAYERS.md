@@ -12,10 +12,10 @@ Jelmagyarázat: ✅ kódban, teszttel igazolva · 📦 telepítési sablon (val�
 
 | # | Réteg | Fenyegetés | Védelem | Hol | Igazolás |
 |---|---|---|---|---|---|
-| 1 | Hálózat / szerver | port-szkennelés, SSH-jelszópróbálgatás | tűzfal: csak 22 (fékkel), 80, 443 · SSH csak kulccsal, root nem · auto-frissítés | `deploy/harden-server.sh` | 📦 (`bash -n` ✅) |
-| 1 | | ismételt PIN-próbálgatás egy IP-ről | fail2ban a biztonsági naplóból: 30 hiba / 10 perc → 1 óra kizárás | `deploy/fail2ban/` | ✅ szűrő a valódi naplón: 50 találat, 0 téves |
-| 1 | | PHP-hibarészlet, verzió kiszivárgása | `expose_php`/`display_errors` ki, veszélyes függvények tiltva | `deploy/php-hardening.ini` | 📦 |
-| 2 | Web-határ | lehallgatás, protokoll-leminősítés | HTTPS (Caddy, Let's Encrypt), HSTS 1 év | `deploy/Caddyfile` + Symfony | ✅ HSTS csak HTTPS-en (teszt) |
+| 1 | Hálózat / szerver | port-szkennelés, SSH-jelszópróbálgatás | tűzfal: csak 22 (fékkel), 80, 443 · auto-frissítés · fail2ban az SSH-ra · *SSH csak kulccsal: később, külön lépés (TELEPITES-SZERVER.md)* | `deploy/install.sh` | 📦 (`bash -n` ✅) |
+| 1 | | ismételt PIN-próbálgatás egy IP-ről | fail2ban a biztonsági naplóból: 30 hiba / 10 perc → 1 óra kizárás | `deploy/templates/fail2ban/` | ✅ szűrő a valódi naplón: 50 találat, 0 téves |
+| 1 | | PHP-hibarészlet, verzió kiszivárgása | `expose_php`/`display_errors` ki, veszélyes függvények tiltva, `open_basedir` — **csak az RPW saját php-fpm készletére** | `deploy/templates/php-fpm-rpw.conf` | 📦 |
+| 2 | Web-határ | lehallgatás, protokoll-leminősítés | HTTPS (Caddy, Let's Encrypt), HSTS 1 év | `deploy/templates/Caddyfile.tpl` + Symfony | ✅ HSTS csak HTTPS-en (teszt) |
 | 2 | | XSS kártékony külső kódja, adatkiszivárgás | **CSP: a böngésző CSAK a saját szerverrel beszél** (`connect-src 'self'`), nincs CDN, nincs Supabase | `SecurityHeadersSubscriber` | ✅ teszt + E2E: 0 CSP-sértés |
 | 2 | | kattintás-eltérítés, MIME-csere | `frame-ancestors 'none'`, `X-Frame-Options`, `nosniff`, COOP/CORP | ugyanott | ✅ |
 | 2 | | idegen oldalról indított írás | eredet-őr: író kérés csak a saját oldalról (vagy `RPW_ALLOWED_ORIGINS`) | `OriginGuardSubscriber` | ✅ teszt (403) |
@@ -28,7 +28,7 @@ Jelmagyarázat: ✅ kódban, teszttel igazolva · 📦 telepítési sablon (val�
 | 3 | | hamis fájl (pl. kép helyett szkript) | tárolókapu: egy fájlra szóló, aláírt, lejáró URL · tartalom a bájtokból azonosítva · szigorú CSP a letöltésen | `StorageController`, `FileStore` | ✅ |
 | 3 | | fizetős AI / levél visszaélés | belépés kötelező · IP-fék · fejléc-injektálás kizárva · melléklet-típus és -méret | `FunctionsController` | ✅ |
 | 4 | Adat | kitalálható titok → hamisítható fotó-link | **élesben gyenge `APP_SECRET`-tel a szerver nem indul (503)** · bekapcsolt debug módban sem | `ProductionGuardSubscriber` | ✅ |
-| 4 | | adatvesztés (lemezhiba, hiba, zsarolóvírus) | napi **titkosított** mentés (XChaCha20-Poly1305), sha256, **visszaellenőrzéssel**, 14 nap megőrzés; a kulcs nem a mentés mellett | `rpw:backup`, `deploy/systemd/` | ✅ hamisítás / csonkítás / rossz kulcs észlelve |
+| 4 | | adatvesztés (lemezhiba, hiba, zsarolóvírus) | napi **titkosított** mentés (XChaCha20-Poly1305), sha256, **visszaellenőrzéssel**, 14 nap megőrzés; a kulcs nem a mentés mellett | `rpw:backup`, `deploy/templates/rpw-backup.*`, telepítés előtt is (`release.sh`) | ✅ hamisítás / csonkítás / rossz kulcs észlelve |
 | 4 | | fájlok közvetlen letöltése | a fotótár a webgyökéren kívül | `var/storage` | ✅ `rpw:security:check` |
 | 5 | Megfigyelés | észrevétlen támadás | biztonsági eseménynapló: belépés, rossz PIN, zárolás, eredet-tiltás, PIN-csere, zárfeloldás — **IP-vel, PIN és token nélkül** · auditban és `var/log/security-prod-*.log`-ban | `SecurityLog` | ✅ teszt |
 | 5 | | rosszul beállított éles szerver | `rpw:security:check` élesítési kapu rétegenként, kilépési kóddal | parancs | ✅ fejlesztői gépen 4 HIBÁ-t jelez (helyesen) |
@@ -40,7 +40,7 @@ Jelmagyarázat: ✅ kódban, teszttel igazolva · 📦 telepítési sablon (val�
 | `'unsafe-inline'` a CSP-ben | a felület több száz inline kezelőt használ | minden más CSP-irányelv szűk; nincs külső szkriptforrás; a token nem sütiben van |
 | A munkamenet-token a böngésző `localStorage`-ában | a régi felület így működik | rövid, abszolút lejárat; PIN-cserével visszavonható; XSS ellen a CSP |
 | A titkosítatlan munkaadat az adatbázisban | szabványos; a lemez titkosítása a hosting feladata | a mentés titkosított; a hostingnál titkosított lemezt kell választani |
-| A szerversablonok valódi szerveren nem futottak | a hosting még nincs eldöntve | a telepítéskor egyenként ellenőrizni (lent) |
+| A szerversablonok valódi szerveren nem futottak | a gép (külön Contabo VPS, döntés 2026-11-22) még nincs megrendelve | a telepítéskor egyenként ellenőrizni (lent) |
 
 ## Élesítési ellenőrzőlista
 
@@ -50,8 +50,8 @@ symfony/bin/console rpw:security:check
 
 Annak ellenőrzése, amit a parancs nem lát:
 
-- [ ] `deploy/harden-server.sh <admin>` lefutott; `ufw status` → csak 22/80/443
-- [ ] `ssh root@…` elutasítva; jelszavas SSH elutasítva
+- [ ] `deploy/install.sh` lefutott (`../TELEPITES-SZERVER.md`); `ufw status` → csak 22/80/443
+- [ ] *(a kulcsos SSH bevezetése után)* jelszavas SSH elutasítva
 - [ ] `curl -sI https://<domain>/api/health` → `strict-transport-security` és `content-security-policy` megvan
 - [ ] `curl -sI http://<domain>/` → átirányít HTTPS-re
 - [ ] `curl -s https://<domain>/.env` és `/symfony/.env` → 404
