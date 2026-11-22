@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Application\AuthService;
 use App\Security\ActorUser;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
@@ -16,7 +17,11 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 #[Route('/api')]
 final class AuthController
 {
-    public function __construct(private readonly AuthService $auth, private readonly Connection $db)
+    public function __construct(
+        private readonly AuthService $auth,
+        private readonly Connection $db,
+        #[Autowire('%kernel.project_dir%/../REVISION')] private readonly string $revisionFile = '',
+    )
     {
     }
 
@@ -31,7 +36,10 @@ final class AuthController
             $db = false;
         }
 
-        return new JsonResponse(['ok' => $db, 'service' => 'rpw-symfony', 'db' => $db, 'time' => gmdate(\DATE_ATOM)], $db ? 200 : 503);
+        // a futó kiadás commitja: a telepítő ezzel igazolja, hogy TÉNYLEG az új kód válaszol (nem egy gyorsítótárazott régi)
+        $rev = is_file($this->revisionFile) ? substr(trim((string) file_get_contents($this->revisionFile)), 0, 12) : null;
+
+        return new JsonResponse(['ok' => $db, 'service' => 'rpw-symfony', 'db' => $db, 'rev' => $rev, 'time' => gmdate(\DATE_ATOM)], $db ? 200 : 503);
     }
 
     #[Route('/roster/{shopId}', methods: ['GET'])]
