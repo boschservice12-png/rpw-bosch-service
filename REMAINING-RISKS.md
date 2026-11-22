@@ -3,6 +3,16 @@
 Ismert maradék kockázatok — **súly szerint**, nem sorrendben.
 Az „igazolva" oszlop megmondja, hogy állítás vagy mérés.
 
+> **⚠ HELYESBÍTÉS — 2026-11-22, élő mérés alapján** (részletek: `AUDIT-2026-11-22.md`)
+> - **1. pont elavult:** mind a 11 aktív dolgozónak van PIN-je (0 hiányzik).
+> - **2. pont elavult:** a 008–017 élesben fut (`supabase_migrations.schema_migrations`).
+>   A **005–007 viszont NEM**: hiányzik a `rpw_transition`, a `rpw_requirements`, a
+>   `rpw_protected_fields`, a `rpw_patch_permissions` és a `rpw__pin_weak`.
+> - **5. pont élesben nem igaz:** a „szerver dönt” csak a 006 után állna. Élesben
+>   `SERVER_TRANSITIONS: false`, a fázisszabályokat a kliens (`rpw-workflow.js`) érvényesíti.
+>   Megoldás: RPW-004 (Symfony) — lásd az AUDIT 4.3 pontját.
+> - **Új (🟠):** élesben nincs PIN-erősség ellenőrzés (`rpw__pin_weak` hiányzik).
+
 ---
 
 ## 🔴 Élesítést blokkoló

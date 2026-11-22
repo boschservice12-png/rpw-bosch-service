@@ -5,10 +5,10 @@ window.RPW_CFG = {
   SB_URL: 'https://pxypbbvqinbwesfikkdb.supabase.co',
   SB_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4eXBiYnZxaW5id2VzZmlra2RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMjMwNzIsImV4cCI6MjA4NjU5OTA3Mn0.WZBdbr-YBxLq1ALnHY2weFQ7j2JhUUj6hOUGkuuErnQ',
   BUCKET: 'rpw-photos',
-  // ── ERP-alapú hitelesítés (a MEGLÉVŐ RED ERP auth) ──────────────
-  // Az RPW NEM tart fenn külön user/PIN/session rendszert. A dolgozó a
-  // vállalati identitásával lép be: employee_login(SHOP_ID, PIN) → token,
-  // amelyet a session_context(token) validál minden secure RPC-ben.
+  // ── Saját hitelesítés (2026-08-23 óta, rpw_employees / rpw_roles) ──
+  // Az RPW SAJÁT dolgozó-, szerepkör- és PIN-rendszert visz (az ERP-függés
+  // megszűnt): rpw2_login(SHOP_ID, dolgozó, PIN) → token, amelyet a
+  // rpw2_session(token) validál minden secure RPC-ben.
   // SHOP_ID: a szerviz azonosítója (RedAssistance). Központi konfig — NEM
   // oldalanként hardcode-olva. Felderítve 2026-08-18: minden RPW-dolgozó ide tartozik.
   SHOP_ID: 'bc39e3c1-696c-4590-a9ed-d3810df1c02d',
@@ -27,11 +27,11 @@ window.RPW_CFG = {
   //
   // A bevezetés története és a mérések: CHANGELOG.md, 2026-08-29.
   AUTH_REQUIRED: true,
-  // Privát Storage kapcsoló (P0 #11). ALAPBÓL KI (false) → a fotó-URL réteg
-  // szükség esetén publikus URL-re esik vissza (a bucket ma publikus).
-  // true-ra állítás CSAK a 0009_storage_private_signed.FILE_ONLY.sql alkalmazása UTÁN:
-  // ekkor NINCS publikus-URL fallback, csak időkorlátos aláírt URL.
-  // P0.6 (2026-08-23): a bucket PRIVÁT. Minden fájlelérés időkorlátos
+  // Privát Storage kapcsoló (P0 #11). false → a fotó-URL réteg publikus
+  // URL-re esne vissza; true → NINCS publikus-URL fallback.
+  // P0.6 (2026-08-23): a bucket PRIVÁT (storage.buckets.public=false, mérve
+  // 2026-11-22). A nyilvános hozzáférést NEM a bucket, hanem az 5 anon
+  // tárolószabály adja — ezeket zárja a 018. Minden fájlelérés időkorlátos
   // aláírt URL-lel megy; publikus fallback NINCS.
   STORAGE_PRIVATE: true,
   // RPW-003 (2026-11-08): minden tároló-művelet a `rpw-storage` Edge Functionön
