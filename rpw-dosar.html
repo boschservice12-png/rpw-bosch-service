@@ -569,7 +569,9 @@ window.rpwOverride=async function(){
   var from=JOB.phase||1;
   var res=await RPWWorkflow.commitCriticalTransition(JOB, function(){
     return RPWWorkflow.managerOverride(JOB,{fromPhase:from,toPhase:to,actor:actor,reason:reason});
-  }, {action:'reopen', phase:to, reason:reason, save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
+  // 2026-11-23: a felülbírálás 'override' műveletként megy a szerverre (eddig 'reopen' — a szerver
+  // így 5 karakteres indokú újranyitást rögzített, overrideGrants-bejegyzés nélkül: a nyom elveszett).
+  }, {action:'override', phase:to, reason:reason, save:function(){return RPWSave.commitConfirmed(sb,JOB);}});
   if(!res.ok){
     if(res.notSynced){ dlgSay({tone:'warn',title:T('dlg_sync_t'),text:RPWWorkflow.t('wf_saved_not_synced',_ln),okText:T('dlg_ok')}); return; }
     var errs=(res.result&&res.result.errors)||[];

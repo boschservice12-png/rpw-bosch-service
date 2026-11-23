@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-23T00:47:07.520Z",
+  "generated": "2026-11-23T01:01:27.954Z",
   "files": 33,
   "total": 28,
   "allowed": 28,
@@ -95,7 +95,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 657,
+      "sor": 659,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",
@@ -103,7 +103,7 @@
     },
     {
       "fajl": "rpw-dosar.html",
-      "sor": 701,
+      "sor": 703,
       "mezo": "inchis",
       "ok": "a commitCriticalTransition mutate() törzse",
       "ut": "élesben NEM fut le — a rpw_transition dönt (bizonyítva a frontend-tesztben)",

@@ -1,5 +1,13 @@
 # CHANGELOG.md
 
+## 2026-11-23 (5) — Két hiba a Symfony-úton (AUDIT-2026-11-23 §3.3)
+
+> Ferenc: „igen javítsd a két hibát". Symfony + felület, migráció nincs. Élesben (Netlify, `SERVER_TRANSITIONS:false`) a viselkedés nem változik: ott a böngésző dönt, és a felülbírálás eddig is rögzült.
+
+- **„Egyéb" javítás:** a Control lap (`rpw-control-red.html:362`) `category:'other'`-t küldhet — a szerver eddig `wf_rw_target`-tel elutasította. Mostantól elfogadja; a célfázis a kérésből jön, és csak műhelyfázis (4 vagy 5) lehet (`TransitionEngine::REWORK_OTHER_TARGETS`; a compat híd átadja: `RpcController` `target_phase`).
+- **Felülbírálás:** `rpw-dosar.html` `rpwOverride` és `rpw-data.js` `TXN_ACTION.override` → `'override'` (eddig `'reopen'`: a szerver 5 karakteres indokú újranyitást rögzített, `overrideGrants` nélkül). Most a szerver valódi `override` ága fut: 10 karakteres indok, engedélyrekord, a felülbíráló a munkamenetből.
+- Tesztek: `TransitionEngineTest::testReworkCategoryOtherUsesRequestedWorkshopPhase`, `CompatTest::testReworkOtherAndOverrideThroughCompat`, `test-ugy-folyamat.js` 13. csoport — mutációval ellenőrizve. Symfony PHPUnit: 100 teszt / 603 állítás OK; felület: zöld.
+
 ## 2026-11-23 (4) — „Eșec salvare" a saját gépen + a WhatsApp opcionális
 
 > Ferenc: „a WhatsApp opcionális — most leblokkol" (képernyőkép: „✗ Eșec salvare – reîncearcă"). Csak frontend, migráció nincs.

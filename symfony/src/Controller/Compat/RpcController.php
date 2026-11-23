@@ -200,6 +200,7 @@ final class RpcController
         ], static fn ($v) => $v !== null && $v !== '');
         $args = array_map(static fn ($v) => mb_substr((string) $v, 0, 2000), $args);
         if ($action === 'rework_open') {
+            $args['target_phase'] = (string) $phase;   // the "other" category takes its target phase from here
             $args['category'] ??= match ($phase) { 4 => 'tinichigerie', 5 => 'vopsitorie', default => 'manager' };
             $args['description'] ??= $args['reason'] ?? '';
         }

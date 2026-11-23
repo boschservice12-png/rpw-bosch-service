@@ -111,6 +111,29 @@ final class TransitionEngineTest extends TestCase
         self::assertSame('rework_not_found', $this->denied(fn () => $this->e->apply($j, 6, 'rework_close', $w, $this->now, ['rework_id' => $id, 'note' => 'x'])));
     }
 
+    /** 2026-11-23: rpw-control-red.html can send category "other" — its target phase is chosen on the page (4 or 5). */
+    public function testReworkCategoryOtherUsesRequestedWorkshopPhase(): void
+    {
+        $w = Fixtures::actor(['work']);
+        $j = ['phases' => array_fill_keys(['1', '2', '3', '4', '5'], ['status' => 'done']) + ['6' => ['status' => 'active']]];
+        $base = ['category' => 'other', 'description' => 'Zgârietură pe ușa din spate', 'assigned_to' => 'Nagy Béla'];
+        $four = $this->e->apply($j, 6, 'rework_open', $w, $this->now, $base + ['target_phase' => 4]);
+        self::assertSame(4, $four['rework'][0]['sourcePhase']);
+        self::assertSame('rework', $four['phases']['4']['status']);
+        $five = $this->e->apply($j, 6, 'rework_open', $w, $this->now, $base + ['target_phase' => '5']);
+        self::assertSame(5, $five['rework'][0]['sourcePhase'], 'a string célfázis is elfogadott (a compat híd stringet ad)');
+        foreach ([null, 0, 3, 6, 7, 'x'] as $bad) {
+            $e = null;
+            try {
+                $this->e->apply($j, 6, 'rework_open', $w, $this->now, $base + ['target_phase' => $bad]);
+            } catch (TransitionDenied $d) {
+                $e = $d;
+            }
+            self::assertNotNull($e, 'célfázis: '.var_export($bad, true));
+            self::assertSame(['wf_rw_target'], $e->details['missing'], 'csak műhelyfázis (4/5) lehet: '.var_export($bad, true));
+        }
+    }
+
     public function testReopenNeedsOverrideAndReasonAndUnclosesJob(): void
     {
         $j = ['inchis' => true, 'phases' => array_fill_keys(['1', '2', '3', '4', '5', '6', '7'], ['status' => 'done'])];

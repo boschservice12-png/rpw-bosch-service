@@ -230,7 +230,7 @@
       close:         'complete',      // a 7. fázis lezárása = a munka lezárása
       skip:          'skip',
       reopen:        'reopen',
-      override:      'reopen',        // a felülbírálás újranyitás, override joggal
+      override:      'override',      // 2026-11-23: saját művelet (overrideGrants + 10 karakteres indok) — nem sima újranyitás
       createRework:  'rework_open',
       resolveRework: 'rework_close',
       // v4: a tölcsér (commitCriticalTransition) a SZERVEROLDALI nevet

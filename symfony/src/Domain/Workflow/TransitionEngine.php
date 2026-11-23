@@ -22,7 +22,9 @@ final class TransitionEngine
     public const ACTIONS = ['start', 'complete', 'skip', 'reopen', 'rework_open', 'rework_close', 'override'];
     public const MIN_REASON = 5;
     public const MIN_LONG_TEXT = 10;
-    public const REWORK_CATEGORIES = ['tinichigerie' => 4, 'bodywork' => 4, 'vopsitorie' => 5, 'paint' => 5, 'manager' => 6];
+    public const REWORK_CATEGORIES = ['tinichigerie' => 4, 'bodywork' => 4, 'vopsitorie' => 5, 'paint' => 5, 'manager' => 6, 'other' => null];
+    /** "other" (rpw-control-red.html: "alt motiv"): the target phase comes from the request and must be a workshop phase. */
+    public const REWORK_OTHER_TARGETS = [4, 5];
 
     /**
      * @param array{reason?:?string, rework_id?:?string, note?:?string, category?:?string,
@@ -163,8 +165,18 @@ final class TransitionEngine
         $desc = trim((string) ($a['description'] ?? $a['reason'] ?? ''));
         $assigned = trim((string) ($a['assigned_to'] ?? ''));
         $errors = [];
-        if (!isset(self::REWORK_CATEGORIES[$category])) {
+        $target = null;
+        if (!\array_key_exists($category, self::REWORK_CATEGORIES)) {
             $errors[] = $category === '' ? 'wf_rw_category' : 'wf_rw_target';
+        } else {
+            $target = self::REWORK_CATEGORIES[$category];
+            if ($target === null) {   // "other": the target phase is chosen on the control page (4 or 5)
+                $t = (int) ($a['target_phase'] ?? 0);
+                $target = \in_array($t, self::REWORK_OTHER_TARGETS, true) ? $t : null;
+                if ($target === null) {
+                    $errors[] = 'wf_rw_target';
+                }
+            }
         }
         if (mb_strlen($desc) < self::MIN_LONG_TEXT) {
             $errors[] = 'wf_rw_desc';
@@ -175,7 +187,6 @@ final class TransitionEngine
         if ($errors !== []) {
             throw new TransitionDenied('rework_invalid', ['missing' => $errors]);
         }
-        $target = self::REWORK_CATEGORIES[$category];
         $rw = [
             'id' => 'rw_'.bin2hex(random_bytes(6)),
             'sourcePhase' => $target,

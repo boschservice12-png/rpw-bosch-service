@@ -160,6 +160,30 @@ final class CompatTest extends ApiTestCase
         self::assertSame('active', $done['data']['phases']['6']['status']);
     }
 
+    /** 2026-11-23: the two compat-path bugs found in AUDIT-2026-11-23 §3.3. */
+    public function testReworkOtherAndOverrideThroughCompat(): void
+    {
+        [$s, $ids] = $this->shop('A', ['admin' => ['Ana Admin', '4826']]);
+        $t = $this->loginRpc($s, $ids['admin'], '4826')['token'];
+        $id = 'RPW-2c7d4f1a-1a2b-4c3d-9e8f-0123456789ab';
+        $data = ['phases' => array_fill_keys(['1', '2', '3', '4', '5'], ['status' => 'done']) + ['6' => ['status' => 'active']]];
+        $this->db->insert('rpw_jobs', ['id' => $id, 'shop_id' => $s, 'data' => json_encode($data), 'version' => 1]);
+        // 1. "other" category, target phase from p_phase (exactly what rpw-control-red.html sends)
+        $rw = $this->rpc('rpw_transition', ['p_token' => $t, 'p_id' => $id, 'p_phase' => 4, 'p_action' => 'rework_open', 'p_expected_version' => 1,
+            'p_reason' => 'Zgârietură pe ușa din spate', 'p_extra' => ['category' => 'other', 'description' => 'Zgârietură pe ușa din spate', 'assigned_to' => 'Ion Pop']]);
+        self::assertTrue($rw['ok'], json_encode($rw));
+        self::assertSame(4, $rw['data']['rework'][0]['sourcePhase']);
+        // 2. override is its own action: grant recorded, 10-character reason required
+        $short = $this->rpc('rpw_transition', ['p_token' => $t, 'p_id' => $id, 'p_phase' => 7, 'p_action' => 'override', 'p_expected_version' => 2, 'p_reason' => 'scurt']);
+        self::assertSame('wf_override_reason_short', $short['error']);
+        $ov = $this->rpc('rpw_transition', ['p_token' => $t, 'p_id' => $id, 'p_phase' => 7, 'p_action' => 'override', 'p_expected_version' => 2,
+            'p_reason' => 'Clientul a aprobat telefonic predarea']);
+        self::assertTrue($ov['ok'], json_encode($ov));
+        $g = end($ov['data']['overrideGrants']);
+        self::assertSame(7, $g['toPhase']);
+        self::assertSame('Ana Admin', $g['actor'], 'a felülbíráló a munkamenetből jön, nem a kliensből');
+    }
+
     public function testTeamPostsAndLastManagerLock(): void
     {
         [$s, $ids] = $this->shop('A', ['admin' => ['Ana Admin', '4826'], 'vopsitor' => ['Vasile Pop', '5937']]);

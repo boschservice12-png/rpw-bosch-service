@@ -3,7 +3,7 @@
 > **Ez a fájl generált.** Forrás: `_tests/last-run.json`.
 > Újragenerálás: `npm test && node _tests/gen-report.js`
 
-*Generálva: 2026-11-23T00:47:07.618Z*
+*Generálva: 2026-11-23T01:01:28.036Z*
 
 ---
 
@@ -40,13 +40,13 @@ Staging:               NOT VERIFIED
 
 | Kategória | Fájl | Állítás | Sikeres | Sikertelen | El sem indult |
 |---|---:|---:|---:|---:|---:|
-| **Unit** | 57 | 3514 | 3514 | 0 | 0 |
+| **Unit** | 57 | 3517 | 3517 | 0 | 0 |
 | **Database integration** | 5 | 355 | 355 | 0 | 0 |
 | **Frontend integration** | 5 | 486 | 486 | 0 | 0 |
 | **Static workflow audit** | 1 | 2 | 2 | 0 | 0 |
 | **Staging** | — | — | — | — | — |
 
-**Futási idő:** 49.4 s
+**Futási idő:** 51.6 s
 
 > ⚠ **A staging NEM igazolt** — a MANUAL-STAGING-CHECKLIST.md nincs kitöltve
 > Ezért a „minden teszt sikeres" állítás NEM tehető meg.
@@ -129,7 +129,7 @@ Ez fedi a brief 6. pontjának mind a 12 esetét és a 13. pont regresszióit.
 | unit | `test-tenant.js` | 12 | 0 | ✅ |
 | unit | `test-thumbs.js` | 18 | 0 | ✅ |
 | unit | `test-typo.js` | 19 | 0 | ✅ |
-| unit | `test-ugy-folyamat.js` | 87 | 0 | ✅ |
+| unit | `test-ugy-folyamat.js` | 90 | 0 | ✅ |
 | unit | `test-wa.js` | 20 | 0 | ✅ |
 | unit | `test-xss.js` | 95 | 0 | ✅ |
 | integration | `test-int-migrations.js` | 48 | 0 | ✅ |

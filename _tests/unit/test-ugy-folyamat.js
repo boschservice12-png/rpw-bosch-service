@@ -292,6 +292,13 @@ try{
   w.S.condRoster=null; await w.condRosterLoad();
   eq(w.S.condRoster.map(e=>e.name).join(','),'Ion Pop','a névsor (rpw2_roster) a feltétel-ablakhoz, csapat-jog nélkül is');
   w.sb.rpc=realRpc;
+
+  grp('13 · FELÜLBÍRÁLÁS — saját művelet, nem újranyitás (AUDIT-2026-11-23 §3.3)');
+  const fsD=require('fs'), dosar=fsD.readFileSync(path.join(ROOT,'rpw-dosar.html'),'utf8'), data=fsD.readFileSync(path.join(ROOT,'rpw-data.js'),'utf8');
+  const ov=dosar.slice(dosar.indexOf('window.rpwOverride='), dosar.indexOf('window.tS='));
+  ok(/action:'override'/.test(ov)&&!/action:'reopen'/.test(ov),'rpw-dosar.html rpwOverride → action:\'override\'');
+  ok(/override:\s*'override'/.test(data),'rpw-data.js TXN_ACTION.override → \'override\'');
+  ok(/rpw-control-red\.html/.test('rpw-control-red.html')&&/mode==='other'\?'other'/.test(fsD.readFileSync(path.join(ROOT,'rpw-control-red.html'),'utf8')),'a Control lap továbbra is küldhet „other” kategóriát (a szerver elfogadja — CompatTest)');
 }catch(e){ fail++; console.log('   ✗ KIVÉTEL: '+e.message+'\n'+(e.stack||'').split('\n').slice(0,4).join('\n')); }
 console.log('\n'+(fail?'✗ ':'✓ ')+pass+' pass / '+fail+' fail');
 process.exit(fail?1:0);
