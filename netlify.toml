@@ -120,6 +120,12 @@
   status = 404
   force = true
 
+[[redirects]]
+  from = "/AUDIT-2026-11-23.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
 # RPW-004 (2026-11-21): a helyi kipróbálás Docker-csomagja (építési leírás,
 # indítószkript) — belső anyag, a statikus oldal nem szolgálhatja ki.
 [[redirects]]
