@@ -57,9 +57,9 @@ REGULI CRITICE:
 Extrage si returneaza DOAR JSON:
 {
   "name": "numele complet sau null",
-  "address": "adresa completa (oras, judet, strada) sau null",
-  "cnp": "CNP 13 cifre sau null"
+  "address": "adresa completa (oras, judet, strada) sau null"
 }
+NU extrage CNP-ul (codul numeric personal) — nu il returna in niciun camp.
 Doar JSON.`,
 
   constatare: `Analizeaza acest document romanesc: Constatare amiabila, Proces verbal de dauna, sau Deviz de la asigurator.
@@ -242,7 +242,7 @@ exports.handler = async (event) => {
                              code: 'ai_schema_' + val.error });
     }
 
-    // A kockázatos mezők EMBERI MEGERŐSÍTÉST kérnek (vin, cnp, rendszám,
+    // A kockázatos mezők EMBERI MEGERŐSÍTÉST kérnek (vin, rendszám,
     // kárszám, összegek, órák). Az AI eredménye SOHA nem vált fázist —
     // ezt a kliens dönti el, a felhasználó jóváhagyása után.
     return response(200, {

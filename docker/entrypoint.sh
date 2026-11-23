@@ -22,7 +22,9 @@ mkdir -p "$RPW_STORAGE_DIR" /data/backups
 php bin/console cache:clear --no-warmup -q
 php bin/console cache:warmup -q
 php bin/console rpw:db:init
-php bin/console rpw:shop:seed "Bosch Service (próba)" "Ferenc Admin" 4826 --id="$RPW_SHOP_ID" --demo
+# 2026-11-23: a mintacsapat (ismert PIN-ek) CSAK kifejezett helyi kérésre: RPW_DEMO=1
+DEMO_FLAG=""; [ "${RPW_DEMO:-0}" = "1" ] && DEMO_FLAG="--demo"
+php bin/console rpw:shop:seed "Bosch Service (próba)" "Ferenc Admin" 4826 --id="$RPW_SHOP_ID" $DEMO_FLAG
 
 # 2026-11-22: ÉJSZAKAI MENTÉS a konténerben is (eddig nem volt: a gép hibájával minden elveszett volna).
 # Naponta 02:30-kor titkosított, visszaellenőrzött mentés a /data/backups-ba (14 marad), utána visszatöltési

@@ -14,6 +14,8 @@ services:
       # opcionális: OCR / iratbesorolás és levélküldés (üresen a funkció "nincs beállítva")
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
+      # mintacsapat ismert PIN-ekkel: CSAK helyi próbához (RPW_DEMO=1) — alapból ki
+      RPW_DEMO: ${RPW_DEMO:-0}
     restart: unless-stopped
 volumes:
   rpw-data:

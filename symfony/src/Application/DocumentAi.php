@@ -130,9 +130,6 @@ final class DocumentAi
         if ($str($f['vin'] ?? null) !== '') {
             $out['vin'] = ['value' => $f['vin'], 'needsConfirm' => true, 'ok' => preg_match('/^[A-HJ-NPR-Z0-9]{17}$/', strtoupper($str($f['vin']))) === 1];
         }
-        if ($str($f['cnp'] ?? null) !== '') {
-            $out['cnp'] = ['value' => $f['cnp'], 'needsConfirm' => true, 'ok' => preg_match('/^\d{13}$/', $str($f['cnp'])) === 1];
-        }
         if ($str($f['plate'] ?? null) !== '') {
             $pl = trim(str_replace('-', ' ', $str($f['plate'])));
             $out['plate'] = ['value' => $f['plate'], 'needsConfirm' => true, 'ok' => preg_match('/^[A-Z]{1,2}\s?\d{2,3}\s?[A-Z]{3}$/i', $pl) === 1];
@@ -160,8 +157,8 @@ final class DocumentAi
         $props = match ($type) {
             // rpw-recepcio-red.html: p.plate, p.vin, p.brand, p.model, p.year, p.capacitate, p.owner
             'talon' => ['plate' => $s, 'vin' => $s, 'brand' => $s, 'model' => $s, 'year' => $s, 'capacitate' => $s, 'owner' => $s],
-            // p.name, p.address, p.cnp
-            'buletin' => ['name' => $s, 'address' => $s, 'cnp' => $s],
+            // p.name, p.address — 2026-11-23: NO CNP (GDPR data minimisation, same rule as TyreFleet)
+            'buletin' => ['name' => $s, 'address' => $s],
             // p.nrDosar, p.proprietar, p.asigurator, p.daune[] (index.html és a recepció is)
             'constatare' => ['nrDosar' => $s, 'proprietar' => $s, 'asigurator' => $s, 'daune' => ['type' => 'array', 'items' => [
                 'type' => 'object',

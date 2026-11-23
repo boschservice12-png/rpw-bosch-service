@@ -28,7 +28,7 @@ final class FakeVisionModel implements VisionModel
                 isset($p['enum']) => $p['enum'][0],
                 ($p['type'] ?? null) === 'number' => 0.9,
                 isset($p['anyOf']) && $p['anyOf'][0]['type'] === 'number' => 4.5,
-                default => match ($k) { 'vin' => 'WVWZZZ1KZAW000001', 'plate' => 'MS 50 BSS', 'cnp' => '1800101264001', default => 'x-'.$k },
+                default => match ($k) { 'vin' => 'WVWZZZ1KZAW000001', 'plate' => 'MS 50 BSS', default => 'x-'.$k },
             };
         }
 

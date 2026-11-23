@@ -31,6 +31,9 @@ final class SeedShopCommand extends Command
         'auditor' => ['Szerelő', []],
     ];
 
+    /** The first-admin PIN printed by docker/entrypoint.sh and bin/rpw-local (must be changed; rpw:security:check flags it). */
+    public const FIRST_ADMIN_PIN = '4826';
+
     /** Mintacsapat CSAK helyi próbához — éles szervizben ne használd. */
     public const DEMO = [
         ['Rita Recepție', 'receptie', '5937'],
@@ -56,6 +59,12 @@ final class SeedShopCommand extends Command
 
     protected function execute(InputInterface $in, OutputInterface $out): int
     {
+        // 2026-11-23: the demo team has PINs written in this file — only on an explicit local opt-in.
+        if ($in->getOption('demo') && (($_SERVER['RPW_DEMO'] ?? getenv('RPW_DEMO')) !== '1')) {
+            $out->writeln('<error>--demo csak RPW_DEMO=1 mellett (helyi próba). Szerveren soha.</error>');
+
+            return Command::FAILURE;
+        }
         $pin = (string) $in->getArgument('pin');
         if (($err = PinPolicy::validate($pin)) !== null) {
             $out->writeln('<error>PIN elutasítva: '.$err.'</error>');

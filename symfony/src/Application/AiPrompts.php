@@ -36,9 +36,9 @@ Buletin de identitate romanesc (CI).
 Extrage si returneaza DOAR JSON:
 {
   "name": "numele complet sau null",
-  "address": "adresa completa (oras, judet, strada) sau null",
-  "cnp": "CNP 13 cifre sau null"
+  "address": "adresa completa (oras, judet, strada) sau null"
 }
+NU extrage CNP-ul (codul numeric personal) — nu il returna in niciun camp.
 Doar JSON.
 TXT;
 

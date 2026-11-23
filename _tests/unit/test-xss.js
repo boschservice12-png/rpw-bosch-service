@@ -112,10 +112,24 @@ console.log('\n5. Az OCR eredménye sem kerül nyersen HTML-be');
   ok(H.validateOcr('szöveg', 'talon').ok === false, 'szöveg-válasz elutasítva');
   ok(H.validateOcr({ semmi:1 }, 'talon').ok === false, 'ismeretlen mezők → elutasítva');
   // a kockázatos mezők megerősítést kérnek
-  const u = H.flagUncertain({ vin:'ROSSZ', cnp:'123', total:'1500,50', plate:'MS12ABC' });
+  const u = H.flagUncertain({ vin:'ROSSZ', cnp:'1800101264001', total:'1500,50', plate:'MS12ABC' });
   ok(u.vin.needsConfirm === true,   'VIN megerősítést kér');
   ok(u.vin.ok === false,            '  és formailag hibásnak jelöli');
-  ok(u.cnp.needsConfirm === true,   'CNP megerősítést kér');
+  ok(u.cnp === undefined,           'CNP NEM jön vissza (2026-11-23: nem olvassuk, nem tároljuk)');
+  ok(H.validateOcr({ cnp:'1800101264001', nume:'X' }, 'buletin').data.cnp === undefined, '  és a buletin-séma eldobja');
+  // 2026-11-23: a prompt minden kulcsa átmegy a szűrőn (korábban brand/year/owner/name/address/ore_* elveszett)
+  {
+    const src = require('fs').readFileSync(require('path').join(__dirname,'..','..','functions','ocr.js'),'utf8');
+    Object.keys(H.OCR_SCHEMA).forEach(function(t){
+      const m = src.match(new RegExp(t+':\\s*`([\\s\\S]*?)`'));
+      ok(!!m, '  ocr.js prompt megvan: '+t);
+      const keys = Array.from(new Set(Array.from((m?m[1]:'').matchAll(/"([a-zA-Z_]+)"\s*:/g)).map(x=>x[1])))
+        .filter(k => !['element','actiune','ore'].includes(k));   // a daune[] elemeinek belső kulcsai
+      const miss = keys.filter(k => H.OCR_SCHEMA[t].indexOf(k) < 0);
+      ok(miss.length === 0, '  '+t+': minden prompt-kulcs átmegy a szűrőn'+(miss.length?' — HIÁNYZIK: '+miss:''));
+      ok(H.OCR_SCHEMA[t].indexOf('cnp') < 0 && !/"cnp"\s*:/.test(m?m[1]:''), '  '+t+': CNP nincs se a promptban, se a sémában');
+    });
+  }
   ok(u.total.needsConfirm === true, 'összeg megerősítést kér');
   ok(u.plate.needsConfirm === true, 'rendszám megerősítést kér');
 }

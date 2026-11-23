@@ -2,7 +2,7 @@
 # ════════════════════════════════════════════════════════════════
 #  VÉGPONTTÓL VÉGPONTIG PRÓBA — valódi böngésző, valódi oldalak, új backend
 #
-#  Előfeltétel: fut a helyi rendszer (symfony/bin/rpw-local), Node + Playwright.
+#  Előfeltétel: fut a helyi rendszer MINTACSAPATTAL (RPW_DEMO=1 symfony/bin/rpw-local --reset), Node + Playwright.
 #  Egy teljes munka 1→7: recepció (valódi fotófeltöltés), értékelés,
 #  lakatos, fényező, kontroll, lezárás — szerepkörönként más dolgozóval,
 #  és egy elutasított lezárási kísérlettel (lakatos, nincs `close` joga).

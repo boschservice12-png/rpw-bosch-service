@@ -1,5 +1,17 @@
 # CHANGELOG.md
 
+## 2026-11-23 (6) — PIN-orákulum, ügyfél-link, mintadolgozók, CNP, OCR-mezők
+
+> Ferenc: „igen mindharom mehet". Symfony + Netlify-függvények + felület; élő migráció: **019** (`_migrations/019_pin_orakulum_es_ugyfel_feltoltes.sql`, visszaút `019_rollback.sql`) — **élesben még NEM futott** (a Supabase jóváhagyó kérdésére nem jött válasz).
+
+- **PIN-orákulum megszűnt:** a „pin_taken” válasz elárulta a kolléga PIN-jét. A belépés dolgozó + PIN, egyediség nem kell. Symfony `AuthService::setPin`, `docker/pin-reset.php`, élő `rpw2_pin_set` (019).
+- **Ügyfél-link (WhatsApp) nem írhat felül:** lezárt munkára `closed`; a `dosarActe` rekeszeiben a személyzet fájljai megmaradnak, az ügyfél csak a saját (src=whatsapp, `<munka>/acta_…`) bejegyzéseit cseréli; `clientUploads` csak hozzáfűzés; `clientGata` csak `{at, files}`; korlát 30/rekesz, 200 összesen. Symfony `ClientUploadService::mergeClientPatch`, a tároló-kapu lezárt munkára nem ad ügyfél-aláírást; élő `rpw_client_upload` (019). Élő adatok ellenőrizve: a meglévő 2 ügyfélfájl megfelel.
+- **Mintadolgozók csak kérésre:** `--demo` csak `RPW_DEMO=1` mellett (`docker-compose`, `entrypoint.sh`, `rpw-local`, E2E `run.sh`). A `rpw:security:check` HIBÁ-t jelez, ha a forráskódban szereplő PIN van használatban.
+- **CNP nem kerül kiolvasásra és tárolásra** (mint a TyreFleetben): buletin-prompt, `OCR_SCHEMA`, `flagUncertain`, Symfony `AiPrompts`/`DocumentAi`, recepció CNP-mező törölve.
+- **ÉLŐ OCR-HIBA javítva (Netlify `functions/_shared.js`):** az `OCR_SCHEMA` szűrő eldobta a promptok kulcsainak nagy részét — talon: márka, év, hengerűrtartalom, tulajdonos; buletin: név, cím; constatare: károk, tulajdonos; Audatex: órák, összegek, dossziészám. A recepció/evaluare ezeket üresen kapta. Most mind átmegy; őrteszt: minden prompt-kulcs a sémában, CNP sehol.
+- Tesztek: Symfony 109 teszt / 627 állítás OK (új: `ClientUploadMergeTest`, `HardeningTest`, `ApiTest` PIN); `test-int-019-live.js` 26/26 valódi PostgreSQL-en (élő alakú séma, 019 → rollback → 019); `test-xss.js` OCR-séma őr. Mutációval ellenőrizve (lezárás, személyzeti fájl, duplikáció, demó-kapu, OCR-séma, SQL lezárás és megtartás).
+- Helyesbítés: a korábbi auditok „élesben nincs PIN-erősség” állítása téves — élesben `rpw__pin_gyenge` működik.
+
 ## 2026-11-23 (5) — Két hiba a Symfony-úton (AUDIT-2026-11-23 §3.3)
 
 > Ferenc: „igen javítsd a két hibát". Symfony + felület, migráció nincs. Élesben (Netlify, `SERVER_TRANSITIONS:false`) a viselkedés nem változik: ott a böngésző dönt, és a felülbírálás eddig is rögzült.

@@ -185,7 +185,10 @@ final class ApiTest extends ApiTestCase
         $adm = $this->login($s, $ids['admin'], '4826');
         $vop = $this->login($s, $ids['vopsitor'], '5937');
         self::assertSame('weak_pin', $this->call('POST', '/api/team/pin', ['pin' => '1234'], $vop)['error']);
-        self::assertSame('pin_taken', $this->call('POST', '/api/team/pin', ['pin' => '4826'], $vop)['error']);
+        // 2026-11-23: no "pin_taken" oracle — a colleague's PIN is accepted (login is employee + PIN)
+        self::assertTrue($this->call('POST', '/api/team/pin', ['pin' => '4826'], $vop)['ok'], 'a colleague\'s PIN must not be revealed');
+        $this->login($s, $ids['admin'], '4826');
+        $this->login($s, $ids['vopsitor'], '4826');
         self::assertSame('not_allowed', $this->call('POST', '/api/team/pin', ['employee_id' => $ids['admin'], 'pin' => '7391'], $vop)['error']);
         self::assertTrue($this->call('POST', '/api/team/pin', ['pin' => '7391'], $vop)['ok']);
         $this->login($s, $ids['vopsitor'], '7391');

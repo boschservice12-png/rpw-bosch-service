@@ -36,7 +36,9 @@ fi
 SHOP_ID="$(grep '^RPW_SHOP_ID=' .env.local | cut -d= -f2)"
 
 php bin/console rpw:db:init
-php bin/console rpw:shop:seed "Bosch Service (helyi)" "Ferenc Admin" 4826 --id="$SHOP_ID" --demo
+# 2026-11-23: a mintacsapat (ismert PIN-ek) csak kifejezett kérésre — az E2E ezzel indul: RPW_DEMO=1 symfony/bin/rpw-local --reset
+DEMO_FLAG=""; [ "${RPW_DEMO:-0}" = "1" ] && DEMO_FLAG="--demo"
+php bin/console rpw:shop:seed "Bosch Service (helyi)" "Ferenc Admin" 4826 --id="$SHOP_ID" $DEMO_FLAG
 
 echo
 echo "════════════════════════════════════════════════════════"

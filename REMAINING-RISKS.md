@@ -1,5 +1,7 @@
 # REMAINING-RISKS.md
 
+> **Helyesbítés 2026-11-23:** a PIN-erősség élesben VAN — `rpw__pin_gyenge` (a `rpw2_pin_set` hívja); a `rpw__pin_weak` név csak a repó 007-ében szerepel. Az alábbi „nincs PIN-erősség” állítás téves.
+
 Ismert maradék kockázatok — **súly szerint**, nem sorrendben.
 Az „igazolva" oszlop megmondja, hogy állítás vagy mérés.
 

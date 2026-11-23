@@ -172,13 +172,9 @@ final class AuthService
         if (($err = PinPolicy::validate($pin)) !== null) {
             throw new ApiError($err);
         }
-        $others = $this->db->fetchFirstColumn('SELECT pin_hash FROM rpw_employees WHERE shop_id = :shop AND active = :t AND id <> :id AND pin_hash IS NOT NULL',
-            ['shop' => $a->shopId, 't' => true, 'id' => $employeeId], ['t' => \Doctrine\DBAL\ParameterType::BOOLEAN]);
-        foreach ($others as $h) {
-            if (password_verify($pin, (string) $h)) {
-                throw new ApiError('pin_taken');
-            }
-        }
+        // 2026-11-23 (AUDIT-SYMFONY-LOCALHOST §3.2): NO uniqueness check against colleagues' PINs.
+        // Login is by employee + PIN, so uniqueness is not needed — and a "pin_taken" answer let any
+        // worker discover a colleague's PIN by trying it as their own (the roster shows whose it is).
         $hash = '$2a$'.substr(password_hash($pin, \PASSWORD_BCRYPT, ['cost' => 10]), 4);
         $now = $this->clock->now();
         $n = $this->db->executeStatement('UPDATE rpw_employees SET pin_hash = :h, pin_set_at = :now WHERE id = :id AND shop_id = :shop AND active = :t',

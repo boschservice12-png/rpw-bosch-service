@@ -312,9 +312,8 @@ var i={
   clientP:{ro:'Telefon',en:'Phone',hu:'Tel'},
   note:{ro:'Obs.',en:'Notes',hu:'Megj.'},
   scanBuletin:{ro:'Buletin (optional)',en:'ID card (optional)',hu:'Szemelyi (opt.)'},
-  scanBuletinS:{ro:'Claude AI: nume, adresa, CNP',en:'Claude AI: name, address, CNP',hu:'Claude AI: nev, cim, CNP'},
+  scanBuletinS:{ro:'Claude AI: nume, adresa',en:'Claude AI: name, address',hu:'Claude AI: nev, cim'},
   adresa:{ro:'Adresa',en:'Address',hu:'Cim'},
-  cnp:{ro:'CNP',en:'CNP',hu:'CNP'},
   step1:{ro:'Talon — scanare',en:'Reg. card — scan',hu:'Talon — beolvasas'},
   step2:{ro:'Constatare — scanare',en:'Constatare — scan',hu:'Constatare — beolvasas'},
   scanT:{ro:'Fotografiaza talonul',en:'Photo reg. card',hu:'Fotozd a talont'},
@@ -662,7 +661,7 @@ async function ocrBuletin(dataUrl){
     var p=await callOCR(dataUrlToBase64(dataUrl),'buletin');
     if(p.name&&p.name!=='null'&&!JOB._clientEdited)JOB.client=p.name;
     if(p.address&&p.address!=='null'&&!JOB._adresaEdited)JOB.adresa=p.address;
-    if(p.cnp&&p.cnp!=='null'&&!JOB._cnpEdited)JOB.cnp=p.cnp;
+    // 2026-11-23 (Ferenc): a CNP-t NEM olvassuk ki és NEM tároljuk (GDPR, adattakarékosság — mint a TyreFleetben).
     await saveJ();
     S.ocrRun.buletin=false;
     toast('Buletin: '+(p.name||'?'),'info');
@@ -895,7 +894,7 @@ function render(){
     h+='<div class="pslot-acts"><label class="pslot-act" title="Fotografiază">📷 Foto<input type="file" accept="image/*" capture="environment" onchange="upBuletin(event)"/></label><label class="pslot-act" title="Importă din fișier">📁 Import<input type="file" accept="image/*" onchange="upBuletin(event)"/></label></div></div>';
     if(S.ocrRun.buletin)h+='<div class="ocr-text">'+T('scanning')+'</div><div class="ocr-bar"><div class="ocr-fill" style="width:60%"></div></div>';
     if(hasBuletin){
-      h+='<div class="info-grid" style="margin-top:8px"><div class="info-f"><div class="info-l">'+T('adresa')+'</div><input class="info-v" value="'+escA(job.adresa||'')+'" onchange="updF(\'adresa\',this.value);mark(\'_adresaEdited\')"/></div><div class="info-f"><div class="info-l">'+T('cnp')+'</div><input class="info-v mono" value="'+escA(job.cnp||'')+'" onchange="updF(\'cnp\',this.value);mark(\'_cnpEdited\')"/></div></div>';
+      h+='<div class="info-grid" style="margin-top:8px"><div class="info-f"><div class="info-l">'+T('adresa')+'</div><input class="info-v" value="'+escA(job.adresa||'')+'" onchange="updF(\'adresa\',this.value);mark(\'_adresaEdited\')"/></div></div>';
     }
     h+='</div>';
     h+='</div></div>';
@@ -1290,7 +1289,7 @@ window.reOcrTalon=async function(){
 window.upBuletin=function(e){
   var f=e.target.files&&e.target.files[0];if(!f)return;
   resizeFile(f).then(async function(dataUrl){
-    JOB._clientEdited=false;JOB._adresaEdited=false;JOB._cnpEdited=false;
+    JOB._clientEdited=false;JOB._adresaEdited=false;
     try{await uploadPhoto('buletin_client',dataUrl)}catch(err){toast('Upload: '+err.message,'err');return}
     render();
     await ocrBuletin(dataUrl);

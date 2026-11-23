@@ -59,6 +59,18 @@ final class SecurityCheckCommand extends Command
         // 3. alkalmazás
         $noPin = (int) $this->db->fetchOne('SELECT COUNT(*) FROM rpw_employees WHERE active = :t AND pin_hash IS NULL', ['t' => true], ['t' => \Doctrine\DBAL\ParameterType::BOOLEAN]);
         $add('3 alkalmazás', $noPin === 0 ? 'OK' : 'FIGYELEM', $noPin === 0 ? 'minden aktív dolgozónak van PIN-je' : $noPin.' aktív dolgozónak nincs PIN-je (nem tud belépni)');
+        // 2026-11-23: PINs that are written in the source (demo team, first admin) must not stay in use.
+        $known = array_merge(array_column(SeedShopCommand::DEMO, 2), [SeedShopCommand::FIRST_ADMIN_PIN]);
+        $weak = 0;
+        foreach ($this->db->fetchFirstColumn('SELECT pin_hash FROM rpw_employees WHERE active = :t AND pin_hash IS NOT NULL', ['t' => true], ['t' => \Doctrine\DBAL\ParameterType::BOOLEAN]) as $h) {
+            foreach ($known as $p) {
+                if (password_verify($p, (string) $h)) {
+                    ++$weak;
+                    break;
+                }
+            }
+        }
+        $add('3 alkalmazás', $weak === 0 ? 'OK' : 'HIBA', $weak === 0 ? 'nincs a forráskódban szereplő (minta-) PIN használatban' : $weak.' aktív dolgozó a forráskódban szereplő PIN-nel lép be — cseréld (RPW-PIN-csere.bat / Echipă)');
         $admins = 0;
         foreach ($this->db->fetchFirstColumn('SELECT r.can FROM rpw_employees e JOIN rpw_roles r ON r.shop_id = e.shop_id AND r.code = e.role_code WHERE e.active = :t', ['t' => true], ['t' => \Doctrine\DBAL\ParameterType::BOOLEAN]) as $c) {
             $admins += (int) ((Sql::decode($c)['delete'] ?? false) === true);

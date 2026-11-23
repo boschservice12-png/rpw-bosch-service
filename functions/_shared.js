@@ -109,8 +109,7 @@ function flagUncertain(fields){
   // meg kell erősítenie. Az `ok:true` sem „biztos" — csak formailag helyes.
   if(fields.vin){ out.vin = { value:fields.vin, needsConfirm:true,
     ok:/^[A-HJ-NPR-Z0-9]{17}$/.test(String(fields.vin).toUpperCase()) }; }
-  if(fields.cnp){ out.cnp = { value:fields.cnp, needsConfirm:true,
-    ok:/^\d{13}$/.test(String(fields.cnp)) }; }
+  // 2026-11-23: a CNP-t nem olvassuk ki és nem adjuk vissza (GDPR) — a sémából is kikerült.
   // rendszám (RO): MS 12 ABC / B 123 ABC
   if(fields.plate||fields.nr){ var pl=String(fields.plate||fields.nr);
     out.plate = { value:pl, needsConfirm:true,
@@ -139,11 +138,18 @@ function flagUncertain(fields){
 // Az AI szövegmodell — a válasza NEM megbízható szerkezet. Ha nem
 // értelmezhető objektum, az NEM sikeres válasz (a hívó 502-t ad).
 var OCR_SCHEMA = {
-  talon:      ['vin','plate','nr','marca','model','an','proprietar','serie','categorie','masaMax','culoare'],
-  buletin:    ['cnp','nume','prenume','serie','numar','adresa','emis','valabil'],
-  constatare: ['nrDosar','asigurator','dataConstatare','vinovat','plateVinovat','elemente','observatii','plate','vin'],
+  // 2026-11-23: a lista a functions/ocr.js PROMPTOK kulcsait IS tartalmazza (brand, year, owner,
+  // name, address, ore_*, total_*) — korábban ezeket a szűrő eldobta, a recepció/evaluare üresen kapta.
+  // A test-ocr-schema teszt őrzi, hogy minden prompt-kulcs átmenjen. CNP SOHA (GDPR).
+  talon:      ['vin','plate','nr','marca','model','an','proprietar','serie','categorie','masaMax','culoare',
+               'brand','year','capacitate','owner'],
+  buletin:    ['nume','prenume','serie','numar','adresa','emis','valabil','name','address'],
+  constatare: ['nrDosar','asigurator','dataConstatare','vinovat','plateVinovat','elemente','observatii','plate','vin',
+               'proprietar','daune'],
   audatex:    ['nrDosar','total','totalFaraTva','manopera','piese','vopsea',
-               'oreManopera','oreVopsire','oreTinichigerie','pozitii','moneda']
+               'oreManopera','oreVopsire','oreTinichigerie','pozitii','moneda',
+               'nr_dosar','ore_tinichigerie','ore_vopsitorie','pret_ora','total_manopera_ron',
+               'total_vopsitorie_ron','total_piese_ron','total_cu_tva']
 };
 function validateOcr(obj, type){
   if(obj===null || typeof obj!=='object' || Array.isArray(obj)){
